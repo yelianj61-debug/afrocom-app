@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AfroTV Admin</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#060606;--bg1:#111;--bg2:#1c1c1c;--bg3:#282828;--bg4:#333;--border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.15);--red:#FE2C55;--cyan:#20D5EC;--green:#25F4EE;--gold:#FFB800;--t2:rgba(255,255,255,.7);--t3:rgba(255,255,255,.4);--font:'Inter',-apple-system,sans-serif}
+html,body{height:100%;background:var(--bg);color:#fff;font-family:var(--font)}
+button,input,textarea,select{font-family:var(--font);color:inherit;border:none;background:none;cursor:pointer}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg1)}::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:2px}
+.layout{display:flex;height:100vh;overflow:hidden}
+#sidebar{width:220px;background:var(--bg1);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transition:.3s}
+.sb-logo{padding:20px 16px;border-bottom:1px solid var(--border);font-weight:900;font-size:1.2rem;letter-spacing:2px}
+.sb-logo span{color:var(--red)}
+.sb-nav{flex:1;overflow-y:auto;padding:8px 0}
+.nav-item{display:flex;align-items:center;gap:10px;padding:11px 16px;cursor:pointer;font-size:14px;font-weight:600;color:var(--t2);border-radius:6px;margin:1px 6px;position:relative;transition:.15s}
+.nav-item:hover{background:rgba(255,255,255,.06)}
+.nav-item.on{background:rgba(254,44,85,.12);color:#fff}
+.nav-item.on::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:3px;background:var(--red);border-radius:0 2px 2px 0}
+.nav-ic{font-size:18px;flex-shrink:0;width:22px;text-align:center}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:99px;min-width:20px;text-align:center}
+.nav-sep{font-size:10px;font-weight:800;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;padding:14px 16px 6px}
+#main{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+.topbar{height:56px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0;background:var(--bg1);position:sticky;top:0;z-index:10}
+.page-title{font-weight:800;font-size:17px;flex:1}
+.content{padding:20px;flex:1}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:4px;font-weight:700;font-size:13px;padding:8px 16px;cursor:pointer;border:none;transition:.15s;white-space:nowrap}
+.btn-red{background:var(--red);color:#fff}.btn-red:hover{opacity:.85}
+.btn-cyan{background:rgba(32,213,236,.15);color:var(--cyan);border:1px solid rgba(32,213,236,.3)}.btn-cyan:hover{background:rgba(32,213,236,.25)}
+.btn-out{border:1px solid var(--border2);color:var(--t2)}.btn-out:hover{border-color:rgba(255,255,255,.3);color:#fff}
+.btn-green{background:rgba(37,244,238,.15);color:var(--green);border:1px solid rgba(37,244,238,.3)}
+.btn-gold{background:rgba(255,184,0,.15);color:var(--gold);border:1px solid rgba(255,184,0,.3)}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn:disabled{opacity:.3;cursor:not-allowed}
+.inp{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:9px 12px;color:#fff;font-size:14px}
+.inp:focus{outline:none;border-color:rgba(255,255,255,.25)}
+.lbl{font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;display:block}
+.field{margin-bottom:14px}
+.card{background:var(--bg1);border:1px solid var(--border);border-radius:10px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:20px}
+.kpi{background:var(--bg1);border:1px solid var(--border);border-radius:10px;padding:16px}
+.kpi-val{font-size:2rem;font-weight:900;line-height:1;margin-bottom:4px}
+.kpi-lbl{font-size:12px;color:var(--t2);font-weight:600}
+.kpi-sub{font-size:11px;color:var(--t3);margin-top:3px}
+.table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead{background:var(--bg2)}
+th{padding:10px 14px;text-align:left;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--t3);white-space:nowrap}
+td{padding:10px 14px;border-top:1px solid var(--border);vertical-align:middle}
+tr:hover td{background:rgba(255,255,255,.02)}
+.av{border-radius:50%;object-fit:cover;background:var(--bg3)}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:700}
+.badge-green{background:rgba(37,244,238,.12);color:var(--green);border:1px solid rgba(37,244,238,.2)}
+.badge-red{background:rgba(254,44,85,.12);color:var(--red);border:1px solid rgba(254,44,85,.2)}
+.badge-gold{background:rgba(255,184,0,.12);color:var(--gold);border:1px solid rgba(255,184,0,.2)}
+.badge-grey{background:rgba(255,255,255,.06);color:var(--t3);border:1px solid var(--border)}
+.badge-cyan{background:rgba(32,213,236,.12);color:var(--cyan);border:1px solid rgba(32,213,236,.2)}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:.2s}
+.modal-bg.on{opacity:1;pointer-events:all}
+.modal{background:var(--bg1);border:1px solid var(--border2);border-radius:14px;padding:22px;width:100%;max-width:460px;max-height:88vh;overflow-y:auto}
+.modal h3{font-size:16px;font-weight:800;margin-bottom:16px}
+.section{margin-bottom:24px}
+.section-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px}
+.section-tt{font-size:16px;font-weight:800}
+.section-sub{font-size:12px;color:var(--t3);margin-top:2px}
+.search-bar{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;margin-bottom:16px}
+.search-bar input{flex:1;background:none;color:#fff;font-size:14px}
+.search-bar input:focus{outline:none}
+.empty{text-align:center;padding:48px 20px;color:var(--t3)}
+.empty-ic{font-size:40px;margin-bottom:10px}
+.spin{width:20px;height:20px;border:2.5px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:_sp .6s linear infinite;display:inline-block}
+@keyframes _sp{to{transform:rotate(360deg)}}
+.toast-area{position:fixed;top:20px;right:20px;z-index:999;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--bg1);border:1px solid var(--border2);color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:600;animation:fadeIn .2s ease;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-8px)}}
+.progress{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-top:8px}
+.progress-bar{height:100%;background:var(--red);border-radius:3px;transition:width .3s}
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:16px}
+.tab{padding:10px 16px;font-size:13px;font-weight:700;color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;transition:.15s}
+.tab.on{color:#fff;border-bottom-color:var(--red)}
+.tab-content{display:none}.tab-content.on{display:block}
+.login-page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:20px}
+.login-box{background:var(--bg1);border:1px solid var(--border2);border-radius:14px;padding:28px;width:100%;max-width:380px}
+.login-logo{font-weight:900;font-size:2rem;letter-spacing:3px;margin-bottom:4px;text-align:center}
+.login-logo span{color:var(--red)}
+.login-sub{color:var(--t3);font-size:13px;margin-bottom:24px;text-align:center}
+.sel{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:9px 12px;color:#fff;font-size:14px;width:100%;appearance:none}
+</style>
+</head>
+<body>
+
+<div id="login-view" class="login-page">
+  <div class="login-box">
+    <div class="login-logo">Afro<span>TV</span></div>
+    <div class="login-sub">Espace Administration</div>
+    <div id="login-err" style="background:rgba(254,44,85,.1);border:1px solid rgba(254,44,85,.3);border-radius:6px;padding:10px;font-size:13px;color:#ff6b8a;margin-bottom:12px;display:none"></div>
+    <div class="field"><label class="lbl">Email admin</label><input class="inp" type="email" id="adm-email" placeholder="admin@afrotv.com"></div>
+    <div class="field"><label class="lbl">Mot de passe</label><input class="inp" type="password" id="adm-pw" placeholder="••••••••"></div>
+    <button class="btn btn-red" style="width:100%;padding:12px;margin-top:4px" onclick="adminLogin()"><span id="login-btxt">Se connecter</span></button>
+  </div>
+</div>
+
+<div id="app-view" style="display:none" class="layout">
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="sb-logo">Afro<span>TV</span> <span style="font-size:11px;color:var(--t3);font-weight:600">Admin</span></div>
+    <div class="sb-nav">
+      <div class="nav-sep">Principal</div>
+      <div class="nav-item on" onclick="showSection('dashboard')"><span class="nav-ic">📊</span> Dashboard</div>
+      <div class="nav-item" onclick="showSection('users')"><span class="nav-ic">👥</span> Utilisateurs</div>
+      <div class="nav-item" onclick="showSection('videos')"><span class="nav-ic">🎬</span> Vidéos</div>
+      <div class="nav-item" onclick="showSection('sounds')"><span class="nav-ic">🎵</span> Sons</div>
+      <div class="nav-sep">Modération</div>
+      <div class="nav-item" onclick="showSection('reports-v')"><span class="nav-ic">🚨</span> Signalements vidéos <span class="nav-badge" id="nb-rv">0</span></div>
+      <div class="nav-item" onclick="showSection('reports-p')"><span class="nav-ic">⚠️</span> Signalements profils <span class="nav-badge" id="nb-rp">0</span></div>
+      <div class="nav-sep">Monétisation</div>
+      <div class="nav-item" onclick="showSection('mono')"><span class="nav-ic">💸</span> Monétisation <span class="nav-badge" id="nb-mono">0</span></div>
+      <div class="nav-item" onclick="showSection('withdrawals')"><span class="nav-ic">🏦</span> Retraits <span class="nav-badge" id="nb-wd">0</span></div>
+      <div class="nav-item" onclick="showSection('verif')"><span class="nav-ic">✅</span> Vérifications <span class="nav-badge" id="nb-verif">0</span></div>
+      <div class="nav-item" onclick="showSection('trophies')"><span class="nav-ic">🏆</span> Trophées <span class="nav-badge" id="nb-troph">0</span></div>
+      <div class="nav-sep">Système</div>
+      <div class="nav-item" onclick="showSection('notifs')"><span class="nav-ic">📢</span> Notifications</div>
+      <div class="nav-item" onclick="showSection('analytics')"><span class="nav-ic">📈</span> Analytics</div>
+      <div class="nav-item" onclick="adminLogout()"><span class="nav-ic">🚪</span> <span style="color:var(--red)">Déconnexion</span></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+    <div class="topbar">
+      <span class="page-title" id="page-title">Dashboard</span>
+      <span style="font-size:12px;color:var(--t3)" id="admin-name"></span>
+    </div>
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div id="sec-dashboard" class="section">
+        <div class="kpi-grid" id="kpi-grid"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="card" style="padding:16px"><div style="font-weight:800;font-size:14px;margin-bottom:12px">📅 Inscriptions récentes</div><div id="dash-users"></div></div>
+          <div class="card" style="padding:16px"><div style="font-weight:800;font-size:14px;margin-bottom:12px">🎬 Vidéos récentes</div><div id="dash-vids"></div></div>
+        </div>
+      </div>
+
+      <!-- USERS -->
+      <div id="sec-users" style="display:none">
+        <div class="section-hd"><div><div class="section-tt">Utilisateurs</div></div><button class="btn btn-out btn-sm" onclick="exportUsers()">📤 Exporter</button></div>
+        <div class="search-bar"><span style="color:var(--t3)">🔍</span><input type="text" placeholder="Rechercher par email, pseudo..." oninput="srchUsers(this.value)"></div>
+        <div class="tabs">
+          <div class="tab on" onclick="userTab('all',this)">Tous</div>
+          <div class="tab" onclick="userTab('verified',this)">Vérifiés</div>
+          <div class="tab" onclick="userTab('monetized',this)">Monétisés</div>
+          <div class="tab" onclick="userTab('banned',this)">Bannis</div>
+        </div>
+        <div class="table-wrap"><table><thead><tr><th>Utilisateur</th><th>Email</th><th>Rôle</th><th>Abonnés</th><th>Vidéos</th><th>Pièces</th><th>Status</th><th>Actions</th></tr></thead><tbody id="users-tbody"></tbody></table></div>
+        <div style="text-align:center;margin-top:12px"><button class="btn btn-out" onclick="loadMoreUsers()">Charger plus</button></div>
+      </div>
+
+      <!-- VIDEOS -->
+      <div id="sec-videos" style="display:none">
+        <div class="section-hd"><div class="section-tt">Vidéos</div></div>
+        <div class="search-bar"><span style="color:var(--t3)">🔍</span><input type="text" placeholder="Rechercher par description..." oninput="srchVideos(this.value)"></div>
+        <div class="table-wrap"><table><thead><tr><th>Miniature</th><th>Auteur</th><th>Description</th><th>Vues</th><th>Likes</th><th>Date</th><th>Actions</th></tr></thead><tbody id="videos-tbody"></tbody></table></div>
+      </div>
+
+      <!-- SOUNDS -->
+      <div id="sec-sounds" style="display:none">
+        <div class="section-hd"><div class="section-tt">Gestion des sons</div><button class="btn btn-red" onclick="openModal('m-add-sound')">+ Ajouter un son</button></div>
+        <div class="table-wrap"><table><thead><tr><th>Titre</th><th>Artiste</th><th>Catégorie</th><th>Utilisations</th><th>Actif</th><th>Actions</th></tr></thead><tbody id="sounds-tbody"></tbody></table></div>
+      </div>
+
+      <!-- REPORTS VIDEOS -->
+      <div id="sec-reports-v" style="display:none">
+        <div class="section-hd"><div><div class="section-tt">Signalements vidéos</div><div class="section-sub" id="rv-count"></div></div></div>
+        <div class="table-wrap"><table><thead><tr><th>Vidéo</th><th>Signalé par</th><th>Motif</th><th>Description</th><th>Date</th><th>Statut</th><th>Actions</th></tr></thead><tbody id="rv-tbody"></tbody></table></div>
+      </div>
+
+      <!-- REPORTS PROFILES -->
+      <div id="sec-reports-p" style="display:none">
+        <div class="section-hd"><div><div class="section-tt">Signalements profils</div><div class="section-sub" id="rp-count"></div></div></div>
+        <div class="table-wrap"><table><thead><tr><th>Profil signalé</th><th>Signalé par</th><th>Motif</th><th>Date</th><th>Statut</th><th>Actions</th></tr></thead><tbody id="rp-tbody"></tbody></table></div>
+      </div>
+
+      <!-- MONETISATION -->
+      <div id="sec-mono" style="display:none">
+        <div class="tabs">
+          <div class="tab on" onclick="monoTab('requests',this)">Demandes</div>
+          <div class="tab" onclick="monoTab('appeals',this)">Réactivations</div>
+        </div>
+        <div id="mono-requests" class="tab-content on">
+          <div class="table-wrap"><table><thead><tr><th>Utilisateur</th><th>Date naiss.</th><th>Méthode</th><th>Pièce ID</th><th>Date</th><th>Statut</th><th>Actions</th></tr></thead><tbody id="mono-tbody"></tbody></table></div>
+        </div>
+        <div id="mono-appeals" class="tab-content">
+          <div class="table-wrap"><table><thead><tr><th>Utilisateur</th><th>Raison</th><th>Pièce ID</th><th>Date</th><th>Statut</th><th>Actions</th></tr></thead><tbody id="appeal-tbody"></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- WITHDRAWALS -->
+      <div id="sec-withdrawals" style="display:none">
+        <div class="section-hd"><div class="section-tt">Demandes de retrait</div></div>
+        <div class="table-wrap"><table><thead><tr><th>Utilisateur</th><th>Pièces</th><th>Montant €</th><th>Méthode</th><th>Détails paiement</th><th>Date</th><th>Statut</th><th>Actions</th></tr></thead><tbody id="wd-tbody"></tbody></table></div>
+      </div>
+
+      <!-- VERIFICATION -->
+      <div id="sec-verif" style="display:none">
+        <div class="section-hd"><div class="section-tt">Demandes de vérification</div></div>
+        <div class="table-wrap"><table><thead><tr><th>Utilisateur</th><th>Profession</th><th>Date naiss.</th><th>Pièce ID</th><th>Réseaux</th><th>Date</th><th>Statut</th><th>Actions</th></tr></thead><tbody id="verif-tbody"></tbody></table></div>
+      </div>
+
+      <!-- TROPHIES -->
+      <div id="sec-trophies" style="display:none">
+        <div class="section-hd">
+          <div><div class="section-tt">🏆 Trophées à remettre</div><div class="section-sub">Utilisateurs ayant le badge Viral</div></div>
+          <div style="display:flex;gap:10px;font-size:13px">
+            <span>En attente : <b id="troph-pending">0</b></span>
+            <span>|</span>
+            <span>Contactés : <b id="troph-contacted">0</b></span>
+            <span>|</span>
+            <span>Remis : <b id="troph-delivered">0</b></span>
+          </div>
+        </div>
+        <div class="table-wrap"><table><thead><tr><th>Utilisateur</th><th>Abonnés</th><th>Vues</th><th>Date badge</th><th>Statut</th><th>Notes</th><th>Actions</th></tr></thead><tbody id="troph-tbody"></tbody></table></div>
+      </div>
+
+      <!-- NOTIFICATIONS -->
+      <div id="sec-notifs" style="display:none">
+        <div class="tabs">
+          <div class="tab on" onclick="notifTab('individual',this)">Individuelle</div>
+          <div class="tab" onclick="notifTab('broadcast',this)">Broadcast</div>
+        </div>
+        <div id="notif-individual" class="tab-content on">
+          <div class="card" style="padding:18px">
+            <div class="field"><label class="lbl">Email ou pseudo de l'utilisateur</label><input class="inp" id="notif-user" placeholder="user@example.com ou @pseudo" oninput="srchNotifUser(this.value)"><div id="notif-user-res" style="margin-top:6px"></div></div>
+            <div id="notif-target-info" style="display:none;background:rgba(37,244,238,.06);border:1px solid rgba(37,244,236,.2);border-radius:6px;padding:10px;margin-bottom:12px;font-size:13px"></div>
+            <div class="field"><label class="lbl">Type</label>
+              <select class="sel" id="notif-type">
+                <option value="system">ℹ️ Système</option>
+                <option value="broadcast">📢 Annonce</option>
+                <option value="coins_added">💰 Pièces ajoutées</option>
+                <option value="ban">🚫 Avertissement</option>
+              </select>
+            </div>
+            <div class="field"><label class="lbl">Message</label><textarea class="inp" id="notif-msg" rows="3" placeholder="Ton message..." style="resize:none"></textarea></div>
+            <button class="btn btn-red" onclick="sendIndivNotif()">📤 Envoyer</button>
+          </div>
+        </div>
+        <div id="notif-broadcast" class="tab-content">
+          <div class="card" style="padding:18px">
+            <div class="field"><label class="lbl">Message pour TOUS les utilisateurs</label><textarea class="inp" id="bc-msg" rows="4" placeholder="Annonce AfroTV..." style="resize:none"></textarea></div>
+            <div style="background:rgba(254,44,85,.06);border:1px solid rgba(254,44,85,.2);border-radius:6px;padding:10px;margin-bottom:14px;font-size:12px;color:var(--t2)">⚠️ Ce message sera envoyé à tous les utilisateurs actifs.</div>
+            <button class="btn btn-red" onclick="sendBroadcast()">📢 Envoyer à tous</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ANALYTICS -->
+      <div id="sec-analytics" style="display:none">
+        <div class="kpi-grid" id="analytics-kpi"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="card" style="padding:16px"><div style="font-weight:800;font-size:14px;margin-bottom:12px">🎬 Top vidéos</div><div id="top-vids"></div></div>
+          <div class="card" style="padding:16px"><div style="font-weight:800;font-size:14px;margin-bottom:12px">👤 Top créateurs</div><div id="top-creators"></div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-bg" id="m-add-sound">
+  <div class="modal">
+    <h3>🎵 Ajouter un son</h3>
+    <div class="field"><label class="lbl">Titre *</label><input class="inp" id="snd-title" placeholder="Titre du son"></div>
+    <div class="field"><label class="lbl">Artiste</label><input class="inp" id="snd-artist" placeholder="Nom de l'artiste"></div>
+    <div class="field"><label class="lbl">Catégorie</label>
+      <select class="sel" id="snd-cat">
+        <option value="music">Musique</option>
+        <option value="effect">Effet sonore</option>
+        <option value="ambiance">Ambiance</option>
+      </select>
+    </div>
+    <div class="field"><label class="lbl">Fichier audio (MP3, WAV) *</label><input type="file" id="snd-file" accept="audio/*" class="inp" style="padding:8px"></div>
+    <div id="snd-prog" style="display:none;margin-bottom:12px">
+      <div style="font-size:13px;color:var(--t2);margin-bottom:6px" id="snd-prog-lbl">Upload en cours...</div>
+      <div class="progress"><div class="progress-bar" id="snd-prog-bar" style="width:0"></div></div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-red" onclick="uploadSound()">💾 Enregistrer</button>
+      <button class="btn btn-out" onclick="closeModal('m-add-sound')">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="m-user-detail">
+  <div class="modal" id="user-detail-content"></div>
+</div>
+
+<div class="modal-bg" id="m-reject-note">
+  <div class="modal">
+    <h3 id="rn-title">Motif de refus</h3>
+    <div class="field"><textarea class="inp" id="rn-note" rows="4" placeholder="Motif du refus..." style="resize:none"></textarea></div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-red" id="rn-confirm" onclick="confirmReject()">Confirmer le refus</button>
+      <button class="btn btn-out" onclick="closeModal('m-reject-note')">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-area" id="toast-area"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const SB_URL='https://bkcttyhtrrgkzmceuxru.supabase.co';
+const SB_KEY='sb_publishable_gJ1aJ64bSt11rNw5pzneAQ_8wQtk_3j';
+const CLOUD='dx0dzt35e';
+const SUPER_ADMIN_EMAIL='martialgbesso44@gmail.com';
+const COIN_EUR=0.0125;
+
+let SB,adminUser=null,curSection='dashboard';
+let rejectTarget=null,rejectType=null,notifTargetId=null;
+let usersOffset=0,userFilter='all',userQuery='';
+
+function waitCDN(n){if(typeof supabase!=='undefined'){SB=supabase.createClient(SB_URL,SB_KEY);init();}else if(n<100)setTimeout(()=>waitCDN(n+1),100);}
+async function init(){const{data:{session}}=await SB.auth.getSession();if(session){const{data:u}=await SB.from('users').select('*').eq('id',session.user.id).single();if(u&&(u.role==='admin'||u.role==='super_admin'||u.role==='moderator'||session.user.email===SUPER_ADMIN_EMAIL)){adminUser=u;showApp();}else{document.getElementById('login-err').textContent='Accès refusé - compte non administrateur';document.getElementById('login-err').style.display='block';}}}
+
+function toast(m,type){const area=document.getElementById('toast-area');const t=document.createElement('div');t.className='toast';if(type==='error')t.style.borderColor='rgba(254,44,85,.4)';if(type==='success')t.style.borderColor='rgba(37,244,238,.3)';t.textContent=m;area.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300);},3500);}
+function openModal(id){document.getElementById(id)?.classList.add('on');}
+function closeModal(id){document.getElementById(id)?.classList.remove('on');}
+const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const fmt=n=>!n?'0':n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':''+n;
+const ago=d=>{const s=Math.floor((Date.now()-new Date(d))/1e3);return s<60?s+'s':s<3600?Math.floor(s/60)+'min':s<86400?Math.floor(s/3600)+'h':Math.floor(s/86400)+'j';};
+const avHtml=(u,n,sz)=>'<img src="'+(u||'https://ui-avatars.com/api/?name='+encodeURIComponent(n||'U')+'&background=2a2a2a&color=fff&bold=true')+'" class="av" style="width:'+(sz||32)+'px;height:'+(sz||32)+'px">';
+const statusBadge=s=>s==='approved'?'<span class="badge badge-green">✓ Approuvé</span>':s==='rejected'?'<span class="badge badge-red">✗ Rejeté</span>':s==='pending'?'<span class="badge badge-gold">⏳ En attente</span>':s==='paid'?'<span class="badge badge-cyan">💰 Payé</span>':s==='contacted'?'<span class="badge badge-cyan">📞 Contacté</span>':s==='delivered'?'<span class="badge badge-green">✓ Remis</span>':'<span class="badge badge-grey">'+s+'</span>';
+
+async function adminLogin(){
+  const email=document.getElementById('adm-email').value.trim(),pw=document.getElementById('adm-pw').value;
+  const btn=document.getElementById('login-btxt');btn.innerHTML='<span class="spin" style="width:14px;height:14px;border-width:2px"></span>';
+  const{error}=await SB.auth.signInWithPassword({email,password:pw});
+  btn.textContent='Se connecter';
+  if(error){document.getElementById('login-err').textContent=error.message;document.getElementById('login-err').style.display='block';return;}
+  const{data:u}=await SB.from('users').select('*').eq('id',(await SB.auth.getUser()).data.user.id).single();
+  if(!u||(!['admin','super_admin','moderator'].includes(u.role)&&email!==SUPER_ADMIN_EMAIL)){document.getElementById('login-err').textContent='Accès non autorisé';document.getElementById('login-err').style.display='block';await SB.auth.signOut();return;}
+  adminUser=u;showApp();
+}
+async function adminLogout(){await SB.auth.signOut();adminUser=null;document.getElementById('app-view').style.display='none';document.getElementById('login-view').style.display='flex';}
+function showApp(){document.getElementById('login-view').style.display='none';document.getElementById('app-view').style.display='flex';document.getElementById('admin-name').textContent=adminUser?.username||adminUser?.email||'Admin';loadDashboard();loadBadgeCounts();}
+
+function showSection(s){curSection=s;document.querySelectorAll('[id^="sec-"]').forEach(el=>el.style.display='none');document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('on'));document.getElementById('sec-'+s)?.style.setProperty('display','block');event?.currentTarget?.classList.add('on');const titles={dashboard:'📊 Dashboard',users:'👥 Utilisateurs',videos:'🎬 Vidéos',sounds:'🎵 Sons','reports-v':'🚨 Signalements vidéos','reports-p':'⚠️ Signalements profils',mono:'💸 Monétisation',withdrawals:'🏦 Retraits',verif:'✅ Vérifications',trophies:'🏆 Trophées',notifs:'📢 Notifications',analytics:'📈 Analytics'};document.getElementById('page-title').textContent=titles[s]||s;const loaders={dashboard:loadDashboard,users:()=>loadUsers(true),videos:()=>loadVideos(true),sounds:loadSounds,'reports-v':loadReportsV,'reports-p':loadReportsP,mono:()=>loadMono('requests'),withdrawals:loadWithdrawals,verif:loadVerif,trophies:loadTrophies,analytics:loadAnalytics};if(loaders[s])loaders[s]();}
+
+/* ── BADGE COUNTS ── */
+async function loadBadgeCounts(){const counts={rv:'video_reports',rp:'profile_reports',mono:'monetization_requests',wd:'withdrawal_requests',verif:'verification_requests',troph:'trophy_handovers'};await Promise.all(Object.entries(counts).map(async([key,table])=>{const{count}=await SB.from(table).select('id',{count:'exact',head:true}).eq('status','pending');const el=document.getElementById('nb-'+key.replace('wd','wd'));if(el)el.textContent=count||0;}));const{count:rv}=await SB.from('video_reports').select('id',{count:'exact',head:true}).eq('status','pending');const{count:rp}=await SB.from('profile_reports').select('id',{count:'exact',head:true}).eq('status','pending');const{count:mn}=await SB.from('monetization_requests').select('id',{count:'exact',head:true}).eq('status','pending');const{count:wd}=await SB.from('withdrawal_requests').select('id',{count:'exact',head:true}).eq('status','pending');const{count:vr}=await SB.from('verification_requests').select('id',{count:'exact',head:true}).eq('status','pending');const{count:tr}=await SB.from('trophy_handovers').select('id',{count:'exact',head:true}).eq('status','pending');document.getElementById('nb-rv').textContent=rv||0;document.getElementById('nb-rp').textContent=rp||0;document.getElementById('nb-mono').textContent=mn||0;document.getElementById('nb-wd').textContent=wd||0;document.getElementById('nb-verif').textContent=vr||0;document.getElementById('nb-troph').textContent=tr||0;}
+
+/* ── DASHBOARD ── */
+async function loadDashboard(){
+  const[{count:users},{count:vids},{count:lives},{data:coins}]=await Promise.all([SB.from('users').select('id',{count:'exact',head:true}),SB.from('videos').select('id',{count:'exact',head:true}).is('deleted_at',null),SB.from('live_streams').select('id',{count:'exact',head:true}).eq('status','live'),SB.from('transactions').select('coins').eq('status','completed').eq('type','purchase')]);
+  const totalCoins=(coins||[]).reduce((a,t)=>a+(t.coins||0),0);
+  const totalEur=(totalCoins*COIN_EUR).toFixed(2);
+  document.getElementById('kpi-grid').innerHTML=`<div class="kpi"><div class="kpi-val" style="color:var(--cyan)">${fmt(users||0)}</div><div class="kpi-lbl">👥 Utilisateurs</div><div class="kpi-sub">Total inscrits</div></div><div class="kpi"><div class="kpi-val" style="color:var(--red)">${fmt(vids||0)}</div><div class="kpi-lbl">🎬 Vidéos</div><div class="kpi-sub">Publiées</div></div><div class="kpi"><div class="kpi-val" style="color:var(--green)">${lives||0}</div><div class="kpi-lbl">🔴 Lives actifs</div><div class="kpi-sub">En ce moment</div></div><div class="kpi"><div class="kpi-val" style="color:var(--gold)">${totalEur} €</div><div class="kpi-lbl">💰 Revenus</div><div class="kpi-sub">Total pièces vendues</div></div>`;
+  const{data:recentUsers}=await SB.from('users').select('id,username,avatar_url,created_at').order('created_at',{ascending:false}).limit(5);
+  const{data:recentVids}=await SB.from('videos').select('id,description,user:user_id(username),created_at,views_count').is('deleted_at',null).order('created_at',{ascending:false}).limit(5);
+  document.getElementById('dash-users').innerHTML=(recentUsers||[]).map(u=>'<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">'+avHtml(u.avatar_url,u.username,28)+'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">@'+esc(u.username||'?')+'</div><div style="font-size:11px;color:var(--t3)">'+ago(u.created_at)+'</div></div></div>').join('');
+  document.getElementById('dash-vids').innerHTML=(recentVids||[]).map(v=>'<div style="padding:6px 0;border-bottom:1px solid var(--border)"><div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(v.description?.slice(0,60)||'Vidéo sans titre')+'</div><div style="font-size:11px;color:var(--t3)">@'+esc(v.user?.username||'?')+' · '+fmt(v.views_count)+' vues · '+ago(v.created_at)+'</div></div>').join('');
+}
+
+/* ── USERS ── */
+async function loadUsers(reset){if(reset){usersOffset=0;document.getElementById('users-tbody').innerHTML='';}let q=SB.from('users').select('id,username,full_name,avatar_url,email,role,is_verified,is_monetized,followers_count,videos_count,coins_balance,deleted_at,created_at').order('created_at',{ascending:false}).range(usersOffset,usersOffset+29);if(userQuery)q=SB.from('users').select('id,username,full_name,avatar_url,email,role,is_verified,is_monetized,followers_count,videos_count,coins_balance,deleted_at,created_at').or('username.ilike.%'+userQuery+'%,email.ilike.%'+userQuery+'%').order('created_at',{ascending:false}).limit(30);if(userFilter==='verified')q=q.eq('is_verified',true);if(userFilter==='monetized')q=q.eq('is_monetized',true);if(userFilter==='banned')q=q.not('deleted_at','is',null);const{data}=await q;if(!data?.length&&reset){document.getElementById('users-tbody').innerHTML='<tr><td colspan="8"><div class="empty"><div class="empty-ic">👥</div>Aucun utilisateur</div></td></tr>';return;}const tb=document.getElementById('users-tbody');(data||[]).forEach(u=>{const tr=document.createElement('tr');tr.innerHTML='<td><div style="display:flex;align-items:center;gap:8px">'+avHtml(u.avatar_url,u.username,32)+'<div><div style="font-weight:700">@'+esc(u.username||'?')+'</div><div style="font-size:11px;color:var(--t3)">'+esc(u.full_name||'')+'</div></div></div></td><td style="color:var(--t3);font-size:12px">'+esc(u.email||'–')+'</td><td><span class="badge '+(u.role==='admin'||u.role==='super_admin'?'badge-red':u.role==='moderator'?'badge-gold':'badge-grey')+'">'+esc(u.role||'user')+'</span></td><td>'+fmt(u.followers_count)+'</td><td>'+fmt(u.videos_count)+'</td><td style="color:var(--gold);font-weight:700">'+fmt(u.coins_balance)+'</td><td>'+(u.deleted_at?'<span class="badge badge-red">Banni</span>':u.is_verified?'<span class="badge badge-cyan">✓ Vérifié</span>':'<span class="badge badge-grey">Standard</span>')+'</td><td><div style="display:flex;gap:4px;flex-wrap:wrap"><button class="btn btn-cyan btn-sm" onclick="viewUser(\''+u.id+'\')">Voir</button>'+(u.deleted_at?'<button class="btn btn-green btn-sm" onclick="unbanUser(\''+u.id+'\')">Débannir</button>':'<button class="btn btn-red btn-sm" onclick="banUser(\''+u.id+'\')">Bannir</button>')+(!u.is_verified?'<button class="btn btn-gold btn-sm" onclick="verifyUser(\''+u.id+'\')">Vérifier</button>':'')+'</div></td>';tb.appendChild(tr);});usersOffset+=data.length;}
+let srchUserTimer=null;function srchUsers(q){clearTimeout(srchUserTimer);userQuery=q;srchUserTimer=setTimeout(()=>loadUsers(true),350);}
+function userTab(f,el){userFilter=f;document.querySelectorAll('#sec-users .tab').forEach(t=>t.classList.remove('on'));el.classList.add('on');loadUsers(true);}
+function loadMoreUsers(){usersOffset&&loadUsers(false);}
+
+async function viewUser(uid){const{data:u}=await SB.from('users').select('*').eq('id',uid).single();if(!u)return;const{count:vidCount}=await SB.from('videos').select('id',{count:'exact',head:true}).eq('user_id',uid);const{data:badges}=await SB.from('user_badges').select('*').eq('user_id',uid);document.getElementById('user-detail-content').innerHTML='<h3>Profil utilisateur</h3><div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">'+avHtml(u.avatar_url,u.username,56)+'<div><div style="font-weight:800;font-size:16px">@'+esc(u.username||'?')+'</div><div style="color:var(--t3);font-size:13px">'+esc(u.email||'–')+'</div></div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px"><div class="card" style="padding:10px 14px"><div style="font-size:11px;color:var(--t3)">Abonnés</div><div style="font-weight:800;font-size:1.2rem">'+fmt(u.followers_count)+'</div></div><div class="card" style="padding:10px 14px"><div style="font-size:11px;color:var(--t3)">Vidéos</div><div style="font-weight:800;font-size:1.2rem">'+fmt(vidCount||0)+'</div></div><div class="card" style="padding:10px 14px"><div style="font-size:11px;color:var(--t3)">Pièces</div><div style="font-weight:800;font-size:1.2rem;color:var(--gold)">'+fmt(u.coins_balance)+'</div></div><div class="card" style="padding:10px 14px"><div style="font-size:11px;color:var(--t3)">Gains créateur</div><div style="font-weight:800;font-size:1.2rem;color:var(--green)">'+fmt(u.creator_balance_coins)+'</div></div></div><div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Badges ('+((badges||[]).length)+')</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">'+(badges||[]).map(b=>'<span title="'+esc(b.badge_name)+'" style="font-size:22px;cursor:pointer">'+b.badge_emoji+'</span>').join('')+'</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="btn btn-out" onclick="addCoinsToUser(\''+uid+'\')">💰 Ajouter pièces</button><button class="btn btn-out" onclick="setUserRole(\''+uid+'\')">🎭 Changer rôle</button><button class="btn '+(u.is_monetized?'btn-out"  onclick="deMonetizeUser(\''+uid+'\')">Désactiver mono</button>':'btn-green" onclick="monetizeUser(\''+uid+'\')">Activer mono</button>')+'<button class="btn btn-red" onclick="closeModal(\'m-user-detail\')">Fermer</button></div>';openModal('m-user-detail');}
+async function banUser(uid){if(!confirm('Bannir cet utilisateur ?'))return;await SB.from('users').update({deleted_at:new Date().toISOString()}).eq('id',uid);await SB.from('notifications').insert({user_id:uid,type:'ban',content:'Ton compte a été suspendu pour violation des règles AfroTV.'}).catch(()=>{});toast('Utilisateur banni','success');loadUsers(true);}
+async function unbanUser(uid){await SB.from('users').update({deleted_at:null}).eq('id',uid);toast('Utilisateur débanni','success');loadUsers(true);}
+async function verifyUser(uid){await SB.from('users').update({is_verified:true}).eq('id',uid);await SB.from('notifications').insert({user_id:uid,type:'system',content:'🎉 Ton compte a été vérifié ! La coche bleue est maintenant active.'}).catch(()=>{});toast('Utilisateur vérifié ✓','success');loadUsers(true);}
+async function monetizeUser(uid){await SB.from('users').update({is_monetized:true}).eq('id',uid);await SB.from('notifications').insert({user_id:uid,type:'system',content:'💸 Ta monétisation a été activée ! Tu recevras 70% des cadeaux de tes lives.'}).catch(()=>{});toast('Monétisation activée','success');closeModal('m-user-detail');}
+async function deMonetizeUser(uid){await SB.from('users').update({is_monetized:false}).eq('id',uid);toast('Monétisation désactivée','success');closeModal('m-user-detail');}
+async function addCoinsToUser(uid){const n=parseInt(prompt('Nombre de pièces à ajouter:'));if(!n||n<=0)return;const{data:u}=await SB.from('users').select('coins_balance').eq('id',uid).single();await SB.from('users').update({coins_balance:(u?.coins_balance||0)+n}).eq('id',uid);await SB.from('notifications').insert({user_id:uid,type:'coins_added',content:'💰 +'+n.toLocaleString('fr-FR')+' pièces ajoutées par l\'administration AfroTV !'}).catch(()=>{});toast('+'+n+' pièces ajoutées','success');}
+async function setUserRole(uid){const role=prompt('Rôle (user/moderator/admin/super_admin):');if(!role||!['user','moderator','admin','super_admin'].includes(role))return;await SB.from('users').update({role}).eq('id',uid);toast('Rôle mis à jour: '+role,'success');}
+function exportUsers(){toast('Export CSV en développement','success');}
+
+/* ── VIDEOS ── */
+let vidQuery='';
+async function loadVideos(reset){if(reset)document.getElementById('videos-tbody').innerHTML='';let q=SB.from('videos').select('id,description,thumbnail_url,views_count,likes_count,created_at,user:user_id(id,username,avatar_url)').is('deleted_at',null).order('created_at',{ascending:false}).limit(30);if(vidQuery)q=SB.from('videos').select('id,description,thumbnail_url,views_count,likes_count,created_at,user:user_id(id,username,avatar_url)').ilike('description','%'+vidQuery+'%').is('deleted_at',null).limit(30);const{data}=await q;if(!data?.length){document.getElementById('videos-tbody').innerHTML='<tr><td colspan="7"><div class="empty"><div class="empty-ic">🎬</div>Aucune vidéo</div></td></tr>';return;}document.getElementById('videos-tbody').innerHTML=data.map(v=>'<tr><td>'+(v.thumbnail_url?'<img src="'+v.thumbnail_url+'" style="width:48px;height:64px;border-radius:4px;object-fit:cover">':'<div style="width:48px;height:64px;border-radius:4px;background:var(--bg3);display:flex;align-items:center;justify-content:center">🎬</div>')+'</td><td><div style="display:flex;align-items:center;gap:7px">'+avHtml(v.user?.avatar_url,v.user?.username,28)+'@'+esc(v.user?.username||'?')+'</div></td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t2)">'+esc(v.description||'–')+'</td><td>'+fmt(v.views_count)+'</td><td>'+fmt(v.likes_count)+'</td><td style="color:var(--t3);font-size:12px">'+new Date(v.created_at).toLocaleDateString('fr-FR')+'</td><td><div style="display:flex;gap:4px"><button class="btn btn-red btn-sm" onclick="deleteVideo(\''+v.id+'\')">Supprimer</button></div></td></tr>').join('');}
+let srchVidTimer=null;function srchVideos(q){clearTimeout(srchVidTimer);vidQuery=q;srchVidTimer=setTimeout(()=>loadVideos(true),350);}
+async function deleteVideo(vid){if(!confirm('Supprimer cette vidéo ?'))return;await SB.from('videos').update({deleted_at:new Date().toISOString()}).eq('id',vid);toast('Vidéo supprimée','success');loadVideos(true);}
+
+/* ── SOUNDS ── */
+async function loadSounds(){const{data}=await SB.from('sounds').select('*').order('created_at',{ascending:false});document.getElementById('sounds-tbody').innerHTML=!data?.length?'<tr><td colspan="6"><div class="empty"><div class="empty-ic">🎵</div>Aucun son</div></td></tr>':data.map(s=>'<tr><td style="font-weight:700">'+esc(s.title)+'</td><td style="color:var(--t2)">'+esc(s.artist||'–')+'</td><td><span class="badge badge-grey">'+s.category+'</span></td><td>'+fmt(s.usage_count)+'</td><td>'+(s.is_active?'<span class="badge badge-green">Actif</span>':'<span class="badge badge-grey">Inactif</span>')+'</td><td><div style="display:flex;gap:4px"><button class="btn btn-cyan btn-sm" onclick="playSound(\''+s.audio_url+'\')">▶ Écouter</button><button class="btn btn-out btn-sm" onclick="toggleSound(\''+s.id+'\','+s.is_active+')">'+(s.is_active?'Désactiver':'Activer')+'</button><button class="btn btn-red btn-sm" onclick="deleteSound(\''+s.id+'\')">Supprimer</button></div></td></tr>').join('');}
+let currentAudio=null;function playSound(url){if(currentAudio){currentAudio.pause();currentAudio=null;}currentAudio=new Audio(url);currentAudio.play().catch(()=>toast('Impossible de lire','error'));}
+async function uploadSound(){const title=document.getElementById('snd-title').value.trim();const file=document.getElementById('snd-file').files[0];if(!title||!file){toast('Titre et fichier requis','error');return;}document.getElementById('snd-prog').style.display='block';document.getElementById('snd-prog-bar').style.width='0';document.getElementById('snd-prog-lbl').textContent='Upload en cours...';const fd=new FormData();fd.append('file',file);fd.append('upload_preset','afrotv_sounds');fd.append('resource_type','video');fd.append('folder','afrotv/sounds');try{const xhr=new XMLHttpRequest();xhr.open('POST','https://api.cloudinary.com/v1_1/'+CLOUD+'/video/upload');xhr.upload.onprogress=e=>{if(e.lengthComputable){const pct=Math.round(e.loaded/e.total*100);document.getElementById('snd-prog-bar').style.width=pct+'%';document.getElementById('snd-prog-lbl').textContent='Upload: '+pct+'%';}};xhr.onload=async()=>{if(xhr.status===200){const d=JSON.parse(xhr.responseText);const{error}=await SB.from('sounds').insert({title,artist:document.getElementById('snd-artist').value.trim()||null,category:document.getElementById('snd-cat').value,audio_url:d.secure_url,duration:Math.round(d.duration)||null,is_active:true});if(error)toast('DB Error: '+error.message,'error');else{toast('Son ajouté !','success');closeModal('m-add-sound');document.getElementById('snd-title').value='';document.getElementById('snd-artist').value='';document.getElementById('snd-file').value='';document.getElementById('snd-prog').style.display='none';loadSounds();}}else toast('Upload échoué','error');};xhr.send(fd);}catch(e){toast('Erreur: '+e.message,'error');};}
+async function toggleSound(id,active){await SB.from('sounds').update({is_active:!active}).eq('id',id);toast(active?'Son désactivé':'Son activé','success');loadSounds();}
+async function deleteSound(id){if(!confirm('Supprimer ce son ?'))return;await SB.from('sounds').delete().eq('id',id);toast('Son supprimé','success');loadSounds();}
+
+/* ── REPORTS VIDEOS ── */
+async function loadReportsV(){const{data,count}=await SB.from('video_reports').select('*,reporter:reporter_id(username,avatar_url),video:video_id(id,description,thumbnail_url)',{count:'exact'}).order('created_at',{ascending:false}).limit(50);document.getElementById('rv-count').textContent=(count||0)+' signalements';document.getElementById('rv-tbody').innerHTML=!data?.length?'<tr><td colspan="7"><div class="empty"><div class="empty-ic">🚨</div>Aucun signalement</div></td></tr>':data.map(r=>'<tr><td>'+(r.video?.thumbnail_url?'<img src="'+r.video.thumbnail_url+'" style="width:36px;height:48px;object-fit:cover;border-radius:4px">':'🎬')+'</td><td><div style="display:flex;align-items:center;gap:7px">'+avHtml(r.reporter?.avatar_url,r.reporter?.username,28)+'@'+esc(r.reporter?.username||'?')+'</div></td><td style="font-weight:600">'+esc(r.reason)+'</td><td style="color:var(--t2);font-size:12px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.description||'–')+'</td><td style="color:var(--t3);font-size:12px">'+new Date(r.created_at).toLocaleDateString('fr-FR')+'</td><td>'+statusBadge(r.status)+'</td><td><div style="display:flex;gap:4px"><button class="btn btn-red btn-sm" onclick="deleteReportedVideo(\''+r.video_id+'\',\''+r.id+'\')">Supprimer</button><button class="btn btn-out btn-sm" onclick="ignoreReport(\'video_reports\',\''+r.id+'\')">Ignorer</button></div></td></tr>').join('');}
+async function deleteReportedVideo(vid,rid){if(!confirm('Supprimer la vidéo et résoudre le signalement ?'))return;await SB.from('videos').update({deleted_at:new Date().toISOString()}).eq('id',vid);await SB.from('video_reports').update({status:'resolved'}).eq('id',rid);toast('Vidéo supprimée','success');loadReportsV();loadBadgeCounts();}
+async function ignoreReport(table,id){await SB.from(table).update({status:'ignored'}).eq('id',id);toast('Signalement ignoré','success');table==='video_reports'?loadReportsV():loadReportsP();loadBadgeCounts();}
+
+/* ── REPORTS PROFILES ── */
+async function loadReportsP(){const{data,count}=await SB.from('profile_reports').select('*,reporter:reporter_id(username,avatar_url),reported:reported_user_id(id,username,avatar_url,full_name)',{count:'exact'}).order('created_at',{ascending:false}).limit(50);document.getElementById('rp-count').textContent=(count||0)+' signalements';document.getElementById('rp-tbody').innerHTML=!data?.length?'<tr><td colspan="5"><div class="empty"><div class="empty-ic">⚠️</div>Aucun signalement</div></td></tr>':data.map(r=>'<tr><td><div style="display:flex;align-items:center;gap:8px">'+avHtml(r.reported?.avatar_url,r.reported?.username,32)+'<div><div style="font-weight:700">@'+esc(r.reported?.username||'?')+'</div><div style="font-size:11px;color:var(--t3)">'+esc(r.reported?.full_name||'')+'</div></div></div></td><td><div style="display:flex;align-items:center;gap:7px">'+avHtml(r.reporter?.avatar_url,r.reporter?.username,24)+'@'+esc(r.reporter?.username||'?')+'</div></td><td style="font-weight:600">'+esc(r.reason)+'</td><td style="color:var(--t3);font-size:12px">'+new Date(r.created_at).toLocaleDateString('fr-FR')+'</td><td>'+statusBadge(r.status)+'</td><td><div style="display:flex;gap:4px"><button class="btn btn-red btn-sm" onclick="banUser(\''+r.reported_user_id+'\')">Bannir</button><button class="btn btn-gold btn-sm" onclick="warnUser(\''+r.reported_user_id+'\',\''+r.id+'\')">Avertir</button><button class="btn btn-out btn-sm" onclick="ignoreReport(\'profile_reports\',\''+r.id+'\')">Ignorer</button></div></td></tr>').join('');}
+async function warnUser(uid,rid){const msg=prompt('Message d\'avertissement:');if(!msg)return;await SB.from('notifications').insert({user_id:uid,type:'system',content:'⚠️ Avertissement : '+msg});await SB.from('profile_reports').update({status:'resolved'}).eq('id',rid);toast('Avertissement envoyé','success');loadReportsP();}
+
+/* ── MONETISATION ── */
+function monoTab(t,el){document.querySelectorAll('#sec-mono .tab').forEach(x=>x.classList.remove('on'));el?.classList.add('on');document.querySelectorAll('#sec-mono .tab-content').forEach(x=>x.classList.remove('on'));document.getElementById('mono-'+t)?.classList.add('on');if(t==='requests')loadMonoRequests();else loadAppeals();}
+async function loadMono(t){monoTab(t,document.querySelector('#sec-mono .tab'));if(t==='requests')loadMonoRequests();else loadAppeals();}
+async function loadMonoRequests(){const{data}=await SB.from('monetization_requests').select('*,user:user_id(id,username,avatar_url,full_name)').order('created_at',{ascending:false}).limit(50);document.getElementById('mono-tbody').innerHTML=!data?.length?'<tr><td colspan="7"><div class="empty"><div class="empty-ic">💸</div>Aucune demande</div></td></tr>':data.map(r=>'<tr><td><div style="display:flex;align-items:center;gap:8px">'+avHtml(r.user?.avatar_url,r.user?.username,32)+'<div><div style="font-weight:700">@'+esc(r.user?.username||'?')+'</div><div style="font-size:11px;color:var(--t3)">'+esc(r.user?.full_name||'')+'</div></div></div></td><td style="color:var(--t2)">'+esc(r.birth_date||'–')+'</td><td><span class="badge badge-grey">'+esc(r.payment_method||'–')+'</span></td><td>'+(r.id_document_url?'<a href="'+r.id_document_url+'" target="_blank" class="btn btn-cyan btn-sm">Voir pièce</a>':'–')+'</td><td style="color:var(--t3);font-size:12px">'+new Date(r.created_at).toLocaleDateString('fr-FR')+'</td><td>'+statusBadge(r.status)+'</td><td>'+(r.status==='pending'?'<div style="display:flex;gap:4px"><button class="btn btn-green btn-sm" onclick="approveRequest(\'monetization_requests\',\''+r.id+'\',\''+r.user_id+'\',\'mono\')">Approuver</button><button class="btn btn-red btn-sm" onclick="openRejectModal(\'mono\',\''+r.id+'\',\''+r.user_id+'\')">Rejeter</button></div>':'–')+'</td></tr>').join('');}
+async function loadAppeals(){const{data}=await SB.from('monetization_appeals').select('*,user:user_id(id,username,avatar_url)').order('created_at',{ascending:false}).limit(50);document.getElementById('appeal-tbody').innerHTML=!data?.length?'<tr><td colspan="6"><div class="empty"><div class="empty-ic">🔓</div>Aucune demande</div></td></tr>':data.map(r=>'<tr><td><div style="display:flex;align-items:center;gap:8px">'+avHtml(r.user?.avatar_url,r.user?.username,32)+'@'+esc(r.user?.username||'?')+'</div></td><td style="color:var(--t2);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.reason)+'</td><td>'+(r.id_document_url?'<a href="'+r.id_document_url+'" target="_blank" class="btn btn-cyan btn-sm">Voir</a>':'–')+'</td><td style="color:var(--t3);font-size:12px">'+new Date(r.created_at).toLocaleDateString('fr-FR')+'</td><td>'+statusBadge(r.status)+'</td><td>'+(r.status==='pending'?'<div style="display:flex;gap:4px"><button class="btn btn-green btn-sm" onclick="approveAppeal(\''+r.id+'\',\''+r.user_id+'\')">Débloquer</button><button class="btn btn-red btn-sm" onclick="openRejectModal(\'appeal\',\''+r.id+'\',\''+r.user_id+'\')">Rejeter</button></div>':'–')+'</td></tr>').join('');}
+async function approveRequest(table,id,uid,type){await SB.from(table).update({status:'approved',reviewed_at:new Date().toISOString(),reviewed_by:adminUser.id}).eq('id',id);if(type==='mono'){await SB.from('users').update({is_monetized:true}).eq('id',uid);await SB.from('notifications').insert({user_id:uid,type:'system',content:'🎉 Ta demande de monétisation a été approuvée ! Tu recevras 70% des cadeaux.'}).catch(()=>{});}toast('Approuvé !','success');loadBadgeCounts();type==='mono'?loadMonoRequests():loadVerif();}
+async function approveAppeal(id,uid){await SB.from('monetization_appeals').update({status:'approved',reviewed_at:new Date().toISOString(),reviewed_by:adminUser.id}).eq('id',id);await SB.from('users').update({monetization_locked:false,birth_attempts:0}).eq('id',uid);await SB.from('notifications').insert({user_id:uid,type:'system',content:'✅ Ton compte a été débloqué. Tu peux refaire ta demande de monétisation.'}).catch(()=>{});toast('Compte débloqué !','success');loadAppeals();loadBadgeCounts();}
+function openRejectModal(type,id,uid){rejectType=type;rejectTarget={id,uid};document.getElementById('rn-title').textContent=type==='verif'?'Motif de refus (vérification)':type==='mono'?'Motif de refus (monétisation)':'Motif de rejet';document.getElementById('rn-note').value='';openModal('m-reject-note');}
+async function confirmReject(){const note=document.getElementById('rn-note').value.trim();if(!note){toast('Écris un motif','error');return;}const tables={mono:'monetization_requests',appeal:'monetization_appeals',wd:'withdrawal_requests',verif:'verification_requests'};const table=tables[rejectType];if(!table)return;await SB.from(table).update({status:'rejected',admin_note:note,reviewed_at:new Date().toISOString(),reviewed_by:adminUser.id}).eq('id',rejectTarget.id);await SB.from('notifications').insert({user_id:rejectTarget.uid,type:'system',content:'❌ Ta demande a été refusée. Motif : '+note}).catch(()=>{});closeModal('m-reject-note');toast('Refus envoyé avec notification','success');loadBadgeCounts();if(rejectType==='mono')loadMonoRequests();else if(rejectType==='appeal')loadAppeals();else if(rejectType==='wd')loadWithdrawals();else if(rejectType==='verif')loadVerif();}
+
+/* ── WITHDRAWALS ── */
+async function loadWithdrawals(){const{data}=await SB.from('withdrawal_requests').select('*,user:user_id(id,username,avatar_url,full_name)').order('created_at',{ascending:false}).limit(50);document.getElementById('wd-tbody').innerHTML=!data?.length?'<tr><td colspan="8"><div class="empty"><div class="empty-ic">🏦</div>Aucun retrait</div></td></tr>':data.map(r=>'<tr><td><div style="display:flex;align-items:center;gap:8px">'+avHtml(r.user?.avatar_url,r.user?.username,32)+'@'+esc(r.user?.username||'?')+'</div></td><td style="color:var(--gold);font-weight:700">'+fmt(r.amount_coins)+' 💰</td><td style="color:var(--green);font-weight:700">'+r.amount_eur+' €</td><td><span class="badge badge-grey">'+esc(r.payment_method)+'</span></td><td style="color:var(--t2);font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis">'+esc(JSON.stringify(r.payment_details||{}))+'</td><td style="color:var(--t3);font-size:12px">'+new Date(r.created_at).toLocaleDateString('fr-FR')+'</td><td>'+statusBadge(r.status)+'</td><td>'+(r.status==='pending'?'<div style="display:flex;gap:4px"><button class="btn btn-green btn-sm" onclick="payWithdrawal(\''+r.id+'\',\''+r.user_id+'\','+r.amount_eur+')">✓ Payé</button><button class="btn btn-red btn-sm" onclick="openRejectModal(\'wd\',\''+r.id+'\',\''+r.user_id+'\')">Rejeter</button></div>':'–')+'</td></tr>').join('');}
+async function payWithdrawal(id,uid,eur){if(!confirm('Confirmer le paiement de '+eur+' € ?'))return;await SB.from('withdrawal_requests').update({status:'paid',processed_at:new Date().toISOString(),processed_by:adminUser.id}).eq('id',id);await SB.from('notifications').insert({user_id:uid,type:'system',content:'💸 Ton retrait de '+eur+' € a été traité avec succès !'}).catch(()=>{});toast('Paiement confirmé','success');loadWithdrawals();loadBadgeCounts();}
+
+/* ── VERIFICATION ── */
+async function loadVerif(){const{data}=await SB.from('verification_requests').select('*,user:user_id(id,username,avatar_url,full_name)').order('created_at',{ascending:false}).limit(50);document.getElementById('verif-tbody').innerHTML=!data?.length?'<tr><td colspan="8"><div class="empty"><div class="empty-ic">✅</div>Aucune demande</div></td></tr>':data.map(r=>'<tr><td><div style="display:flex;align-items:center;gap:8px">'+avHtml(r.user?.avatar_url,r.user?.username,32)+'<div><div style="font-weight:700">@'+esc(r.user?.username||'?')+'</div><div style="font-size:11px;color:var(--t3)">'+esc(r.user?.full_name||'')+'</div></div></div></td><td style="color:var(--t2)">'+esc(r.profession||'–')+'</td><td style="color:var(--t2)">'+esc(r.birth_date||'–')+'</td><td>'+(r.id_document_url?'<a href="'+r.id_document_url+'" target="_blank" class="btn btn-cyan btn-sm">Voir pièce</a>':'–')+'</td><td style="color:var(--t2);font-size:12px">'+esc(r.social_links||'–')+'</td><td style="color:var(--t3);font-size:12px">'+new Date(r.created_at).toLocaleDateString('fr-FR')+'</td><td>'+statusBadge(r.status)+'</td><td>'+(r.status==='pending'?'<div style="display:flex;gap:4px"><button class="btn btn-green btn-sm" onclick="approveVerif(\''+r.id+'\',\''+r.user_id+'\')">Approuver</button><button class="btn btn-red btn-sm" onclick="openRejectModal(\'verif\',\''+r.id+'\',\''+r.user_id+'\')">Rejeter</button></div>':'–')+'</td></tr>').join('');}
+async function approveVerif(id,uid){await SB.from('verification_requests').update({status:'approved',reviewed_at:new Date().toISOString(),reviewed_by:adminUser.id}).eq('id',id);await SB.from('users').update({is_verified:true}).eq('id',uid);await SB.from('notifications').insert({user_id:uid,type:'system',content:'✅ Félicitations ! Ton compte a été vérifié. La coche bleue ✓ est maintenant active sur ton profil.'}).catch(()=>{});toast('Vérification approuvée','success');loadVerif();loadBadgeCounts();}
+
+/* ── TROPHIES ── */
+async function loadTrophies(){const{data}=await SB.from('trophy_handovers').select('*,user:user_id(id,username,avatar_url,full_name,followers_count,total_views_received)').order('created_at',{ascending:false});const pending=(data||[]).filter(t=>t.status==='pending').length;const contacted=(data||[]).filter(t=>t.status==='contacted').length;const delivered=(data||[]).filter(t=>t.status==='delivered').length;document.getElementById('troph-pending').textContent=pending;document.getElementById('troph-contacted').textContent=contacted;document.getElementById('troph-delivered').textContent=delivered;document.getElementById('troph-tbody').innerHTML=!data?.length?'<tr><td colspan="7"><div class="empty"><div class="empty-ic">🏆</div>Aucun trophée</div></td></tr>':data.map(t=>'<tr><td><div style="display:flex;align-items:center;gap:8px">'+avHtml(t.user?.avatar_url,t.user?.username,36)+'<div><div style="font-weight:700">@'+esc(t.user?.username||'?')+'</div><div style="font-size:11px;color:var(--t3)">'+esc(t.user?.full_name||'')+'</div></div></div></td><td>'+fmt(t.user?.followers_count)+' abonnés</td><td>'+fmt(t.user?.total_views_received)+' vues</td><td style="color:var(--t3);font-size:12px">'+new Date(t.created_at).toLocaleDateString('fr-FR')+'</td><td>'+statusBadge(t.status)+'</td><td style="color:var(--t2);font-size:12px">'+esc(t.notes||'–')+'</td><td><div style="display:flex;gap:4px;flex-wrap:wrap">'+(t.status==='pending'?'<button class="btn btn-cyan btn-sm" onclick="contactTrophy(\''+t.id+'\',\''+t.user_id+'\')">📞 Contacter</button>':'')+(t.status==='contacted'?'<button class="btn btn-green btn-sm" onclick="deliverTrophy(\''+t.id+'\',\''+t.user_id+'\')">✓ Remis</button>':'')+'</div></td></tr>').join('');}
+async function contactTrophy(id,uid){await SB.from('trophy_handovers').update({status:'contacted',updated_at:new Date().toISOString()}).eq('id',id);await SB.from('user_badges').update({admin_notified:true}).eq('user_id',uid).eq('badge_type','viral');await SB.from('notifications').insert({user_id:uid,type:'system',content:'🏆 Félicitations ! Tu as gagné le trophée AfroTV Viral ! Notre équipe va te contacter très prochainement pour te remettre ton prix.'}).catch(()=>{});toast('Notification envoyée','success');loadTrophies();loadBadgeCounts();}
+async function deliverTrophy(id,uid){const notes=prompt('Notes de remise (optionnel):');await SB.from('trophy_handovers').update({status:'delivered',notes:notes||null,updated_at:new Date().toISOString()}).eq('id',id);await SB.from('notifications').insert({user_id:uid,type:'system',content:'🏆 Ton trophée AfroTV Viral a été officiellement remis ! Merci de faire partie de la communauté AfroTV.'}).catch(()=>{});toast('Trophée marqué remis','success');loadTrophies();}
+
+/* ── NOTIFICATIONS ── */
+function notifTab(t,el){document.querySelectorAll('#sec-notifs .tab').forEach(x=>x.classList.remove('on'));el?.classList.add('on');document.querySelectorAll('#sec-notifs .tab-content').forEach(x=>x.classList.remove('on'));document.getElementById('notif-'+t)?.classList.add('on');}
+let nSrchTimer=null;function srchNotifUser(q){clearTimeout(nSrchTimer);if(!q.trim()){document.getElementById('notif-user-res').innerHTML='';return;}nSrchTimer=setTimeout(async()=>{const{data}=await SB.from('users').select('id,username,avatar_url,email').or('username.ilike.%'+q+'%,email.ilike.%'+q+'%').limit(5);document.getElementById('notif-user-res').innerHTML=data?.length?data.map(u=>'<div onclick="selNotifUser(\''+u.id+'\',\''+esc(u.username)+'\',\''+esc(u.avatar_url||'')+'\',\''+esc(u.email||'')+'\',this)" style="display:flex;align-items:center;gap:8px;padding:8px;cursor:pointer;border-radius:6px;margin-top:4px;border:1px solid var(--border)"><img src="'+(u.avatar_url||'https://ui-avatars.com/api/?name='+encodeURIComponent(u.username||'U')+'&background=2a2a2a&color=fff')+'" class="av" style="width:28px;height:28px"><div><div style="font-size:13px;font-weight:700">@'+esc(u.username||'?')+'</div><div style="font-size:11px;color:var(--t3)">'+esc(u.email||'')+'</div></div></div>').join(''):'';}  ,300);}
+function selNotifUser(id,uname,av,email,el){notifTargetId=id;document.getElementById('notif-user-res').innerHTML='';document.getElementById('notif-user').value='@'+uname;document.getElementById('notif-target-info').style.display='block';document.getElementById('notif-target-info').innerHTML='<img src="'+(av||'https://ui-avatars.com/api/?name='+encodeURIComponent(uname)+'&background=2a2a2a&color=fff')+'" class="av" style="width:28px;height:28px;vertical-align:middle;margin-right:6px"><b>@'+esc(uname)+'</b> · '+esc(email);}
+async function sendIndivNotif(){if(!notifTargetId){toast('Sélectionne un utilisateur','error');return;}const msg=document.getElementById('notif-msg').value.trim();if(!msg){toast('Écris un message','error');return;}const type=document.getElementById('notif-type').value;const{error}=await SB.from('notifications').insert({user_id:notifTargetId,type,content:msg});if(error){toast('Erreur: '+error.message,'error');return;}toast('Notification envoyée !','success');document.getElementById('notif-msg').value='';}
+async function sendBroadcast(){const msg=document.getElementById('bc-msg').value.trim();if(!msg){toast('Écris un message','error');return;}if(!confirm('Envoyer ce message à TOUS les utilisateurs ?'))return;const{data:users}=await SB.from('users').select('id').is('deleted_at',null).limit(1000);if(!users?.length){toast('Aucun utilisateur','error');return;}const inserts=users.map(u=>({user_id:u.id,type:'broadcast',content:msg}));const{error}=await SB.from('notifications').insert(inserts);if(error){toast('Erreur: '+error.message,'error');return;}toast('✅ Broadcast envoyé à '+users.length+' utilisateurs','success');document.getElementById('bc-msg').value='';}
+
+/* ── ANALYTICS ── */
+async function loadAnalytics(){const[{count:users},{count:vids},{count:likes},{count:comments},{data:gifts}]=await Promise.all([SB.from('users').select('id',{count:'exact',head:true}),SB.from('videos').select('id',{count:'exact',head:true}).is('deleted_at',null),SB.from('likes').select('id',{count:'exact',head:true}),SB.from('comments').select('id',{count:'exact',head:true}).is('deleted_at',null),SB.from('live_chat_messages').select('gift_value').eq('is_gift',true)]);const totalGifts=(gifts||[]).reduce((a,g)=>a+(g.gift_value||0),0);document.getElementById('analytics-kpi').innerHTML=`<div class="kpi"><div class="kpi-val" style="color:var(--cyan)">${fmt(users||0)}</div><div class="kpi-lbl">👥 Utilisateurs</div></div><div class="kpi"><div class="kpi-val" style="color:var(--red)">${fmt(vids||0)}</div><div class="kpi-lbl">🎬 Vidéos</div></div><div class="kpi"><div class="kpi-val" style="color:var(--red)">❤️ ${fmt(likes||0)}</div><div class="kpi-lbl">Likes total</div></div><div class="kpi"><div class="kpi-val" style="color:var(--cyan)">💬 ${fmt(comments||0)}</div><div class="kpi-lbl">Commentaires</div></div><div class="kpi"><div class="kpi-val" style="color:var(--gold)">🎁 ${fmt(totalGifts)}</div><div class="kpi-lbl">Pièces cadeaux</div><div class="kpi-sub">${(totalGifts*0.0125).toFixed(0)} € générés</div></div>`;const{data:topVids}=await SB.from('videos').select('id,description,views_count,user:user_id(username)').is('deleted_at',null).order('views_count',{ascending:false}).limit(5);document.getElementById('top-vids').innerHTML=(topVids||[]).map((v,i)=>'<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)"><span style="font-weight:900;color:var(--t4);width:18px">'+(i+1)+'</span><div style="flex:1;overflow:hidden"><div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(v.description?.slice(0,50)||'–')+'</div><div style="font-size:11px;color:var(--t3)">@'+esc(v.user?.username||'?')+'</div></div><div style="font-weight:700;font-size:13px">'+fmt(v.views_count)+' vues</div></div>').join('');const{data:topC}=await SB.from('users').select('username,avatar_url,followers_count,total_views_received').is('deleted_at',null).order('followers_count',{ascending:false}).limit(5);document.getElementById('top-creators').innerHTML=(topC||[]).map((u,i)=>'<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)"><span style="font-weight:900;color:var(--t4);width:18px">'+(i+1)+'</span>'+avHtml(u.avatar_url,u.username,28)+'<div style="flex:1"><div style="font-size:13px;font-weight:700">@'+esc(u.username||'?')+'</div></div><div style="font-weight:700;font-size:13px">'+fmt(u.followers_count)+' abonnés</div></div>').join('');}
+
+document.getElementById('adm-pw').addEventListener('keydown',e=>{if(e.key==='Enter')adminLogin();});
+waitCDN(0);
+</script>
+</body>
+</html>
