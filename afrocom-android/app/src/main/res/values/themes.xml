@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Afrocom" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowBackground">#FE3C72</item>
+        <item name="android:statusBarColor">#FE3C72</item>
+        <item name="android:navigationBarColor">#FE3C72</item>
+        <item name="colorPrimary">#FE3C72</item>
+        <item name="colorPrimaryDark">#C42D59</item>
+        <item name="colorAccent">#FE3C72</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
+</resources>
