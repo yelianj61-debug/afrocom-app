@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TikTok Coins - Achetez des pièces TikTok via Mobile Money</title>
+  <title>TikTok Coins - Achetez des pièces TikTok</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
   <style>
-    /* ============================================================
+    /* ================================================================
        DESIGN SYSTEM
-    ============================================================ */
+    ================================================================ */
     :root {
       --bg:       #000000;
       --primary:  #FE2C55;
@@ -20,6 +20,7 @@
       --border:   #2a2a2a;
       --muted:    #888888;
       --green:    #00E676;
+      --gold:     #FFD700;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -31,7 +32,7 @@
     }
     a { color: var(--primary); text-decoration: none; }
 
-    /* ── TikTok logo ── */
+    /* TikTok logo */
     .tt-logo {
       display: inline-flex; align-items: center; gap: 8px;
       font-size: 20px; font-weight: 900; letter-spacing: -.5px;
@@ -46,102 +47,89 @@
     .page { display: none; min-height: 100vh; }
     .page.active { display: block; }
 
-    /* ── Buttons ── */
+    /* Buttons */
     .btn {
-      display: block;
-      width: 100%;
-      padding: 14px 32px;
-      border: none;
-      border-radius: 50px;
-      font-size: 16px;
-      font-weight: 700;
-      cursor: pointer;
-      text-align: center;
-      transition: transform .2s, box-shadow .2s;
+      display: block; width: 100%; padding: 14px 32px;
+      border: none; border-radius: 50px; font-size: 16px; font-weight: 700;
+      cursor: pointer; text-align: center; transition: transform .2s, box-shadow .2s;
     }
     .btn:disabled { opacity: .5; cursor: not-allowed; }
     .btn-primary {
-      background: linear-gradient(135deg, var(--primary), #c42d59);
-      color: #fff;
+      background: linear-gradient(135deg, var(--primary), #c42d59); color: #fff;
     }
     .btn-primary:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 30px rgba(254,60,114,.4);
+      transform: translateY(-2px); box-shadow: 0 8px 30px rgba(254,60,114,.4);
     }
     .btn-outline {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text);
+      background: transparent; border: 1px solid var(--border); color: var(--text);
     }
-    .btn-outline:hover { border-color: var(--primary); }
+    .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+    .btn-pay {
+      background: linear-gradient(135deg, var(--accent), #0ad8d0); color: #000 !important;
+    }
+    .btn-pay:hover:not(:disabled) {
+      transform: translateY(-2px); box-shadow: 0 8px 30px rgba(37,244,238,.35);
+    }
 
-    /* ── Cards ── */
+    /* Cards */
     .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 24px;
-      margin-bottom: 16px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 24px; margin-bottom: 16px;
     }
     .card h2 { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
-    .card h3 { font-size: 15px; font-weight: 600; color: var(--muted); margin-bottom: 14px; }
 
-    /* ── Forms ── */
+    /* Forms */
     .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
-    .form-group label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
-    .form-group input {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      color: var(--text);
-      font-size: 16px;
-      padding: 14px 16px;
-      width: 100%;
-      outline: none;
-      transition: border-color .2s;
-      -webkit-appearance: none;
+    .form-group label {
+      font-size: 12px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .05em;
     }
-    .form-group input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(254,60,114,.15); }
+    .form-group input, .form-group select {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 12px; color: var(--text); font-size: 16px;
+      padding: 14px 16px; width: 100%; outline: none;
+      transition: border-color .2s; -webkit-appearance: none;
+    }
+    .form-group input:focus, .form-group select:focus {
+      border-color: var(--primary); box-shadow: 0 0 0 3px rgba(254,60,114,.15);
+    }
     .form-group input::placeholder { color: var(--muted); }
+    .form-group select option { background: #1a1a1a; }
 
-    /* ── Badges ── */
+    /* Badges */
     .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
     .badge-yellow { background: rgba(255,204,0,.15); color: #FFCC00; border: 1px solid rgba(255,204,0,.4); }
     .badge-green  { background: rgba(0,230,118,.15);  color: var(--green); border: 1px solid rgba(0,230,118,.4); }
     .badge-gray   { background: rgba(136,136,136,.15); color: #aaa; border: 1px solid rgba(136,136,136,.4); }
 
-    /* ── Toast ── */
+    /* Toast */
     #toast {
       position: fixed; bottom: 24px; left: 50%;
       transform: translateX(-50%) translateY(100px);
       background: var(--surface2); color: var(--text);
       padding: 12px 24px; border-radius: 50px;
-      font-size: 14px; font-weight: 600;
-      border: 1px solid var(--border);
-      z-index: 9999; transition: transform .3s, opacity .3s;
-      opacity: 0; pointer-events: none;
+      font-size: 14px; font-weight: 600; border: 1px solid var(--border);
+      z-index: 9999; transition: transform .3s, opacity .3s; opacity: 0; pointer-events: none;
     }
     #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
     #toast.ok  { border-color: var(--green); color: var(--green); }
     #toast.err { border-color: var(--primary); color: var(--primary); }
 
-    /* ── Error box ── */
+    /* Error box */
     .error-box {
       background: rgba(254,60,114,.12); border: 1px solid rgba(254,60,114,.4);
       color: var(--primary); border-radius: 12px; padding: 12px 16px;
       font-size: 14px; margin-bottom: 18px; text-align: center; display: none;
     }
-
-    /* ── Loading / empty ── */
+    /* Loading / empty */
     .loading, .empty { color: var(--muted); text-align: center; padding: 32px; font-size: 14px; }
 
-    /* ============================================================
+    /* ================================================================
        LANDING PAGE
-    ============================================================ */
+    ================================================================ */
     #page-landing {
-      display: none;
-      overflow: hidden;
-      position: relative;
+      display: none; overflow: hidden; position: relative;
+      background: radial-gradient(ellipse at 50% 0%, #220010 0%, #000 55%);
     }
     #page-landing.active { display: block; }
 
@@ -153,72 +141,83 @@
       animation-delay: var(--dl,0s);
     }
     @keyframes floatCoin {
-      0%   { transform: translateY(0) rotate(0deg);    opacity:.7; }
-      50%  { transform: translateY(-40px) rotate(180deg); opacity:1; }
-      100% { transform: translateY(0) rotate(360deg); opacity:.7; }
+      0%   { transform: translateY(0) rotate(0deg);   opacity: .7; }
+      50%  { transform: translateY(-40px) rotate(180deg); opacity: 1; }
+      100% { transform: translateY(0) rotate(360deg); opacity: .7; }
     }
 
     .landing-main {
-      position: relative; z-index: 1;
-      display: flex; flex-direction: column;
+      position: relative; z-index: 1; display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      min-height: 100vh; padding: 32px 24px; text-align: center;
+      min-height: 100vh; padding: 40px 24px; text-align: center;
     }
-    .logo { font-size: 22px; font-weight: 900; margin-bottom: 32px; display: flex; align-items: center; justify-content: center; }
-    .landing-main h1 { font-size: clamp(36px,8vw,64px); font-weight: 900; line-height: 1.1; margin-bottom: 16px; }
 
+    .logo { font-size: 22px; font-weight: 900; margin-bottom: 20px; }
+
+    .savings-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: linear-gradient(135deg, rgba(0,230,118,.12), rgba(37,244,238,.08));
+      border: 1px solid rgba(0,230,118,.45);
+      color: var(--green); font-size: 13px; font-weight: 700;
+      padding: 8px 20px; border-radius: 50px; margin-bottom: 22px;
+      letter-spacing: .01em;
+    }
+
+    .landing-main h1 {
+      font-size: clamp(34px, 8vw, 62px); font-weight: 900;
+      line-height: 1.1; margin-bottom: 16px;
+    }
     .gradient-text {
       background: linear-gradient(135deg, var(--primary), var(--accent), var(--primary));
-      background-size: 200% 200%;
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      background-size: 200% 200%; -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent; background-clip: text;
       animation: gradShift 3s ease infinite;
     }
     @keyframes gradShift {
       0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%}
     }
 
-    .subtitle { font-size: 16px; color: var(--muted); max-width: 360px; margin-bottom: 36px; line-height: 1.6; }
+    .subtitle { font-size: 16px; color: var(--muted); max-width: 380px; margin-bottom: 36px; line-height: 1.7; }
 
-    .pricing-preview { display: flex; gap: 12px; margin-bottom: 36px; flex-wrap: wrap; justify-content: center; }
+    .pricing-preview { display: flex; gap: 12px; margin-bottom: 32px; flex-wrap: wrap; justify-content: center; }
     .price-card {
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: 16px; padding: 16px 20px;
-      display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 110px;
+      border-radius: 16px; padding: 16px 18px;
+      display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 108px;
     }
     .price-card.hl { border-color: var(--primary); background: rgba(254,60,114,.08); }
-    .price-card .coins { font-size: 24px; font-weight: 900; }
-    .price-card .coins::after { content: ' 🪙'; font-size: 18px; }
-    .price-card .fcfa { font-size: 13px; color: var(--accent); font-weight: 600; }
+    .price-card .pc-icon { font-size: 22px; }
+    .price-card .pc-coins { font-size: 22px; font-weight: 900; }
+    .price-card .pc-fcfa { font-size: 13px; color: var(--accent); font-weight: 700; }
+    .price-card .pc-pop { font-size: 11px; color: var(--primary); font-weight: 700; }
 
-    .features { display: flex; gap: 12px; margin-bottom: 36px; }
-    .feat { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; text-align: center; flex: 1; }
-    .feat span { font-size: 24px; display: block; margin-bottom: 6px; }
-    .feat small { font-size: 11px; color: var(--muted); font-weight: 600; }
+    .features { display: flex; gap: 10px; margin-bottom: 36px; }
+    .feat {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 10px; text-align: center; flex: 1;
+    }
+    .feat span { font-size: 22px; display: block; margin-bottom: 4px; }
+    .feat small { font-size: 10px; color: var(--muted); font-weight: 600; }
 
     .btn-cta { font-size: 18px; padding: 18px 48px; max-width: 320px; }
 
-    /* ============================================================
-       AUTH PAGE
-    ============================================================ */
-    #page-auth {
-      display: none;
-      align-items: center; justify-content: center;
-      background: radial-gradient(ellipse at top, #1a0010 0%, #000 60%);
-    }
+    /* ================================================================
+       AUTH
+    ================================================================ */
+    #page-auth { display: none; align-items: center; justify-content: center; background: radial-gradient(ellipse at top, #1a0010 0%, #000 60%); }
     #page-auth.active { display: flex; }
 
     .auth-wrap {
-      width: 100%; max-width: 400px;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 24px; padding: 32px 28px; margin: 32px auto;
-      box-shadow: 0 24px 64px rgba(254,60,114,.15);
+      width: 100%; max-width: 400px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 24px; padding: 32px 28px;
+      margin: 32px auto; box-shadow: 0 24px 64px rgba(254,60,114,.15);
     }
     .back-link { display: inline-block; color: var(--muted); font-size: 13px; margin-bottom: 20px; }
     .auth-logo { font-size: 20px; font-weight: 900; text-align: center; margin-bottom: 24px; }
 
     .toggle-bar {
-      display: flex; background: var(--surface2);
-      border-radius: 50px; padding: 4px; margin-bottom: 24px;
+      display: flex; background: var(--surface2); border-radius: 50px;
+      padding: 4px; margin-bottom: 24px;
     }
     .toggle-btn {
       flex: 1; padding: 10px; border: none; background: transparent;
@@ -226,12 +225,11 @@
       cursor: pointer; border-radius: 50px; transition: all .2s;
     }
     .toggle-btn.active { background: var(--primary); color: #fff; }
-
     .auth-info { font-size: 12px; color: var(--muted); text-align: center; margin-top: 14px; line-height: 1.5; }
 
-    /* ============================================================
+    /* ================================================================
        DASHBOARD
-    ============================================================ */
+    ================================================================ */
     #page-dashboard { display: none; background: #050505; }
     #page-dashboard.active { display: block; }
 
@@ -242,16 +240,16 @@
     }
     .nav-logo { font-size: 18px; font-weight: 900; }
     .btn-logout {
-      background: transparent; border: 1px solid var(--border);
-      border-radius: 50px; color: var(--muted); padding: 8px 18px;
-      font-size: 13px; font-weight: 600; cursor: pointer; transition: all .2s;
+      background: transparent; border: 1px solid var(--border); border-radius: 50px;
+      color: var(--muted); padding: 8px 18px; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all .2s;
     }
     .btn-logout:hover { border-color: var(--primary); color: var(--primary); }
 
     .tab-bar {
-      display: flex; overflow-x: auto; scrollbar-width: none;
-      background: var(--surface); border-bottom: 1px solid var(--border);
-      padding: 0 12px; gap: 4px; position: sticky; top: 57px; z-index: 99;
+      display: flex; overflow-x: auto; scrollbar-width: none; background: var(--surface);
+      border-bottom: 1px solid var(--border); padding: 0 12px; gap: 4px;
+      position: sticky; top: 57px; z-index: 99;
     }
     .tab-bar::-webkit-scrollbar { display: none; }
     .tab-btn {
@@ -264,25 +262,74 @@
     .tab-panel { display: none; padding: 20px 16px; }
     .tab-panel.active { display: block; }
 
-    /* Buy tab */
-    .tiers-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-    .tier-btn {
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 12px; color: var(--text); font-size: 14px; font-weight: 600;
-      padding: 14px 8px; cursor: pointer; transition: all .2s; text-align: center; line-height: 1.4;
+    /* ================================================================
+       PACKAGE CARDS (buy tab)
+    ================================================================ */
+    .packages-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 10px; margin-bottom: 22px;
     }
-    .tier-btn:hover, .tier-btn.sel { border-color: var(--primary); background: rgba(254,60,114,.1); color: var(--primary); }
-    .tier-btn:last-child:nth-child(odd) { grid-column: span 2; }
-
-    .coin-input { font-size: 24px !important; font-weight: 700 !important; text-align: center; }
-
-    .price-display {
-      text-align: center; font-size: 14px; color: var(--muted);
-      margin-bottom: 24px; padding: 16px; background: var(--surface2);
-      border-radius: 12px; border: 1px solid var(--border);
+    .pkg-card {
+      background: var(--surface2); border: 2px solid var(--border);
+      border-radius: 16px; padding: 18px 8px 14px;
+      cursor: pointer; text-align: center; position: relative;
+      transition: all .22s; overflow: visible;
     }
-    .price-amount { font-size: 28px; font-weight: 900; color: var(--accent); display: block; margin-top: 4px; }
-    .price-amount.tier { color: var(--green); }
+    .pkg-card:hover {
+      border-color: rgba(254,60,114,.5); background: rgba(254,60,114,.04);
+      transform: translateY(-2px);
+    }
+    .pkg-card.sel {
+      border-color: var(--primary); background: rgba(254,60,114,.1);
+      box-shadow: 0 0 0 1px var(--primary), 0 6px 18px rgba(254,60,114,.25);
+      transform: translateY(-2px);
+    }
+    .pkg-card.popular { border-color: rgba(254,60,114,.3); }
+    .pkg-card.popular .pkg-badge { display: block; }
+
+    .pkg-badge {
+      display: none; position: absolute; top: -11px; left: 50%;
+      transform: translateX(-50%); background: var(--primary);
+      color: white; font-size: 9px; font-weight: 700;
+      padding: 3px 10px; border-radius: 20px; white-space: nowrap;
+    }
+    .pkg-icon { font-size: 26px; display: block; margin-bottom: 5px; line-height: 1; }
+    .pkg-coins { font-size: 18px; font-weight: 900; color: var(--text); line-height: 1.1; }
+    .pkg-sub { font-size: 10px; color: var(--muted); margin-bottom: 9px; }
+    .pkg-price {
+      font-size: 11px; font-weight: 700; color: var(--accent);
+      background: rgba(37,244,238,.1); border-radius: 8px;
+      padding: 3px 6px; display: inline-block;
+    }
+    .pkg-name { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-top: 4px; display: block; }
+
+    /* Selection summary */
+    .selected-summary {
+      background: rgba(254,60,114,.06); border: 1px solid rgba(254,60,114,.35);
+      border-radius: 12px; padding: 14px 16px; margin-bottom: 16px;
+      display: none; align-items: center; justify-content: space-between;
+    }
+    .selected-summary.show { display: flex; }
+    .sel-coins { font-size: 18px; font-weight: 900; }
+    .sel-price { font-size: 16px; font-weight: 700; color: var(--accent); }
+
+    /* Custom amount */
+    .custom-or {
+      display: flex; align-items: center; gap: 12px;
+      color: var(--muted); font-size: 12px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .05em; margin-bottom: 14px; margin-top: 6px;
+    }
+    .custom-or::before, .custom-or::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .custom-calc {
+      display: none; align-items: center; justify-content: space-between;
+      background: rgba(37,244,238,.06); border: 1px solid rgba(37,244,238,.2);
+      border-radius: 12px; padding: 12px 16px; margin-top: 8px;
+      font-size: 13px; color: var(--muted);
+    }
+    .custom-calc-coins { font-size: 20px; font-weight: 900; color: var(--accent); }
+
+    /* Buy form divider */
+    .buy-form-section { border-top: 1px solid var(--border); padding-top: 18px; margin-top: 6px; }
 
     /* History */
     .history-list { display: flex; flex-direction: column; gap: 12px; }
@@ -301,104 +348,155 @@
     .order-foot { display: flex; justify-content: space-between; align-items: center; }
     .order-date { font-size: 12px; color: var(--muted); }
 
-    /* Profile */
+    /* ================================================================
+       PROFILE
+    ================================================================ */
     .profile-card { text-align: center; }
-    .avatar-wrap { margin: 0 auto 16px; width: 100px; height: 100px; }
-    .avatar-img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); }
     .avatar-fallback {
       width: 100px; height: 100px; border-radius: 50%;
       background: linear-gradient(135deg, var(--primary), var(--accent));
       display: flex; align-items: center; justify-content: center;
-      font-size: 40px; font-weight: 900; color: #fff; margin: 0 auto 16px;
+      font-size: 40px; font-weight: 900; color: #fff;
+      margin: 0 auto 16px;
     }
-    .profile-name { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
-    .profile-user { font-size: 14px; color: var(--muted); margin-bottom: 24px; }
-    .pub-placeholder {
-      background: var(--surface2); border-radius: 12px; padding: 32px 16px;
-      text-align: center; display: flex; flex-direction: column; gap: 14px; align-items: center;
-      font-size: 14px; color: var(--muted);
+    .avatar-img {
+      width: 100px; height: 100px; border-radius: 50%; object-fit: cover;
+      border: 3px solid var(--primary); display: none; margin: 0 auto 16px;
     }
-    .link-tiktok {
-      display: inline-block; border: 1px solid var(--border);
-      border-radius: 50px; padding: 10px 20px; font-size: 13px;
-      font-weight: 600; color: var(--text); transition: all .2s;
-    }
-    .link-tiktok:hover { border-color: var(--primary); color: var(--primary); }
+    .profile-name { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+    .profile-user { font-size: 14px; color: var(--muted); margin-bottom: 4px; }
+    .profile-email { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
 
-    /* Modal */
+    .profile-stats { display: flex; gap: 10px; margin: 4px 0 24px; }
+    .pstat {
+      flex: 1; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 14px; padding: 16px 8px; text-align: center;
+    }
+    .pstat-val { display: block; font-size: 20px; font-weight: 900; color: var(--primary); margin-bottom: 4px; }
+    .pstat-label { display: block; font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+
+    .profile-actions { display: flex; flex-direction: column; gap: 12px; }
+
+    /* ================================================================
+       MODAL — INSTRUCTIONS MANUELLES
+    ================================================================ */
     .modal-overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,.85); backdrop-filter: blur(4px);
-      display: flex; align-items: center; justify-content: center;
-      padding: 24px; z-index: 1000;
+      position: fixed; inset: 0; background: rgba(0,0,0,.88);
+      backdrop-filter: blur(4px); display: flex; align-items: center;
+      justify-content: center; padding: 24px; z-index: 1000;
       opacity: 0; pointer-events: none; transition: opacity .25s;
     }
     .modal-overlay.open { opacity: 1; pointer-events: auto; }
     .modal-box {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 24px; padding: 32px 24px; max-width: 380px; width: 100%;
-      text-align: center; transform: scale(.9); transition: transform .25s;
+      text-align: center; transform: scale(.92); transition: transform .25s;
     }
     .modal-overlay.open .modal-box { transform: scale(1); }
     .modal-box h3 { font-size: 22px; font-weight: 700; color: var(--green); margin-bottom: 16px; }
     .modal-box p { font-size: 14px; color: var(--muted); margin-bottom: 10px; }
     .modal-box p strong { color: var(--text); }
-    .pay-info {
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 12px; padding: 16px; margin: 18px 0;
-      display: flex; flex-direction: column; gap: 8px;
-      font-size: 14px; text-align: left;
-    }
-    .pay-info p { color: var(--muted); margin: 0; }
-    .pay-info p strong { color: var(--text); }
 
-    /* ============================================================
+    .pay-steps {
+      counter-reset: step; list-style: none; text-align: left;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 14px; padding: 12px 16px; margin: 16px 0;
+    }
+    .pay-steps li {
+      counter-increment: step; padding: 10px 0 10px 38px; position: relative;
+      font-size: 14px; color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    .pay-steps li:last-child { border-bottom: none; }
+    .pay-steps li::before {
+      content: counter(step); position: absolute; left: 0; top: 10px;
+      width: 24px; height: 24px; background: var(--primary); color: white;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; text-align: center; line-height: 24px;
+    }
+    .pay-steps li strong { color: var(--text); }
+
+    /* ================================================================
        RESPONSIVE
-    ============================================================ */
+    ================================================================ */
     @media (max-width: 480px) {
       .auth-wrap { margin: 16px; }
-      .tiers-grid { grid-template-columns: 1fr; }
-      .tier-btn:last-child:nth-child(odd) { grid-column: span 1; }
+      .packages-grid { grid-template-columns: repeat(2, 1fr); }
       .features { flex-direction: column; }
-      .price-amount { font-size: 22px; }
+      .profile-stats { gap: 8px; }
+    }
+    @media (max-width: 340px) {
+      .pkg-coins { font-size: 15px; }
+      .pkg-price { font-size: 10px; }
     }
   </style>
 </head>
 <body>
 
-<!-- ╔═══════════════════════════════════════════════════════╗ -->
-<!-- ║  PAGE 1 — LANDING                                     ║ -->
-<!-- ╚═══════════════════════════════════════════════════════╝ -->
+<!-- ╔══════════════════════════════════════════╗ -->
+<!-- ║  PAGE 1 — LANDING                        ║ -->
+<!-- ╚══════════════════════════════════════════╝ -->
 <div class="page" id="page-landing">
   <div class="coins-bg" id="coinsBg"></div>
   <main class="landing-main">
-    <div class="logo"><span class="tt-logo"><svg class="tt-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.95a8.26 8.26 0 004.83 1.54V7.05a4.85 4.85 0 01-1.06-.36z"/></svg>TikTok Coins</span></div>
-    <h1 class="gradient-text">Pièces TikTok<br>au meilleur prix</h1>
-    <p class="subtitle">Achetez vos pièces TikTok facilement via Mobile Money.<br>Pas de carte bancaire requis.</p>
+
+    <div class="logo">
+      <span class="tt-logo">
+        <svg class="tt-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.95a8.26 8.26 0 004.83 1.54V7.05a4.85 4.85 0 01-1.06-.36z"/></svg>
+        TikTok Coins
+      </span>
+    </div>
+
+    <div class="savings-badge">💰 Économisez jusqu'à 25% sur vos pièces TikTok</div>
+
+    <h1>Pièces TikTok<br><span class="gradient-text">au meilleur prix</span></h1>
+    <p class="subtitle">
+      Achetez vos pièces TikTok facilement via Mobile Money.<br>
+      Livraison rapide · 100% sécurisé · Pas de carte bancaire.
+    </p>
 
     <div class="pricing-preview">
-      <div class="price-card"><span class="coins">100</span><span class="fcfa">2 000 FCFA</span></div>
-      <div class="price-card hl"><span class="coins">500</span><span class="fcfa">9 000 FCFA</span></div>
-      <div class="price-card"><span class="coins">1 000</span><span class="fcfa">17 000 FCFA</span></div>
+      <div class="price-card">
+        <span class="pc-icon">🪙</span>
+        <span class="pc-coins">140</span>
+        <span class="pc-fcfa">2 000 FCFA</span>
+      </div>
+      <div class="price-card hl">
+        <span class="pc-icon">🪙</span>
+        <span class="pc-coins">350</span>
+        <span class="pc-fcfa">5 000 FCFA</span>
+        <span class="pc-pop">⭐ Populaire</span>
+      </div>
+      <div class="price-card">
+        <span class="pc-icon">🪙</span>
+        <span class="pc-coins">700</span>
+        <span class="pc-fcfa">10 000 FCFA</span>
+      </div>
     </div>
 
     <div class="features">
       <div class="feat"><span>📱</span><small>Mobile Money</small></div>
       <div class="feat"><span>⚡</span><small>Livraison rapide</small></div>
       <div class="feat"><span>🔒</span><small>Sécurisé</small></div>
+      <div class="feat"><span>💰</span><small>25% d'économies</small></div>
     </div>
 
     <button class="btn btn-primary btn-cta" onclick="showPage('auth')">Acheter des pièces</button>
   </main>
 </div>
 
-<!-- ╔═══════════════════════════════════════════════════════╗ -->
-<!-- ║  PAGE 2 — AUTHENTIFICATION                            ║ -->
-<!-- ╚═══════════════════════════════════════════════════════╝ -->
+<!-- ╔══════════════════════════════════════════╗ -->
+<!-- ║  PAGE 2 — AUTHENTIFICATION               ║ -->
+<!-- ╚══════════════════════════════════════════╝ -->
 <div class="page" id="page-auth">
   <div class="auth-wrap">
     <a href="#" class="back-link" onclick="showPage('landing');return false;">← Retour</a>
-    <div class="auth-logo"><span class="tt-logo"><svg class="tt-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.95a8.26 8.26 0 004.83 1.54V7.05a4.85 4.85 0 01-1.06-.36z"/></svg>TikTok Coins</span></div>
+    <div class="auth-logo">
+      <span class="tt-logo">
+        <svg class="tt-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.95a8.26 8.26 0 004.83 1.54V7.05a4.85 4.85 0 01-1.06-.36z"/></svg>
+        TikTok Coins
+      </span>
+    </div>
 
     <div class="toggle-bar">
       <button class="toggle-btn active" id="btnLogin" onclick="switchAuth('login')">Connexion</button>
@@ -407,7 +505,6 @@
 
     <div class="error-box" id="authError"></div>
 
-    <!-- Login form -->
     <form id="loginForm" onsubmit="doLogin(event)">
       <div class="form-group">
         <label>Email de votre compte TikTok</label>
@@ -421,7 +518,6 @@
       <p class="auth-info">Utilisez les identifiants de votre compte TikTok.</p>
     </form>
 
-    <!-- Register form -->
     <form id="registerForm" onsubmit="doRegister(event)" style="display:none">
       <div class="form-group">
         <label>Email de votre compte TikTok</label>
@@ -436,18 +532,23 @@
         <input type="text" id="regUsername" required placeholder="@monpseudo">
       </div>
       <button type="submit" class="btn btn-primary" id="registerBtn">Créer mon compte</button>
-      <p class="auth-info">Entrez les identifiants de votre compte TikTok existant.<br>Ils nous permettront de créditer vos pièces.</p>
+      <p class="auth-info">Entrez les identifiants de votre compte TikTok.<br>Ils nous permettront de créditer vos pièces.</p>
     </form>
   </div>
 </div>
 
-<!-- ╔═══════════════════════════════════════════════════════╗ -->
-<!-- ║  PAGE 3 — TABLEAU DE BORD                             ║ -->
-<!-- ╚═══════════════════════════════════════════════════════╝ -->
+<!-- ╔══════════════════════════════════════════╗ -->
+<!-- ║  PAGE 3 — TABLEAU DE BORD               ║ -->
+<!-- ╚══════════════════════════════════════════╝ -->
 <div class="page" id="page-dashboard">
 
   <nav class="dash-nav">
-    <div class="nav-logo"><span class="tt-logo"><svg class="tt-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.95a8.26 8.26 0 004.83 1.54V7.05a4.85 4.85 0 01-1.06-.36z"/></svg>TikTok Coins</span></div>
+    <div class="nav-logo">
+      <span class="tt-logo">
+        <svg class="tt-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.95a8.26 8.26 0 004.83 1.54V7.05a4.85 4.85 0 01-1.06-.36z"/></svg>
+        TikTok Coins
+      </span>
+    </div>
     <button class="btn-logout" onclick="doLogout()">Déconnexion</button>
   </nav>
 
@@ -458,30 +559,94 @@
     <button class="tab-btn" data-tab="profile">👤 Profil</button>
   </div>
 
-  <!-- TAB: Acheter -->
+  <!-- ─── TAB: Acheter ─── -->
   <section class="tab-panel active" id="tab-buy">
     <div class="card">
-      <h2>🪙 Acheter des pièces</h2>
-      <div class="tiers-grid">
-        <button class="tier-btn" data-coins="100">100 🪙<br><small style="color:var(--accent)">2 000 FCFA</small></button>
-        <button class="tier-btn" data-coins="200">200 🪙<br><small style="color:var(--accent)">3 800 FCFA</small></button>
-        <button class="tier-btn" data-coins="500">500 🪙<br><small style="color:var(--accent)">9 000 FCFA</small></button>
-        <button class="tier-btn" data-coins="1000">1 000 🪙<br><small style="color:var(--accent)">17 000 FCFA</small></button>
-        <button class="tier-btn" data-coins="5000">5 000 🪙<br><small style="color:var(--accent)">80 000 FCFA</small></button>
+      <h2>🪙 Choisissez votre forfait</h2>
+
+      <div class="packages-grid">
+
+        <div class="pkg-card" data-coins="140" data-price="2000">
+          <span class="pkg-icon">🪙</span>
+          <div class="pkg-coins">140</div>
+          <div class="pkg-sub">pièces</div>
+          <div class="pkg-price">2 000 FCFA</div>
+          <span class="pkg-name">Starter</span>
+        </div>
+
+        <div class="pkg-card popular" data-coins="350" data-price="5000">
+          <div class="pkg-badge">⭐ Populaire</div>
+          <span class="pkg-icon">🪙</span>
+          <div class="pkg-coins">350</div>
+          <div class="pkg-sub">pièces</div>
+          <div class="pkg-price">5 000 FCFA</div>
+          <span class="pkg-name">Populaire</span>
+        </div>
+
+        <div class="pkg-card" data-coins="700" data-price="10000">
+          <span class="pkg-icon">🪙</span>
+          <div class="pkg-coins">700</div>
+          <div class="pkg-sub">pièces</div>
+          <div class="pkg-price">10 000 FCFA</div>
+          <span class="pkg-name">Pro</span>
+        </div>
+
+        <div class="pkg-card" data-coins="1400" data-price="20000">
+          <span class="pkg-icon">🪙</span>
+          <div class="pkg-coins">1 400</div>
+          <div class="pkg-sub">pièces</div>
+          <div class="pkg-price">20 000 FCFA</div>
+          <span class="pkg-name">Premium</span>
+        </div>
+
+        <div class="pkg-card" data-coins="3500" data-price="50000">
+          <span class="pkg-icon">🪙</span>
+          <div class="pkg-coins">3 500</div>
+          <div class="pkg-sub">pièces</div>
+          <div class="pkg-price">50 000 FCFA</div>
+          <span class="pkg-name">Élite</span>
+        </div>
+
+        <div class="pkg-card" data-coins="7000" data-price="100000">
+          <span class="pkg-icon">🪙</span>
+          <div class="pkg-coins">7 000</div>
+          <div class="pkg-sub">pièces</div>
+          <div class="pkg-price">100 000 FCFA</div>
+          <span class="pkg-name">VIP</span>
+        </div>
+
       </div>
-      <div class="form-group">
-        <label>Ou entrez un montant personnalisé</label>
-        <input type="number" id="coinInput" min="1" placeholder="Ex: 300" class="coin-input">
+
+      <!-- Custom amount (FCFA) -->
+      <div class="custom-or">ou montant personnalisé</div>
+      <div class="form-group" style="margin-bottom:8px">
+        <label>Montant en FCFA (minimum 2 000)</label>
+        <input type="number" id="customFcfa" min="2000" step="500" placeholder="Ex : 15 000">
       </div>
-      <div class="price-display">
-        Prix total
-        <span class="price-amount" id="priceDisplay">—</span>
+      <div class="custom-calc" id="customCalc">
+        <span>Vous obtiendrez :</span>
+        <span class="custom-calc-coins" id="customCoinsDisplay">0 🪙</span>
       </div>
+
+      <!-- Selected summary -->
+      <div class="selected-summary" id="selectedSummary">
+        <span class="sel-coins" id="selCoins">—</span>
+        <span class="sel-price" id="selPrice">—</span>
+      </div>
+
+      <!-- TikTok username to receive coins -->
+      <div class="buy-form-section">
+        <div class="form-group">
+          <label>Username TikTok à créditer</label>
+          <input type="text" id="buyTiktokUsername" placeholder="@votre_pseudo_tiktok">
+        </div>
+      </div>
+
       <button class="btn btn-primary" id="buyBtn" onclick="doBuy()">Payer maintenant</button>
     </div>
   </section>
 
-  <!-- TAB: Historique -->
+  <!-- ─── TAB: Historique ─── -->
   <section class="tab-panel" id="tab-history">
     <div class="card">
       <h2>📋 Historique des achats</h2>
@@ -489,7 +654,7 @@
     </div>
   </section>
 
-  <!-- TAB: Commandes -->
+  <!-- ─── TAB: Commandes ─── -->
   <section class="tab-panel" id="tab-orders">
     <div class="card">
       <h2>📦 Mes commandes</h2>
@@ -497,48 +662,67 @@
     </div>
   </section>
 
-  <!-- TAB: Profil -->
+  <!-- ─── TAB: Profil ─── -->
   <section class="tab-panel" id="tab-profile">
     <div class="card profile-card">
       <div id="avatarFallback" class="avatar-fallback"></div>
-      <img id="avatarImg" class="avatar-img" src="" alt="" style="display:none">
+      <img id="avatarImg" class="avatar-img" src="" alt="">
       <div id="profileName" class="profile-name"></div>
       <div id="profileUser" class="profile-user"></div>
-      <h3>Publications TikTok</h3>
-      <div id="pubArea" class="pub-placeholder">
-        <div style="font-size:48px">📱</div>
-        <p>Les publications ne peuvent pas être affichées directement ici.</p>
-        <a id="tiktokLink" href="#" target="_blank" class="link-tiktok">Voir le profil sur TikTok ↗</a>
+      <div id="profileEmail" class="profile-email"></div>
+
+      <div class="profile-stats">
+        <div class="pstat">
+          <span class="pstat-val" id="statOrders">—</span>
+          <span class="pstat-label">Commandes</span>
+        </div>
+        <div class="pstat">
+          <span class="pstat-val" id="statCoins">—</span>
+          <span class="pstat-label">Pièces</span>
+        </div>
+        <div class="pstat">
+          <span class="pstat-val" id="statMember">—</span>
+          <span class="pstat-label">Depuis</span>
+        </div>
+      </div>
+
+      <div class="profile-actions">
+        <a id="tiktokLink" href="#" target="_blank" class="btn btn-primary" style="text-decoration:none">
+          Voir mon profil TikTok ↗
+        </a>
+        <button class="btn btn-outline" onclick="doLogout()">Se déconnecter</button>
       </div>
     </div>
   </section>
 </div>
 
-<!-- ╔═══════════════════════════════════════════════════════╗ -->
-<!-- ║  MODAL PAIEMENT                                        ║ -->
-<!-- ╚═══════════════════════════════════════════════════════╝ -->
+<!-- ╔══════════════════════════════════════════╗ -->
+<!-- ║  MODAL — PAIEMENT MANUEL (repli)         ║ -->
+<!-- ╚══════════════════════════════════════════╝ -->
 <div class="modal-overlay" id="payModal">
   <div class="modal-box">
     <h3>✅ Commande créée !</h3>
-    <p>Commande <strong id="mOrderId"></strong></p>
+    <p>Référence : <strong id="mOrderId"></strong></p>
     <p>Montant : <strong id="mAmount" style="color:var(--accent);font-size:20px"></strong></p>
-    <div class="pay-info">
-      <p>📱 Envoyez le montant via :</p>
-      <p><strong>Orange Money / Wave / MTN Money</strong></p>
-      <p>Numéro : <strong style="color:var(--accent)">+XXX XX XX XX XX</strong></p>
-      <p>Référence : numéro de commande</p>
-    </div>
-    <p style="font-size:12px;margin-bottom:20px">Votre commande sera traitée dès réception du paiement.</p>
-    <button class="btn btn-primary" onclick="closeModal()">Compris, merci !</button>
+
+    <ol class="pay-steps">
+      <li>Ouvrez votre application <strong>Mobile Money</strong></li>
+      <li>Envoyez <strong id="mAmount2"></strong> au numéro : <strong style="color:var(--accent)" id="mPhone"></strong></li>
+      <li>Mettez en référence : <strong id="mRef"></strong></li>
+      <li>Votre commande sera traitée dès vérification ✓</li>
+    </ol>
+
+    <p style="font-size:12px;color:var(--muted);margin-bottom:20px">Conservez votre confirmation de transaction.</p>
+    <button class="btn btn-primary" onclick="closeModal()">J'ai payé, compris !</button>
   </div>
 </div>
 
 <!-- Toast -->
 <div id="toast"></div>
 
-<!-- ============================================================
+<!-- ================================================================
      SCRIPTS
-============================================================ -->
+================================================================ -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 /* ── Supabase ── */
@@ -547,6 +731,11 @@ const SUPABASE_KEY = 'sb_publishable_A3qyBPM64bwVx8f-do7lHg_B-cAtLsE';
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+/* ── Leekpay / Paiement ── */
+const LEEKPAY_PUBLIC_KEY    = 'pk_live_nu7fCtvTy1uyjvT0zYgk5q4wrDUiQzct';
+const SUPABASE_FUNCTIONS_URL = SUPABASE_URL + '/functions/v1/create-payment';
+const PAYMENT_PHONE         = '+XXX XX XX XX XX'; // ← Remplacez par votre numéro Mobile Money
+
 /* ── Session ── */
 const Session = {
   set(u)  { localStorage.setItem('afrocom_user', JSON.stringify(u)); },
@@ -554,75 +743,72 @@ const Session = {
   clear() { localStorage.removeItem('afrocom_user'); }
 };
 
-/* ── Pricing ── */
+/* ── Pricing — 2 000 FCFA = 140 pièces ── */
 const TIERS = [
-  { coins:5000, price:80000 },
-  { coins:1000, price:17000 },
-  { coins:500,  price:9000  },
-  { coins:200,  price:3800  },
-  { coins:100,  price:2000  },
+  { coins: 140,  price: 2000   },
+  { coins: 350,  price: 5000   },
+  { coins: 700,  price: 10000  },
+  { coins: 1400, price: 20000  },
+  { coins: 3500, price: 50000  },
+  { coins: 7000, price: 100000 },
 ];
-function calcPrice(n) {
-  const t = TIERS.find(t => t.coins === n);
-  return t ? t.price : Math.round(n * 20);
-}
-function fmtPrice(n) { return Number(n).toLocaleString('fr-FR') + ' FCFA'; }
+const RATE = 140 / 2000; // coins per FCFA
+
+function calcCoins(fcfa)  { return Math.floor(fcfa * RATE); }
+function fmtPrice(n)  { return Number(n).toLocaleString('fr-FR') + ' FCFA'; }
+function fmtCoins(n)  { return Number(n).toLocaleString('fr-FR'); }
 
 /* ── Toast ── */
-function toast(msg, type='info', ms=3000) {
+function toast(msg, type = 'info', ms = 3000) {
   const el = document.getElementById('toast');
   el.textContent = msg;
-  el.className   = 'show ' + (type==='ok'?'ok':type==='err'?'err':'');
+  el.className = 'show ' + (type === 'ok' ? 'ok' : type === 'err' ? 'err' : '');
   clearTimeout(el._t);
-  el._t = setTimeout(() => el.className='', ms);
+  el._t = setTimeout(() => { el.className = ''; }, ms);
 }
 
-/* ══════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════
    PAGE ROUTING
-══════════════════════════════════════════════════════════ */
+══════════════════════════════════════════ */
 let currentUser = null;
 
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
-  window.scrollTo(0,0);
+  window.scrollTo(0, 0);
 }
 
-// Bootstrap
 window.addEventListener('DOMContentLoaded', () => {
   spawnCoins();
   currentUser = Session.get();
-  if (currentUser) {
-    openDashboard();
-  } else {
-    showPage('landing');
-  }
+  if (currentUser) openDashboard();
+  else showPage('landing');
 });
 
-/* ══════════════════════════════════════════════════════════
-   FLOATING COINS (landing)
-══════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+   FLOATING COINS
+══════════════════════════════════════════ */
 function spawnCoins() {
   const bg = document.getElementById('coinsBg');
   for (let i = 0; i < 18; i++) {
     const c = document.createElement('div');
     c.className = 'coin';
-    const s = 16 + Math.random()*28;
+    const s = 16 + Math.random() * 28;
     c.style.cssText = [
-      `left:${Math.random()*100}%`,
-      `top:${Math.random()*100}%`,
-      `--d:${3+Math.random()*5}s`,
-      `--dl:-${Math.random()*5}s`,
+      `left:${Math.random() * 100}%`,
+      `top:${Math.random() * 100}%`,
+      `--d:${3 + Math.random() * 5}s`,
+      `--dl:-${Math.random() * 5}s`,
       `width:${s}px`, `height:${s}px`,
-      `opacity:${.1+Math.random()*.25}`
+      `opacity:${0.1 + Math.random() * 0.25}`
     ].join(';');
     bg.appendChild(c);
   }
 }
 
-/* ══════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════
    AUTH
-══════════════════════════════════════════════════════════ */
+══════════════════════════════════════════ */
 function switchAuth(mode) {
   const isLogin = mode === 'login';
   document.getElementById('loginForm').style.display    = isLogin ? 'block' : 'none';
@@ -640,7 +826,7 @@ function setAuthError(msg) {
 
 function setBtnLoading(id, loading, label) {
   const b = document.getElementById(id);
-  b.disabled    = loading;
+  b.disabled = loading;
   b.textContent = loading ? 'Chargement...' : label;
 }
 
@@ -667,11 +853,10 @@ async function doRegister(e) {
   setAuthError('');
   const email    = document.getElementById('regEmail').value.trim();
   const password = document.getElementById('regPassword').value;
-  let   username = document.getElementById('regUsername').value.trim().replace(/^@/,'');
+  let   username = document.getElementById('regUsername').value.trim().replace(/^@/, '');
   if (!email || !password || !username) { setAuthError('Remplissez tous les champs.'); return; }
 
   setBtnLoading('registerBtn', true, 'Créer mon compte');
-
   const { data: existing } = await db.from('users').select('id').eq('tiktok_email', email).maybeSingle();
   if (existing) {
     setAuthError('Cet email est déjà enregistré. Connectez-vous.');
@@ -696,9 +881,9 @@ function doLogout() {
   showPage('landing');
 }
 
-/* ══════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════
    DASHBOARD INIT
-══════════════════════════════════════════════════════════ */
+══════════════════════════════════════════ */
 function openDashboard() {
   showPage('dashboard');
   initTabs();
@@ -708,7 +893,6 @@ function openDashboard() {
   loadProfile();
 }
 
-/* Tabs */
 function initTabs() {
   const btns   = document.querySelectorAll('.tab-btn');
   const panels = document.querySelectorAll('.tab-panel');
@@ -722,73 +906,130 @@ function initTabs() {
   });
 }
 
-/* ══════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════
    BUY TAB
-══════════════════════════════════════════════════════════ */
+══════════════════════════════════════════ */
+let selectedPkg = null;
+
 function initBuyTab() {
-  const input   = document.getElementById('coinInput');
-  const display = document.getElementById('priceDisplay');
+  /* Pre-fill TikTok username */
+  const uInput = document.getElementById('buyTiktokUsername');
+  if (currentUser?.tiktok_username) uInput.value = '@' + currentUser.tiktok_username;
 
-  document.querySelectorAll('.tier-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const n = parseInt(btn.dataset.coins);
-      input.value = n;
-      updatePriceDisplay(n, true);
-      document.querySelectorAll('.tier-btn').forEach(b => b.classList.remove('sel'));
-      btn.classList.add('sel');
+  /* Package card selection */
+  document.querySelectorAll('.pkg-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.pkg-card').forEach(c => c.classList.remove('sel'));
+      card.classList.add('sel');
+      selectedPkg = { coins: parseInt(card.dataset.coins), price: parseInt(card.dataset.price) };
+      document.getElementById('customFcfa').value = '';
+      document.getElementById('customCalc').style.display = 'none';
+      showSummary(selectedPkg.coins, selectedPkg.price);
     });
   });
 
-  input.addEventListener('input', () => {
-    const n = parseInt(input.value) || 0;
-    updatePriceDisplay(n, TIERS.some(t => t.coins === n));
-    document.querySelectorAll('.tier-btn').forEach(b => {
-      b.classList.toggle('sel', parseInt(b.dataset.coins) === n);
-    });
+  /* Custom FCFA → auto-calculate coins */
+  document.getElementById('customFcfa').addEventListener('input', function () {
+    const fcfa = parseInt(this.value) || 0;
+    if (fcfa >= 2000) {
+      const coins = calcCoins(fcfa);
+      document.getElementById('customCoinsDisplay').textContent = fmtCoins(coins) + ' 🪙';
+      document.getElementById('customCalc').style.display = 'flex';
+      document.querySelectorAll('.pkg-card').forEach(c => c.classList.remove('sel'));
+      selectedPkg = { coins, price: fcfa };
+      showSummary(coins, fcfa);
+    } else {
+      document.getElementById('customCalc').style.display = 'none';
+      if (!fcfa) { selectedPkg = null; document.getElementById('selectedSummary').classList.remove('show'); }
+    }
   });
+}
 
-  function updatePriceDisplay(n, isTier) {
-    display.textContent = n > 0 ? fmtPrice(calcPrice(n)) : '—';
-    display.className   = 'price-amount' + (isTier && n > 0 ? ' tier' : '');
-  }
+function showSummary(coins, price) {
+  document.getElementById('selCoins').textContent = fmtCoins(coins) + ' 🪙';
+  document.getElementById('selPrice').textContent = fmtPrice(price);
+  document.getElementById('selectedSummary').classList.add('show');
 }
 
 async function doBuy() {
-  const input = document.getElementById('coinInput');
-  const coins = parseInt(input.value);
-  const btn   = document.getElementById('buyBtn');
-  if (!coins || coins < 1) { toast('Entrez un nombre de pièces valide.', 'err'); return; }
+  if (!selectedPkg) { toast('Choisissez un forfait ou entrez un montant.', 'err'); return; }
 
-  const price = calcPrice(coins);
-  btn.disabled = true; btn.textContent = 'Création...';
+  const tiktokUsername = document.getElementById('buyTiktokUsername').value.trim().replace(/^@/, '');
+  if (!tiktokUsername) { toast('Entrez le username TikTok à créditer.', 'err'); return; }
 
-  const { data: order, error } = await db.from('orders')
-    .insert([{ user_id: currentUser.id, coin_amount: coins, price, payment_status: 'en_attente', order_status: 'en cours' }])
-    .select().single();
+  const { coins, price } = selectedPkg;
+  const btn = document.getElementById('buyBtn');
+  btn.disabled = true; btn.textContent = 'Création de la commande...';
+
+  /* 1 — Create order */
+  const { data: order, error } = await db.from('orders').insert([{
+    user_id:        currentUser.id,
+    coin_amount:    coins,
+    price,
+    payment_status: 'en_attente',
+    order_status:   'en cours',
+    tiktok_username: tiktokUsername,
+  }]).select().single();
+
+  if (error) {
+    btn.disabled = false; btn.textContent = 'Payer maintenant';
+    toast('Erreur : ' + error.message, 'err');
+    return;
+  }
+
+  /* 2 — Try Leekpay Edge Function */
+  btn.textContent = 'Connexion au paiement...';
+  let payOk = false;
+
+  try {
+    const res = await fetch(SUPABASE_FUNCTIONS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        order_id:       order.id,
+        amount:         price,
+        customer_email: currentUser.tiktok_email,
+        customer_name:  currentUser.tiktok_username,
+        callback_url:   window.location.href,
+      })
+    });
+    if (res.ok) {
+      const d = await res.json();
+      if (d.payment_url) {
+        window.open(d.payment_url, '_blank');
+        toast('Redirection vers Leekpay...', 'ok', 5000);
+        payOk = true;
+      }
+    }
+  } catch (_) { /* Edge Function non déployée → repli manuel */ }
 
   btn.disabled = false; btn.textContent = 'Payer maintenant';
-
-  if (error) { toast('Erreur : ' + error.message, 'err'); return; }
-
-  document.getElementById('mOrderId').textContent = '#' + order.id;
-  document.getElementById('mAmount').textContent  = fmtPrice(price);
-  document.getElementById('payModal').classList.add('open');
-
   loadHistory();
   loadOrders();
+
+  if (!payOk) {
+    /* Repli — instructions manuelles */
+    document.getElementById('mOrderId').textContent = 'TTC-' + order.id;
+    document.getElementById('mAmount').textContent  = fmtPrice(price);
+    document.getElementById('mAmount2').textContent = fmtPrice(price);
+    document.getElementById('mPhone').textContent   = PAYMENT_PHONE;
+    document.getElementById('mRef').textContent     = 'TTC-' + order.id;
+    document.getElementById('payModal').classList.add('open');
+  }
 }
 
 function closeModal() {
   document.getElementById('payModal').classList.remove('open');
-  document.getElementById('coinInput').value = '';
-  document.getElementById('priceDisplay').textContent = '—';
-  document.getElementById('priceDisplay').className = 'price-amount';
-  document.querySelectorAll('.tier-btn').forEach(b => b.classList.remove('sel'));
+  document.querySelectorAll('.pkg-card').forEach(c => c.classList.remove('sel'));
+  document.getElementById('customFcfa').value = '';
+  document.getElementById('customCalc').style.display = 'none';
+  document.getElementById('selectedSummary').classList.remove('show');
+  selectedPkg = null;
 }
 
-/* ══════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════
    HISTORY TAB
-══════════════════════════════════════════════════════════ */
+══════════════════════════════════════════ */
 async function loadHistory() {
   const el = document.getElementById('historyList');
   el.innerHTML = '<p class="loading">Chargement...</p>';
@@ -802,26 +1043,26 @@ async function loadHistory() {
     return;
   }
   el.innerHTML = data.map(o => {
-    const d = new Date(o.created_at).toLocaleDateString('fr-FR', { year:'numeric', month:'long', day:'numeric' });
+    const d = new Date(o.created_at).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
     return `<div class="history-item">
       <span style="font-size:20px">🪙</span>
-      <span>Vous avez acheté <strong>${o.coin_amount} pièces</strong> le ${d}
+      <span>Vous avez acheté <strong>${fmtCoins(o.coin_amount)} pièces</strong> le ${d}
       <br><small style="color:var(--accent)">${fmtPrice(o.price)}</small></span>
     </div>`;
   }).join('');
 }
 
-/* ══════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════
    ORDERS TAB
-══════════════════════════════════════════════════════════ */
+══════════════════════════════════════════ */
 const OS = {
-  'en cours':   { l:'En cours',   c:'badge-yellow' },
-  'effectue':   { l:'Effectué',   c:'badge-green'  },
-  'en_attente': { l:'En attente', c:'badge-gray'   },
+  'en cours':   { l: 'En cours',   c: 'badge-yellow' },
+  'effectue':   { l: 'Effectué',   c: 'badge-green'  },
+  'en_attente': { l: 'En attente', c: 'badge-gray'   },
 };
 const PS = {
-  'payé':       { l:'Payé',       c:'badge-green' },
-  'en_attente': { l:'En attente', c:'badge-gray'  },
+  'payé':       { l: 'Payé',       c: 'badge-green' },
+  'en_attente': { l: 'En attente', c: 'badge-gray'  },
 };
 
 async function loadOrders() {
@@ -846,7 +1087,7 @@ async function loadOrders() {
         <span class="badge ${os.c}">${os.l}</span>
       </div>
       <div class="order-body">
-        <span>🪙 ${o.coin_amount} pièces</span>
+        <span>🪙 ${fmtCoins(o.coin_amount)} pièces</span>
         <span style="color:var(--accent)">${fmtPrice(o.price)}</span>
       </div>
       <div class="order-foot">
@@ -857,21 +1098,41 @@ async function loadOrders() {
   }).join('');
 }
 
-/* ══════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════
    PROFILE TAB
-══════════════════════════════════════════════════════════ */
+══════════════════════════════════════════ */
 async function loadProfile() {
   const u = currentUser;
-  document.getElementById('profileName').textContent  = u.tiktok_username;
-  document.getElementById('profileUser').textContent  = '@' + u.tiktok_username;
+
+  document.getElementById('profileName').textContent = u.tiktok_username;
+  document.getElementById('profileUser').textContent = '@' + u.tiktok_username;
+
+  const parts  = (u.tiktok_email || '').split('@');
+  const masked = (parts[0] || '').substring(0, 3) + '***@' + (parts[1] || '');
+  document.getElementById('profileEmail').textContent = masked;
   document.getElementById('avatarFallback').textContent = u.tiktok_username[0].toUpperCase();
   document.getElementById('tiktokLink').href = 'https://www.tiktok.com/@' + encodeURIComponent(u.tiktok_username);
 
-  // Try TikTok oEmbed (usually blocked by CORS — fallback always visible)
+  /* Load order stats */
+  const { data: orders } = await db.from('orders').select('coin_amount').eq('user_id', u.id);
+  const totalOrders = orders?.length || 0;
+  const totalCoins  = (orders || []).reduce((s, o) => s + (o.coin_amount || 0), 0);
+  const memberSince = u.created_at
+    ? new Date(u.created_at).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })
+    : '—';
+
+  document.getElementById('statOrders').textContent = totalOrders;
+  document.getElementById('statCoins').textContent  = fmtCoins(totalCoins);
+  document.getElementById('statMember').textContent = memberSince;
+
+  /* Try TikTok oEmbed for avatar (usually CORS-blocked) */
   try {
     const ctrl = new AbortController();
     setTimeout(() => ctrl.abort(), 4000);
-    const r = await fetch(`https://www.tiktok.com/oembed?url=https://www.tiktok.com/@${encodeURIComponent(u.tiktok_username)}`, { signal: ctrl.signal });
+    const r = await fetch(
+      `https://www.tiktok.com/oembed?url=https://www.tiktok.com/@${encodeURIComponent(u.tiktok_username)}`,
+      { signal: ctrl.signal }
+    );
     if (!r.ok) throw 0;
     const j = await r.json();
     const img = document.getElementById('avatarImg');
@@ -879,7 +1140,7 @@ async function loadProfile() {
     img.style.display = 'block';
     document.getElementById('avatarFallback').style.display = 'none';
     if (j.author_name) document.getElementById('profileName').textContent = j.author_name;
-  } catch { /* fallback already shown */ }
+  } catch { /* initials fallback */ }
 }
 </script>
 </body>
