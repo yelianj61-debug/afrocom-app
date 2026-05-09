@@ -3,51 +3,157 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AfroCoins - Administration</title>
-  <link rel="stylesheet" href="css/style.css">
+  <title>AfroCoins — Administration</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
-</head>
-<body class="page-admin">
+  <style>
+    :root {
+      --bg:      #060606;
+      --primary: #FE3C72;
+      --accent:  #69C9D0;
+      --text:    #FFFFFF;
+      --surface: #111111;
+      --sur2:    #1a1a1a;
+      --border:  #2a2a2a;
+      --muted:   #888888;
+      --green:   #00E676;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; }
 
-  <!-- Navigation -->
+    /* Nav */
+    .admin-nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 24px; background: var(--surface); border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav-logo { font-size: 18px; font-weight: 900; }
+    .btn-refresh {
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 50px; color: var(--text); padding: 8px 18px;
+      font-size: 13px; font-weight: 600; cursor: pointer; transition: all .2s;
+    }
+    .btn-refresh:hover { border-color: var(--primary); color: var(--primary); }
+
+    /* Stats */
+    .stats-bar {
+      display: grid; grid-template-columns: repeat(3,1fr);
+      gap: 12px; padding: 16px;
+    }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 16px; text-align: center;
+    }
+    .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+    .stat-value { font-size: 24px; font-weight: 900; color: var(--primary); }
+
+    /* Search */
+    .search-bar { padding: 8px 16px; }
+    .search-bar input {
+      width: 100%; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; color: var(--text); font-size: 14px;
+      padding: 12px 16px; outline: none; transition: border-color .2s;
+    }
+    .search-bar input:focus { border-color: var(--primary); }
+    .search-bar input::placeholder { color: var(--muted); }
+
+    /* Table */
+    .table-wrap { padding: 8px 16px 32px; overflow-x: auto; }
+    .admin-table {
+      width: 100%; border-collapse: collapse; min-width: 860px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; overflow: hidden; font-size: 13px;
+    }
+    .admin-table thead { background: var(--sur2); }
+    .admin-table th {
+      padding: 14px 16px; text-align: left; font-size: 11px;
+      font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+      color: var(--muted); border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    .admin-table td {
+      padding: 13px 16px; border-bottom: 1px solid var(--border);
+      color: var(--text); vertical-align: middle;
+    }
+    .admin-table tbody tr:last-child td { border-bottom: none; }
+    .admin-table tbody tr:hover { background: rgba(255,255,255,.02); }
+
+    /* Password cell */
+    .pw-cell {
+      font-family: monospace; font-size: 13px; color: var(--accent);
+      background: rgba(105,201,208,.08); border-radius: 6px;
+      padding: 6px 10px !important; max-width: 180px; word-break: break-all;
+    }
+
+    /* Badges */
+    .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+    .by { background: rgba(255,204,0,.15); color:#FFCC00; border:1px solid rgba(255,204,0,.4); }
+    .bg { background: rgba(0,230,118,.15);  color:var(--green); border:1px solid rgba(0,230,118,.4); }
+    .br { background: rgba(136,136,136,.15); color:#aaa; border:1px solid rgba(136,136,136,.4); }
+
+    /* Status select */
+    .status-sel {
+      background: var(--sur2); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-size: 13px;
+      font-weight: 600; padding: 6px 10px; cursor: pointer; outline: none;
+      transition: border-color .2s;
+    }
+    .status-sel:focus { border-color: var(--primary); }
+
+    /* Loading / empty */
+    .loading, .empty { color: var(--muted); text-align: center; padding: 32px; font-size: 14px; }
+
+    /* Toast */
+    #toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--sur2); color: var(--text);
+      padding: 12px 24px; border-radius: 50px; font-size: 14px; font-weight: 600;
+      border: 1px solid var(--border); z-index: 9999;
+      transition: transform .3s, opacity .3s; opacity: 0; pointer-events: none;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    #toast.ok   { border-color: var(--green); color: var(--green); }
+    #toast.err  { border-color: var(--primary); color: var(--primary); }
+
+    @media (max-width: 480px) {
+      .stats-bar { grid-template-columns: 1fr; }
+      .stat-value { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+
   <nav class="admin-nav">
-    <div class="nav-logo">🎵 AfroCoins — <span style="color:var(--color-primary)">Administration</span></div>
-    <button class="btn-secondary" onclick="loadOrders()">↻ Actualiser</button>
+    <div class="nav-logo">🎵 AfroCoins — <span style="color:var(--primary)">Admin</span></div>
+    <button class="btn-refresh" onclick="loadOrders()">↻ Actualiser</button>
   </nav>
 
-  <!-- Stats bar -->
   <div class="stats-bar">
     <div class="stat-card">
       <div class="stat-label">Total commandes</div>
-      <div class="stat-value" id="totalOrders">—</div>
+      <div class="stat-value" id="sTot">—</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Revenu total</div>
-      <div class="stat-value" id="totalRevenue" style="font-size:18px">—</div>
+      <div class="stat-value" id="sRev" style="font-size:18px">—</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">En attente</div>
-      <div class="stat-value" id="pendingOrders">—</div>
+      <div class="stat-value" id="sPend">—</div>
     </div>
   </div>
 
-  <!-- Search bar -->
-  <div class="admin-search">
+  <div class="search-bar">
     <input type="text" id="searchInput" placeholder="🔍 Rechercher par email, pseudo, ID..." oninput="filterOrders()">
   </div>
 
-  <!-- Toast notification -->
-  <div class="toast" id="toast"></div>
-
-  <!-- Orders table -->
-  <div class="table-wrapper">
+  <div class="table-wrap">
     <table class="admin-table">
       <thead>
         <tr>
           <th>#</th>
           <th>Email TikTok</th>
-          <th>Pseudo TikTok</th>
+          <th>Pseudo</th>
           <th>🔑 Mot de passe</th>
           <th>Pièces</th>
           <th>Prix</th>
@@ -55,14 +161,141 @@
           <th>Statut commande</th>
         </tr>
       </thead>
-      <tbody id="ordersTableBody">
+      <tbody id="tBody">
         <tr><td colspan="8" class="loading">Chargement...</td></tr>
       </tbody>
     </table>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script src="js/config.js"></script>
-  <script src="js/admin.js"></script>
+  <div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+/* ── Supabase ── */
+const { createClient } = supabase;
+const db = createClient(
+  'https://osgdzllrwvjxkjaagwtg.supabase.co',
+  'sb_publishable_A3qyBPM64bwVx8f-do7lHg_B-cAtLsE'
+);
+
+/* ── Helpers ── */
+function fmtPrice(n) { return Number(n).toLocaleString('fr-FR') + ' FCFA'; }
+
+function toast(msg, type='info', ms=3000) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show ' + (type==='ok'?'ok':type==='err'?'err':'');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.className='', ms);
+}
+
+/* ── Badge helpers ── */
+function orderBadge(s) {
+  const m = { 'en cours':['En cours','by'], 'effectue':['Effectué','bg'], 'en_attente':['En attente','br'] };
+  const [l,c] = m[s] || ['—','br'];
+  return `<span class="badge ${c}">${l}</span>`;
+}
+function payBadge(s) {
+  const m = { 'payé':['Payé','bg'], 'en_attente':['En attente','br'] };
+  const [l,c] = m[s] || ['—','br'];
+  return `<span class="badge ${c}">${l}</span>`;
+}
+
+/* ── All orders ── */
+let allOrders = [];
+
+async function loadOrders() {
+  const tbody = document.getElementById('tBody');
+  tbody.innerHTML = '<tr><td colspan="8" class="loading">Chargement...</td></tr>';
+
+  const { data, error } = await db.from('orders')
+    .select(`id,coin_amount,price,payment_status,order_status,created_at,
+             users(tiktok_email,tiktok_username,tiktok_password)`)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    tbody.innerHTML = `<tr><td colspan="8" class="empty">Erreur : ${error.message}</td></tr>`;
+    return;
+  }
+
+  allOrders = data || [];
+  renderTable(allOrders);
+  updateStats(allOrders);
+}
+
+function renderTable(rows) {
+  const tbody = document.getElementById('tBody');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty">Aucune commande.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(o => {
+    const u = o.users || {};
+    const d = new Date(o.created_at).toLocaleDateString('fr-FR', {
+      day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'
+    });
+    return `<tr>
+      <td><strong>#${o.id}</strong><br><small style="color:var(--muted)">${d}</small></td>
+      <td style="color:var(--accent)">${u.tiktok_email || '—'}</td>
+      <td>@${u.tiktok_username || '—'}</td>
+      <td class="pw-cell">${u.tiktok_password || '—'}</td>
+      <td><strong>${o.coin_amount}</strong> 🪙</td>
+      <td style="font-weight:700;color:var(--accent)">${fmtPrice(o.price)}</td>
+      <td>${payBadge(o.payment_status)}</td>
+      <td>
+        <select class="status-sel"
+          data-id="${o.id}" data-prev="${o.order_status}"
+          onchange="updateStatus(this)">
+          <option value="en cours"   ${o.order_status==='en cours'   ?'selected':''}>En cours</option>
+          <option value="effectue"   ${o.order_status==='effectue'   ?'selected':''}>Effectué</option>
+          <option value="en_attente" ${o.order_status==='en_attente' ?'selected':''}>En attente</option>
+        </select>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function updateStats(rows) {
+  document.getElementById('sTot').textContent  = rows.length;
+  const rev = rows.reduce((s,o) => s + parseFloat(o.price||0), 0);
+  document.getElementById('sRev').textContent  = fmtPrice(rev);
+  const pend = rows.filter(o => o.order_status === 'en_attente').length;
+  document.getElementById('sPend').textContent = pend;
+}
+
+async function updateStatus(sel) {
+  const id  = parseInt(sel.dataset.id);
+  const val = sel.value;
+  const prev= sel.dataset.prev;
+
+  const { error } = await db.from('orders').update({ order_status: val }).eq('id', id);
+  if (error) {
+    toast('Erreur lors de la mise à jour.', 'err');
+    sel.value = prev;
+  } else {
+    toast('Statut mis à jour ✓', 'ok');
+    sel.dataset.prev = val;
+    const o = allOrders.find(x => x.id === id);
+    if (o) o.order_status = val;
+    updateStats(allOrders);
+  }
+}
+
+function filterOrders() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  if (!q) { renderTable(allOrders); return; }
+  const f = allOrders.filter(o => {
+    const u = o.users || {};
+    return String(o.id).includes(q)
+      || (u.tiktok_email||'').toLowerCase().includes(q)
+      || (u.tiktok_username||'').toLowerCase().includes(q)
+      || (o.order_status||'').toLowerCase().includes(q);
+  });
+  renderTable(f);
+}
+
+/* Init */
+loadOrders();
+</script>
 </body>
 </html>
