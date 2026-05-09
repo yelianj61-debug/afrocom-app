@@ -239,12 +239,12 @@
       position: sticky; top: 0; z-index: 100;
     }
     .nav-logo { font-size: 18px; font-weight: 900; }
-    .btn-logout {
+    .btn-profile-nav {
       background: transparent; border: 1px solid var(--border); border-radius: 50px;
-      color: var(--muted); padding: 8px 18px; font-size: 13px; font-weight: 600;
+      color: var(--text); padding: 8px 18px; font-size: 13px; font-weight: 600;
       cursor: pointer; transition: all .2s;
     }
-    .btn-logout:hover { border-color: var(--primary); color: var(--primary); }
+    .btn-profile-nav:hover { border-color: var(--accent); color: var(--accent); }
 
     .tab-bar {
       display: flex; overflow-x: auto; scrollbar-width: none; background: var(--surface);
@@ -376,45 +376,6 @@
     .pstat-label { display: block; font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
 
     .profile-actions { display: flex; flex-direction: column; gap: 12px; }
-
-    /* ================================================================
-       MODAL — INSTRUCTIONS MANUELLES
-    ================================================================ */
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,.88);
-      backdrop-filter: blur(4px); display: flex; align-items: center;
-      justify-content: center; padding: 24px; z-index: 1000;
-      opacity: 0; pointer-events: none; transition: opacity .25s;
-    }
-    .modal-overlay.open { opacity: 1; pointer-events: auto; }
-    .modal-box {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 24px; padding: 32px 24px; max-width: 380px; width: 100%;
-      text-align: center; transform: scale(.92); transition: transform .25s;
-    }
-    .modal-overlay.open .modal-box { transform: scale(1); }
-    .modal-box h3 { font-size: 22px; font-weight: 700; color: var(--green); margin-bottom: 16px; }
-    .modal-box p { font-size: 14px; color: var(--muted); margin-bottom: 10px; }
-    .modal-box p strong { color: var(--text); }
-
-    .pay-steps {
-      counter-reset: step; list-style: none; text-align: left;
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 14px; padding: 12px 16px; margin: 16px 0;
-    }
-    .pay-steps li {
-      counter-increment: step; padding: 10px 0 10px 38px; position: relative;
-      font-size: 14px; color: var(--muted);
-      border-bottom: 1px solid var(--border);
-    }
-    .pay-steps li:last-child { border-bottom: none; }
-    .pay-steps li::before {
-      content: counter(step); position: absolute; left: 0; top: 10px;
-      width: 24px; height: 24px; background: var(--primary); color: white;
-      border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      font-size: 12px; font-weight: 700; text-align: center; line-height: 24px;
-    }
-    .pay-steps li strong { color: var(--text); }
 
     /* ================================================================
        RESPONSIVE
@@ -549,7 +510,7 @@
         TikTok Coins
       </span>
     </div>
-    <button class="btn-logout" onclick="doLogout()">Déconnexion</button>
+    <button class="btn-profile-nav" onclick="goToProfile()">👤 Profil</button>
   </nav>
 
   <div class="tab-bar">
@@ -696,27 +657,6 @@
   </section>
 </div>
 
-<!-- ╔══════════════════════════════════════════╗ -->
-<!-- ║  MODAL — PAIEMENT MANUEL (repli)         ║ -->
-<!-- ╚══════════════════════════════════════════╝ -->
-<div class="modal-overlay" id="payModal">
-  <div class="modal-box">
-    <h3>✅ Commande créée !</h3>
-    <p>Référence : <strong id="mOrderId"></strong></p>
-    <p>Montant : <strong id="mAmount" style="color:var(--accent);font-size:20px"></strong></p>
-
-    <ol class="pay-steps">
-      <li>Ouvrez votre application <strong>Mobile Money</strong></li>
-      <li>Envoyez <strong id="mAmount2"></strong> au numéro : <strong style="color:var(--accent)" id="mPhone"></strong></li>
-      <li>Mettez en référence : <strong id="mRef"></strong></li>
-      <li>Votre commande sera traitée dès vérification ✓</li>
-    </ol>
-
-    <p style="font-size:12px;color:var(--muted);margin-bottom:20px">Conservez votre confirmation de transaction.</p>
-    <button class="btn btn-primary" onclick="closeModal()">J'ai payé, compris !</button>
-  </div>
-</div>
-
 <!-- Toast -->
 <div id="toast"></div>
 
@@ -734,7 +674,6 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 /* ── Leekpay / Paiement ── */
 const LEEKPAY_PUBLIC_KEY    = 'pk_live_nu7fCtvTy1uyjvT0zYgk5q4wrDUiQzct';
 const SUPABASE_FUNCTIONS_URL = SUPABASE_URL + '/functions/v1/quick-responder';
-const PAYMENT_PHONE         = '+XXX XX XX XX XX'; // ← Remplacez par votre numéro Mobile Money
 
 /* ── Session ── */
 const Session = {
@@ -906,6 +845,13 @@ function initTabs() {
   });
 }
 
+function goToProfile() {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector('[data-tab="profile"]').classList.add('active');
+  document.getElementById('tab-profile').classList.add('active');
+}
+
 /* ══════════════════════════════════════════
    BUY TAB
 ══════════════════════════════════════════ */
@@ -961,13 +907,13 @@ async function doBuy() {
   const btn = document.getElementById('buyBtn');
   btn.disabled = true; btn.textContent = 'Création de la commande...';
 
-  /* 1 — Create order */
+  /* 1 — Créer la commande */
   const { data: order, error } = await db.from('orders').insert([{
-    user_id:        currentUser.id,
-    coin_amount:    coins,
+    user_id:         currentUser.id,
+    coin_amount:     coins,
     price,
-    payment_status: 'en_attente',
-    order_status:   'en cours',
+    payment_status:  'en_attente',
+    order_status:    'en cours',
     tiktok_username: tiktokUsername,
   }]).select().single();
 
@@ -977,49 +923,46 @@ async function doBuy() {
     return;
   }
 
-  /* 2 — Try Leekpay Edge Function */
-  btn.textContent = 'Connexion au paiement...';
-  let payOk = false;
+  /* 2 — Appel Leekpay via Edge Function */
+  btn.textContent = 'Connexion au paiement Leekpay...';
 
   try {
     const res = await fetch(SUPABASE_FUNCTIONS_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+      },
       body: JSON.stringify({
         order_id:       order.id,
         amount:         price,
         customer_email: currentUser.tiktok_email,
         customer_name:  currentUser.tiktok_username,
         callback_url:   window.location.href,
-      })
+      }),
     });
-    if (res.ok) {
-      const d = await res.json();
-      if (d.payment_url) {
-        window.open(d.payment_url, '_blank');
-        toast('Redirection vers Leekpay...', 'ok', 5000);
-        payOk = true;
-      }
+
+    const d = await res.json();
+
+    if (!res.ok || !d.payment_url) {
+      throw new Error(d.error || 'Pas de lien de paiement reçu');
     }
-  } catch (_) { /* Edge Function non déployée → repli manuel */ }
 
-  btn.disabled = false; btn.textContent = 'Payer maintenant';
-  loadHistory();
-  loadOrders();
+    /* 3 — Redirection automatique vers Leekpay */
+    loadHistory();
+    loadOrders();
+    resetBuyForm();
+    window.location.href = d.payment_url;
 
-  if (!payOk) {
-    /* Repli — instructions manuelles */
-    document.getElementById('mOrderId').textContent = 'TTC-' + order.id;
-    document.getElementById('mAmount').textContent  = fmtPrice(price);
-    document.getElementById('mAmount2').textContent = fmtPrice(price);
-    document.getElementById('mPhone').textContent   = PAYMENT_PHONE;
-    document.getElementById('mRef').textContent     = 'TTC-' + order.id;
-    document.getElementById('payModal').classList.add('open');
+  } catch (err) {
+    /* Annuler la commande si Leekpay échoue */
+    await db.from('orders').delete().eq('id', order.id);
+    btn.disabled = false; btn.textContent = 'Payer maintenant';
+    toast('Erreur paiement Leekpay : ' + err.message, 'err', 6000);
   }
 }
 
-function closeModal() {
-  document.getElementById('payModal').classList.remove('open');
+function resetBuyForm() {
   document.querySelectorAll('.pkg-card').forEach(c => c.classList.remove('sel'));
   document.getElementById('customFcfa').value = '';
   document.getElementById('customCalc').style.display = 'none';
@@ -1125,22 +1068,9 @@ async function loadProfile() {
   document.getElementById('statCoins').textContent  = fmtCoins(totalCoins);
   document.getElementById('statMember').textContent = memberSince;
 
-  /* Try TikTok oEmbed for avatar (usually CORS-blocked) */
-  try {
-    const ctrl = new AbortController();
-    setTimeout(() => ctrl.abort(), 4000);
-    const r = await fetch(
-      `https://www.tiktok.com/oembed?url=https://www.tiktok.com/@${encodeURIComponent(u.tiktok_username)}`,
-      { signal: ctrl.signal }
-    );
-    if (!r.ok) throw 0;
-    const j = await r.json();
-    const img = document.getElementById('avatarImg');
-    img.src = j.thumbnail_url;
-    img.style.display = 'block';
-    document.getElementById('avatarFallback').style.display = 'none';
-    if (j.author_name) document.getElementById('profileName').textContent = j.author_name;
-  } catch { /* initials fallback */ }
+  /* Avatar: toujours afficher les initiales (TikTok bloque le chargement externe) */
+  document.getElementById('avatarImg').style.display = 'none';
+  document.getElementById('avatarFallback').style.display = 'flex';
 }
 </script>
 </body>
