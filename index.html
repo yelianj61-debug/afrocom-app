@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AfroCoins - Pièces TikTok via Mobile Money</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    /* Landing-specific extras */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      width: 100%;
+      max-width: 600px;
+      margin-bottom: 40px;
+    }
+    .feature-item {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 16px;
+      padding: 20px 16px;
+      text-align: center;
+    }
+    .feature-icon { font-size: 28px; margin-bottom: 8px; display: block; }
+    .feature-label { font-size: 12px; color: var(--color-muted); font-weight: 600; }
+    @media (max-width: 480px) {
+      .features { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body class="page-landing">
+
+  <!-- Animated coins background -->
+  <div class="coins-bg" id="coinsBg"></div>
+
+  <main class="landing-main">
+
+    <div class="logo">🎵 AfroCoins</div>
+
+    <h1 class="gradient-text">Pièces TikTok<br>au meilleur prix</h1>
+
+    <p class="subtitle">
+      Achetez vos pièces TikTok facilement via Mobile Money.<br>
+      Pas de carte bancaire ni PayPal requis.
+    </p>
+
+    <!-- Pricing preview -->
+    <div class="pricing-preview">
+      <div class="price-card">
+        <span class="coins">100</span>
+        <span class="fcfa">2 000 FCFA</span>
+      </div>
+      <div class="price-card highlight">
+        <span class="coins">500</span>
+        <span class="fcfa">9 000 FCFA</span>
+      </div>
+      <div class="price-card">
+        <span class="coins">1 000</span>
+        <span class="fcfa">17 000 FCFA</span>
+      </div>
+    </div>
+
+    <!-- Feature highlights -->
+    <div class="features">
+      <div class="feature-item">
+        <span class="feature-icon">📱</span>
+        <span class="feature-label">Mobile Money</span>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">⚡</span>
+        <span class="feature-label">Livraison rapide</span>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">🔒</span>
+        <span class="feature-label">Sécurisé</span>
+      </div>
+    </div>
+
+    <a href="auth.html" class="btn-primary btn-cta">Acheter des pièces</a>
+
+  </main>
+
+  <script>
+    // Inject floating animated coins into background
+    const bg = document.getElementById('coinsBg');
+    for (let i = 0; i < 18; i++) {
+      const coin = document.createElement('div');
+      coin.className = 'coin';
+      coin.style.cssText = [
+        `left: ${Math.random() * 100}%`,
+        `top: ${Math.random() * 100}%`,
+        `--duration: ${3 + Math.random() * 5}s`,
+        `--delay: -${Math.random() * 5}s`,
+        `width: ${16 + Math.random() * 28}px`,
+        `height: ${16 + Math.random() * 28}px`,
+        `opacity: ${0.15 + Math.random() * 0.3}`,
+      ].join(';');
+      bg.appendChild(coin);
+    }
+  </script>
+</body>
+</html>

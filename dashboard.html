@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AfroCoins - Tableau de bord</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+</head>
+<body class="page-dashboard">
+
+  <!-- Top navigation bar -->
+  <nav class="dash-nav">
+    <div class="nav-logo">🎵 AfroCoins</div>
+    <button class="btn-logout" onclick="logout()">Déconnexion</button>
+  </nav>
+
+  <!-- Tab bar -->
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="buy">🪙 Acheter</button>
+    <button class="tab-btn" data-tab="history">📋 Historique</button>
+    <button class="tab-btn" data-tab="orders">📦 Commandes</button>
+    <button class="tab-btn" data-tab="profile">👤 Profil</button>
+  </div>
+
+  <!-- ═══ TAB 1: ACHETER DES PIÈCES ═══ -->
+  <section class="tab-panel active" id="panel-buy">
+    <div class="card buy-card">
+      <h2>🪙 Acheter des pièces</h2>
+
+      <div class="pricing-tiers">
+        <button class="tier-btn" data-coins="100">100 🪙<br><span style="color:var(--color-accent);font-size:12px">2 000 FCFA</span></button>
+        <button class="tier-btn" data-coins="200">200 🪙<br><span style="color:var(--color-accent);font-size:12px">3 800 FCFA</span></button>
+        <button class="tier-btn" data-coins="500">500 🪙<br><span style="color:var(--color-accent);font-size:12px">9 000 FCFA</span></button>
+        <button class="tier-btn" data-coins="1000">1 000 🪙<br><span style="color:var(--color-accent);font-size:12px">17 000 FCFA</span></button>
+        <button class="tier-btn" data-coins="5000">5 000 🪙<br><span style="color:var(--color-accent);font-size:12px">80 000 FCFA</span></button>
+      </div>
+
+      <div class="form-group">
+        <label>Ou entrez un montant personnalisé</label>
+        <input type="number" id="coinInput" min="1" placeholder="Ex: 300" class="coin-input">
+      </div>
+
+      <div class="price-display">
+        Prix total
+        <span class="price-amount" id="priceDisplay">—</span>
+      </div>
+
+      <button class="btn-primary" id="buyBtn" onclick="handleBuy()">Payer maintenant</button>
+    </div>
+  </section>
+
+  <!-- ═══ TAB 2: HISTORIQUE ═══ -->
+  <section class="tab-panel" id="panel-history">
+    <div class="card">
+      <h2>📋 Historique des achats</h2>
+      <div id="historyList" class="history-list">
+        <p class="loading">Chargement...</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ TAB 3: COMMANDES ═══ -->
+  <section class="tab-panel" id="panel-orders">
+    <div class="card">
+      <h2>📦 Mes commandes</h2>
+      <div id="ordersContainer" class="orders-container">
+        <p class="loading">Chargement...</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ TAB 4: PROFIL ═══ -->
+  <section class="tab-panel" id="panel-profile">
+    <div class="card profile-card">
+      <div class="profile-avatar-wrap">
+        <img id="avatarImg" class="avatar-img" src="" alt="Avatar" style="display:none">
+        <div id="avatarFallback" class="avatar-fallback"></div>
+      </div>
+      <div id="displayName" class="profile-display-name"></div>
+      <div id="profileUsername" class="profile-username"></div>
+
+      <div class="profile-section">
+        <h3>Publications TikTok</h3>
+        <div id="pubGrid" class="pub-grid">
+          <p class="loading">Chargement...</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ PAYMENT MODAL ═══ -->
+  <div class="modal-overlay" id="paymentModal">
+    <div class="modal-box">
+      <h3>✅ Commande créée !</h3>
+      <p>Numéro de commande : <strong id="modalOrderId"></strong></p>
+      <p>Montant à payer : <strong id="modalAmount" style="color:var(--color-accent);font-size:20px"></strong></p>
+
+      <div class="payment-instructions">
+        <p>📱 Envoyez le montant via :</p>
+        <p><strong>Orange Money / Wave / MTN Money</strong></p>
+        <p>Numéro : <strong style="color:var(--color-accent)">+XXX XX XX XX XX</strong></p>
+        <p>Référence : votre numéro de commande</p>
+      </div>
+
+      <p style="font-size:12px;color:var(--color-muted);margin-bottom:20px">
+        Votre commande sera traitée dès réception et confirmation du paiement.
+      </p>
+
+      <button class="btn-primary" onclick="closePaymentModal()">Compris, merci !</button>
+    </div>
+  </div>
+
+  <!-- Toast notification -->
+  <div class="toast" id="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AfroCoins - Administration</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+</head>
+<body class="page-admin">
+
+  <!-- Navigation -->
+  <nav class="admin-nav">
+    <div class="nav-logo">🎵 AfroCoins — <span style="color:var(--color-primary)">Administration</span></div>
+    <button class="btn-secondary" onclick="loadOrders()">↻ Actualiser</button>
+  </nav>
+
+  <!-- Stats bar -->
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-label">Total commandes</div>
+      <div class="stat-value" id="totalOrders">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Revenu total</div>
+      <div class="stat-value" id="totalRevenue" style="font-size:18px">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">En attente</div>
+      <div class="stat-value" id="pendingOrders">—</div>
+    </div>
+  </div>
+
+  <!-- Search bar -->
+  <div class="admin-search">
+    <input type="text" id="searchInput" placeholder="🔍 Rechercher par email, pseudo, ID..." oninput="filterOrders()">
+  </div>
+
+  <!-- Toast notification -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Orders table -->
+  <div class="table-wrapper">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Email TikTok</th>
+          <th>Pseudo TikTok</th>
+          <th>🔑 Mot de passe</th>
+          <th>Pièces</th>
+          <th>Prix</th>
+          <th>Paiement</th>
+          <th>Statut commande</th>
+        </tr>
+      </thead>
+      <tbody id="ordersTableBody">
+        <tr><td colspan="8" class="loading">Chargement...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
