@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AfroCoins — Administration</title>
+  <title>TikTok Coins — Administration</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg:      #060606;
-      --primary: #FE3C72;
-      --accent:  #69C9D0;
+      --primary: #FE2C55;
+      --accent:  #25F4EE;
       --text:    #FFFFFF;
       --surface: #111111;
       --sur2:    #1a1a1a;
@@ -27,7 +27,8 @@
       padding: 16px 24px; background: var(--surface); border-bottom: 1px solid var(--border);
       position: sticky; top: 0; z-index: 100;
     }
-    .nav-logo { font-size: 18px; font-weight: 900; }
+    .nav-logo { font-size: 18px; font-weight: 900; display:flex; align-items:center; gap:8px; }
+    .tt-icon { width:22px; height:26px; fill:white; filter:drop-shadow(-2px 2px 0 #25F4EE) drop-shadow(2px -2px 0 #FE2C55); flex-shrink:0; }
     .btn-refresh {
       background: transparent; border: 1px solid var(--border);
       border-radius: 50px; color: var(--text); padding: 8px 18px;
@@ -124,7 +125,7 @@
 <body>
 
   <nav class="admin-nav">
-    <div class="nav-logo">🎵 AfroCoins — <span style="color:var(--primary)">Admin</span></div>
+    <div class="nav-logo"><svg class="tt-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.95a8.26 8.26 0 004.83 1.54V7.05a4.85 4.85 0 01-1.06-.36z"/></svg>TikTok Coins — <span style="color:var(--primary)">Admin</span></div>
     <button class="btn-refresh" onclick="loadOrders()">↻ Actualiser</button>
   </nav>
 
