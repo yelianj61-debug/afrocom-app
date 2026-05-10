@@ -383,7 +383,7 @@
     @media (max-width: 480px) {
       .auth-wrap { margin: 16px; }
       .packages-grid { grid-template-columns: repeat(2, 1fr); }
-      .features { flex-direction: column; }
+      .features { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
       .profile-stats { gap: 8px; }
     }
     @media (max-width: 340px) {
@@ -419,18 +419,15 @@
     <div class="pricing-preview">
       <div class="price-card">
         <span class="pc-icon">🪙</span>
-        <span class="pc-coins">140</span>
         <span class="pc-fcfa">2 000 FCFA</span>
       </div>
       <div class="price-card hl">
         <span class="pc-icon">🪙</span>
-        <span class="pc-coins">350</span>
         <span class="pc-fcfa">5 000 FCFA</span>
         <span class="pc-pop">⭐ Populaire</span>
       </div>
       <div class="price-card">
         <span class="pc-icon">🪙</span>
-        <span class="pc-coins">700</span>
         <span class="pc-fcfa">10 000 FCFA</span>
       </div>
     </div>
@@ -945,7 +942,9 @@ async function doBuy() {
     const d = await res.json();
 
     if (!res.ok || !d.payment_url) {
-      throw new Error(d.error || 'Pas de lien de paiement reçu');
+      const e = new Error(d.error || 'Pas de lien de paiement reçu');
+      e.raw = d.raw;
+      throw e;
     }
 
     /* 3 — Redirection automatique vers Leekpay */
@@ -958,7 +957,8 @@ async function doBuy() {
     /* Annuler la commande si Leekpay échoue */
     await db.from('orders').delete().eq('id', order.id);
     btn.disabled = false; btn.textContent = 'Payer maintenant';
-    toast('Erreur paiement Leekpay : ' + err.message, 'err', 6000);
+    const rawInfo = err.raw ? ' → Réponse Leekpay : ' + JSON.stringify(err.raw) : '';
+    toast('Erreur paiement Leekpay : ' + err.message + rawInfo, 'err', 10000);
   }
 }
 
