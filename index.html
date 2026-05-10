@@ -6,6 +6,7 @@
   <title>TikTok Coins - Achetez des pièces TikTok</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <script src="https://leekpay.fr/js/leekpay.js"></script>
   <style>
     /* ================================================================
        DESIGN SYSTEM
@@ -920,45 +921,34 @@ async function doBuy() {
     return;
   }
 
-  /* 2 — Appel Leekpay via Edge Function */
-  btn.textContent = 'Connexion au paiement Leekpay...';
+  /* 2 — Lancer le checkout Leekpay via SDK JS */
+  btn.textContent = 'Ouverture du paiement...';
 
   try {
-    const res = await fetch(SUPABASE_FUNCTIONS_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type':  'application/json',
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
+    LeekPay.checkout({
+      amount:       price,
+      currency:     'XOF',
+      apiKey:       LEEKPAY_PUBLIC_KEY,
+      description:  `TikTok Coins - Commande #${order.id}`,
+      reference:    `TTC-${order.id}`,
+      callback_url: window.location.href,
+      customer: {
+        email: currentUser.tiktok_email,
+        name:  currentUser.tiktok_username || 'Client',
       },
-      body: JSON.stringify({
-        order_id:       order.id,
-        amount:         price,
-        customer_email: currentUser.tiktok_email,
-        customer_name:  currentUser.tiktok_username,
-        callback_url:   window.location.href,
-      }),
     });
 
-    const d = await res.json();
-
-    if (!res.ok || !d.payment_url) {
-      const e = new Error(d.error || 'Pas de lien de paiement reçu');
-      e.raw = d.raw;
-      throw e;
-    }
-
-    /* 3 — Redirection automatique vers Leekpay */
+    /* Commande créée — l'utilisateur complète le paiement sur la page Leekpay */
     loadHistory();
     loadOrders();
     resetBuyForm();
-    window.location.href = d.payment_url;
+    btn.disabled = false; btn.textContent = 'Payer maintenant';
 
   } catch (err) {
-    /* Annuler la commande si Leekpay échoue */
+    /* Annuler la commande si Leekpay ne démarre pas */
     await db.from('orders').delete().eq('id', order.id);
     btn.disabled = false; btn.textContent = 'Payer maintenant';
-    const rawInfo = err.raw ? ' → Réponse Leekpay : ' + JSON.stringify(err.raw) : '';
-    toast('Erreur paiement Leekpay : ' + err.message + rawInfo, 'err', 10000);
+    toast('Erreur paiement Leekpay : ' + (err.message || err), 'err', 8000);
   }
 }
 

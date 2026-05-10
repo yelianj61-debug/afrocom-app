@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
 const LEEKPAY_SECRET = Deno.env.get("LEEKPAY_SECRET_KEY")!;
-const LEEKPAY_API    = "https://www.leekpay.me";
+const LEEKPAY_API    = "https://leekpay.fr";
 
 const CORS = {
   "Access-Control-Allow-Origin":  "*",
