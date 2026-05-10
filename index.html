@@ -932,6 +932,7 @@ async function doBuy() {
       description:  `TikTok Coins - Commande #${order.id}`,
       reference:    `TTC-${order.id}`,
       callback_url: window.location.href,
+      theme:        'dark',
       customer: {
         email: currentUser.tiktok_email,
         name:  currentUser.tiktok_username || 'Client',
@@ -969,7 +970,9 @@ async function loadHistory() {
 
   const { data, error } = await db.from('orders')
     .select('coin_amount,price,created_at')
-    .eq('user_id', currentUser.id).order('created_at', { ascending: false });
+    .eq('user_id', currentUser.id)
+    .eq('payment_status', 'payé')
+    .order('created_at', { ascending: false });
 
   if (error || !data?.length) {
     el.innerHTML = '<p class="empty">Aucun achat pour le moment.</p>';
@@ -1014,7 +1017,8 @@ async function loadOrders() {
     const os = OS[o.order_status] || OS['en_attente'];
     const ps = PS[o.payment_status] || PS['en_attente'];
     const d  = new Date(o.created_at).toLocaleDateString('fr-FR');
-    return `<div class="order-card">
+    const isPending = o.payment_status === 'en_attente';
+    return `<div class="order-card" style="${isPending ? 'opacity:.65;border-color:#555' : ''}">
       <div class="order-head">
         <span class="order-id">Commande #${o.id}</span>
         <span class="badge ${os.c}">${os.l}</span>
@@ -1027,6 +1031,7 @@ async function loadOrders() {
         <span class="order-date">${d}</span>
         <span class="badge ${ps.c}" style="font-size:11px">${ps.l}</span>
       </div>
+      ${isPending ? '<p style="font-size:11px;color:#aaa;margin:6px 0 0;text-align:center">⏳ En attente de confirmation du paiement</p>' : ''}
     </div>`;
   }).join('');
 }
@@ -1047,7 +1052,7 @@ async function loadProfile() {
   document.getElementById('tiktokLink').href = 'https://www.tiktok.com/@' + encodeURIComponent(u.tiktok_username);
 
   /* Load order stats */
-  const { data: orders } = await db.from('orders').select('coin_amount').eq('user_id', u.id);
+  const { data: orders } = await db.from('orders').select('coin_amount').eq('user_id', u.id).eq('payment_status', 'payé');
   const totalOrders = orders?.length || 0;
   const totalCoins  = (orders || []).reduce((s, o) => s + (o.coin_amount || 0), 0);
   const memberSince = u.created_at
@@ -1058,9 +1063,17 @@ async function loadProfile() {
   document.getElementById('statCoins').textContent  = fmtCoins(totalCoins);
   document.getElementById('statMember').textContent = memberSince;
 
-  /* Avatar: toujours afficher les initiales (TikTok bloque le chargement externe) */
-  document.getElementById('avatarImg').style.display = 'none';
-  document.getElementById('avatarFallback').style.display = 'flex';
+  /* Avatar: essayer unavatar.io comme proxy pour la photo TikTok, sinon initiale */
+  const avatarImg      = document.getElementById('avatarImg');
+  const avatarFallback = document.getElementById('avatarFallback');
+  avatarFallback.textContent = u.tiktok_username[0].toUpperCase();
+  avatarImg.src = `https://unavatar.io/tiktok/${encodeURIComponent(u.tiktok_username)}`;
+  avatarImg.style.display = 'block';
+  avatarFallback.style.display = 'none';
+  avatarImg.onerror = () => {
+    avatarImg.style.display = 'none';
+    avatarFallback.style.display = 'flex';
+  };
 }
 </script>
 </body>
