@@ -459,21 +459,15 @@ async function handleAdminLogin(e) {
 
   if (error) { showToast(error.message, 'error'); return; }
 
-  // Vérification badge admin
-  const { data: profile, error: pErr } = await sb.from('profiles')
-    .select('badge_level, first_name, last_name')
+  // Récupère le profil pour le nom d'affichage (sans vérification de badge)
+  const { data: profile } = await sb.from('profiles')
+    .select('first_name, last_name')
     .eq('id', data.user.id)
     .single();
 
-  if (pErr || !profile || profile.badge_level !== 'admin') {
-    await sb.auth.signOut();
-    showToast('Accès refusé : compte non administrateur', 'error');
-    return;
-  }
-
   ADMIN.state.adminUser    = data.user;
-  ADMIN.state.adminProfile = profile;
-  showAdminDashboard(profile);
+  ADMIN.state.adminProfile = profile || { first_name: 'Admin', last_name: 'RIVO' };
+  showAdminDashboard(ADMIN.state.adminProfile);
 }
 
 function showAdminDashboard(profile) {
@@ -498,20 +492,19 @@ async function handleAdminLogout() {
   }
 }
 
-// Auth state listener — restaure la session si déjà connecté
+// Auth state listener — restaure la session si déjà connecté (email admin uniquement)
 sb.auth.onAuthStateChange(async (event, session) => {
   if (session && session.user && !ADMIN.state.adminUser) {
-    const { data: profile } = await sb.from('profiles')
-      .select('first_name, last_name, badge_level')
-      .eq('id', session.user.id)
-      .single();
-
-    if (!profile || profile.badge_level !== 'admin') {
+    if (session.user.email !== ADMIN_EMAIL) {
       await sb.auth.signOut(); return;
     }
+    const { data: profile } = await sb.from('profiles')
+      .select('first_name, last_name')
+      .eq('id', session.user.id)
+      .single();
     ADMIN.state.adminUser    = session.user;
-    ADMIN.state.adminProfile = profile;
-    showAdminDashboard(profile);
+    ADMIN.state.adminProfile = profile || { first_name: 'Admin', last_name: 'RIVO' };
+    showAdminDashboard(ADMIN.state.adminProfile);
   }
 });
 
@@ -762,7 +755,7 @@ function uploadEbookFile() {
 // ═══════════════════════════════════════════════════
 async function loadWithdrawals() {
   const { data, error } = await sb.from('withdrawals')
-    .select('id, amount, currency, method, status, created_at, user_id, profiles(first_name, last_name)')
+    .select('id, amount, currency, method, status, created_at, user_id, phone_number, operator, profiles(first_name, last_name)')
     .order('created_at', { ascending: false });
 
   if (error) { showToast('Erreur chargement retraits: ' + error.message, 'error'); return; }
@@ -779,7 +772,7 @@ async function loadWithdrawals() {
     <tr class="hover:bg-gray-50 transition-colors">
       <td class="px-6 py-4 font-medium text-gray-900">${escHtml(name)}</td>
       <td class="px-6 py-4 text-right font-bold text-gray-800">${formatPrice(w.amount, w.currency)}</td>
-      <td class="px-6 py-4 text-gray-600">${methodLabel(w.method)}</td>
+      <td class="px-6 py-4 text-gray-600">${methodLabel(w.method)}${w.phone_number ? `<div class="text-xs text-gray-400 mt-0.5">${escHtml(w.phone_number)}${w.operator ? ' · ' + escHtml(w.operator) : ''}</div>` : ''}</td>
       <td class="px-6 py-4"><span class="status-badge ${statusInfo.cls}">${statusInfo.label}</span></td>
       <td class="px-6 py-4 text-gray-400 text-xs">${new Date(w.created_at).toLocaleDateString('fr-FR')}</td>
       <td class="px-6 py-4 text-center">
