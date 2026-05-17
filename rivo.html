@@ -216,6 +216,7 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
           <button type="submit" id="li-btn" class="btn-primary" style="width:100%;justify-content:center;padding:.875rem;font-size:1rem">
             Se connecter
           </button>
+          <p id="li-err" style="display:none;color:#dc2626;font-size:.85rem;text-align:center;background:#fef2f2;border:1px solid #fecaca;border-radius:.75rem;padding:.625rem .875rem;margin-top:-.25rem"></p>
         </form>
         <p style="text-align:center;color:#6b7280;margin-top:1.25rem;font-size:.875rem">
           Pas encore de compte ?
@@ -281,6 +282,7 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
           <button type="submit" id="rg-btn" class="btn-accent" style="width:100%;justify-content:center;padding:.875rem;font-size:1rem;margin-top:.25rem">
             Créer mon compte
           </button>
+          <p id="rg-err" style="display:none;color:#dc2626;font-size:.85rem;text-align:center;background:#fef2f2;border:1px solid #fecaca;border-radius:.75rem;padding:.625rem .875rem"></p>
         </form>
         <p style="text-align:center;color:#6b7280;margin-top:1.25rem;font-size:.875rem">
           Déjà inscrit ?
@@ -468,6 +470,8 @@ function fmt(n,c='XOF'){return c==='XOF'?new Intl.NumberFormat('fr-FR').format(n
 function badgeInfo(l){const m={debutant:['🌱','Débutant','#dbeafe','#1d4ed8'],bronze:['🥉','Bronze','#fef3c7','#92400e'],argent:['🥈','Argent','#f1f5f9','#475569'],or:['🥇','Or','#fef9c3','#854d0e'],diamant:['💎','Diamant','#dbeafe','#1d4ed8'],admin:['👑','Admin','#ede9fe','#6d28d9']};return m[l]||m.debutant;}
 function togglePwd(id){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';}
 function setBtn(id,html,dis=false){const b=document.getElementById(id);if(b){b.innerHTML=html;b.disabled=dis;}}
+function showErr(id,msg){const el=document.getElementById(id);if(!el)return;el.textContent=msg;el.style.display=msg?'block':'none';}
+function withTimeout(p,ms=15000){return Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('Délai dépassé. Vérifiez votre connexion internet.')),ms))]);}
 function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('show');}
 function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show');}
 
@@ -481,18 +485,18 @@ function goTo(p){
 
 // ── Auth check on load ───────────────────────────────
 (async()=>{
-  const {data:{session}}=await sb.auth.getSession();
-  if(session){CU=session.user;await loadProfileData();goTo('dashboard');}
-  // load landing courses regardless
+  try{
+    const {data:{session}}=await withTimeout(sb.auth.getSession());
+    if(session){CU=session.user;await loadProfileData();goTo('dashboard');}
+    const ps=new URLSearchParams(location.search).get('payment');
+    const pid=new URLSearchParams(location.search).get('pid');
+    if(ps==='ok'&&pid){
+      await sb.from('purchases').update({status:'complete'}).eq('id',pid);
+      history.replaceState({},'',location.pathname);
+      if(session){goTo('dashboard');setTimeout(()=>toast('Paiement réussi ! 🎉'),500);}
+    }
+  }catch(e){console.error('Init error:',e);}
   loadLandingCourses();
-  // check payment success
-  const ps=new URLSearchParams(location.search).get('payment');
-  const pid=new URLSearchParams(location.search).get('pid');
-  if(ps==='ok'&&pid){
-    await sb.from('purchases').update({status:'complete'}).eq('id',pid);
-    history.replaceState({},'',location.pathname);
-    if(session){goTo('dashboard');setTimeout(()=>toast('Paiement réussi ! 🎉'),500);}
-  }
 })();
 
 async function loadProfileData(){
@@ -513,27 +517,30 @@ async function loadProfileData(){
 // ── Login ─────────────────────────────────────────────
 async function doLogin(e){
   e.preventDefault();
-  const email=document.getElementById('li-email').value.trim();
-  const pwd=document.getElementById('li-pwd').value;
+  showErr('li-err','');
   setBtn('li-btn','<span class="spin"></span> Connexion...',true);
-  const{data,error}=await sb.auth.signInWithPassword({email,password:pwd});
-  if(error){toast('Email ou mot de passe incorrect','err');setBtn('li-btn','Se connecter');return;}
-  CU=data.user;
-  const{data:p}=await sb.from('profiles').select('badge_level').eq('id',CU.id).single();
-  if(p?.badge_level==='admin'){
-    toast('Connexion admin réussie !');
-    // On charge admin dans rivo-admin.html → on redirige
-    setTimeout(()=>{window.location.href='./rivo-admin.html';},700);
-    return;
+  try{
+    const email=document.getElementById('li-email').value.trim();
+    const pwd=document.getElementById('li-pwd').value;
+    const{data,error}=await withTimeout(sb.auth.signInWithPassword({email,password:pwd}));
+    if(error)throw error;
+    CU=data.user;
+    const{data:p}=await withTimeout(sb.from('profiles').select('badge_level').eq('id',CU.id).single());
+    if(p?.badge_level==='admin'){toast('Connexion admin réussie !');setTimeout(()=>{window.location.href='./rivo-admin.html';},700);return;}
+    await loadProfileData();
+    toast('Connexion réussie ! 🎉');
+    setTimeout(()=>{goTo('dashboard');if(!loaded.bord){loaded.bord=true;loadBord();}},500);
+  }catch(err){
+    showErr('li-err',err.message||'Email ou mot de passe incorrect');
+  }finally{
+    setBtn('li-btn','Se connecter',false);
   }
-  await loadProfileData();
-  toast('Connexion réussie ! 🎉');
-  setTimeout(()=>{goTo('dashboard');if(!loaded.bord){loaded.bord=true;loadBord();}},500);
 }
 
 // ── Register ──────────────────────────────────────────
 async function doRegister(e){
   e.preventDefault();
+  showErr('rg-err','');
   const fn=document.getElementById('rg-fn').value.trim();
   const ln=document.getElementById('rg-ln').value.trim();
   const email=document.getElementById('rg-email').value.trim();
@@ -541,25 +548,31 @@ async function doRegister(e){
   const pwd=document.getElementById('rg-pwd').value;
   const cpwd=document.getElementById('rg-cpwd').value;
   const ref=document.getElementById('rg-ref').value.trim().toUpperCase();
-  if(fn.length<2||ln.length<2){toast('Prénom et nom requis (min 2 caractères)','err');return;}
-  if(pwd.length<8){toast('Mot de passe : minimum 8 caractères','err');return;}
-  if(pwd!==cpwd){toast('Les mots de passe ne correspondent pas','err');return;}
+  if(fn.length<2||ln.length<2){showErr('rg-err','Prénom et nom requis (min 2 caractères)');return;}
+  if(pwd.length<8){showErr('rg-err','Mot de passe : minimum 8 caractères');return;}
+  if(pwd!==cpwd){showErr('rg-err','Les mots de passe ne correspondent pas');return;}
   setBtn('rg-btn','<span class="spin"></span> Création...',true);
-  let refId=null;
-  if(ref){
-    const{data:r}=await sb.from('profiles').select('id').eq('referral_code',ref).single();
-    if(!r){toast('Code de parrainage invalide','err');setBtn('rg-btn','Créer mon compte');return;}
-    refId=r.id;
+  try{
+    let refId=null;
+    if(ref){
+      const{data:r}=await withTimeout(sb.from('profiles').select('id').eq('referral_code',ref).single());
+      if(!r)throw new Error('Code de parrainage invalide');
+      refId=r.id;
+    }
+    const{data:auth,error}=await withTimeout(sb.auth.signUp({email,password:pwd,options:{data:{first_name:fn,last_name:ln}}}));
+    if(error)throw error;
+    if(auth.user){
+      await sb.from('profiles').update({first_name:fn,last_name:ln,birth_date:birth,referred_by:refId}).eq('id',auth.user.id);
+      CU=auth.user;
+      await loadProfileData();
+    }
+    toast('Bienvenue sur RIVO ! 🎉');
+    setTimeout(()=>{goTo('dashboard');if(!loaded.bord){loaded.bord=true;loadBord();}},600);
+  }catch(err){
+    showErr('rg-err',err.message||'Erreur lors de l\'inscription');
+  }finally{
+    setBtn('rg-btn','Créer mon compte',false);
   }
-  const{data:auth,error}=await sb.auth.signUp({email,password:pwd,options:{data:{first_name:fn,last_name:ln}}});
-  if(error){toast(error.message||'Erreur inscription','err');setBtn('rg-btn','Créer mon compte');return;}
-  if(auth.user){
-    await sb.from('profiles').update({first_name:fn,last_name:ln,birth_date:birth,referred_by:refId}).eq('id',auth.user.id);
-    CU=auth.user;
-    await loadProfileData();
-  }
-  toast('Bienvenue sur RIVO ! 🎉');
-  setTimeout(()=>{goTo('dashboard');if(!loaded.bord){loaded.bord=true;loadBord();}},600);
 }
 
 // ── Logout ────────────────────────────────────────────
@@ -625,22 +638,26 @@ function closePayModal(){document.getElementById('pay-modal').style.display='non
 async function confirmPay(){
   if(!pendingCourse)return;
   setBtn('pay-btn','<span class="spin"></span>',true);
-  const{data:pur,error}=await sb.from('purchases').insert({user_id:CU.id,course_id:pendingCourse.id,amount:pendingCourse.price,currency:pendingCourse.currency,status:'en_attente',payment_method:'fedapay'}).select().single();
-  if(error){toast('Erreur création commande','err');setBtn('pay-btn','⚡ Payer');return;}
   try{
+    const{data:pur,error}=await withTimeout(sb.from('purchases').insert({user_id:CU.id,course_id:pendingCourse.id,amount:pendingCourse.price,currency:pendingCourse.currency,status:'en_attente',payment_method:'fedapay'}).select().single());
+    if(error)throw new Error('Erreur création commande');
     const base=location.href.split('?')[0];
-    const r=await fetch('https://api.fedapay.com/v1/transactions',{method:'POST',headers:{'Authorization':`Bearer ${FP_SK}`,'Content-Type':'application/json'},body:JSON.stringify({description:`RIVO - ${pendingCourse.title}`,amount:pendingCourse.price,currency:{iso:pendingCourse.currency==='XOF'?'XOF':pendingCourse.currency},callback_url:`${base}?payment=ok&pid=${pur.id}`,redirect_url:`${base}?payment=ok&pid=${pur.id}`,meta:{pid:pur.id,uid:CU.id,cid:pendingCourse.id}})});
+    const r=await withTimeout(fetch('https://api.fedapay.com/v1/transactions',{method:'POST',headers:{'Authorization':`Bearer ${FP_SK}`,'Content-Type':'application/json'},body:JSON.stringify({description:`RIVO - ${pendingCourse.title}`,amount:pendingCourse.price,currency:{iso:pendingCourse.currency==='XOF'?'XOF':pendingCourse.currency},callback_url:`${base}?payment=ok&pid=${pur.id}`,redirect_url:`${base}?payment=ok&pid=${pur.id}`,meta:{pid:pur.id,uid:CU.id,cid:pendingCourse.id}})}));
     const d=await r.json();
     const txId=d.v1?.transaction?.id||d.transaction?.id;
     if(txId){
       await sb.from('purchases').update({transaction_id:String(txId)}).eq('id',pur.id);
-      const tr=await fetch(`https://api.fedapay.com/v1/transactions/${txId}/token`,{method:'POST',headers:{'Authorization':`Bearer ${FP_SK}`,'Content-Type':'application/json'}});
+      const tr=await withTimeout(fetch(`https://api.fedapay.com/v1/transactions/${txId}/token`,{method:'POST',headers:{'Authorization':`Bearer ${FP_SK}`,'Content-Type':'application/json'}}));
       const td=await tr.json();
       const token=td.v1?.token?.token||td.token?.token||td.token;
       if(token){window.location.href=`https://checkout.fedapay.com/${token}`;return;}
     }
-    throw new Error('Token manquant');
-  }catch(err){toast('Erreur paiement, réessayez','err');setBtn('pay-btn','⚡ Payer');}
+    throw new Error('Token de paiement manquant');
+  }catch(err){
+    toast(err.message||'Erreur paiement, réessayez','err');
+  }finally{
+    setBtn('pay-btn','⚡ Payer',false);
+  }
 }
 
 // ── Dashboard: Mes formations ─────────────────────────

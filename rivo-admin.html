@@ -329,6 +329,10 @@ const SB_URL  = 'https://qwdttzsbbspayojzeugy.supabase.co';
 const SB_ANON = 'sb_publishable_tG64uzNsmT0XDV7pmglqFA_lxQ4xIFm';
 const sb = window.supabase.createClient(SB_URL, SB_ANON);
 
+function withTimeout(p, ms = 15000) {
+  return Promise.race([p, new Promise((_,rej) => setTimeout(() => rej(new Error('Délai dépassé. Vérifiez votre connexion internet.')), ms))]);
+}
+
 let adminUser = null;
 let adminProfile = null;
 let allUsers = [];
@@ -336,23 +340,34 @@ let loaded = {};
 
 /* ── Init ─────────────────────────────────────────────── */
 async function init() {
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session) return redirect();
+  try {
+    const { data: { session } } = await withTimeout(sb.auth.getSession());
+    if (!session) return redirect();
 
-  const { data: profile } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
-  if (!profile || profile.badge_level !== 'admin') return redirect();
+    const { data: profile } = await withTimeout(sb.from('profiles').select('*').eq('id', session.user.id).single());
+    if (!profile || profile.badge_level !== 'admin') return redirect();
 
-  adminUser = session.user;
-  adminProfile = profile;
+    adminUser = session.user;
+    adminProfile = profile;
 
-  const initials = ((profile.first_name||'A')[0] + (profile.last_name||'D')[0]).toUpperCase();
-  document.getElementById('admin-avatar').textContent = initials;
-  document.getElementById('admin-name').textContent = `${profile.first_name||''} ${profile.last_name||''}`.trim() || 'Admin';
+    const initials = ((profile.first_name||'A')[0] + (profile.last_name||'D')[0]).toUpperCase();
+    document.getElementById('admin-avatar').textContent = initials;
+    document.getElementById('admin-name').textContent = `${profile.first_name||''} ${profile.last_name||''}`.trim() || 'Admin';
 
-  document.getElementById('loading-screen').classList.add('hidden');
-  document.getElementById('admin-app').classList.remove('hidden');
+    document.getElementById('loading-screen').classList.add('hidden');
+    document.getElementById('admin-app').classList.remove('hidden');
 
-  switchTab('dashboard');
+    switchTab('dashboard');
+  } catch(err) {
+    document.getElementById('loading-screen').innerHTML = `
+      <div style="text-align:center;padding:2rem;color:#f87171;max-width:360px">
+        <div style="font-size:2rem;margin-bottom:1rem">⚠️</div>
+        <p style="font-weight:700;margin-bottom:.5rem">Erreur de connexion</p>
+        <p style="font-size:.85rem;color:#9ca3af;margin-bottom:1.5rem">${err.message||'Impossible de joindre le serveur'}</p>
+        <button onclick="init()" style="background:#7c3aed;color:#fff;border:none;border-radius:8px;padding:8px 20px;cursor:pointer;font-weight:600">Réessayer</button>
+        <br/><button onclick="redirect()" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:.8rem;margin-top:.75rem">Retour à l'accueil</button>
+      </div>`;
+  }
 }
 
 function redirect() {
@@ -553,34 +568,41 @@ function openCourseModal(course) {
 
 async function saveCourse(e) {
   e.preventDefault();
-  const id       = document.getElementById('course-id').value;
-  const errEl    = document.getElementById('course-error');
+  const id    = document.getElementById('course-id').value;
+  const errEl = document.getElementById('course-error');
+  const saveBtn = e.submitter || document.querySelector('#course-form button[type=submit]');
   errEl.classList.add('hidden');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Enregistrement…'; }
+  try {
+    const payload = {
+      title:             document.getElementById('course-title').value.trim(),
+      short_description: document.getElementById('course-short').value.trim(),
+      description:       document.getElementById('course-desc').value.trim(),
+      price:             parseFloat(document.getElementById('course-price').value) || 0,
+      currency:          document.getElementById('course-currency').value,
+      cover_url:         document.getElementById('course-cover').value.trim() || null,
+      file_url:          document.getElementById('course-file').value.trim() || null,
+      published:         document.getElementById('course-published').checked,
+    };
 
-  const payload = {
-    title:             document.getElementById('course-title').value.trim(),
-    short_description: document.getElementById('course-short').value.trim(),
-    description:       document.getElementById('course-desc').value.trim(),
-    price:             parseFloat(document.getElementById('course-price').value) || 0,
-    currency:          document.getElementById('course-currency').value,
-    cover_url:         document.getElementById('course-cover').value.trim() || null,
-    file_url:          document.getElementById('course-file').value.trim() || null,
-    published:         document.getElementById('course-published').checked,
-  };
+    let err;
+    if (id) {
+      ({ error: err } = await withTimeout(sb.from('courses').update(payload).eq('id', id)));
+    } else {
+      ({ error: err } = await withTimeout(sb.from('courses').insert(payload)));
+    }
+    if (err) throw err;
 
-  let err;
-  if (id) {
-    ({ error: err } = await sb.from('courses').update(payload).eq('id', id));
-  } else {
-    ({ error: err } = await sb.from('courses').insert(payload));
+    closeModal('course-modal');
+    toast(id ? 'Formation mise à jour !' : 'Formation créée !');
+    loaded.formations = false;
+    loadFormations();
+  } catch(err) {
+    errEl.textContent = err.message || 'Erreur lors de la sauvegarde';
+    errEl.classList.remove('hidden');
+  } finally {
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Enregistrer'; }
   }
-
-  if (err) { errEl.textContent = err.message; errEl.classList.remove('hidden'); return; }
-
-  closeModal('course-modal');
-  toast(id ? 'Formation mise à jour !' : 'Formation créée !');
-  loaded.formations = false;
-  loadFormations();
 }
 
 async function togglePublish(id, current) {
@@ -636,31 +658,38 @@ function renderRetraits(rows) {
 
 async function validateRetrait(id, userId, amount) {
   confirm('Valider le retrait', `Valider et déduire ${amount.toLocaleString('fr-FR')} FCFA du solde de l'utilisateur ?`, async () => {
-    // Get current balance
-    const { data: prof } = await sb.from('profiles').select('balance').eq('id', userId).single();
-    if (!prof) { toast('Profil introuvable', false); return; }
-    const newBalance = (prof.balance || 0) - amount;
-    if (newBalance < 0) { toast('Solde insuffisant pour ce retrait', false); return; }
+    try {
+      const { data: prof } = await withTimeout(sb.from('profiles').select('balance').eq('id', userId).single());
+      if (!prof) throw new Error('Profil introuvable');
+      const newBalance = (prof.balance || 0) - amount;
+      if (newBalance < 0) throw new Error('Solde insuffisant pour ce retrait');
 
-    const [r1, r2] = await Promise.all([
-      sb.from('withdrawals').update({ status: 'complete' }).eq('id', id),
-      sb.from('profiles').update({ balance: newBalance }).eq('id', userId),
-    ]);
-    if (r1.error || r2.error) { toast('Erreur lors de la validation', false); return; }
-    toast('Retrait validé, solde déduit');
-    loaded.retraits = false;
-    loadRetraits();
-    loaded.dashboard = false;
+      const [r1, r2] = await withTimeout(Promise.all([
+        sb.from('withdrawals').update({ status: 'complete' }).eq('id', id),
+        sb.from('profiles').update({ balance: newBalance }).eq('id', userId),
+      ]));
+      if (r1.error || r2.error) throw new Error('Erreur lors de la validation');
+      toast('Retrait validé, solde déduit');
+      loaded.retraits = false;
+      loadRetraits();
+      loaded.dashboard = false;
+    } catch(err) {
+      toast(err.message || 'Erreur lors de la validation', false);
+    }
   });
 }
 
 async function rejectRetrait(id) {
   confirm('Rejeter le retrait', 'Confirmer le rejet de cette demande de retrait ?', async () => {
-    const { error } = await sb.from('withdrawals').update({ status: 'rejete' }).eq('id', id);
-    if (error) { toast(error.message, false); return; }
-    toast('Retrait rejeté');
-    loaded.retraits = false;
-    loadRetraits();
+    try {
+      const { error } = await withTimeout(sb.from('withdrawals').update({ status: 'rejete' }).eq('id', id));
+      if (error) throw error;
+      toast('Retrait rejeté');
+      loaded.retraits = false;
+      loadRetraits();
+    } catch(err) {
+      toast(err.message || 'Erreur lors du rejet', false);
+    }
   });
 }
 
@@ -700,26 +729,26 @@ async function loadAttestations() {
 async function sendAttestation(purchaseId, userId, courseId) {
   const pdfUrl = document.getElementById('pdf-' + purchaseId).value.trim();
   const message = document.getElementById('msg-' + purchaseId).value.trim();
-
   if (!pdfUrl) { toast('Veuillez entrer l\'URL du PDF', false); return; }
 
-  // Insert certificate
-  const { data: cert, error: certErr } = await sb.from('certificates').insert({
-    user_id: userId,
-    course_id: courseId,
-    pdf_url: pdfUrl,
-    message: message || null,
-  }).select().single();
+  const btn = document.querySelector(`#attest-${purchaseId} button`);
+  if (btn) { btn.disabled = true; btn.textContent = 'Envoi…'; }
+  try {
+    const { data: cert, error: certErr } = await withTimeout(sb.from('certificates').insert({
+      user_id: userId, course_id: courseId, pdf_url: pdfUrl, message: message || null,
+    }).select().single());
+    if (certErr) throw certErr;
 
-  if (certErr) { toast(certErr.message, false); return; }
+    const { error: purchErr } = await withTimeout(sb.from('purchases').update({ certificate_id: cert.id }).eq('id', purchaseId));
+    if (purchErr) throw purchErr;
 
-  // Link to purchase
-  const { error: purchErr } = await sb.from('purchases').update({ certificate_id: cert.id }).eq('id', purchaseId);
-  if (purchErr) { toast(purchErr.message, false); return; }
-
-  toast('Attestation envoyée avec succès !');
-  document.getElementById('attest-' + purchaseId).remove();
-  loaded.dashboard = false;
+    toast('Attestation envoyée avec succès !');
+    document.getElementById('attest-' + purchaseId).remove();
+    loaded.dashboard = false;
+  } catch(err) {
+    toast(err.message || 'Erreur lors de l\'envoi', false);
+    if (btn) { btn.disabled = false; btn.textContent = 'Envoyer l\'attestation'; }
+  }
 }
 
 /* ── Start ────────────────────────────────────────────── */
