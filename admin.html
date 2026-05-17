@@ -53,37 +53,32 @@
       <p class="text-gray-500 text-sm mt-1">RIVO — Accès réservé</p>
     </div>
     <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8">
-      <div id="login-step-email" class="">
-        <div class="text-center mb-6">
-          <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-          </div>
-          <h2 class="font-bold text-gray-900 text-lg">Connexion par lien magique</h2>
-          <p class="text-gray-500 text-sm mt-1">Entrez votre email admin pour recevoir un lien de connexion sécurisé</p>
+      <div class="text-center mb-6">
+        <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
         </div>
-        <form onsubmit="handleAdminMagicLink(event)">
-          <div class="mb-5">
-            <label class="block text-sm font-semibold text-gray-700 mb-2">Email administrateur</label>
-            <input id="admin-email-input" name="email" type="email" required
-              value="assistancetrc416@gmail.com"
-              placeholder="assistancetrc416@gmail.com"
-              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-gray-800">
-          </div>
-          <button type="submit" id="btn-magic-link" data-label="Recevoir le lien de connexion"
-            class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-md shadow-blue-200">
-            Recevoir le lien de connexion
-          </button>
-        </form>
+        <h2 class="font-bold text-gray-900 text-lg">Connexion administrateur</h2>
+        <p class="text-gray-500 text-sm mt-1">Accès réservé à l'équipe RIVO</p>
       </div>
-
-      <div id="login-step-confirm" class="hidden text-center">
-        <div class="w-16 h-16 bg-green-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <form onsubmit="handleAdminLogin(event)" novalidate>
+        <div class="mb-4">
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+          <input name="email" type="email" required
+            value="assistancetrc416@gmail.com"
+            readonly
+            class="w-full px-4 py-3 border border-gray-200 bg-gray-50 rounded-xl outline-none text-gray-700 font-medium cursor-not-allowed">
         </div>
-        <h2 class="font-bold text-gray-900 text-lg mb-2">Lien envoyé !</h2>
-        <p class="text-gray-500 text-sm">Vérifiez votre boîte mail <strong id="confirm-email-display"></strong> et cliquez sur le lien pour accéder au panneau d'administration.</p>
-        <button onclick="resetLoginStep()" class="mt-6 text-sm text-blue-600 hover:underline font-medium">Renvoyer un lien</button>
-      </div>
+        <div class="mb-6">
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Mot de passe</label>
+          <input id="admin-password-input" name="password" type="password" required
+            placeholder="Votre mot de passe"
+            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-gray-800">
+        </div>
+        <button type="submit" id="btn-admin-login" data-label="Accéder au panneau"
+          class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-md shadow-blue-200">
+          Accéder au panneau
+        </button>
+      </form>
     </div>
   </div>
 </div>
@@ -447,67 +442,76 @@ function closeModal(id, e) {
 // ═══════════════════════════════════════════════════
 // AUTH
 // ═══════════════════════════════════════════════════
-async function handleAdminMagicLink(e) {
+async function handleAdminLogin(e) {
   e.preventDefault();
-  const email = document.getElementById('admin-email-input').value.trim();
-  if (!email || email !== ADMIN_EMAIL) {
-    showToast('Accès réservé à l\'administrateur', 'error'); return;
-  }
-  const btn = document.getElementById('btn-magic-link');
-  btn.disabled = true; btn.textContent = 'Envoi en cours...';
+  const password = document.getElementById('admin-password-input').value;
+  if (!password) { showToast('Veuillez saisir votre mot de passe', 'error'); return; }
 
-  const { error } = await sb.auth.signInWithOtp({
-    email,
-    options: { shouldCreateUser: false }
+  const btn = document.getElementById('btn-admin-login');
+  btn.disabled = true; btn.textContent = 'Connexion...';
+
+  const { data, error } = await sb.auth.signInWithPassword({
+    email: ADMIN_EMAIL,
+    password: password
   });
 
   btn.disabled = false; btn.textContent = btn.dataset.label;
 
   if (error) { showToast(error.message, 'error'); return; }
-  document.getElementById('login-step-email').classList.add('hidden');
-  document.getElementById('login-step-confirm').classList.remove('hidden');
-  document.getElementById('confirm-email-display').textContent = email;
+
+  // Vérification badge admin
+  const { data: profile, error: pErr } = await sb.from('profiles')
+    .select('badge_level, first_name, last_name')
+    .eq('id', data.user.id)
+    .single();
+
+  if (pErr || !profile || profile.badge_level !== 'admin') {
+    await sb.auth.signOut();
+    showToast('Accès refusé : compte non administrateur', 'error');
+    return;
+  }
+
+  ADMIN.state.adminUser    = data.user;
+  ADMIN.state.adminProfile = profile;
+  showAdminDashboard(profile);
 }
 
-function resetLoginStep() {
-  document.getElementById('login-step-email').classList.remove('hidden');
-  document.getElementById('login-step-confirm').classList.add('hidden');
+function showAdminDashboard(profile) {
+  document.getElementById('page-admin-login').classList.add('hidden');
+  document.getElementById('page-admin-dashboard').classList.remove('hidden');
+  const name = profile.first_name + ' ' + profile.last_name;
+  const el   = document.getElementById('admin-name-display');
+  const chip = document.getElementById('admin-info-chip');
+  if (el) el.textContent   = name;
+  if (chip) chip.textContent = name;
+  showSection('stats');
 }
 
 async function handleAdminLogout() {
   await sb.auth.signOut();
+  ADMIN.state.adminUser    = null;
+  ADMIN.state.adminProfile = null;
   document.getElementById('page-admin-dashboard').classList.add('hidden');
   document.getElementById('page-admin-login').classList.remove('hidden');
-  resetLoginStep();
+  if (document.getElementById('admin-password-input')) {
+    document.getElementById('admin-password-input').value = '';
+  }
 }
 
-// Auth state listener
+// Auth state listener — restaure la session si déjà connecté
 sb.auth.onAuthStateChange(async (event, session) => {
-  if (session?.user) {
-    // Verify admin
+  if (session && session.user && !ADMIN.state.adminUser) {
     const { data: profile } = await sb.from('profiles')
       .select('first_name, last_name, badge_level')
       .eq('id', session.user.id)
       .single();
 
     if (!profile || profile.badge_level !== 'admin') {
-      await sb.auth.signOut();
-      showToast('Accès refusé : compte non administrateur', 'error');
-      return;
+      await sb.auth.signOut(); return;
     }
-    ADMIN.state.adminUser = session.user;
+    ADMIN.state.adminUser    = session.user;
     ADMIN.state.adminProfile = profile;
-
-    document.getElementById('page-admin-login').classList.add('hidden');
-    document.getElementById('page-admin-dashboard').classList.remove('hidden');
-
-    const nameDisplay = `${profile.first_name} ${profile.last_name}`;
-    const el = document.getElementById('admin-name-display');
-    if (el) el.textContent = nameDisplay;
-    const chip = document.getElementById('admin-info-chip');
-    if (chip) chip.textContent = nameDisplay;
-
-    showSection('stats');
+    showAdminDashboard(profile);
   }
 });
 
