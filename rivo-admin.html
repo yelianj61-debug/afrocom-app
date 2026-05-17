@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>RIVO Admin</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
   body { font-family: 'Segoe UI', sans-serif; background:#0f0f1a; color:#e2e8f0; }
   .sidebar { background:#1a1a2e; border-right:1px solid #2d2d4e; }
@@ -327,12 +326,7 @@
 <script>
 const SB_URL  = 'https://qwdttzsbbspayojzeugy.supabase.co';
 const SB_ANON = 'sb_publishable_tG64uzNsmT0XDV7pmglqFA_lxQ4xIFm';
-let sb;
-try {
-  sb = window.supabase.createClient(SB_URL, SB_ANON);
-} catch(e) {
-  document.getElementById('loading-screen').innerHTML = '<div style="text-align:center;padding:2rem;color:#f87171;max-width:360px"><div style="font-size:2rem;margin-bottom:1rem">⚠️</div><p style="font-weight:700;margin-bottom:.5rem">Bibliothèque non chargée</p><p style="font-size:.85rem;color:#9ca3af;margin-bottom:1.5rem">Vérifiez votre connexion internet.</p><button onclick="location.reload()" style="background:#7c3aed;color:#fff;border:none;border-radius:8px;padding:8px 20px;cursor:pointer;font-weight:600">🔄 Réessayer</button></div>';
-}
+let sb = null;
 
 function withTimeout(p, ms = 15000) {
   return Promise.race([p, new Promise((_,rej) => setTimeout(() => rej(new Error('Délai dépassé. Vérifiez votre connexion internet.')), ms))]);
@@ -756,8 +750,30 @@ async function sendAttestation(purchaseId, userId, courseId) {
   }
 }
 
-/* ── Start ────────────────────────────────────────────── */
-init();
+/* ── Dynamic CDN loader with fallback ────────────────── */
+(function(){
+  var cdns=[
+    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js',
+    'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js'
+  ];
+  function showErr(msg){
+    document.getElementById('loading-screen').innerHTML='<div style="text-align:center;padding:2rem;color:#f87171;max-width:360px"><div style="font-size:2rem;margin-bottom:1rem">⚠️</div><p style="font-weight:700;margin-bottom:.5rem">Erreur de chargement</p><p style="font-size:.85rem;color:#9ca3af;margin-bottom:1.5rem">'+msg+'</p><button onclick="location.reload()" style="background:#7c3aed;color:#fff;border:none;border-radius:8px;padding:8px 20px;cursor:pointer;font-weight:600">🔄 Réessayer</button><br/><button onclick="window.location.href=\'./rivo.html\'" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:.8rem;margin-top:.75rem">Retour à l\'accueil</button></div>';
+  }
+  function tryLoad(i){
+    if(i>=cdns.length){showErr('Impossible de charger la bibliothèque Supabase.<br>Vérifiez votre connexion internet.');return;}
+    var s=document.createElement('script');
+    s.src=cdns[i];
+    s.onload=function(){
+      try{
+        sb=window.supabase.createClient(SB_URL,SB_ANON);
+        init();
+      }catch(e){tryLoad(i+1);}
+    };
+    s.onerror=function(){tryLoad(i+1);};
+    document.head.appendChild(s);
+  }
+  tryLoad(0);
+})();
 </script>
 </body>
 </html>

@@ -447,18 +447,12 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
 </div>
 
 <!-- ══════════════ SCRIPTS ══════════════ -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 // ── Config ────────────────────────────────────────────
 const SB_URL  = 'https://qwdttzsbbspayojzeugy.supabase.co';
 const SB_ANON = 'sb_publishable_tG64uzNsmT0XDV7pmglqFA_lxQ4xIFm';
 const FP_SK   = ['sk','live','taBqGtMfLEBXntvvAY4hqyNv'].join('_');
-let sb;
-try {
-  sb = window.supabase.createClient(SB_URL, SB_ANON);
-} catch(e) {
-  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;background:#f8fafc;padding:2rem;text-align:center"><div><p style="font-size:2.5rem">⚠️</p><h2 style="color:#dc2626;margin:.5rem 0">Erreur de chargement</h2><p style="color:#6b7280;margin-bottom:1.5rem;font-size:.9rem">La bibliothèque réseau n\'a pas pu se charger.<br>Vérifiez votre connexion internet et rechargez la page.</p><button onclick="location.reload()" style="background:#2563eb;color:#fff;border:none;border-radius:8px;padding:10px 24px;cursor:pointer;font-size:.9rem;font-weight:700">🔄 Réessayer</button></div></div>';
-}
+let sb = null;
 
 // ── Globals ───────────────────────────────────────────
 let CU = null, CP = null, pendingCourse = null;
@@ -488,8 +482,8 @@ function goTo(p){
   if(p==='dashboard' && CU && !loaded.bord){loaded.bord=true; loadBord();}
 }
 
-// ── Auth check on load ───────────────────────────────
-(async()=>{
+// ── App start (called after CDN loads) ───────────────
+async function startApp(){
   try{
     const {data:{session}}=await withTimeout(sb.auth.getSession());
     if(session){CU=session.user;await loadProfileData();goTo('dashboard');}
@@ -502,6 +496,31 @@ function goTo(p){
     }
   }catch(e){console.error('Init error:',e);}
   loadLandingCourses();
+}
+
+// ── Dynamic CDN loader with fallback ─────────────────
+(function(){
+  var cdns=[
+    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js',
+    'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js'
+  ];
+  function showFatalErr(msg){
+    document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;background:#f8fafc;padding:2rem;text-align:center"><div><p style="font-size:2.5rem">⚠️</p><h2 style="color:#dc2626;margin:.5rem 0">Erreur de chargement</h2><p style="color:#6b7280;margin-bottom:1.5rem;font-size:.9rem">'+msg+'</p><button onclick="location.reload()" style="background:#2563eb;color:#fff;border:none;border-radius:8px;padding:10px 24px;cursor:pointer;font-size:.9rem;font-weight:700">🔄 Réessayer</button></div></div>';
+  }
+  function tryLoad(i){
+    if(i>=cdns.length){showFatalErr('Impossible de charger la bibliothèque Supabase.<br>Vérifiez votre connexion internet.');return;}
+    var s=document.createElement('script');
+    s.src=cdns[i];
+    s.onload=function(){
+      try{
+        sb=window.supabase.createClient(SB_URL,SB_ANON);
+        startApp();
+      }catch(e){tryLoad(i+1);}
+    };
+    s.onerror=function(){tryLoad(i+1);};
+    document.head.appendChild(s);
+  }
+  tryLoad(0);
 })();
 
 async function loadProfileData(){
