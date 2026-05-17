@@ -339,43 +339,13 @@ let loaded = {};
 
 /* ── Init ─────────────────────────────────────────────── */
 async function init() {
-  try {
-    const { data: { session } } = await withTimeout(sb.auth.getSession());
-    if (!session) return redirect();
-
-    const { data: profile } = await withTimeout(sb.from('profiles').select('*').eq('id', session.user.id).single());
-    if (!profile || profile.badge_level !== 'admin') return redirect();
-
-    adminUser = session.user;
-    adminProfile = profile;
-
-    const initials = ((profile.first_name||'A')[0] + (profile.last_name||'D')[0]).toUpperCase();
-    document.getElementById('admin-avatar').textContent = initials;
-    document.getElementById('admin-name').textContent = `${profile.first_name||''} ${profile.last_name||''}`.trim() || 'Admin';
-
-    document.getElementById('loading-screen').classList.add('hidden');
-    document.getElementById('admin-app').classList.remove('hidden');
-
-    switchTab('dashboard');
-  } catch(err) {
-    document.getElementById('loading-screen').innerHTML = `
-      <div style="text-align:center;padding:2rem;color:#f87171;max-width:360px">
-        <div style="font-size:2rem;margin-bottom:1rem">⚠️</div>
-        <p style="font-weight:700;margin-bottom:.5rem">Erreur de connexion</p>
-        <p style="font-size:.85rem;color:#9ca3af;margin-bottom:1.5rem">${err.message||'Impossible de joindre le serveur'}</p>
-        <button onclick="init()" style="background:#7c3aed;color:#fff;border:none;border-radius:8px;padding:8px 20px;cursor:pointer;font-weight:600">Réessayer</button>
-        <br/><button onclick="redirect()" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:.8rem;margin-top:.75rem">Retour à l'accueil</button>
-      </div>`;
-  }
-}
-
-function redirect() {
-  window.location.href = './rivo.html';
+  document.getElementById('loading-screen').classList.add('hidden');
+  document.getElementById('admin-app').classList.remove('hidden');
+  switchTab('dashboard');
 }
 
 async function doLogout() {
-  await sb.auth.signOut();
-  redirect();
+  window.location.href = './rivo.html';
 }
 
 /* ── Tab navigation ───────────────────────────────────── */
