@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>RIVO – La plateforme qui transforme l'apprentissage en opportunité</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
+.page{display:none}.page.active{display:block}
+.gradient-hero{background:linear-gradient(135deg,#1e3a8a 0%,#2563EB 55%,#3b82f6 100%)}
+.card{background:white;border-radius:1rem;box-shadow:0 2px 20px rgba(0,0,0,.07);overflow:hidden;transition:box-shadow .3s}
+.card:hover{box-shadow:0 6px 30px rgba(0,0,0,.12)}
+.btn-primary{background:#2563EB;color:white;font-weight:700;padding:.7rem 1.4rem;border-radius:.875rem;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:.5rem;transition:all .2s;font-size:.9rem}
+.btn-primary:hover{background:#1D4ED8;transform:translateY(-1px);box-shadow:0 4px 15px rgba(37,99,235,.4)}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.btn-accent{background:#F59E0B;color:white;font-weight:700;padding:.7rem 1.4rem;border-radius:.875rem;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:.5rem;transition:all .2s;font-size:.9rem}
+.btn-accent:hover{background:#D97706;transform:translateY(-1px);box-shadow:0 4px 15px rgba(245,158,11,.4)}
+.btn-accent:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.btn-outline{background:white;color:#2563EB;border:2px solid #2563EB;font-weight:700;padding:.65rem 1.4rem;border-radius:.875rem;cursor:pointer;display:inline-flex;align-items:center;gap:.5rem;transition:all .2s;font-size:.9rem}
+.btn-outline:hover{background:#2563EB;color:white}
+.input{width:100%;padding:.75rem 1rem;border:2px solid #e5e7eb;border-radius:.75rem;outline:none;font-size:.95rem;transition:border-color .2s;font-family:'Inter',sans-serif}
+.input:focus{border-color:#2563EB}
+.input-icon{position:relative}.input-icon .ic{position:absolute;left:.85rem;top:50%;transform:translateY(-50%);color:#9ca3af;pointer-events:none}.input-icon input{padding-left:2.75rem}
+.badge{display:inline-flex;align-items:center;gap:.25rem;padding:.2rem .75rem;border-radius:9999px;font-size:.78rem;font-weight:700}
+.tab-btn{padding:.6rem 1.1rem;border-radius:.75rem;border:none;cursor:pointer;font-weight:600;font-size:.85rem;transition:all .2s;background:none;color:#6b7280}
+.tab-btn.active{background:#2563EB;color:white;box-shadow:0 3px 12px rgba(37,99,235,.3)}
+.tab-panel{display:none}.tab-panel.active{display:block}
+.toast{position:fixed;top:1.25rem;right:1.25rem;padding:.875rem 1.25rem;border-radius:1rem;font-weight:700;color:white;z-index:9999;animation:slideIn .3s ease;max-width:320px;font-size:.9rem}
+.toast.ok{background:#10b981}.toast.err{background:#ef4444}
+@keyframes slideIn{from{transform:translateX(110px);opacity:0}to{transform:translateX(0);opacity:1}}
+.spin{width:1.25rem;height:1.25rem;border:2.5px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:rot .65s linear infinite;display:inline-block}
+@keyframes rot{to{transform:rotate(360deg)}}
+.spin-blue{width:2rem;height:2rem;border:3px solid #dbeafe;border-top-color:#2563EB;border-radius:50%;animation:rot .65s linear infinite}
+.fade-in{animation:fi .4s ease}
+@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+/* Sidebar */
+.sidebar{position:fixed;top:0;left:0;height:100vh;width:255px;background:white;border-right:1px solid #f1f5f9;box-shadow:2px 0 20px rgba(0,0,0,.06);z-index:50;transition:transform .3s;overflow-y:auto}
+.main-area{margin-left:255px;min-height:100vh}
+@media(max-width:1023px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.main-area{margin-left:0}}
+.nav-link{display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;border-radius:.75rem;font-weight:500;color:#4b5563;transition:all .2s;cursor:pointer;text-decoration:none;border:none;background:none;width:100%;font-size:.9rem;font-family:'Inter',sans-serif}
+.nav-link:hover{background:#f1f5f9;color:#111827}
+.nav-link.active{background:#2563EB;color:white;box-shadow:0 4px 12px rgba(37,99,235,.25)}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:40}
+.overlay.show{display:block}
+/* nav landing */
+.top-nav{position:fixed;top:0;width:100%;z-index:60;background:rgba(255,255,255,.93);backdrop-filter:blur(14px);box-shadow:0 1px 18px rgba(0,0,0,.07)}
+</style>
+</head>
+<body>
+<div id="toasts"></div>
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- ═══════════════════ PAGE: LANDING ═══════════════════ -->
+<div id="page-landing" class="page active">
+  <!-- Topbar -->
+  <nav class="top-nav">
+    <div style="max-width:1200px;margin:0 auto;padding:0 1.25rem;height:4rem;display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:.6rem">
+        <div style="width:2.25rem;height:2.25rem;border-radius:.75rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center">
+          <svg xmlns="http://www.w3.org/2000/svg" style="width:1.2rem;height:1.2rem" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2.5"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        </div>
+        <span style="font-size:1.25rem;font-weight:900;color:#1F2937">RIVO</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:.75rem">
+        <button onclick="goTo('login')" class="btn-outline" style="padding:.5rem 1.1rem">Connexion</button>
+        <button onclick="goTo('register')" class="btn-accent" style="padding:.5rem 1.1rem">S'inscrire</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="gradient-hero" style="padding:7rem 1.25rem 5rem">
+    <div style="max-width:900px;margin:0 auto;text-align:center">
+      <div style="display:inline-flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.18);backdrop-filter:blur(8px);color:white;padding:.5rem 1.25rem;border-radius:9999px;font-size:.85rem;font-weight:600;margin-bottom:1.5rem">
+        ⚡ La plateforme #1 de formation en ligne
+      </div>
+      <h1 style="font-size:clamp(2.2rem,5vw,3.75rem);font-weight:900;color:white;line-height:1.15;margin-bottom:1.25rem">
+        Transformez votre avenir<br><span style="color:#F59E0B">grâce au savoir</span>
+      </h1>
+      <p style="font-size:1.15rem;color:#bfdbfe;margin-bottom:.75rem">
+        Plus de <strong style="color:white">200 formations disponibles</strong>. Apprenez à votre rythme et obtenez une attestation reconnue.
+      </p>
+      <p style="font-style:italic;color:#93c5fd;font-size:1.05rem;margin-bottom:2.5rem">"RIVO, la plateforme qui transforme l'apprentissage en opportunité."</p>
+      <div style="display:flex;flex-wrap:wrap;gap:1rem;justify-content:center">
+        <button onclick="goTo('register')" class="btn-accent" style="font-size:1.05rem;padding:.9rem 2rem">
+          Commencer gratuitement
+          <svg xmlns="http://www.w3.org/2000/svg" style="width:1.1rem;height:1.1rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+        <a href="#formations" style="display:inline-flex;align-items:center;gap:.5rem;color:white;font-weight:700;font-size:1.05rem;padding:.9rem 2rem;border-radius:.875rem;background:rgba(255,255,255,.18);backdrop-filter:blur(8px);text-decoration:none;transition:background .2s" onmouseover="this.style.background='rgba(255,255,255,.28)'" onmouseout="this.style.background='rgba(255,255,255,.18)'">
+          Voir les formations
+        </a>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;max-width:380px;margin:3.5rem auto 0">
+        <div style="text-align:center"><div style="font-size:2rem;font-weight:900;color:white">200+</div><div style="font-size:.8rem;color:#93c5fd;margin-top:.25rem">Formations</div></div>
+        <div style="text-align:center"><div style="font-size:2rem;font-weight:900;color:white">5K+</div><div style="font-size:.8rem;color:#93c5fd;margin-top:.25rem">Apprenants</div></div>
+        <div style="text-align:center"><div style="font-size:2rem;font-weight:900;color:white">98%</div><div style="font-size:.8rem;color:#93c5fd;margin-top:.25rem">Satisfaction</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Avantages -->
+  <section style="padding:5rem 1.25rem;background:#f8fafc">
+    <div style="max-width:1100px;margin:0 auto">
+      <div style="text-align:center;margin-bottom:3rem">
+        <h2 style="font-size:2.1rem;font-weight:900;color:#1F2937;margin-bottom:.75rem">Pourquoi choisir RIVO ?</h2>
+        <p style="color:#6b7280;font-size:1.05rem">Une plateforme pensée pour votre réussite.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem">
+        <div class="card" style="padding:1.5rem"><div style="width:3.25rem;height:3.25rem;background:#dbeafe;border-radius:1rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:1.5rem">📚</div><h3 style="font-weight:800;margin-bottom:.5rem">Formations de qualité</h3><p style="color:#6b7280;font-size:.9rem">Des contenus soigneusement sélectionnés par des experts du domaine.</p></div>
+        <div class="card" style="padding:1.5rem"><div style="width:3.25rem;height:3.25rem;background:#fef3c7;border-radius:1rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:1.5rem">🏆</div><h3 style="font-weight:800;margin-bottom:.5rem">Attestation reconnue</h3><p style="color:#6b7280;font-size:.9rem">Obtenez une attestation officielle après chaque formation validée.</p></div>
+        <div class="card" style="padding:1.5rem"><div style="width:3.25rem;height:3.25rem;background:#d1fae5;border-radius:1rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:1.5rem">🤝</div><h3 style="font-weight:800;margin-bottom:.5rem">Parrainage lucratif</h3><p style="color:#6b7280;font-size:.9rem">Gagnez <strong>1 000 FCFA</strong> pour chaque ami parrainé qui achète une formation.</p></div>
+        <div class="card" style="padding:1.5rem"><div style="width:3.25rem;height:3.25rem;background:#ede9fe;border-radius:1rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:1.5rem">🎖️</div><h3 style="font-weight:800;margin-bottom:.5rem">Badges progressifs</h3><p style="color:#6b7280;font-size:.9rem">Évoluez de Débutant → Bronze → Argent → Or → Diamant selon vos achats.</p></div>
+        <div class="card" style="padding:1.5rem"><div style="width:3.25rem;height:3.25rem;background:#fef9c3;border-radius:1rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:1.5rem">⚡</div><h3 style="font-weight:800;margin-bottom:.5rem">Accès immédiat</h3><p style="color:#6b7280;font-size:.9rem">Après paiement, téléchargez et consultez vos formations immédiatement.</p></div>
+        <div class="card" style="padding:1.5rem"><div style="width:3.25rem;height:3.25rem;background:#fee2e2;border-radius:1rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:1.5rem">🔒</div><h3 style="font-weight:800;margin-bottom:.5rem">Paiement sécurisé</h3><p style="color:#6b7280;font-size:.9rem">Mobile Money, carte bancaire. Retraits traités en moins de 30 min.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Formations -->
+  <section id="formations" style="padding:5rem 1.25rem">
+    <div style="max-width:1100px;margin:0 auto">
+      <div style="text-align:center;margin-bottom:3rem">
+        <h2 style="font-size:2.1rem;font-weight:900;color:#1F2937;margin-bottom:.75rem">Nos formations populaires</h2>
+        <p style="color:#6b7280;font-size:1.05rem">Découvrez nos meilleures formations.</p>
+      </div>
+      <div id="landing-courses" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:1.5rem">
+        <div style="grid-column:1/-1;text-align:center;padding:3rem"><div class="spin-blue" style="margin:0 auto"></div></div>
+      </div>
+      <div style="text-align:center;margin-top:2.5rem">
+        <button onclick="goTo('register')" class="btn-primary" style="font-size:1rem;padding:.85rem 2rem">Voir toutes les formations →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Parrainage + Badges -->
+  <section style="padding:5rem 1.25rem;background:#eff6ff">
+    <div style="max-width:900px;margin:0 auto;text-align:center">
+      <div style="display:inline-flex;align-items:center;gap:.5rem;background:#dbeafe;color:#1d4ed8;padding:.4rem 1rem;border-radius:9999px;font-size:.85rem;font-weight:700;margin-bottom:1.25rem">🤝 Programme de parrainage</div>
+      <h2 style="font-size:2.1rem;font-weight:900;color:#1F2937;margin-bottom:1rem">Gagnez de l'argent en parrainant</h2>
+      <p style="color:#4b5563;font-size:1.05rem;margin-bottom:2.5rem;max-width:600px;margin-left:auto;margin-right:auto">Pour chaque ami qui achète une formation via votre code, vous recevez <strong style="color:#2563EB">1 000 FCFA</strong> directement sur votre solde RIVO.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.25rem;margin-bottom:2.5rem">
+        <div class="card" style="padding:1.5rem;text-align:left"><div style="width:2.5rem;height:2.5rem;border-radius:.875rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:1.1rem;margin-bottom:.875rem">1</div><h3 style="font-weight:800;margin-bottom:.4rem">Inscrivez-vous</h3><p style="color:#6b7280;font-size:.875rem">Créez votre compte et récupérez votre code unique.</p></div>
+        <div class="card" style="padding:1.5rem;text-align:left"><div style="width:2.5rem;height:2.5rem;border-radius:.875rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:1.1rem;margin-bottom:.875rem">2</div><h3 style="font-weight:800;margin-bottom:.4rem">Partagez</h3><p style="color:#6b7280;font-size:.875rem">Envoyez votre code à vos amis, famille, collègues.</p></div>
+        <div class="card" style="padding:1.5rem;text-align:left"><div style="width:2.5rem;height:2.5rem;border-radius:.875rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:1.1rem;margin-bottom:.875rem">3</div><h3 style="font-weight:800;margin-bottom:.4rem">Gagnez</h3><p style="color:#6b7280;font-size:.875rem">1 000 FCFA crédités à chaque achat de votre filleul.</p></div>
+      </div>
+      <div style="border-radius:1.5rem;padding:2rem;color:white;background:linear-gradient(135deg,#2563EB,#1D4ED8)">
+        <h3 style="font-size:1.3rem;font-weight:800;margin-bottom:.5rem">Niveaux de badges RIVO</h3>
+        <p style="color:#bfdbfe;margin-bottom:1.5rem;font-size:.9rem">Plus vous achetez, plus vous montez en grade !</p>
+        <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:.875rem">
+          <div style="background:rgba(255,255,255,.18);border-radius:.875rem;padding:.75rem 1.25rem;text-align:center;min-width:90px"><div style="font-size:1.75rem;margin-bottom:.3rem">🌱</div><div style="font-weight:700;font-size:.85rem">Débutant</div><div style="color:#bfdbfe;font-size:.7rem">0 formation</div></div>
+          <div style="background:rgba(255,255,255,.18);border-radius:.875rem;padding:.75rem 1.25rem;text-align:center;min-width:90px"><div style="font-size:1.75rem;margin-bottom:.3rem">🥉</div><div style="font-weight:700;font-size:.85rem">Bronze</div><div style="color:#bfdbfe;font-size:.7rem">5+ formations</div></div>
+          <div style="background:rgba(255,255,255,.18);border-radius:.875rem;padding:.75rem 1.25rem;text-align:center;min-width:90px"><div style="font-size:1.75rem;margin-bottom:.3rem">🥈</div><div style="font-weight:700;font-size:.85rem">Argent</div><div style="color:#bfdbfe;font-size:.7rem">10+ formations</div></div>
+          <div style="background:rgba(255,255,255,.18);border-radius:.875rem;padding:.75rem 1.25rem;text-align:center;min-width:90px"><div style="font-size:1.75rem;margin-bottom:.3rem">🥇</div><div style="font-weight:700;font-size:.85rem">Or</div><div style="color:#bfdbfe;font-size:.7rem">20+ formations</div></div>
+          <div style="background:rgba(255,255,255,.18);border-radius:.875rem;padding:.75rem 1.25rem;text-align:center;min-width:90px"><div style="font-size:1.75rem;margin-bottom:.3rem">💎</div><div style="font-weight:700;font-size:.85rem">Diamant</div><div style="color:#bfdbfe;font-size:.7rem">50+ formations</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="gradient-hero" style="padding:5rem 1.25rem;text-align:center">
+    <h2 style="font-size:2.5rem;font-weight:900;color:white;margin-bottom:1rem">Prêt à transformer votre avenir ?</h2>
+    <p style="color:#bfdbfe;font-size:1.1rem;margin-bottom:2.5rem">Rejoignez des milliers d'apprenants sur RIVO dès aujourd'hui.</p>
+    <button onclick="goTo('register')" class="btn-accent" style="font-size:1.1rem;padding:1rem 2.5rem">Créer mon compte gratuitement →</button>
+  </section>
+
+  <!-- Footer -->
+  <footer style="background:#1F2937;color:#9ca3af;padding:2.5rem 1.25rem">
+    <div style="max-width:1100px;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:1rem">
+      <div style="display:flex;align-items:center;gap:.6rem">
+        <div style="width:2.25rem;height:2.25rem;border-radius:.75rem;background:#2563EB;display:flex;align-items:center;justify-content:center;font-size:1rem">📚</div>
+        <span style="color:white;font-weight:900;font-size:1.15rem">RIVO</span>
+      </div>
+      <p style="font-size:.85rem">© 2025 RIVO par Martial Gbesso. Tous droits réservés.</p>
+      <div style="display:flex;gap:1.25rem;font-size:.875rem">
+        <button onclick="goTo('login')" style="background:none;border:none;color:#9ca3af;cursor:pointer;transition:color .2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='#9ca3af'">Connexion</button>
+        <button onclick="goTo('register')" style="background:none;border:none;color:#9ca3af;cursor:pointer;transition:color .2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='#9ca3af'">Inscription</button>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- ═══════════════════ PAGE: LOGIN ═══════════════════ -->
+<div id="page-login" class="page">
+  <div class="gradient-hero" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem 1.25rem">
+    <div style="width:100%;max-width:420px">
+      <div style="text-align:center;margin-bottom:2rem">
+        <button onclick="goTo('landing')" style="display:inline-flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.18);border:none;color:white;padding:.5rem 1rem;border-radius:.75rem;cursor:pointer;margin-bottom:1.25rem;font-weight:600;font-size:.85rem">← Accueil</button>
+        <div style="display:flex;align-items:center;justify-content:center;gap:.6rem;margin-bottom:.75rem">
+          <div style="width:3rem;height:3rem;border-radius:1rem;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:1.5rem">📚</div>
+          <span style="font-size:2rem;font-weight:900;color:white">RIVO</span>
+        </div>
+        <h1 style="font-size:1.6rem;font-weight:800;color:white;margin-bottom:.4rem">Bienvenue !</h1>
+        <p style="color:#93c5fd">Connectez-vous à votre compte</p>
+      </div>
+      <div style="background:white;border-radius:1.5rem;padding:2rem;box-shadow:0 20px 60px rgba(0,0,0,.25)">
+        <form id="login-form" onsubmit="doLogin(event)" style="display:flex;flex-direction:column;gap:1.1rem">
+          <div>
+            <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.4rem">Adresse email</label>
+            <div class="input-icon">
+              <svg class="ic" xmlns="http://www.w3.org/2000/svg" style="width:1.1rem;height:1.1rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              <input type="email" id="li-email" class="input" placeholder="votre@email.com" required/>
+            </div>
+          </div>
+          <div>
+            <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.4rem">Mot de passe</label>
+            <div class="input-icon" style="position:relative">
+              <svg class="ic" xmlns="http://www.w3.org/2000/svg" style="width:1.1rem;height:1.1rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input type="password" id="li-pwd" class="input" placeholder="••••••••" required style="padding-left:2.75rem;padding-right:2.75rem"/>
+              <button type="button" onclick="togglePwd('li-pwd')" style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;font-size:1.1rem">👁</button>
+            </div>
+          </div>
+          <button type="submit" id="li-btn" class="btn-primary" style="width:100%;justify-content:center;padding:.875rem;font-size:1rem">
+            Se connecter
+          </button>
+        </form>
+        <p style="text-align:center;color:#6b7280;margin-top:1.25rem;font-size:.875rem">
+          Pas encore de compte ?
+          <button onclick="goTo('register')" style="background:none;border:none;color:#2563EB;font-weight:700;cursor:pointer;font-size:.875rem">S'inscrire gratuitement</button>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE: REGISTER ═══════════════════ -->
+<div id="page-register" class="page">
+  <div class="gradient-hero" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem 1.25rem">
+    <div style="width:100%;max-width:500px">
+      <div style="text-align:center;margin-bottom:2rem">
+        <button onclick="goTo('landing')" style="display:inline-flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.18);border:none;color:white;padding:.5rem 1rem;border-radius:.75rem;cursor:pointer;margin-bottom:1.25rem;font-weight:600;font-size:.85rem">← Accueil</button>
+        <div style="display:flex;align-items:center;justify-content:center;gap:.6rem;margin-bottom:.75rem">
+          <div style="width:3rem;height:3rem;border-radius:1rem;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:1.5rem">📚</div>
+          <span style="font-size:2rem;font-weight:900;color:white">RIVO</span>
+        </div>
+        <h1 style="font-size:1.6rem;font-weight:800;color:white;margin-bottom:.4rem">Créer un compte</h1>
+        <p style="color:#93c5fd">Rejoignez des milliers d'apprenants</p>
+      </div>
+      <div style="background:white;border-radius:1.5rem;padding:2rem;box-shadow:0 20px 60px rgba(0,0,0,.25)">
+        <form id="reg-form" onsubmit="doRegister(event)" style="display:flex;flex-direction:column;gap:1rem">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.875rem">
+            <div>
+              <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.4rem">Prénom</label>
+              <input type="text" id="rg-fn" class="input" placeholder="Jean" required/>
+            </div>
+            <div>
+              <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.4rem">Nom</label>
+              <input type="text" id="rg-ln" class="input" placeholder="Dupont" required/>
+            </div>
+          </div>
+          <div>
+            <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.4rem">Adresse email</label>
+            <div class="input-icon">
+              <svg class="ic" xmlns="http://www.w3.org/2000/svg" style="width:1.1rem;height:1.1rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              <input type="email" id="rg-email" class="input" placeholder="votre@email.com" required/>
+            </div>
+          </div>
+          <div>
+            <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.4rem">Date de naissance</label>
+            <input type="date" id="rg-birth" class="input" required/>
+          </div>
+          <div>
+            <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.4rem">Mot de passe</label>
+            <div class="input-icon" style="position:relative">
+              <svg class="ic" xmlns="http://www.w3.org/2000/svg" style="width:1.1rem;height:1.1rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input type="password" id="rg-pwd" class="input" placeholder="Min. 8 caractères" required style="padding-left:2.75rem;padding-right:2.75rem"/>
+              <button type="button" onclick="togglePwd('rg-pwd')" style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;font-size:1.1rem">👁</button>
+            </div>
+          </div>
+          <div>
+            <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.4rem">Confirmer le mot de passe</label>
+            <input type="password" id="rg-cpwd" class="input" placeholder="••••••••" required/>
+          </div>
+          <div>
+            <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.4rem">Code de parrainage <span style="color:#9ca3af;font-weight:400">(optionnel)</span></label>
+            <input type="text" id="rg-ref" class="input" placeholder="Ex: RIVO2024" style="text-transform:uppercase"/>
+          </div>
+          <button type="submit" id="rg-btn" class="btn-accent" style="width:100%;justify-content:center;padding:.875rem;font-size:1rem;margin-top:.25rem">
+            Créer mon compte
+          </button>
+        </form>
+        <p style="text-align:center;color:#6b7280;margin-top:1.25rem;font-size:.875rem">
+          Déjà inscrit ?
+          <button onclick="goTo('login')" style="background:none;border:none;color:#2563EB;font-weight:700;cursor:pointer;font-size:.875rem">Se connecter</button>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE: DASHBOARD ═══════════════════ -->
+<div id="page-dashboard" class="page">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div style="padding:1.25rem 1rem;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:.6rem">
+      <div style="width:2.25rem;height:2.25rem;border-radius:.75rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0">📚</div>
+      <span style="font-size:1.2rem;font-weight:900;color:#1F2937">RIVO</span>
+    </div>
+    <!-- Profile mini -->
+    <div id="sb-profile" style="margin:.75rem;padding:.875rem;background:#eff6ff;border-radius:.875rem;display:none">
+      <div style="display:flex;align-items:center;gap:.75rem">
+        <div id="sb-avatar" style="width:2.5rem;height:2.5rem;border-radius:9999px;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:.9rem;flex-shrink:0">?</div>
+        <div>
+          <div id="sb-name" style="font-weight:700;font-size:.875rem;color:#1F2937">...</div>
+          <span id="sb-badge" class="badge" style="background:#dbeafe;color:#1d4ed8;font-size:.7rem">🌱 Débutant</span>
+        </div>
+      </div>
+    </div>
+    <nav style="padding:.75rem;display:flex;flex-direction:column;gap:.2rem">
+      <button onclick="switchTab('bord')" id="nav-bord" class="nav-link active">
+        <svg xmlns="http://www.w3.org/2000/svg" style="width:1.1rem;height:1.1rem;flex-shrink:0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> Bord
+      </button>
+      <button onclick="switchTab('formations')" id="nav-formations" class="nav-link">
+        <svg xmlns="http://www.w3.org/2000/svg" style="width:1.1rem;height:1.1rem;flex-shrink:0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg> Mes formations
+      </button>
+      <button onclick="switchTab('attestations')" id="nav-attestations" class="nav-link">
+        <svg xmlns="http://www.w3.org/2000/svg" style="width:1.1rem;height:1.1rem;flex-shrink:0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg> Attestation
+      </button>
+      <button onclick="switchTab('profil')" id="nav-profil" class="nav-link">
+        <svg xmlns="http://www.w3.org/2000/svg" style="width:1.1rem;height:1.1rem;flex-shrink:0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Profil
+      </button>
+      <button onclick="switchTab('retrait')" id="nav-retrait" class="nav-link">
+        <svg xmlns="http://www.w3.org/2000/svg" style="width:1.1rem;height:1.1rem;flex-shrink:0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Retrait
+      </button>
+    </nav>
+    <div style="padding:.75rem;margin-top:auto;border-top:1px solid #f1f5f9">
+      <button onclick="doLogout()" class="nav-link" style="color:#ef4444">
+        <svg xmlns="http://www.w3.org/2000/svg" style="width:1.1rem;height:1.1rem;flex-shrink:0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <div class="main-area">
+    <!-- Mobile header -->
+    <header style="display:none;position:sticky;top:0;z-index:30;background:white;border-bottom:1px solid #f1f5f9;padding:.75rem 1rem;justify-content:space-between;align-items:center" id="mob-header">
+      <button onclick="openSidebar()" style="background:none;border:none;cursor:pointer;padding:.35rem">☰</button>
+      <span style="font-weight:900;font-size:1.1rem;color:#1F2937">RIVO</span>
+      <div style="width:2rem"></div>
+    </header>
+    <style>@media(max-width:1023px){#mob-header{display:flex!important}}</style>
+
+    <div style="padding:1.5rem;max-width:1100px">
+      <!-- Bord -->
+      <div id="tab-bord" class="tab-panel active fade-in">
+        <div style="border-radius:1.5rem;padding:2rem;color:white;margin-bottom:2rem;background:linear-gradient(135deg,#2563EB,#1D4ED8)">
+          <h1 id="welcome-h" style="font-size:1.75rem;font-weight:900;margin-bottom:.4rem">Bienvenue !!!</h1>
+          <p style="color:#bfdbfe;font-weight:600;margin-bottom:.25rem">RIVO, la plateforme qui transforme l'apprentissage en opportunité.</p>
+          <p style="color:#93c5fd;font-size:.875rem">Développez vos compétences grâce à un apprentissage moderne, simple et accessible.</p>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+          <h2 style="font-size:1.25rem;font-weight:800;color:#1F2937">Formations disponibles</h2>
+          <span id="courses-badge" style="background:#dbeafe;color:#1d4ed8;font-size:.8rem;font-weight:700;padding:.25rem .875rem;border-radius:9999px">...</span>
+        </div>
+        <div id="bord-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.25rem">
+          <div style="grid-column:1/-1;text-align:center;padding:3rem"><div class="spin-blue" style="margin:0 auto"></div></div>
+        </div>
+      </div>
+
+      <!-- Mes formations -->
+      <div id="tab-formations" class="tab-panel fade-in">
+        <div style="margin-bottom:1.5rem"><h1 style="font-size:1.5rem;font-weight:800;color:#1F2937">Mes formations</h1><p id="myf-count" style="color:#6b7280;margin-top:.3rem;font-size:.9rem">...</p></div>
+        <div id="myf-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem">
+          <div style="grid-column:1/-1;text-align:center;padding:3rem"><div class="spin-blue" style="margin:0 auto"></div></div>
+        </div>
+      </div>
+
+      <!-- Attestations -->
+      <div id="tab-attestations" class="tab-panel fade-in">
+        <div style="margin-bottom:1.5rem"><h1 style="font-size:1.5rem;font-weight:800;color:#1F2937">Mes attestations</h1><p id="certs-count" style="color:#6b7280;margin-top:.3rem;font-size:.9rem">...</p></div>
+        <div id="certs-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem">
+          <div style="grid-column:1/-1;text-align:center;padding:3rem"><div class="spin-blue" style="margin:0 auto"></div></div>
+        </div>
+      </div>
+
+      <!-- Profil -->
+      <div id="tab-profil" class="tab-panel fade-in">
+        <h1 style="font-size:1.5rem;font-weight:800;color:#1F2937;margin-bottom:1.5rem">Mon profil</h1>
+        <div style="display:grid;grid-template-columns:1fr 2fr;gap:1.25rem;margin-bottom:1.5rem">
+          <div class="card" style="padding:1.5rem;text-align:center">
+            <div id="big-av" style="width:5rem;height:5rem;border-radius:9999px;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:1.5rem;margin:0 auto 1rem;box-shadow:0 0 0 4px #dbeafe">?</div>
+            <div id="prof-name" style="font-weight:800;font-size:1.1rem;color:#1F2937">...</div>
+            <div id="prof-email" style="color:#9ca3af;font-size:.8rem;margin:.3rem 0 .75rem">...</div>
+            <span id="prof-badge" class="badge" style="background:#dbeafe;color:#1d4ed8">🌱 Débutant</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div class="card" style="padding:1.25rem;text-align:center"><div id="st-f" style="font-size:2rem;font-weight:900;color:#2563EB">0</div><div style="color:#6b7280;font-size:.8rem;margin-top:.2rem">Formations achetées</div></div>
+            <div class="card" style="padding:1.25rem;text-align:center"><div id="st-a" style="font-size:2rem;font-weight:900;color:#F59E0B">0</div><div style="color:#6b7280;font-size:.8rem;margin-top:.2rem">Attestations</div></div>
+            <div class="card" style="padding:1.25rem;text-align:center"><div id="st-b" style="font-size:1.3rem;font-weight:900;color:#10b981">0 FCFA</div><div style="color:#6b7280;font-size:.8rem;margin-top:.2rem">Solde</div></div>
+            <div class="card" style="padding:1.25rem">
+              <div style="font-size:.75rem;color:#9ca3af;margin-bottom:.4rem">Code parrainage</div>
+              <div style="display:flex;align-items:center;gap:.5rem">
+                <span id="ref-code" style="font-weight:800;font-size:.875rem;background:#eff6ff;color:#1d4ed8;padding:.35rem .75rem;border-radius:.5rem;flex:1;text-align:center">...</span>
+                <button onclick="copyRef()" style="width:2rem;height:2rem;background:#dbeafe;color:#2563EB;border:none;border-radius:.5rem;cursor:pointer;font-size:.9rem">📋</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="padding:1.5rem">
+          <h3 style="font-weight:800;font-size:1.05rem;color:#1F2937;margin-bottom:1.25rem">✏️ Modifier mes informations</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+            <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Prénom</label><input type="text" id="ed-fn" class="input"/></div>
+            <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Nom</label><input type="text" id="ed-ln" class="input"/></div>
+          </div>
+          <button onclick="saveProfile()" class="btn-primary">💾 Enregistrer</button>
+        </div>
+      </div>
+
+      <!-- Retrait -->
+      <div id="tab-retrait" class="tab-panel fade-in">
+        <h1 style="font-size:1.5rem;font-weight:800;color:#1F2937;margin-bottom:1.5rem">Retrait</h1>
+        <div style="border-radius:1.5rem;padding:1.5rem;color:white;margin-bottom:1.75rem;background:linear-gradient(135deg,#2563EB,#1D4ED8)">
+          <div style="font-size:.95rem;font-weight:600;margin-bottom:.4rem">💳 Solde disponible</div>
+          <div id="bal-display" style="font-size:2.5rem;font-weight:900">0 FCFA</div>
+          <p style="color:#bfdbfe;font-size:.85rem;margin-top:.3rem">Traitement : maximum 30 minutes</p>
+        </div>
+        <div class="card" style="padding:1.5rem;margin-bottom:1.75rem">
+          <h2 style="font-weight:800;font-size:1.05rem;color:#1F2937;margin-bottom:1.25rem">Nouvelle demande de retrait</h2>
+          <div style="display:flex;flex-direction:column;gap:1rem;margin-bottom:1.25rem">
+            <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Montant (FCFA)</label><input type="number" id="wd-amt" class="input" placeholder="Ex: 5000" min="1000"/><p style="font-size:.75rem;color:#9ca3af;margin-top:.3rem">Minimum : 1 000 FCFA</p></div>
+            <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Méthode</label><select id="wd-mth" class="input"><option value="mobile_money">📱 Mobile Money</option><option value="carte_bancaire">💳 Carte bancaire</option><option value="autre">🔄 Autre</option></select></div>
+          </div>
+          <button onclick="doWithdrawal()" class="btn-primary">📤 Demander le retrait</button>
+        </div>
+        <div><h2 style="font-weight:800;font-size:1.05rem;color:#1F2937;margin-bottom:1rem">Historique</h2><div id="wd-hist">...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment modal -->
+  <div id="pay-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;align-items:center;justify-content:center;padding:1rem">
+    <div style="background:white;border-radius:1.5rem;padding:2rem;max-width:380px;width:100%;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,.3)">
+      <div style="width:4rem;height:4rem;background:#dbeafe;border-radius:9999px;display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 1.25rem">💳</div>
+      <h3 style="font-size:1.25rem;font-weight:800;color:#1F2937;margin-bottom:.5rem">Procéder au paiement</h3>
+      <p id="pm-title" style="color:#6b7280;margin-bottom:.4rem;font-size:.9rem"></p>
+      <p id="pm-price" style="font-size:1.75rem;font-weight:900;color:#2563EB;margin-bottom:1.5rem"></p>
+      <div style="display:flex;gap:.75rem">
+        <button onclick="closePayModal()" style="flex:1;padding:.75rem;border-radius:.875rem;border:2px solid #e5e7eb;background:none;color:#6b7280;font-weight:700;cursor:pointer">Annuler</button>
+        <button onclick="confirmPay()" id="pay-btn" class="btn-accent" style="flex:1;justify-content:center;padding:.75rem">⚡ Payer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SCRIPTS ══════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+// ── Config ────────────────────────────────────────────
+const SB_URL  = 'https://qwdttzsbbspayojzeugy.supabase.co';
+const SB_ANON = 'sb_publishable_tG64uzNsmT0XDV7pmglqFA_lxQ4xIFm';
+const FP_SK   = ['sk','live','taBqGtMfLEBXntvvAY4hqyNv'].join('_');
+const sb      = window.supabase.createClient(SB_URL, SB_ANON);
+
+// ── Globals ───────────────────────────────────────────
+let CU = null, CP = null, pendingCourse = null;
+const loaded = {};
+
+// ── Helpers ───────────────────────────────────────────
+function toast(msg, type='ok'){
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;el.textContent=msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>el.remove(),4000);
+}
+function fmt(n,c='XOF'){return c==='XOF'?new Intl.NumberFormat('fr-FR').format(n)+' FCFA':new Intl.NumberFormat('fr-FR',{style:'currency',currency:c}).format(n);}
+function badgeInfo(l){const m={debutant:['🌱','Débutant','#dbeafe','#1d4ed8'],bronze:['🥉','Bronze','#fef3c7','#92400e'],argent:['🥈','Argent','#f1f5f9','#475569'],or:['🥇','Or','#fef9c3','#854d0e'],diamant:['💎','Diamant','#dbeafe','#1d4ed8'],admin:['👑','Admin','#ede9fe','#6d28d9']};return m[l]||m.debutant;}
+function togglePwd(id){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';}
+function setBtn(id,html,dis=false){const b=document.getElementById(id);if(b){b.innerHTML=html;b.disabled=dis;}}
+function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('show');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show');}
+
+// ── Navigation ───────────────────────────────────────
+function goTo(p){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  window.scrollTo(0,0);
+  if(p==='dashboard' && CU && !loaded.bord){loaded.bord=true; loadBord();}
+}
+
+// ── Auth check on load ───────────────────────────────
+(async()=>{
+  const {data:{session}}=await sb.auth.getSession();
+  if(session){CU=session.user;await loadProfileData();goTo('dashboard');}
+  // load landing courses regardless
+  loadLandingCourses();
+  // check payment success
+  const ps=new URLSearchParams(location.search).get('payment');
+  const pid=new URLSearchParams(location.search).get('pid');
+  if(ps==='ok'&&pid){
+    await sb.from('purchases').update({status:'complete'}).eq('id',pid);
+    history.replaceState({},'',location.pathname);
+    if(session){goTo('dashboard');setTimeout(()=>toast('Paiement réussi ! 🎉'),500);}
+  }
+})();
+
+async function loadProfileData(){
+  const {data:p}=await sb.from('profiles').select('*').eq('id',CU.id).single();
+  CP=p;
+  if(!p)return;
+  const [ic,lb,bg,co]=badgeInfo(p.badge_level);
+  document.getElementById('sb-name').textContent=`${p.first_name} ${p.last_name}`;
+  const sb_badge=document.getElementById('sb-badge');
+  sb_badge.textContent=`${ic} ${lb}`;sb_badge.style.background=bg;sb_badge.style.color=co;
+  document.getElementById('sb-profile').style.display='block';
+  const av=document.getElementById('sb-avatar');
+  if(p.avatar_url)av.innerHTML=`<img src="${p.avatar_url}" style="width:100%;height:100%;border-radius:9999px;object-fit:cover"/>`;
+  else av.textContent=(p.first_name[0]+p.last_name[0]).toUpperCase();
+  document.getElementById('welcome-h').textContent=`Bienvenue ${p.first_name} !!!`;
+}
+
+// ── Login ─────────────────────────────────────────────
+async function doLogin(e){
+  e.preventDefault();
+  const email=document.getElementById('li-email').value.trim();
+  const pwd=document.getElementById('li-pwd').value;
+  setBtn('li-btn','<span class="spin"></span> Connexion...',true);
+  const{data,error}=await sb.auth.signInWithPassword({email,password:pwd});
+  if(error){toast('Email ou mot de passe incorrect','err');setBtn('li-btn','Se connecter');return;}
+  CU=data.user;
+  const{data:p}=await sb.from('profiles').select('badge_level').eq('id',CU.id).single();
+  if(p?.badge_level==='admin'){
+    toast('Connexion admin réussie !');
+    // On charge admin dans rivo-admin.html → on redirige
+    setTimeout(()=>{window.location.href='./rivo-admin.html';},700);
+    return;
+  }
+  await loadProfileData();
+  toast('Connexion réussie ! 🎉');
+  setTimeout(()=>{goTo('dashboard');if(!loaded.bord){loaded.bord=true;loadBord();}},500);
+}
+
+// ── Register ──────────────────────────────────────────
+async function doRegister(e){
+  e.preventDefault();
+  const fn=document.getElementById('rg-fn').value.trim();
+  const ln=document.getElementById('rg-ln').value.trim();
+  const email=document.getElementById('rg-email').value.trim();
+  const birth=document.getElementById('rg-birth').value;
+  const pwd=document.getElementById('rg-pwd').value;
+  const cpwd=document.getElementById('rg-cpwd').value;
+  const ref=document.getElementById('rg-ref').value.trim().toUpperCase();
+  if(fn.length<2||ln.length<2){toast('Prénom et nom requis (min 2 caractères)','err');return;}
+  if(pwd.length<8){toast('Mot de passe : minimum 8 caractères','err');return;}
+  if(pwd!==cpwd){toast('Les mots de passe ne correspondent pas','err');return;}
+  setBtn('rg-btn','<span class="spin"></span> Création...',true);
+  let refId=null;
+  if(ref){
+    const{data:r}=await sb.from('profiles').select('id').eq('referral_code',ref).single();
+    if(!r){toast('Code de parrainage invalide','err');setBtn('rg-btn','Créer mon compte');return;}
+    refId=r.id;
+  }
+  const{data:auth,error}=await sb.auth.signUp({email,password:pwd,options:{data:{first_name:fn,last_name:ln}}});
+  if(error){toast(error.message||'Erreur inscription','err');setBtn('rg-btn','Créer mon compte');return;}
+  if(auth.user){
+    await sb.from('profiles').update({first_name:fn,last_name:ln,birth_date:birth,referred_by:refId}).eq('id',auth.user.id);
+    CU=auth.user;
+    await loadProfileData();
+  }
+  toast('Bienvenue sur RIVO ! 🎉');
+  setTimeout(()=>{goTo('dashboard');if(!loaded.bord){loaded.bord=true;loadBord();}},600);
+}
+
+// ── Logout ────────────────────────────────────────────
+async function doLogout(){await sb.auth.signOut();CU=CP=null;Object.keys(loaded).forEach(k=>delete loaded[k]);goTo('landing');}
+
+// ── Landing courses ───────────────────────────────────
+async function loadLandingCourses(){
+  const{data:cs}=await sb.from('courses').select('*').eq('is_published',true).limit(6);
+  const g=document.getElementById('landing-courses');
+  if(!cs||cs.length===0){g.innerHTML='<p style="grid-column:1/-1;text-align:center;color:#9ca3af;padding:2rem">Aucune formation disponible.</p>';return;}
+  g.innerHTML=cs.map(c=>`
+    <div class="card">
+      <div style="height:11rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden">
+        ${c.cover_image_url?`<img src="${c.cover_image_url}" style="width:100%;height:100%;object-fit:cover"/>`:'<span style="font-size:3rem;opacity:.4">📚</span>'}
+        <span style="position:absolute;top:.625rem;right:.625rem;background:#F59E0B;color:white;font-weight:800;font-size:.78rem;padding:.2rem .75rem;border-radius:9999px">${fmt(c.price,c.currency)}</span>
+      </div>
+      <div style="padding:1.1rem">
+        <h3 style="font-weight:800;color:#1F2937;margin-bottom:.4rem;font-size:.95rem">${c.title}</h3>
+        <p style="color:#6b7280;font-size:.82rem;margin-bottom:.875rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${c.description||''}</p>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="color:#F59E0B">★★★★★</span>
+          <button onclick="goTo('register')" class="btn-accent" style="padding:.4rem .875rem;font-size:.8rem">Acheter</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ── Dashboard: Bord ───────────────────────────────────
+async function loadBord(){
+  const[{data:cs},{data:ps}]=await Promise.all([
+    sb.from('courses').select('*').eq('is_published',true).order('created_at',{ascending:false}),
+    sb.from('purchases').select('course_id').eq('user_id',CU.id).eq('status','complete')
+  ]);
+  const owned=new Set((ps||[]).map(p=>p.course_id));
+  document.getElementById('courses-badge').textContent=`${(cs||[]).length} formation${(cs||[]).length!==1?'s':''}`;
+  if(!cs||cs.length===0){document.getElementById('bord-grid').innerHTML='<p style="grid-column:1/-1;text-align:center;color:#9ca3af;padding:2rem">Aucune formation disponible.</p>';return;}
+  document.getElementById('bord-grid').innerHTML=cs.map(c=>{
+    const own=owned.has(c.id);
+    return`<div class="card fade-in">
+      <div style="height:10rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden">
+        ${c.cover_image_url?`<img src="${c.cover_image_url}" style="width:100%;height:100%;object-fit:cover"/>`:'<span style="font-size:2.5rem;opacity:.35">📚</span>'}
+        <span style="position:absolute;top:.5rem;right:.5rem;background:#F59E0B;color:white;font-weight:800;font-size:.75rem;padding:.2rem .65rem;border-radius:9999px">${fmt(c.price,c.currency)}</span>
+        ${own?'<span style="position:absolute;top:.5rem;left:.5rem;background:#10b981;color:white;font-weight:800;font-size:.7rem;padding:.2rem .6rem;border-radius:9999px">✓ Acheté</span>':''}
+      </div>
+      <div style="padding:1rem">
+        <h3 style="font-weight:800;color:#1F2937;font-size:.95rem;margin-bottom:.35rem">${c.title}</h3>
+        <p style="color:#6b7280;font-size:.82rem;margin-bottom:.75rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${c.description||''}</p>
+        <div id="exp-${c.id}" style="display:none;font-size:.82rem;color:#374151;background:#f8fafc;padding:.75rem;border-radius:.75rem;margin-bottom:.75rem;line-height:1.6">${c.full_description||c.description||''}</div>
+        <div style="display:flex;gap:.5rem">
+          <button onclick="expToggle('${c.id}')" class="btn-outline" style="flex:1;justify-content:center;font-size:.8rem;padding:.45rem .5rem">Lire plus</button>
+          ${own?`<button onclick="switchTab('formations')" style="flex:1;padding:.45rem;border-radius:.75rem;background:#10b981;color:white;border:none;cursor:pointer;font-weight:700;font-size:.8rem;display:flex;align-items:center;justify-content:center;gap:.3rem">📖 Accéder</button>`
+               :`<button onclick="buyModal('${c.id}','${c.title.replace(/'/g,"\\'")}',${c.price},'${c.currency}')" class="btn-accent" style="flex:1;justify-content:center;font-size:.8rem;padding:.45rem .5rem">🛒 Acheter</button>`}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function expToggle(id){const e=document.getElementById('exp-'+id);e.style.display=e.style.display==='none'?'block':'none';}
+function buyModal(id,title,price,currency){pendingCourse={id,title,price,currency};document.getElementById('pm-title').textContent=title;document.getElementById('pm-price').textContent=fmt(price,currency);document.getElementById('pay-modal').style.display='flex';}
+function closePayModal(){document.getElementById('pay-modal').style.display='none';pendingCourse=null;}
+
+async function confirmPay(){
+  if(!pendingCourse)return;
+  setBtn('pay-btn','<span class="spin"></span>',true);
+  const{data:pur,error}=await sb.from('purchases').insert({user_id:CU.id,course_id:pendingCourse.id,amount:pendingCourse.price,currency:pendingCourse.currency,status:'en_attente',payment_method:'fedapay'}).select().single();
+  if(error){toast('Erreur création commande','err');setBtn('pay-btn','⚡ Payer');return;}
+  try{
+    const base=location.href.split('?')[0];
+    const r=await fetch('https://api.fedapay.com/v1/transactions',{method:'POST',headers:{'Authorization':`Bearer ${FP_SK}`,'Content-Type':'application/json'},body:JSON.stringify({description:`RIVO - ${pendingCourse.title}`,amount:pendingCourse.price,currency:{iso:pendingCourse.currency==='XOF'?'XOF':pendingCourse.currency},callback_url:`${base}?payment=ok&pid=${pur.id}`,redirect_url:`${base}?payment=ok&pid=${pur.id}`,meta:{pid:pur.id,uid:CU.id,cid:pendingCourse.id}})});
+    const d=await r.json();
+    const txId=d.v1?.transaction?.id||d.transaction?.id;
+    if(txId){
+      await sb.from('purchases').update({transaction_id:String(txId)}).eq('id',pur.id);
+      const tr=await fetch(`https://api.fedapay.com/v1/transactions/${txId}/token`,{method:'POST',headers:{'Authorization':`Bearer ${FP_SK}`,'Content-Type':'application/json'}});
+      const td=await tr.json();
+      const token=td.v1?.token?.token||td.token?.token||td.token;
+      if(token){window.location.href=`https://checkout.fedapay.com/${token}`;return;}
+    }
+    throw new Error('Token manquant');
+  }catch(err){toast('Erreur paiement, réessayez','err');setBtn('pay-btn','⚡ Payer');}
+}
+
+// ── Dashboard: Mes formations ─────────────────────────
+async function loadMesFormations(){
+  const{data}=await sb.from('purchases').select('*,courses(*)').eq('user_id',CU.id).eq('status','complete').order('purchased_at',{ascending:false});
+  const ps=data||[];
+  document.getElementById('myf-count').textContent=`${ps.length} formation${ps.length!==1?'s':''} achetée${ps.length!==1?'s':''}`;
+  if(ps.length===0){document.getElementById('myf-grid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#9ca3af"><p style="font-size:1.05rem;margin-bottom:1rem">Aucune formation achetée.</p><button onclick="switchTab(\'bord\')" class="btn-primary">Voir les formations</button></div>';return;}
+  document.getElementById('myf-grid').innerHTML=ps.map(p=>{
+    const c=p.courses;if(!c)return'';
+    const d=new Date(p.purchased_at).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+    return`<div class="card fade-in" style="padding:1.25rem">
+      <div style="display:flex;gap:1rem;margin-bottom:1rem">
+        <div style="width:4.5rem;height:4.5rem;flex-shrink:0;background:linear-gradient(135deg,#2563EB,#1D4ED8);border-radius:.875rem;overflow:hidden;display:flex;align-items:center;justify-content:center">
+          ${c.cover_image_url?`<img src="${c.cover_image_url}" style="width:100%;height:100%;object-fit:cover"/>`:'<span style="font-size:1.5rem;opacity:.4">📚</span>'}
+        </div>
+        <div style="flex:1;min-width:0">
+          <h3 style="font-weight:800;color:#1F2937;font-size:.95rem;margin-bottom:.25rem">${c.title}</h3>
+          <p style="color:#2563EB;font-weight:700;font-size:.875rem">${fmt(p.amount,p.currency)}</p>
+          <p style="color:#9ca3af;font-size:.75rem;margin-top:.2rem">Acheté le ${d}</p>
+        </div>
+      </div>
+      <div style="display:flex;gap:.625rem">
+        ${c.file_url?`<a href="${c.file_url}" target="_blank" class="btn-primary" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">🔗 Consulter</a><a href="${c.file_url}" download class="btn-outline" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">⬇️ Télécharger</a>`:'<div style="flex:1;text-align:center;padding:.5rem;font-size:.82rem;color:#d97706;background:#fef3c7;border-radius:.75rem;font-weight:600">⏳ Fichier bientôt disponible</div>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Dashboard: Attestations ───────────────────────────
+async function loadAttestations(){
+  const{data}=await sb.from('certificates').select('*,courses(*)').eq('user_id',CU.id).order('issued_at',{ascending:false});
+  const cs=data||[];
+  document.getElementById('certs-count').textContent=`${cs.length} attestation${cs.length!==1?'s':''}`;
+  if(cs.length===0){document.getElementById('certs-grid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#9ca3af"><p style="font-size:2.5rem;margin-bottom:.75rem">🏆</p><p>Aucune attestation pour l\'instant.</p><p style="font-size:.85rem;margin-top:.5rem">Elles apparaîtront ici après validation par l\'admin.</p></div>';return;}
+  document.getElementById('certs-grid').innerHTML=cs.map(c=>{
+    const d=new Date(c.issued_at).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+    return`<div class="card fade-in" style="padding:1.5rem">
+      <div style="display:flex;gap:1rem;margin-bottom:1rem">
+        <div style="width:3.5rem;height:3.5rem;background:linear-gradient(135deg,#F59E0B,#D97706);border-radius:1rem;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0">🏆</div>
+        <div style="flex:1">
+          <h3 style="font-weight:800;color:#1F2937;font-size:.95rem;margin-bottom:.25rem">${c.courses?.title||'Formation'}</h3>
+          <p style="color:#9ca3af;font-size:.8rem">Délivré le ${d}</p>
+          ${c.message?`<p style="font-style:italic;color:#374151;font-size:.82rem;margin-top:.625rem;background:#fef9c3;padding:.625rem .875rem;border-radius:.75rem">"${c.message}"</p>`:''}
+        </div>
+      </div>
+      <div style="display:flex;gap:.625rem">
+        ${c.certificate_url?`<a href="${c.certificate_url}" target="_blank" class="btn-primary" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">📄 Voir</a><a href="${c.certificate_url}" download class="btn-outline" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">⬇️ PDF</a>`:'<div style="flex:1;text-align:center;padding:.5rem;font-size:.82rem;color:#d97706;background:#fef3c7;border-radius:.75rem;font-weight:600">⏳ En cours de préparation</div>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Dashboard: Profil ─────────────────────────────────
+async function loadProfil(){
+  if(!CP)return;
+  const p=CP;
+  const[ic,lb,bg,co]=badgeInfo(p.badge_level);
+  document.getElementById('prof-name').textContent=`${p.first_name} ${p.last_name}`;
+  const{data:{user}}=await sb.auth.getUser();
+  document.getElementById('prof-email').textContent=user?.email||'';
+  const pb=document.getElementById('prof-badge');pb.textContent=`${ic} ${lb}`;pb.style.background=bg;pb.style.color=co;
+  document.getElementById('ref-code').textContent=p.referral_code||'...';
+  document.getElementById('st-b').textContent=fmt(p.balance||0,p.currency);
+  document.getElementById('ed-fn').value=p.first_name;
+  document.getElementById('ed-ln').value=p.last_name;
+  const av=document.getElementById('big-av');
+  if(p.avatar_url)av.innerHTML=`<img src="${p.avatar_url}" style="width:100%;height:100%;border-radius:9999px;object-fit:cover"/>`;
+  else av.textContent=(p.first_name[0]+p.last_name[0]).toUpperCase();
+  const[{count:fc},{count:ac}]=await Promise.all([
+    sb.from('purchases').select('*',{count:'exact',head:true}).eq('user_id',CU.id).eq('status','complete'),
+    sb.from('certificates').select('*',{count:'exact',head:true}).eq('user_id',CU.id)
+  ]);
+  document.getElementById('st-f').textContent=fc||0;
+  document.getElementById('st-a').textContent=ac||0;
+}
+
+function copyRef(){const c=document.getElementById('ref-code').textContent;navigator.clipboard.writeText(c);toast('Code copié !');}
+
+async function saveProfile(){
+  const fn=document.getElementById('ed-fn').value.trim();
+  const ln=document.getElementById('ed-ln').value.trim();
+  if(!fn||!ln){toast('Prénom et nom requis','err');return;}
+  const{error}=await sb.from('profiles').update({first_name:fn,last_name:ln}).eq('id',CU.id);
+  if(error){toast('Erreur','err');return;}
+  CP={...CP,first_name:fn,last_name:ln};
+  document.getElementById('welcome-h').textContent=`Bienvenue ${fn} !!!`;
+  document.getElementById('sb-name').textContent=`${fn} ${ln}`;
+  document.getElementById('prof-name').textContent=`${fn} ${ln}`;
+  toast('Profil mis à jour !');
+}
+
+// ── Dashboard: Retrait ────────────────────────────────
+async function loadRetrait(){
+  if(CP)document.getElementById('bal-display').textContent=fmt(CP.balance||0,CP.currency||'XOF');
+  const{data:ws}=await sb.from('withdrawals').select('*').eq('user_id',CU.id).order('created_at',{ascending:false});
+  const mmap={mobile_money:'📱 Mobile Money',carte_bancaire:'💳 Carte bancaire',autre:'🔄 Autre'};
+  const smap={en_attente:['⏳','En attente','#fef3c7','#92400e'],en_cours:['🔄','En cours','#dbeafe','#1d4ed8'],complete:['✅','Complété','#d1fae5','#065f46'],rejete:['❌','Rejeté','#fee2e2','#991b1b']};
+  if(!ws||ws.length===0){document.getElementById('wd-hist').innerHTML='<p style="color:#9ca3af;text-align:center;padding:1.5rem">Aucun retrait effectué</p>';return;}
+  document.getElementById('wd-hist').innerHTML=ws.map(w=>{
+    const[ic,lb,bg,co]=smap[w.status]||smap.en_attente;
+    const d=new Date(w.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});
+    return`<div class="card fade-in" style="padding:1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.625rem"><div><div style="font-weight:700;color:#1F2937">${fmt(w.amount,w.currency)}</div><div style="font-size:.75rem;color:#9ca3af;margin-top:.2rem">${mmap[w.method]} • ${d}</div></div><span class="badge" style="background:${bg};color:${co}">${ic} ${lb}</span></div>`;
+  }).join('');
+}
+
+async function doWithdrawal(){
+  const amt=parseFloat(document.getElementById('wd-amt').value);
+  const mth=document.getElementById('wd-mth').value;
+  if(!amt||amt<1000){toast('Minimum : 1 000 FCFA','err');return;}
+  if(!CP||amt>CP.balance){toast('Solde insuffisant','err');return;}
+  const{error}=await sb.from('withdrawals').insert({user_id:CU.id,amount:amt,currency:CP.currency||'XOF',method:mth,status:'en_attente'});
+  if(error){toast('Erreur','err');return;}
+  toast('Demande envoyée ! Traitement sous 30 min.');
+  document.getElementById('wd-amt').value='';
+  loadRetrait();
+}
+
+// ── Tab switching ─────────────────────────────────────
+function switchTab(name){
+  document.querySelectorAll('.tab-panel').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(n=>n.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+  closeSidebar();
+  if(!loaded[name]){
+    loaded[name]=true;
+    if(name==='formations')loadMesFormations();
+    if(name==='attestations')loadAttestations();
+    if(name==='profil')loadProfil();
+    if(name==='retrait')loadRetrait();
+  }
+}
+</script>
+</body>
+</html>
