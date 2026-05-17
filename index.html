@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RIVO – La plateforme qui transforme l'apprentissage en opportunité</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { primary: '#2563EB', accent: '#F59E0B', dark: '#1F2937' },
+          fontFamily: { sans: ['Inter', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .gradient-hero { background: linear-gradient(135deg, #1e3a8a 0%, #2563EB 55%, #3b82f6 100%); }
+    .card { background: white; border-radius: 1rem; box-shadow: 0 4px 20px rgba(0,0,0,.08); transition: box-shadow .3s; }
+    .card:hover { box-shadow: 0 8px 32px rgba(0,0,0,.13); }
+    .btn-primary { background:#2563EB; color:white; font-weight:600; padding:.75rem 1.5rem; border-radius:.75rem; display:inline-flex; align-items:center; gap:.5rem; transition:all .2s; cursor:pointer; border:none; }
+    .btn-primary:hover { background:#1D4ED8; transform:translateY(-1px); box-shadow:0 4px 15px rgba(37,99,235,.4); }
+    .btn-accent { background:#F59E0B; color:white; font-weight:600; padding:.75rem 1.5rem; border-radius:.75rem; display:inline-flex; align-items:center; gap:.5rem; transition:all .2s; cursor:pointer; border:none; }
+    .btn-accent:hover { background:#D97706; transform:translateY(-1px); box-shadow:0 4px 15px rgba(245,158,11,.4); }
+    .course-skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size:200% 100%; animation: shimmer 1.5s infinite; border-radius:.75rem; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .fade-in { animation: fadeIn .5s ease-in; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    nav { position: fixed; top: 0; width: 100%; z-index: 50; background: rgba(255,255,255,.92); backdrop-filter: blur(12px); box-shadow: 0 1px 20px rgba(0,0,0,.08); }
+  </style>
+</head>
+<body class="bg-white text-dark">
+
+  <!-- Navbar -->
+  <nav>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <a href="./index.html" class="flex items-center gap-2">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#2563EB,#1D4ED8)">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        </div>
+        <span class="text-xl font-black text-dark">RIVO</span>
+      </a>
+      <div class="hidden md:flex items-center gap-8">
+        <a href="#formations" class="text-gray-600 hover:text-blue-600 font-medium transition-colors">Formations</a>
+        <a href="#avantages" class="text-gray-600 hover:text-blue-600 font-medium transition-colors">Avantages</a>
+        <a href="#parrainage" class="text-gray-600 hover:text-blue-600 font-medium transition-colors">Parrainage</a>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="./login.html" class="text-blue-600 font-semibold hover:text-blue-700 transition-colors">Connexion</a>
+        <a href="./register.html" class="btn-accent py-2 px-5 text-sm" style="padding:.5rem 1.25rem;font-size:.875rem">S'inscrire</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="gradient-hero pt-24 pb-20 px-4">
+    <div class="max-w-7xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-6" style="background:rgba(255,255,255,.18);color:white;backdrop-filter:blur(8px)">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="#F59E0B" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        La plateforme #1 de formation en ligne
+      </div>
+      <h1 class="text-4xl md:text-6xl font-black text-white mb-6 leading-tight">
+        Transformez votre avenir<br/>
+        <span style="color:#F59E0B">grâce au savoir</span>
+      </h1>
+      <p class="text-xl mb-4 max-w-2xl mx-auto" style="color:#bfdbfe">
+        Plus de <span class="font-bold text-white">200 formations disponibles</span>.
+        Apprenez à votre rythme et obtenez une attestation reconnue.
+      </p>
+      <p class="italic mb-10 text-lg" style="color:#93c5fd">
+        "RIVO, la plateforme qui transforme l'apprentissage en opportunité."
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="./register.html" class="btn-accent text-lg px-8 py-4">
+          Commencer gratuitement
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#formations" class="inline-flex items-center gap-2 text-white font-semibold px-8 py-4 rounded-xl transition-all" style="background:rgba(255,255,255,.18);backdrop-filter:blur(8px)">
+          Voir les formations
+        </a>
+      </div>
+      <!-- Stats -->
+      <div class="grid grid-cols-3 gap-6 max-w-lg mx-auto mt-16">
+        <div class="text-center">
+          <div class="text-3xl font-black text-white">200+</div>
+          <div class="text-sm mt-1" style="color:#93c5fd">Formations</div>
+        </div>
+        <div class="text-center">
+          <div class="text-3xl font-black text-white">5K+</div>
+          <div class="text-sm mt-1" style="color:#93c5fd">Apprenants</div>
+        </div>
+        <div class="text-center">
+          <div class="text-3xl font-black text-white">98%</div>
+          <div class="text-sm mt-1" style="color:#93c5fd">Satisfaction</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="avantages" class="py-20 px-4 bg-gray-50">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-14">
+        <h2 class="text-3xl md:text-4xl font-bold text-dark mb-4">Pourquoi choisir RIVO ?</h2>
+        <p class="text-gray-500 text-lg max-w-2xl mx-auto">Une plateforme pensée pour votre réussite.</p>
+      </div>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="card p-6">
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-4" style="background:#dbeafe">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="#2563EB" stroke-width="2"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          </div>
+          <h3 class="text-lg font-bold text-dark mb-2">Formations de qualité</h3>
+          <p class="text-gray-500">Des contenus soigneusement sélectionnés par des experts du domaine.</p>
+        </div>
+        <div class="card p-6">
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-4" style="background:#fef3c7">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="#F59E0B" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+          </div>
+          <h3 class="text-lg font-bold text-dark mb-2">Attestation reconnue</h3>
+          <p class="text-gray-500">Obtenez une attestation officielle après chaque formation validée.</p>
+        </div>
+        <div class="card p-6">
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-4" style="background:#dcfce7">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="#16a34a" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <h3 class="text-lg font-bold text-dark mb-2">Système de parrainage</h3>
+          <p class="text-gray-500">Gagnez <strong>1 000 FCFA</strong> pour chaque ami parrainé qui achète une formation.</p>
+        </div>
+        <div class="card p-6">
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-4" style="background:#ede9fe">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="#7c3aed" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          </div>
+          <h3 class="text-lg font-bold text-dark mb-2">Progression par badges</h3>
+          <p class="text-gray-500">Évoluez de Débutant jusqu'au rang Diamant.</p>
+        </div>
+        <div class="card p-6">
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-4" style="background:#fef9c3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="#ca8a04" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          <h3 class="text-lg font-bold text-dark mb-2">Accès immédiat</h3>
+          <p class="text-gray-500">Après paiement, téléchargez et consultez vos formations immédiatement.</p>
+        </div>
+        <div class="card p-6">
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-4" style="background:#fee2e2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="#dc2626" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h3 class="text-lg font-bold text-dark mb-2">Paiement sécurisé</h3>
+          <p class="text-gray-500">Mobile Money, carte bancaire. Retraits en moins de 30 min.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Formations -->
+  <section id="formations" class="py-20 px-4">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-14">
+        <h2 class="text-3xl md:text-4xl font-bold text-dark mb-4">Nos formations populaires</h2>
+        <p class="text-gray-500 text-lg">Découvrez nos meilleures formations.</p>
+      </div>
+      <div id="courses-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Loading skeletons -->
+        <div class="card overflow-hidden">
+          <div class="course-skeleton h-48"></div>
+          <div class="p-5 space-y-3">
+            <div class="course-skeleton h-5 rounded w-3/4"></div>
+            <div class="course-skeleton h-4 rounded w-full"></div>
+            <div class="course-skeleton h-4 rounded w-5/6"></div>
+          </div>
+        </div>
+        <div class="card overflow-hidden">
+          <div class="course-skeleton h-48"></div>
+          <div class="p-5 space-y-3">
+            <div class="course-skeleton h-5 rounded w-3/4"></div>
+            <div class="course-skeleton h-4 rounded w-full"></div>
+            <div class="course-skeleton h-4 rounded w-5/6"></div>
+          </div>
+        </div>
+        <div class="card overflow-hidden">
+          <div class="course-skeleton h-48"></div>
+          <div class="p-5 space-y-3">
+            <div class="course-skeleton h-5 rounded w-3/4"></div>
+            <div class="course-skeleton h-4 rounded w-full"></div>
+            <div class="course-skeleton h-4 rounded w-5/6"></div>
+          </div>
+        </div>
+      </div>
+      <div class="text-center mt-12">
+        <a href="./register.html" class="btn-primary text-base">
+          Voir toutes les formations
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Referral -->
+  <section id="parrainage" class="py-20 px-4" style="background:#eff6ff">
+    <div class="max-w-5xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-6" style="background:#dbeafe;color:#1d4ed8">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Programme de parrainage
+      </div>
+      <h2 class="text-3xl md:text-4xl font-bold text-dark mb-6">Gagnez de l'argent en parrainant</h2>
+      <p class="text-gray-600 text-lg mb-10 max-w-2xl mx-auto">
+        Pour chaque ami qui achète une formation via votre code, vous recevez <strong class="text-blue-600">1 000 FCFA</strong> directement sur votre solde RIVO.
+      </p>
+      <div class="grid md:grid-cols-3 gap-6 mb-10">
+        <div class="bg-white rounded-2xl p-6 shadow-md text-left">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-lg mb-4" style="background:linear-gradient(135deg,#2563EB,#1D4ED8)">1</div>
+          <h3 class="font-bold text-dark text-lg mb-2">Inscrivez-vous</h3>
+          <p class="text-gray-500">Créez votre compte et récupérez votre code unique de parrainage.</p>
+        </div>
+        <div class="bg-white rounded-2xl p-6 shadow-md text-left">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-lg mb-4" style="background:linear-gradient(135deg,#2563EB,#1D4ED8)">2</div>
+          <h3 class="font-bold text-dark text-lg mb-2">Partagez</h3>
+          <p class="text-gray-500">Envoyez votre code à vos amis, famille, collègues.</p>
+        </div>
+        <div class="bg-white rounded-2xl p-6 shadow-md text-left">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-lg mb-4" style="background:linear-gradient(135deg,#2563EB,#1D4ED8)">3</div>
+          <h3 class="font-bold text-dark text-lg mb-2">Gagnez</h3>
+          <p class="text-gray-500">1 000 FCFA crédités à chaque achat de votre filleul.</p>
+        </div>
+      </div>
+      <!-- Badges -->
+      <div class="rounded-2xl p-8 text-white" style="background:linear-gradient(135deg,#2563EB,#1D4ED8)">
+        <h3 class="text-2xl font-bold mb-3">Niveaux de badges RIVO</h3>
+        <p class="mb-6" style="color:#bfdbfe">Plus vous achetez, plus vous montez en grade !</p>
+        <div class="flex flex-wrap justify-center gap-4">
+          <div class="rounded-xl px-4 py-3 text-center min-w-[90px]" style="background:rgba(255,255,255,.18)"><div class="text-2xl mb-1">🌱</div><div class="font-semibold text-sm">Débutant</div><div class="text-xs" style="color:#bfdbfe">0 formation</div></div>
+          <div class="rounded-xl px-4 py-3 text-center min-w-[90px]" style="background:rgba(255,255,255,.18)"><div class="text-2xl mb-1">🥉</div><div class="font-semibold text-sm">Bronze</div><div class="text-xs" style="color:#bfdbfe">5+ formations</div></div>
+          <div class="rounded-xl px-4 py-3 text-center min-w-[90px]" style="background:rgba(255,255,255,.18)"><div class="text-2xl mb-1">🥈</div><div class="font-semibold text-sm">Argent</div><div class="text-xs" style="color:#bfdbfe">10+ formations</div></div>
+          <div class="rounded-xl px-4 py-3 text-center min-w-[90px]" style="background:rgba(255,255,255,.18)"><div class="text-2xl mb-1">🥇</div><div class="font-semibold text-sm">Or</div><div class="text-xs" style="color:#bfdbfe">20+ formations</div></div>
+          <div class="rounded-xl px-4 py-3 text-center min-w-[90px]" style="background:rgba(255,255,255,.18)"><div class="text-2xl mb-1">💎</div><div class="font-semibold text-sm">Diamant</div><div class="text-xs" style="color:#bfdbfe">50+ formations</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="gradient-hero py-20 px-4">
+    <div class="max-w-4xl mx-auto text-center">
+      <h2 class="text-3xl md:text-5xl font-black text-white mb-6">Prêt à transformer votre avenir ?</h2>
+      <p class="text-xl mb-10" style="color:#bfdbfe">Rejoignez des milliers d'apprenants sur RIVO dès aujourd'hui.</p>
+      <a href="./register.html" class="btn-accent text-lg px-10 py-4">
+        Créer mon compte gratuitement
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-10 px-4" style="background:#1F2937;color:#9ca3af">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+      <div class="flex items-center gap-2">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#2563EB,#1D4ED8)">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        </div>
+        <span class="text-white font-bold text-lg">RIVO</span>
+      </div>
+      <p class="text-sm text-center">© 2025 RIVO par Martial Gbesso. Tous droits réservés.</p>
+      <div class="flex gap-6 text-sm">
+        <a href="./login.html" class="hover:text-white transition-colors">Connexion</a>
+        <a href="./register.html" class="hover:text-white transition-colors">Inscription</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="./config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script>
+    const SUPABASE_URL = window.RIVO_CONFIG.SUPABASE_URL;
+    const SUPABASE_ANON_KEY = window.RIVO_CONFIG.SUPABASE_ANON_KEY;
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    function formatPrice(amount, currency) {
+      if (currency === 'XOF') return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
+      return new Intl.NumberFormat('fr-FR', { style: 'currency', currency }).format(amount);
+    }
+
+    async function loadCourses() {
+      const { data: courses } = await supabase
+        .from('courses')
+        .select('*')
+        .eq('is_published', true)
+        .limit(6);
+
+      const grid = document.getElementById('courses-grid');
+      if (!courses || courses.length === 0) {
+        grid.innerHTML = '<p class="text-center col-span-3 text-gray-400 py-10">Aucune formation disponible pour l\'instant.</p>';
+        return;
+      }
+
+      grid.innerHTML = courses.map(c => `
+        <div class="card overflow-hidden fade-in group">
+          <div class="relative h-48 overflow-hidden flex items-center justify-center" style="background:linear-gradient(135deg,#2563EB,#1D4ED8)">
+            ${c.cover_image_url
+              ? `<img src="${c.cover_image_url}" alt="${c.title}" class="w-full h-full object-cover" style="transition:transform .3s" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" />`
+              : `<svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16" fill="none" viewBox="0 0 24 24" stroke="rgba(255,255,255,.4)" stroke-width="1.5"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>`
+            }
+            <div class="absolute top-3 right-3 text-white text-sm font-bold px-3 py-1 rounded-full" style="background:#F59E0B">${formatPrice(c.price, c.currency)}</div>
+          </div>
+          <div class="p-5">
+            <h3 class="font-bold text-dark text-lg mb-2">${c.title}</h3>
+            <p class="text-gray-500 text-sm mb-4" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${c.description || ''}</p>
+            <div class="flex items-center justify-between">
+              <div class="flex gap-0.5" style="color:#F59E0B">★★★★★</div>
+              <a href="./register.html" class="btn-accent py-2 px-4 text-sm">Acheter</a>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    loadCourses();
+  </script>
+</body>
+</html>
