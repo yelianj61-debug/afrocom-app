@@ -247,7 +247,8 @@
               <th>Utilisateur</th>
               <th>Montant</th>
               <th>Méthode</th>
-              <th>Détails</th>
+              <th>Opérateur</th>
+              <th>Numéro</th>
               <th>Statut</th>
               <th>Date</th>
               <th>Actions</th>
@@ -312,12 +313,22 @@
         </div>
       </div>
       <div>
-        <label class="block text-sm text-gray-400 mb-1">URL Image de couverture</label>
-        <input id="course-cover" type="url" class="input" placeholder="https://…"/>
+        <label class="block text-sm text-gray-400 mb-1">Image de couverture</label>
+        <input type="file" id="cover-file" accept="image/*" style="display:none" onchange="document.getElementById('cover-name').textContent=this.files[0]?.name||'Aucun fichier'"/>
+        <input id="course-cover" type="hidden"/>
+        <div class="flex gap-2 items-center">
+          <button type="button" onclick="document.getElementById('cover-file').click()" class="btn-success" style="font-size:.8rem;padding:6px 12px">📷 Choisir image</button>
+          <span id="cover-name" class="text-sm text-gray-400">Aucun fichier</span>
+        </div>
       </div>
       <div>
-        <label class="block text-sm text-gray-400 mb-1">URL Fichier formation</label>
-        <input id="course-file" type="url" class="input" placeholder="https://…"/>
+        <label class="block text-sm text-gray-400 mb-1">Fichier formation (PDF ou vidéo)</label>
+        <input type="file" id="pdf-file" accept=".pdf,video/*" style="display:none" onchange="document.getElementById('pdf-name').textContent=this.files[0]?.name||'Aucun fichier'"/>
+        <input id="course-file" type="hidden"/>
+        <div class="flex gap-2 items-center">
+          <button type="button" onclick="document.getElementById('pdf-file').click()" class="btn-primary" style="font-size:.8rem;padding:6px 12px">📎 Choisir PDF/Vidéo</button>
+          <span id="pdf-name" class="text-sm text-gray-400">Aucun fichier</span>
+        </div>
       </div>
       <div class="flex items-center gap-2">
         <input id="course-published" type="checkbox" class="w-4 h-4 accent-purple-600"/>
@@ -417,21 +428,26 @@ function confirm(title, msg, onOk) {
 
 /* ── Dashboard ────────────────────────────────────────── */
 async function loadDashboard() {
-  const [usersRes, purchasesRes, withdrawalsRes, certsRes, coursesRes] = await Promise.all([
+  const [usersRes, purchasesRes, withdrawalsRes, coursesRes] = await Promise.all([
     sb.from('profiles').select('id', { count: 'exact', head: true }),
     sb.from('purchases').select('id,amount', { count: 'exact' }).eq('status','complete'),
     sb.from('withdrawals').select('id', { count: 'exact', head: true }).eq('status','en_attente'),
-    sb.from('purchases').select('id', { count: 'exact', head: true }).eq('status','complete').is('certificate_id', null),
-    sb.from('courses').select('id', { count: 'exact', head: true }).eq('published', true),
+    sb.from('courses').select('id', { count: 'exact', head: true }).eq('is_published', true),
   ]);
 
   const revenue = (purchasesRes.data||[]).reduce((s,r) => s + (r.amount||0), 0);
+
+  const [{ count: purchaseTotal }, { count: certTotal }] = await Promise.all([
+    sb.from('purchases').select('id', { count:'exact', head:true }).eq('status','complete'),
+    sb.from('certificates').select('id', { count:'exact', head:true }),
+  ]);
+  const pendingCerts = Math.max(0, (purchaseTotal||0) - (certTotal||0));
 
   document.getElementById('stat-users').textContent = usersRes.count ?? '—';
   document.getElementById('stat-purchases').textContent = purchasesRes.count ?? '—';
   document.getElementById('stat-revenue').textContent = revenue.toLocaleString('fr-FR');
   document.getElementById('stat-withdrawals').textContent = withdrawalsRes.count ?? '—';
-  document.getElementById('stat-certs').textContent = certsRes.count ?? '—';
+  document.getElementById('stat-certs').textContent = pendingCerts;
   document.getElementById('stat-courses').textContent = coursesRes.count ?? '—';
 
   // Recent purchases
@@ -532,12 +548,12 @@ function renderFormations(courses) {
       <div class="p-4">
         <div class="flex items-start justify-between gap-2 mb-1">
           <h3 class="font-semibold text-white leading-snug">${c.title}</h3>
-          <span class="flex-shrink-0 text-xs px-2 py-1 rounded-full ${c.published ? 'bg-green-900/50 text-green-400' : 'bg-gray-700 text-gray-400'}">${c.published ? 'Publié' : 'Brouillon'}</span>
+          <span class="flex-shrink-0 text-xs px-2 py-1 rounded-full ${c.is_published ? 'bg-green-900/50 text-green-400' : 'bg-gray-700 text-gray-400'}">${c.is_published ? 'Publié' : 'Brouillon'}</span>
         </div>
-        <p class="text-gray-400 text-xs mb-3 line-clamp-2">${c.short_description||''}</p>
+        <p class="text-gray-400 text-xs mb-3 line-clamp-2">${c.description||''}</p>
         <div class="text-purple-400 font-bold mb-4">${(c.price||0).toLocaleString('fr-FR')} ${c.currency||'XOF'}</div>
         <div class="flex gap-2 flex-wrap">
-          <button onclick="togglePublish('${c.id}',${c.published})" class="${c.published ? 'btn-warning' : 'btn-success'} text-xs">${c.published ? 'Dépublier' : 'Publier'}</button>
+          <button onclick="togglePublish('${c.id}',${c.is_published})" class="${c.is_published ? 'btn-warning' : 'btn-success'} text-xs">${c.is_published ? 'Dépublier' : 'Publier'}</button>
           <button onclick="openCourseModal(${JSON.stringify(c).replace(/"/g,'&quot;')})" class="btn-primary text-xs">Modifier</button>
           <button onclick="deleteCourse('${c.id}')" class="btn-danger text-xs">Supprimer</button>
         </div>
@@ -549,13 +565,17 @@ function openCourseModal(course) {
   document.getElementById('modal-title').textContent = course ? 'Modifier la formation' : 'Nouvelle formation';
   document.getElementById('course-id').value   = course?.id || '';
   document.getElementById('course-title').value = course?.title || '';
-  document.getElementById('course-short').value = course?.short_description || '';
-  document.getElementById('course-desc').value  = course?.description || '';
+  document.getElementById('course-short').value = course?.description || '';
+  document.getElementById('course-desc').value  = course?.full_description || '';
   document.getElementById('course-price').value = course?.price || '';
   document.getElementById('course-currency').value = course?.currency || 'XOF';
   document.getElementById('course-cover').value = course?.cover_url || '';
   document.getElementById('course-file').value  = course?.file_url || '';
-  document.getElementById('course-published').checked = course?.published || false;
+  document.getElementById('course-published').checked = course?.is_published || false;
+  document.getElementById('cover-file').value = '';
+  document.getElementById('pdf-file').value = '';
+  document.getElementById('cover-name').textContent = course?.cover_url ? 'Image actuelle ✓' : 'Aucun fichier';
+  document.getElementById('pdf-name').textContent = course?.file_url ? 'Fichier actuel ✓' : 'Aucun fichier';
   document.getElementById('course-error').classList.add('hidden');
   const mod=document.getElementById('course-modal');mod.classList.remove('hidden');mod.style.display='flex';
 }
@@ -568,15 +588,23 @@ async function saveCourse(e) {
   errEl.classList.add('hidden');
   if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Enregistrement…'; }
   try {
+    if (saveBtn) saveBtn.textContent = 'Upload…';
+    const coverFile = document.getElementById('cover-file').files[0];
+    const pdfFile   = document.getElementById('pdf-file').files[0];
+    let coverUrl = document.getElementById('course-cover').value.trim() || null;
+    let fileUrl  = document.getElementById('course-file').value.trim() || null;
+    if (coverFile) coverUrl = await uploadCloudinary(coverFile, 'afrotv_images');
+    if (pdfFile)   fileUrl  = await uploadCloudinary(pdfFile, 'afrotv_videos');
+    if (saveBtn) saveBtn.textContent = 'Enregistrement…';
     const payload = {
-      title:             document.getElementById('course-title').value.trim(),
-      short_description: document.getElementById('course-short').value.trim(),
-      description:       document.getElementById('course-desc').value.trim(),
-      price:             parseFloat(document.getElementById('course-price').value) || 0,
-      currency:          document.getElementById('course-currency').value,
-      cover_url:         document.getElementById('course-cover').value.trim() || null,
-      file_url:          document.getElementById('course-file').value.trim() || null,
-      published:         document.getElementById('course-published').checked,
+      title:            document.getElementById('course-title').value.trim(),
+      description:      document.getElementById('course-short').value.trim(),
+      full_description: document.getElementById('course-desc').value.trim(),
+      price:            parseFloat(document.getElementById('course-price').value) || 0,
+      currency:         document.getElementById('course-currency').value,
+      cover_url:        coverUrl,
+      file_url:         fileUrl,
+      is_published:     document.getElementById('course-published').checked,
     };
 
     let err;
@@ -600,7 +628,7 @@ async function saveCourse(e) {
 }
 
 async function togglePublish(id, current) {
-  const { error } = await sb.from('courses').update({ published: !current }).eq('id', id);
+  const { error } = await sb.from('courses').update({ is_published: !current }).eq('id', id);
   if (error) { toast(error.message, false); return; }
   toast(current ? 'Formation dépubliée' : 'Formation publiée !');
   loaded.formations = false;
@@ -617,6 +645,18 @@ function deleteCourse(id) {
   });
 }
 
+/* ── Cloudinary upload ────────────────────────────────── */
+async function uploadCloudinary(file, preset) {
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('upload_preset', preset);
+  const type = file.type.startsWith('image') ? 'image' : 'video';
+  const r = await fetch(`https://api.cloudinary.com/v1_1/dx0dzt35e/${type}/upload`, { method:'POST', body:fd });
+  const d = await r.json();
+  if (d.error) throw new Error(d.error.message);
+  return d.secure_url;
+}
+
 /* ── Retraits ─────────────────────────────────────────── */
 async function loadRetraits() {
   const filter = document.getElementById('retrait-filter').value;
@@ -628,7 +668,7 @@ async function loadRetraits() {
 
 function renderRetraits(rows) {
   const tb = document.getElementById('retraits-table');
-  if (!rows.length) { tb.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500 py-8">Aucun retrait</td></tr>'; return; }
+  if (!rows.length) { tb.innerHTML = '<tr><td colspan="8" class="text-center text-gray-500 py-8">Aucun retrait</td></tr>'; return; }
   tb.innerHTML = rows.map(r => {
     const date = r.created_at ? new Date(r.created_at).toLocaleDateString('fr-FR') : '—';
     const actions = r.status === 'en_attente' ? `
@@ -642,7 +682,8 @@ function renderRetraits(rows) {
       </td>
       <td class="text-orange-300 font-semibold">${(r.amount||0).toLocaleString('fr-FR')} FCFA</td>
       <td class="text-gray-300">${r.method||'—'}</td>
-      <td class="text-gray-400 text-xs max-w-xs truncate">${r.details||'—'}</td>
+      <td class="text-gray-400">${r.operator||'—'}</td>
+      <td class="text-gray-400 text-xs">${r.country_code||''} ${r.phone_number||'—'}</td>
       <td><span class="status-badge status-${r.status}">${r.status}</span></td>
       <td class="text-gray-400">${date}</td>
       <td>${actions}</td>
@@ -689,12 +730,17 @@ async function rejectRetrait(id) {
 
 /* ── Attestations ─────────────────────────────────────── */
 async function loadAttestations() {
-  // Purchases completed without certificate
-  const { data: purchases } = await sb.from('purchases')
-    .select('id,created_at,profiles(id,first_name,last_name,email),courses(id,title)')
-    .eq('status','complete')
-    .is('certificate_id', null)
-    .order('created_at',{ascending:false});
+  const [{ data: allPurchases }, { data: certs }] = await Promise.all([
+    sb.from('purchases')
+      .select('id,created_at,profiles(id,first_name,last_name,email),courses(id,title)')
+      .eq('status','complete')
+      .order('created_at',{ascending:false}),
+    sb.from('certificates').select('user_id,course_id'),
+  ]);
+  const certSet = new Set((certs||[]).map(c => `${c.user_id}:${c.course_id}`));
+  const purchases = (allPurchases||[]).filter(p =>
+    p.profiles?.id && p.courses?.id && !certSet.has(`${p.profiles.id}:${p.courses.id}`)
+  );
 
   const container = document.getElementById('attestations-list');
   if (!purchases || purchases.length === 0) {
@@ -721,20 +767,17 @@ async function loadAttestations() {
 }
 
 async function sendAttestation(purchaseId, userId, courseId) {
-  const pdfUrl = document.getElementById('pdf-' + purchaseId).value.trim();
+  const certUrl = document.getElementById('pdf-' + purchaseId).value.trim();
   const message = document.getElementById('msg-' + purchaseId).value.trim();
-  if (!pdfUrl) { toast('Veuillez entrer l\'URL du PDF', false); return; }
+  if (!certUrl) { toast('Veuillez entrer l\'URL du certificat', false); return; }
 
   const btn = document.querySelector(`#attest-${purchaseId} button`);
   if (btn) { btn.disabled = true; btn.textContent = 'Envoi…'; }
   try {
-    const { data: cert, error: certErr } = await withTimeout(sb.from('certificates').insert({
-      user_id: userId, course_id: courseId, pdf_url: pdfUrl, message: message || null,
-    }).select().single());
+    const { error: certErr } = await withTimeout(sb.from('certificates').insert({
+      user_id: userId, course_id: courseId, certificate_url: certUrl, message: message || null,
+    }));
     if (certErr) throw certErr;
-
-    const { error: purchErr } = await withTimeout(sb.from('purchases').update({ certificate_id: cert.id }).eq('id', purchaseId));
-    if (purchErr) throw purchErr;
 
     toast('Attestation envoyée avec succès !');
     document.getElementById('attest-' + purchaseId).remove();

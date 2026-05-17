@@ -36,22 +36,17 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
 .spin-blue{width:2rem;height:2rem;border:3px solid #dbeafe;border-top-color:#2563EB;border-radius:50%;animation:rot .65s linear infinite}
 .fade-in{animation:fi .4s ease}
 @keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-/* Sidebar */
-.sidebar{position:fixed;top:0;left:0;height:100vh;width:255px;background:white;border-right:1px solid #f1f5f9;box-shadow:2px 0 20px rgba(0,0,0,.06);z-index:50;transition:transform .3s;overflow-y:auto}
-.main-area{margin-left:255px;min-height:100vh}
-@media(max-width:1023px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.main-area{margin-left:0}}
-.nav-link{display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;border-radius:.75rem;font-weight:500;color:#4b5563;transition:all .2s;cursor:pointer;text-decoration:none;border:none;background:none;width:100%;font-size:.9rem;font-family:'Inter',sans-serif}
-.nav-link:hover{background:#f1f5f9;color:#111827}
-.nav-link.active{background:#2563EB;color:white;box-shadow:0 4px 12px rgba(37,99,235,.25)}
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:40}
-.overlay.show{display:block}
+/* Bottom nav */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:2px solid #e5e7eb;display:flex;z-index:100;box-shadow:0 -4px 20px rgba(0,0,0,.08)}
+.bottom-nav button{flex:1;padding:.6rem .25rem .5rem;border:none;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:.2rem;font-size:.65rem;font-weight:600;color:#9ca3af;transition:.2s;font-family:'Inter',sans-serif}
+.bottom-nav button.active{color:#2563EB}
+.bottom-nav button .nav-icon{font-size:1.25rem}
 /* nav landing */
 .top-nav{position:fixed;top:0;width:100%;z-index:60;background:rgba(255,255,255,.93);backdrop-filter:blur(14px);box-shadow:0 1px 18px rgba(0,0,0,.07)}
 </style>
 </head>
 <body>
 <div id="toasts"></div>
-<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
 
 <!-- ═══════════════════ PAGE: LANDING ═══════════════════ -->
 <div id="page-landing" class="page active">
@@ -295,56 +290,31 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
 
 <!-- ═══════════════════ PAGE: DASHBOARD ═══════════════════ -->
 <div id="page-dashboard" class="page">
-  <!-- Sidebar -->
-  <aside class="sidebar" id="sidebar">
-    <div style="padding:1.25rem 1rem;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:.6rem">
-      <div style="width:2.25rem;height:2.25rem;border-radius:.75rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0">📚</div>
-      <span style="font-size:1.2rem;font-weight:900;color:#1F2937">RIVO</span>
+  <!-- Header -->
+  <header style="position:sticky;top:0;z-index:30;background:white;border-bottom:1px solid #f1f5f9;padding:.75rem 1rem;display:flex;justify-content:space-between;align-items:center">
+    <div style="display:flex;align-items:center;gap:.6rem">
+      <div style="width:2.25rem;height:2.25rem;border-radius:.75rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;font-size:1rem">📚</div>
+      <span style="font-size:1.1rem;font-weight:900;color:#1F2937">RIVO</span>
     </div>
-    <!-- Profile mini -->
-    <div id="sb-profile" style="margin:.75rem;padding:.875rem;background:#eff6ff;border-radius:.875rem;display:none">
-      <div style="display:flex;align-items:center;gap:.75rem">
-        <div id="sb-avatar" style="width:2.5rem;height:2.5rem;border-radius:9999px;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:.9rem;flex-shrink:0">?</div>
-        <div>
-          <div id="sb-name" style="font-weight:700;font-size:.875rem;color:#1F2937">...</div>
-          <span id="sb-badge" class="badge" style="background:#dbeafe;color:#1d4ed8;font-size:.7rem">🌱 Débutant</span>
-        </div>
+    <div style="display:flex;align-items:center;gap:.75rem">
+      <div style="position:relative">
+        <button onclick="toggleNotifPanel()" style="background:none;border:none;cursor:pointer;font-size:1.4rem;padding:.25rem;line-height:1">🔔</button>
+        <span id="notif-badge" style="display:none;position:absolute;top:-2px;right:-2px;background:#ef4444;color:white;font-size:.6rem;font-weight:800;min-width:1rem;height:1rem;border-radius:9999px;align-items:center;justify-content:center;padding:0 .2rem">0</span>
       </div>
+      <button onclick="doLogout()" style="background:none;border:none;cursor:pointer;font-size:.8rem;color:#ef4444;font-weight:600;padding:.35rem .75rem;border-radius:.5rem;border:1px solid #fecaca">Déco.</button>
     </div>
-    <nav style="padding:.75rem;display:flex;flex-direction:column;gap:.2rem">
-      <button onclick="switchTab('bord')" id="nav-bord" class="nav-link active">
-        <svg xmlns="http://www.w3.org/2000/svg" style="width:1.1rem;height:1.1rem;flex-shrink:0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> Bord
-      </button>
-      <button onclick="switchTab('formations')" id="nav-formations" class="nav-link">
-        <svg xmlns="http://www.w3.org/2000/svg" style="width:1.1rem;height:1.1rem;flex-shrink:0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg> Mes formations
-      </button>
-      <button onclick="switchTab('attestations')" id="nav-attestations" class="nav-link">
-        <svg xmlns="http://www.w3.org/2000/svg" style="width:1.1rem;height:1.1rem;flex-shrink:0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg> Attestation
-      </button>
-      <button onclick="switchTab('profil')" id="nav-profil" class="nav-link">
-        <svg xmlns="http://www.w3.org/2000/svg" style="width:1.1rem;height:1.1rem;flex-shrink:0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Profil
-      </button>
-      <button onclick="switchTab('retrait')" id="nav-retrait" class="nav-link">
-        <svg xmlns="http://www.w3.org/2000/svg" style="width:1.1rem;height:1.1rem;flex-shrink:0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Retrait
-      </button>
-    </nav>
-    <div style="padding:.75rem;margin-top:auto;border-top:1px solid #f1f5f9">
-      <button onclick="doLogout()" class="nav-link" style="color:#ef4444">
-        <svg xmlns="http://www.w3.org/2000/svg" style="width:1.1rem;height:1.1rem;flex-shrink:0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Déconnexion
-      </button>
+  </header>
+
+  <!-- Notification panel -->
+  <div id="notif-panel" style="display:none;position:fixed;top:3.5rem;right:.75rem;width:min(320px,calc(100vw - 1.5rem));background:white;border-radius:1rem;box-shadow:0 8px 32px rgba(0,0,0,.18);z-index:200;max-height:400px;overflow-y:auto;border:1px solid #e5e7eb">
+    <div style="padding:1rem;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-weight:700;color:#1F2937;font-size:.95rem">Notifications</span>
+      <button onclick="clearNotifications()" style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:.8rem">Tout lire</button>
     </div>
-  </aside>
+    <div id="notif-list" style="padding:.5rem"></div>
+  </div>
 
-  <div class="main-area">
-    <!-- Mobile header -->
-    <header style="display:none;position:sticky;top:0;z-index:30;background:white;border-bottom:1px solid #f1f5f9;padding:.75rem 1rem;justify-content:space-between;align-items:center" id="mob-header">
-      <button onclick="openSidebar()" style="background:none;border:none;cursor:pointer;padding:.35rem">☰</button>
-      <span style="font-weight:900;font-size:1.1rem;color:#1F2937">RIVO</span>
-      <div style="width:2rem"></div>
-    </header>
-    <style>@media(max-width:1023px){#mob-header{display:flex!important}}</style>
-
-    <div style="padding:1.5rem;max-width:1100px">
+  <div style="padding:1.5rem;max-width:1100px;padding-bottom:80px">
       <!-- Bord -->
       <div id="tab-bord" class="tab-panel active fade-in">
         <div style="border-radius:1.5rem;padding:2rem;color:white;margin-bottom:2rem;background:linear-gradient(135deg,#2563EB,#1D4ED8)">
@@ -380,6 +350,16 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
       <!-- Profil -->
       <div id="tab-profil" class="tab-panel fade-in">
         <h1 style="font-size:1.5rem;font-weight:800;color:#1F2937;margin-bottom:1.5rem">Mon profil</h1>
+
+        <!-- Code parrainage proéminent -->
+        <div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:2px dashed #3b82f6;border-radius:1rem;padding:1.5rem;text-align:center;margin-bottom:1.5rem">
+          <p style="font-size:.8rem;color:#6b7280;margin-bottom:.5rem">Votre code de parrainage</p>
+          <p id="ref-code" style="font-size:2rem;font-weight:900;color:#1d4ed8;letter-spacing:.15em">...</p>
+          <p style="font-size:.75rem;color:#6b7280;margin:.5rem 0 1rem">Partagez ce code · Gagnez 1 000 FCFA par achat de vos filleuls</p>
+          <button onclick="copyRef()" style="background:#2563eb;color:#fff;border:none;border-radius:.75rem;padding:.6rem 1.5rem;font-weight:700;cursor:pointer;font-size:.875rem">📋 Copier le code</button>
+        </div>
+
+        <!-- Infos profil + stats -->
         <div style="display:grid;grid-template-columns:1fr 2fr;gap:1.25rem;margin-bottom:1.5rem">
           <div class="card" style="padding:1.5rem;text-align:center">
             <div id="big-av" style="width:5rem;height:5rem;border-radius:9999px;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:1.5rem;margin:0 auto 1rem;box-shadow:0 0 0 4px #dbeafe">?</div>
@@ -391,15 +371,19 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
             <div class="card" style="padding:1.25rem;text-align:center"><div id="st-f" style="font-size:2rem;font-weight:900;color:#2563EB">0</div><div style="color:#6b7280;font-size:.8rem;margin-top:.2rem">Formations achetées</div></div>
             <div class="card" style="padding:1.25rem;text-align:center"><div id="st-a" style="font-size:2rem;font-weight:900;color:#F59E0B">0</div><div style="color:#6b7280;font-size:.8rem;margin-top:.2rem">Attestations</div></div>
             <div class="card" style="padding:1.25rem;text-align:center"><div id="st-b" style="font-size:1.3rem;font-weight:900;color:#10b981">0 FCFA</div><div style="color:#6b7280;font-size:.8rem;margin-top:.2rem">Solde</div></div>
-            <div class="card" style="padding:1.25rem">
-              <div style="font-size:.75rem;color:#9ca3af;margin-bottom:.4rem">Code parrainage</div>
-              <div style="display:flex;align-items:center;gap:.5rem">
-                <span id="ref-code" style="font-weight:800;font-size:.875rem;background:#eff6ff;color:#1d4ed8;padding:.35rem .75rem;border-radius:.5rem;flex:1;text-align:center">...</span>
-                <button onclick="copyRef()" style="width:2rem;height:2rem;background:#dbeafe;color:#2563EB;border:none;border-radius:.5rem;cursor:pointer;font-size:.9rem">📋</button>
-              </div>
-            </div>
+            <div class="card" style="padding:1.25rem;text-align:center"><div id="st-ref" style="font-size:2rem;font-weight:900;color:#8b5cf6">0</div><div style="color:#6b7280;font-size:.8rem;margin-top:.2rem">Filleuls actifs</div></div>
           </div>
         </div>
+
+        <!-- Gains parrainage -->
+        <div class="card" style="padding:1.25rem;display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+          <div>
+            <div style="font-weight:700;color:#1F2937">Gains de parrainage</div>
+            <div style="font-size:.8rem;color:#6b7280">1 000 FCFA × filleuls ayant acheté</div>
+          </div>
+          <div id="st-ref-gain" style="font-size:1.3rem;font-weight:900;color:#10b981">0 FCFA</div>
+        </div>
+
         <div class="card" style="padding:1.5rem">
           <h3 style="font-weight:800;font-size:1.05rem;color:#1F2937;margin-bottom:1.25rem">✏️ Modifier mes informations</h3>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
@@ -430,6 +414,15 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
       </div>
     </div>
   </div>
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav">
+    <button onclick="switchTab('bord')" id="bnav-bord" class="active"><span class="nav-icon">🏠</span><span>Bord</span></button>
+    <button onclick="switchTab('formations')" id="bnav-formations"><span class="nav-icon">📚</span><span>Formations</span></button>
+    <button onclick="switchTab('attestations')" id="bnav-attestations"><span class="nav-icon">🏆</span><span>Attests.</span></button>
+    <button onclick="switchTab('retrait')" id="bnav-retrait"><span class="nav-icon">💸</span><span>Retrait</span></button>
+    <button onclick="switchTab('profil')" id="bnav-profil"><span class="nav-icon">👤</span><span>Profil</span></button>
+  </nav>
 
   <!-- Payment modal -->
   <div id="pay-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;align-items:center;justify-content:center;padding:1rem">
@@ -471,15 +464,16 @@ function togglePwd(id){const i=document.getElementById(id);i.type=i.type==='pass
 function setBtn(id,html,dis=false){const b=document.getElementById(id);if(b){b.innerHTML=html;b.disabled=dis;}}
 function showErr(id,msg){const el=document.getElementById(id);if(!el)return;el.textContent=msg;el.style.display=msg?'block':'none';}
 function withTimeout(p,ms=15000){return Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('Délai dépassé. Vérifiez votre connexion internet.')),ms))]);}
-function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('show');}
-function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show');}
 
 // ── Navigation ───────────────────────────────────────
 function goTo(p){
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
   document.getElementById('page-'+p).classList.add('active');
   window.scrollTo(0,0);
-  if(p==='dashboard' && CU && !loaded.bord){loaded.bord=true; loadBord();}
+  if(p==='dashboard' && CU){
+    if(!loaded.bord){loaded.bord=true; loadBord();}
+    if(!loaded.notif){loaded.notif=true; loadNotifications();}
+  }
 }
 
 // ── App start (called after CDN loads) ───────────────
@@ -527,14 +521,6 @@ async function loadProfileData(){
   const {data:p}=await sb.from('profiles').select('*').eq('id',CU.id).single();
   CP=p;
   if(!p)return;
-  const [ic,lb,bg,co]=badgeInfo(p.badge_level);
-  document.getElementById('sb-name').textContent=`${p.first_name} ${p.last_name}`;
-  const sb_badge=document.getElementById('sb-badge');
-  sb_badge.textContent=`${ic} ${lb}`;sb_badge.style.background=bg;sb_badge.style.color=co;
-  document.getElementById('sb-profile').style.display='block';
-  const av=document.getElementById('sb-avatar');
-  if(p.avatar_url)av.innerHTML=`<img src="${p.avatar_url}" style="width:100%;height:100%;border-radius:9999px;object-fit:cover"/>`;
-  else av.textContent=(p.first_name[0]+p.last_name[0]).toUpperCase();
   document.getElementById('welcome-h').textContent=`Bienvenue ${p.first_name} !!!`;
 }
 
@@ -751,12 +737,16 @@ async function loadProfil(){
   const av=document.getElementById('big-av');
   if(p.avatar_url)av.innerHTML=`<img src="${p.avatar_url}" style="width:100%;height:100%;border-radius:9999px;object-fit:cover"/>`;
   else av.textContent=(p.first_name[0]+p.last_name[0]).toUpperCase();
-  const[{count:fc},{count:ac}]=await Promise.all([
+  const[{count:fc},{count:ac},{data:filleuls}]=await Promise.all([
     sb.from('purchases').select('*',{count:'exact',head:true}).eq('user_id',CU.id).eq('status','complete'),
-    sb.from('certificates').select('*',{count:'exact',head:true}).eq('user_id',CU.id)
+    sb.from('certificates').select('*',{count:'exact',head:true}).eq('user_id',CU.id),
+    sb.from('profiles').select('id').eq('referred_by',CU.id),
   ]);
   document.getElementById('st-f').textContent=fc||0;
   document.getElementById('st-a').textContent=ac||0;
+  const refCount=(filleuls||[]).length;
+  document.getElementById('st-ref').textContent=refCount;
+  document.getElementById('st-ref-gain').textContent=fmt(refCount*1000,'XOF');
 }
 
 function copyRef(){const c=document.getElementById('ref-code').textContent;navigator.clipboard.writeText(c);toast('Code copié !');}
@@ -769,7 +759,6 @@ async function saveProfile(){
   if(error){toast('Erreur','err');return;}
   CP={...CP,first_name:fn,last_name:ln};
   document.getElementById('welcome-h').textContent=`Bienvenue ${fn} !!!`;
-  document.getElementById('sb-name').textContent=`${fn} ${ln}`;
   document.getElementById('prof-name').textContent=`${fn} ${ln}`;
   toast('Profil mis à jour !');
 }
@@ -803,10 +792,11 @@ async function doWithdrawal(){
 // ── Tab switching ─────────────────────────────────────
 function switchTab(name){
   document.querySelectorAll('.tab-panel').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.nav-link').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.bottom-nav button').forEach(n=>n.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
-  document.getElementById('nav-'+name).classList.add('active');
-  closeSidebar();
+  const bnav=document.getElementById('bnav-'+name);
+  if(bnav)bnav.classList.add('active');
+  document.getElementById('notif-panel').style.display='none';
   if(!loaded[name]){
     loaded[name]=true;
     if(name==='formations')loadMesFormations();
@@ -814,6 +804,52 @@ function switchTab(name){
     if(name==='profil')loadProfil();
     if(name==='retrait')loadRetrait();
   }
+}
+
+// ── Notifications ─────────────────────────────────────
+async function loadNotifications(){
+  if(!CU)return;
+  const {data:filleuls}=await sb.from('profiles').select('id,first_name').eq('referred_by',CU.id);
+  const badge=document.getElementById('notif-badge');
+  const list=document.getElementById('notif-list');
+  if(!filleuls?.length){
+    list.innerHTML='<p style="padding:1rem;text-align:center;color:#9ca3af;font-size:.875rem">Aucune notification</p>';
+    return;
+  }
+  const ids=filleuls.map(f=>f.id);
+  const last=localStorage.getItem('rivo_notif_last')||'2020-01-01T00:00:00Z';
+  const {data:purchases}=await sb.from('purchases')
+    .select('user_id,created_at,profiles(first_name)')
+    .in('user_id',ids).eq('status','complete')
+    .gt('created_at',last)
+    .order('created_at',{ascending:false});
+  const count=(purchases||[]).length;
+  if(count>0){badge.textContent=count;badge.style.display='flex';}
+  else{badge.style.display='none';}
+  if(!purchases||!purchases.length){
+    list.innerHTML='<p style="padding:1rem;text-align:center;color:#9ca3af;font-size:.875rem">Aucune nouvelle notification</p>';
+    return;
+  }
+  list.innerHTML=purchases.map(p=>{
+    const d=new Date(p.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+    return`<div style="padding:.75rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.875rem"><span style="font-weight:700">🎉 ${p.profiles?.first_name||'Un filleul'}</span> a acheté une formation — <span style="color:#10b981;font-weight:700">+1 000 FCFA</span><div style="font-size:.75rem;color:#9ca3af;margin-top:.2rem">${d}</div></div>`;
+  }).join('');
+}
+
+function toggleNotifPanel(){
+  const panel=document.getElementById('notif-panel');
+  if(panel.style.display==='none'||!panel.style.display){
+    panel.style.display='block';
+    loadNotifications();
+  }else{
+    panel.style.display='none';
+  }
+}
+
+function clearNotifications(){
+  localStorage.setItem('rivo_notif_last',new Date().toISOString());
+  document.getElementById('notif-badge').style.display='none';
+  document.getElementById('notif-list').innerHTML='<p style="padding:1rem;text-align:center;color:#9ca3af;font-size:.875rem">Tout lu ✓</p>';
 }
 </script>
 </body>
