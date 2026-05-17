@@ -453,7 +453,12 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
 const SB_URL  = 'https://qwdttzsbbspayojzeugy.supabase.co';
 const SB_ANON = 'sb_publishable_tG64uzNsmT0XDV7pmglqFA_lxQ4xIFm';
 const FP_SK   = ['sk','live','taBqGtMfLEBXntvvAY4hqyNv'].join('_');
-const sb      = window.supabase.createClient(SB_URL, SB_ANON);
+let sb;
+try {
+  sb = window.supabase.createClient(SB_URL, SB_ANON);
+} catch(e) {
+  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;background:#f8fafc;padding:2rem;text-align:center"><div><p style="font-size:2.5rem">⚠️</p><h2 style="color:#dc2626;margin:.5rem 0">Erreur de chargement</h2><p style="color:#6b7280;margin-bottom:1.5rem;font-size:.9rem">La bibliothèque réseau n\'a pas pu se charger.<br>Vérifiez votre connexion internet et rechargez la page.</p><button onclick="location.reload()" style="background:#2563eb;color:#fff;border:none;border-radius:8px;padding:10px 24px;cursor:pointer;font-size:.9rem;font-weight:700">🔄 Réessayer</button></div></div>';
+}
 
 // ── Globals ───────────────────────────────────────────
 let CU = null, CP = null, pendingCourse = null;
