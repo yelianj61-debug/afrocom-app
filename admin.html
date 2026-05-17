@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RIVO Admin — Panneau d'administration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { inter: ['Inter', 'sans-serif'] },
+          colors: { brand: { blue: '#2563EB', orange: '#F59E0B', dark: '#1F2937' } }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .sidebar-link { transition: all 0.15s; }
+    .sidebar-link.active { background: #eff6ff; color: #2563EB; font-weight: 600; }
+    .sidebar-link:not(.active):hover { background: #f9fafb; color: #374151; }
+    .spinner { border: 3px solid #f3f4f6; border-top-color: #2563EB; border-radius: 50%; width: 20px; height: 20px; animation: spin 0.8s linear infinite; display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .fade-in { animation: fadeIn 0.25s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .modal-overlay { background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+    ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #f1f5f9; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    table { border-collapse: collapse; }
+    .status-badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 9999px; font-size: 11px; font-weight: 600; }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+<!-- TOAST -->
+<div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2 max-w-sm"></div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE : CONNEXION ADMIN
+═══════════════════════════════════════════════════════ -->
+<div id="page-admin-login" class="min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-md fade-in">
+    <div class="text-center mb-8">
+      <div class="flex items-center justify-center gap-2 mb-3">
+        <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-300">
+          <span class="text-white font-black text-xl">R</span>
+        </div>
+      </div>
+      <h1 class="text-2xl font-black text-gray-900">Espace Administrateur</h1>
+      <p class="text-gray-500 text-sm mt-1">RIVO — Accès réservé</p>
+    </div>
+    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8">
+      <div id="login-step-email" class="">
+        <div class="text-center mb-6">
+          <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          </div>
+          <h2 class="font-bold text-gray-900 text-lg">Connexion par lien magique</h2>
+          <p class="text-gray-500 text-sm mt-1">Entrez votre email admin pour recevoir un lien de connexion sécurisé</p>
+        </div>
+        <form onsubmit="handleAdminMagicLink(event)">
+          <div class="mb-5">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Email administrateur</label>
+            <input id="admin-email-input" name="email" type="email" required
+              value="assistancetrc416@gmail.com"
+              placeholder="assistancetrc416@gmail.com"
+              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-gray-800">
+          </div>
+          <button type="submit" id="btn-magic-link" data-label="Recevoir le lien de connexion"
+            class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-md shadow-blue-200">
+            Recevoir le lien de connexion
+          </button>
+        </form>
+      </div>
+
+      <div id="login-step-confirm" class="hidden text-center">
+        <div class="w-16 h-16 bg-green-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <h2 class="font-bold text-gray-900 text-lg mb-2">Lien envoyé !</h2>
+        <p class="text-gray-500 text-sm">Vérifiez votre boîte mail <strong id="confirm-email-display"></strong> et cliquez sur le lien pour accéder au panneau d'administration.</p>
+        <button onclick="resetLoginStep()" class="mt-6 text-sm text-blue-600 hover:underline font-medium">Renvoyer un lien</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE : DASHBOARD ADMIN
+═══════════════════════════════════════════════════════ -->
+<div id="page-admin-dashboard" class="hidden min-h-screen flex">
+
+  <!-- SIDEBAR -->
+  <aside class="w-64 bg-white shadow-md fixed left-0 top-0 bottom-0 z-20 flex flex-col hidden lg:flex">
+    <div class="p-6 border-b border-gray-100">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shadow">
+          <span class="text-white font-black">R</span>
+        </div>
+        <div>
+          <div class="font-black text-gray-900">RIVO Admin</div>
+          <div id="admin-name-display" class="text-xs text-gray-500"></div>
+        </div>
+      </div>
+    </div>
+    <nav class="flex-1 p-4 space-y-1">
+      <a onclick="showSection('stats')" data-section="stats" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer text-gray-600">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        Statistiques
+      </a>
+      <a onclick="showSection('utilisateurs')" data-section="utilisateurs" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer text-gray-600">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        Utilisateurs
+      </a>
+      <a onclick="showSection('formations')" data-section="formations" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer text-gray-600">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        Formations
+      </a>
+      <a onclick="showSection('retraits')" data-section="retraits" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer text-gray-600">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        Retraits
+        <span id="badge-retraits" class="hidden ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full"></span>
+      </a>
+      <a onclick="showSection('attestations')" data-section="attestations" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer text-gray-600">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Attestations
+        <span id="badge-attestations" class="hidden ml-auto bg-amber-500 text-white text-xs font-bold px-2 py-0.5 rounded-full"></span>
+      </a>
+    </nav>
+    <div class="p-4 border-t border-gray-100">
+      <button onclick="handleAdminLogout()" class="flex items-center gap-2 w-full px-4 py-2.5 text-red-500 hover:bg-red-50 rounded-xl transition-colors text-sm font-medium">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <!-- MOBILE TOP BAR -->
+  <div class="lg:hidden fixed top-0 left-0 right-0 z-30 bg-white border-b border-gray-100 shadow-sm">
+    <div class="flex items-center justify-between px-4 h-14">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center"><span class="text-white font-black text-xs">R</span></div>
+        <span class="font-black text-blue-600">RIVO Admin</span>
+      </div>
+      <button onclick="toggleMobileMenu()" class="p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+        <svg id="menu-icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        <svg id="menu-icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <!-- Mobile menu -->
+    <div id="mobile-menu" class="hidden border-t border-gray-100 bg-white">
+      <div class="p-3 space-y-1">
+        <button onclick="showSection('stats');toggleMobileMenu()" class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl font-medium">Statistiques</button>
+        <button onclick="showSection('utilisateurs');toggleMobileMenu()" class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl font-medium">Utilisateurs</button>
+        <button onclick="showSection('formations');toggleMobileMenu()" class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl font-medium">Formations</button>
+        <button onclick="showSection('retraits');toggleMobileMenu()" class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl font-medium">Retraits</button>
+        <button onclick="showSection('attestations');toggleMobileMenu()" class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl font-medium">Attestations</button>
+        <button onclick="handleAdminLogout()" class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 rounded-xl font-medium">Déconnexion</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <main class="flex-1 lg:ml-64 pt-14 lg:pt-0">
+    <div class="p-6 max-w-7xl mx-auto">
+
+      <!-- Top bar (desktop) -->
+      <div class="hidden lg:flex items-center justify-between mb-8 py-4">
+        <div>
+          <h1 id="section-title" class="text-2xl font-black text-gray-900">Tableau de bord</h1>
+          <p class="text-gray-500 text-sm mt-1">RIVO — Panneau d'administration</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <span id="admin-info-chip" class="text-sm text-gray-500 bg-gray-100 px-3 py-2 rounded-xl font-medium"></span>
+        </div>
+      </div>
+
+      <!-- ─── SECTION STATS ─── -->
+      <div id="section-stats" class="hidden fade-in">
+        <div class="grid sm:grid-cols-3 gap-5 mb-8">
+          <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <div class="flex items-center justify-between mb-4">
+              <span class="text-sm font-medium text-gray-500">Total utilisateurs</span>
+              <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              </div>
+            </div>
+            <div id="stat-users" class="text-3xl font-black text-gray-900">—</div>
+          </div>
+          <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <div class="flex items-center justify-between mb-4">
+              <span class="text-sm font-medium text-gray-500">Formations achetées</span>
+              <div class="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center">
+                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+              </div>
+            </div>
+            <div id="stat-purchases" class="text-3xl font-black text-gray-900">—</div>
+          </div>
+          <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <div class="flex items-center justify-between mb-4">
+              <span class="text-sm font-medium text-gray-500">Revenus totaux</span>
+              <div class="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center">
+                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              </div>
+            </div>
+            <div id="stat-revenue" class="text-3xl font-black text-gray-900">—</div>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <h3 class="font-bold text-gray-900 mb-2">Bienvenue dans l'espace admin RIVO</h3>
+          <p class="text-gray-500 text-sm">Gérez les formations, validez les retraits et envoyez les attestations depuis ce panneau.</p>
+        </div>
+      </div>
+
+      <!-- ─── SECTION UTILISATEURS ─── -->
+      <div id="section-utilisateurs" class="hidden fade-in">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 class="font-bold text-gray-900">Tous les utilisateurs</h3>
+            <span id="users-count-badge" class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full"></span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                  <th class="text-left px-6 py-3 font-semibold">Nom</th>
+                  <th class="text-left px-6 py-3 font-semibold">Badge</th>
+                  <th class="text-left px-6 py-3 font-semibold">Code parrain</th>
+                  <th class="text-right px-6 py-3 font-semibold">Solde</th>
+                  <th class="text-left px-6 py-3 font-semibold">Inscription</th>
+                  <th class="text-left px-6 py-3 font-semibold">Badge</th>
+                </tr>
+              </thead>
+              <tbody id="users-table-body" class="divide-y divide-gray-50">
+                <tr><td colspan="6" class="text-center py-12"><div class="spinner mx-auto"></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── SECTION FORMATIONS ─── -->
+      <div id="section-formations" class="hidden fade-in">
+        <div class="flex items-center justify-between mb-5">
+          <h3 class="font-bold text-gray-900 text-lg">Gérer les formations</h3>
+          <button onclick="openCourseForm(null)" class="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl transition-colors shadow-md shadow-blue-200">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Nouvelle formation
+          </button>
+        </div>
+        <div id="courses-admin-list" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div class="col-span-full flex justify-center py-16"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+      <!-- ─── SECTION RETRAITS ─── -->
+      <div id="section-retraits" class="hidden fade-in">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-100">
+            <h3 class="font-bold text-gray-900">Demandes de retrait</h3>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                  <th class="text-left px-6 py-3 font-semibold">Utilisateur</th>
+                  <th class="text-right px-6 py-3 font-semibold">Montant</th>
+                  <th class="text-left px-6 py-3 font-semibold">Méthode</th>
+                  <th class="text-left px-6 py-3 font-semibold">Statut</th>
+                  <th class="text-left px-6 py-3 font-semibold">Date</th>
+                  <th class="text-center px-6 py-3 font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="withdrawals-table-body" class="divide-y divide-gray-50">
+                <tr><td colspan="6" class="text-center py-12"><div class="spinner mx-auto"></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── SECTION ATTESTATIONS ─── -->
+      <div id="section-attestations" class="hidden fade-in">
+        <div class="mb-5">
+          <h3 class="font-bold text-gray-900 text-lg">Attestations à envoyer</h3>
+          <p class="text-gray-500 text-sm mt-1">Achats validés n'ayant pas encore reçu d'attestation.</p>
+        </div>
+        <div id="attestations-admin-list" class="space-y-4">
+          <div class="flex justify-center py-16"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MODAL : FORMULAIRE FORMATION
+═══════════════════════════════════════════════════════ -->
+<div id="modal-course-form" class="hidden fixed inset-0 z-50 modal-overlay flex items-start justify-center p-4 pt-10 overflow-y-auto" onclick="closeModal('modal-course-form', event)">
+  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg my-4" onclick="event.stopPropagation()">
+    <div class="flex items-center justify-between p-6 border-b border-gray-100">
+      <h3 id="modal-course-form-title" class="font-black text-gray-900 text-lg">Nouvelle formation</h3>
+      <button onclick="closeModal('modal-course-form')" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="form-course" onsubmit="handleCourseFormSubmit(event)" class="p-6 space-y-4">
+      <input type="hidden" id="editing-course-id" value="">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Nom de la formation *</label>
+        <input id="cf-title" name="title" type="text" required placeholder="Ex: Développement Web Moderne" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Description courte *</label>
+        <textarea id="cf-description" name="description" required placeholder="Décrivez brièvement la formation..." rows="2" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition resize-none"></textarea>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Description complète</label>
+        <textarea id="cf-full-description" name="full_description" placeholder="Description détaillée..." rows="3" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition resize-none"></textarea>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Prix (XOF) *</label>
+        <input id="cf-price" name="price" type="number" min="0" required placeholder="15000" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition">
+      </div>
+      <!-- Cover image -->
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Image de couverture</label>
+        <div class="flex gap-2">
+          <input id="cf-cover-url" type="text" readonly placeholder="URL générée après upload..." class="flex-1 px-4 py-3 border border-gray-200 bg-gray-50 rounded-xl text-sm text-gray-500 outline-none">
+          <button type="button" onclick="uploadCoverImage()" class="px-4 py-3 bg-blue-50 hover:bg-blue-100 text-blue-600 font-semibold text-sm rounded-xl transition-colors whitespace-nowrap">
+            Choisir image
+          </button>
+        </div>
+        <div id="cf-cover-preview" class="hidden mt-2">
+          <img id="cf-cover-preview-img" src="" alt="" class="h-32 rounded-xl object-cover">
+        </div>
+      </div>
+      <!-- Ebook -->
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Fichier ebook / formation (PDF)</label>
+        <div class="flex gap-2">
+          <input id="cf-file-url" type="text" readonly placeholder="URL générée après upload..." class="flex-1 px-4 py-3 border border-gray-200 bg-gray-50 rounded-xl text-sm text-gray-500 outline-none">
+          <button type="button" onclick="uploadEbookFile()" class="px-4 py-3 bg-blue-50 hover:bg-blue-100 text-blue-600 font-semibold text-sm rounded-xl transition-colors whitespace-nowrap">
+            Uploader PDF
+          </button>
+        </div>
+      </div>
+      <!-- Published toggle -->
+      <div class="flex items-center gap-3 bg-gray-50 rounded-xl p-4">
+        <input id="cf-published" type="checkbox" class="w-5 h-5 text-blue-600 rounded accent-blue-600 cursor-pointer">
+        <label for="cf-published" class="cursor-pointer">
+          <span class="font-semibold text-gray-900 text-sm">Publier immédiatement</span>
+          <p class="text-xs text-gray-500 mt-0.5">La formation sera visible par les utilisateurs dès la sauvegarde.</p>
+        </label>
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="submit" id="btn-save-course" data-label="Enregistrer" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors shadow-md shadow-blue-200">
+          Enregistrer
+        </button>
+        <button type="button" onclick="closeModal('modal-course-form')" class="px-5 py-3 border border-gray-200 text-gray-600 hover:bg-gray-50 font-semibold rounded-xl transition-colors">
+          Annuler
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SCRIPTS
+═══════════════════════════════════════════════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://widget.cloudinary.com/v2.0/global/all.js" type="text/javascript"></script>
+<script>
+// ═══════════════════════════════════════════════════
+// CONSTANTES
+// ═══════════════════════════════════════════════════
+const SUPABASE_URL = 'https://qwdttzsbbspayojzeugy.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_tG64uzNsmT0XDV7pmglqFA_lxQ4xIFm';
+const CLOUDINARY_CLOUD_NAME = 'dx0dzt35e';
+const CLOUDINARY_PRESET_IMAGES = 'afrotv_images';
+const CLOUDINARY_PRESET_VIDEOS = 'afrotv_videos';
+const ADMIN_EMAIL = 'assistancetrc416@gmail.com';
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+const ADMIN = {
+  state: { currentSection: 'stats', adminUser: null, adminProfile: null }
+};
+
+// ═══════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════
+const ALL_SECTIONS = ['stats', 'utilisateurs', 'formations', 'retraits', 'attestations'];
+const SECTION_TITLES = {
+  stats: 'Tableau de bord',
+  utilisateurs: 'Utilisateurs',
+  formations: 'Formations',
+  retraits: 'Retraits',
+  attestations: 'Attestations'
+};
+
+function showSection(name) {
+  ALL_SECTIONS.forEach(s => {
+    const el = document.getElementById('section-' + s);
+    if (el) el.classList.toggle('hidden', s !== name);
+  });
+  document.querySelectorAll('[data-section]').forEach(link => {
+    link.classList.toggle('active', link.dataset.section === name);
+  });
+  const titleEl = document.getElementById('section-title');
+  if (titleEl) titleEl.textContent = SECTION_TITLES[name] || name;
+  ADMIN.state.currentSection = name;
+
+  // Lazy-load data
+  const loaders = {
+    stats: loadAdminStats,
+    utilisateurs: loadUsers,
+    formations: loadCourses,
+    retraits: loadWithdrawals,
+    attestations: loadPendingAttestations
+  };
+  if (loaders[name]) loaders[name]();
+}
+
+function toggleMobileMenu() {
+  const menu = document.getElementById('mobile-menu');
+  const iconOpen = document.getElementById('menu-icon-open');
+  const iconClose = document.getElementById('menu-icon-close');
+  menu.classList.toggle('hidden');
+  iconOpen.classList.toggle('hidden');
+  iconClose.classList.toggle('hidden');
+}
+
+function closeModal(id, e) {
+  if (!e || e.target.id === id) {
+    document.getElementById(id).classList.add('hidden');
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════════
+async function handleAdminMagicLink(e) {
+  e.preventDefault();
+  const email = document.getElementById('admin-email-input').value.trim();
+  if (!email || email !== ADMIN_EMAIL) {
+    showToast('Accès réservé à l\'administrateur', 'error'); return;
+  }
+  const btn = document.getElementById('btn-magic-link');
+  btn.disabled = true; btn.textContent = 'Envoi en cours...';
+
+  const { error } = await sb.auth.signInWithOtp({
+    email,
+    options: { shouldCreateUser: false }
+  });
+
+  btn.disabled = false; btn.textContent = btn.dataset.label;
+
+  if (error) { showToast(error.message, 'error'); return; }
+  document.getElementById('login-step-email').classList.add('hidden');
+  document.getElementById('login-step-confirm').classList.remove('hidden');
+  document.getElementById('confirm-email-display').textContent = email;
+}
+
+function resetLoginStep() {
+  document.getElementById('login-step-email').classList.remove('hidden');
+  document.getElementById('login-step-confirm').classList.add('hidden');
+}
+
+async function handleAdminLogout() {
+  await sb.auth.signOut();
+  document.getElementById('page-admin-dashboard').classList.add('hidden');
+  document.getElementById('page-admin-login').classList.remove('hidden');
+  resetLoginStep();
+}
+
+// Auth state listener
+sb.auth.onAuthStateChange(async (event, session) => {
+  if (session?.user) {
+    // Verify admin
+    const { data: profile } = await sb.from('profiles')
+      .select('first_name, last_name, badge_level')
+      .eq('id', session.user.id)
+      .single();
+
+    if (!profile || profile.badge_level !== 'admin') {
+      await sb.auth.signOut();
+      showToast('Accès refusé : compte non administrateur', 'error');
+      return;
+    }
+    ADMIN.state.adminUser = session.user;
+    ADMIN.state.adminProfile = profile;
+
+    document.getElementById('page-admin-login').classList.add('hidden');
+    document.getElementById('page-admin-dashboard').classList.remove('hidden');
+
+    const nameDisplay = `${profile.first_name} ${profile.last_name}`;
+    const el = document.getElementById('admin-name-display');
+    if (el) el.textContent = nameDisplay;
+    const chip = document.getElementById('admin-info-chip');
+    if (chip) chip.textContent = nameDisplay;
+
+    showSection('stats');
+  }
+});
+
+// ═══════════════════════════════════════════════════
+// STATS
+// ═══════════════════════════════════════════════════
+async function loadAdminStats() {
+  const [usersRes, purchasesRes, revenueRes, withdrawalsRes, attestationsRes] = await Promise.all([
+    sb.from('profiles').select('id', { count: 'exact', head: true }),
+    sb.from('purchases').select('id', { count: 'exact', head: true }).eq('status', 'complete'),
+    sb.from('purchases').select('amount').eq('status', 'complete'),
+    sb.from('withdrawals').select('id', { count: 'exact', head: true }).eq('status', 'en_attente'),
+    sb.from('purchases').select('id', { count: 'exact', head: false }).eq('status', 'complete')
+  ]);
+
+  const revenue = (revenueRes.data || []).reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+  document.getElementById('stat-users').textContent = usersRes.count ?? '—';
+  document.getElementById('stat-purchases').textContent = purchasesRes.count ?? '—';
+  document.getElementById('stat-revenue').textContent = formatPrice(revenue);
+
+  // Update notification badges
+  const pendingWithdrawals = withdrawalsRes.count || 0;
+  updateBadge('badge-retraits', pendingWithdrawals);
+
+  // Check pending attestations
+  const { count: certsCount } = await sb.from('certificates').select('id', { count: 'exact', head: true });
+  const pendingAtts = Math.max(0, (purchasesRes.count || 0) - (certsCount || 0));
+  updateBadge('badge-attestations', pendingAtts);
+}
+
+function updateBadge(id, count) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (count > 0) { el.textContent = count; el.classList.remove('hidden'); }
+  else el.classList.add('hidden');
+}
+
+// ═══════════════════════════════════════════════════
+// UTILISATEURS
+// ═══════════════════════════════════════════════════
+async function loadUsers() {
+  const { data, error } = await sb.from('profiles')
+    .select('id, first_name, last_name, badge_level, balance, referral_code, created_at')
+    .order('created_at', { ascending: false });
+
+  if (error) { showToast('Erreur chargement utilisateurs: ' + error.message, 'error'); return; }
+  const tbody = document.getElementById('users-table-body');
+  const badge = document.getElementById('users-count-badge');
+  if (badge) badge.textContent = `${data?.length || 0} utilisateurs`;
+
+  if (!data?.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-12 text-gray-400">Aucun utilisateur</td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map(u => `
+    <tr class="hover:bg-gray-50 transition-colors">
+      <td class="px-6 py-4 font-medium text-gray-900">${escHtml(u.first_name)} ${escHtml(u.last_name)}</td>
+      <td class="px-6 py-4"><span class="status-badge ${badgeClass(u.badge_level)}">${badgeLabel(u.badge_level)}</span></td>
+      <td class="px-6 py-4 font-mono text-xs text-gray-500">${escHtml(u.referral_code || '—')}</td>
+      <td class="px-6 py-4 text-right font-semibold text-gray-700">${formatPrice(u.balance || 0)}</td>
+      <td class="px-6 py-4 text-gray-500 text-xs">${new Date(u.created_at).toLocaleDateString('fr-FR')}</td>
+      <td class="px-6 py-4">
+        <select onchange="changeBadge('${u.id}', this.value)" class="text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400">
+          ${['debutant','bronze','argent','or','diamant'].map(b => `<option value="${b}" ${u.badge_level === b ? 'selected' : ''}>${badgeLabel(b)}</option>`).join('')}
+        </select>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function changeBadge(userId, level) {
+  const { error } = await sb.from('profiles').update({ badge_level: level }).eq('id', userId);
+  if (error) showToast('Erreur: ' + error.message, 'error');
+  else showToast('Badge mis à jour', 'success');
+}
+
+// ═══════════════════════════════════════════════════
+// FORMATIONS
+// ═══════════════════════════════════════════════════
+let currentCourses = [];
+
+async function loadCourses() {
+  const { data, error } = await sb.from('courses').select('*').order('created_at', { ascending: false });
+  if (error) { showToast('Erreur: ' + error.message, 'error'); return; }
+  currentCourses = data || [];
+  renderCoursesAdmin(currentCourses);
+}
+
+function renderCoursesAdmin(courses) {
+  const container = document.getElementById('courses-admin-list');
+  if (!courses.length) {
+    container.innerHTML = '<div class="col-span-full text-center py-16 text-gray-400"><div class="text-5xl mb-4">📚</div><p class="font-medium">Aucune formation. Créez-en une !</p></div>';
+    return;
+  }
+  container.innerHTML = courses.map(c => `
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-md transition-shadow">
+      <div class="relative">
+        <img src="${c.cover_image_url || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22180%22%3E%3Crect width=%22400%22 height=%22180%22 fill=%22%23dbeafe%22/%3E%3Ctext x=%22200%22 y=%2295%22 text-anchor=%22middle%22 font-size=%2248%22%3E📚%3C/text%3E%3C/svg%3E'}"
+             alt="${escHtml(c.title)}" class="w-full h-36 object-cover">
+        <span class="absolute top-2 right-2 text-xs font-bold px-2 py-1 rounded-lg ${c.is_published ? 'bg-green-500 text-white' : 'bg-gray-400 text-white'}">
+          ${c.is_published ? '✓ Publié' : 'Brouillon'}
+        </span>
+      </div>
+      <div class="p-4 flex flex-col flex-1">
+        <h4 class="font-bold text-gray-900 line-clamp-1">${escHtml(c.title)}</h4>
+        <p class="text-gray-500 text-xs mt-1 line-clamp-2 flex-1">${escHtml(c.description || '')}</p>
+        <div class="flex items-center justify-between mt-3">
+          <span class="text-blue-600 font-bold text-sm">${formatPrice(c.price, c.currency)}</span>
+        </div>
+        <div class="flex gap-2 mt-3">
+          <button onclick="togglePublished('${c.id}', ${c.is_published})" class="flex-1 py-1.5 text-xs border ${c.is_published ? 'border-orange-200 text-orange-600 hover:bg-orange-50' : 'border-green-200 text-green-600 hover:bg-green-50'} font-semibold rounded-lg transition-colors">
+            ${c.is_published ? 'Dépublier' : 'Publier'}
+          </button>
+          <button onclick="openCourseForm('${c.id}')" class="flex-1 py-1.5 text-xs border border-blue-200 text-blue-600 hover:bg-blue-50 font-semibold rounded-lg transition-colors">
+            Modifier
+          </button>
+          <button onclick="deleteCourse('${c.id}')" class="py-1.5 px-3 text-xs border border-red-200 text-red-500 hover:bg-red-50 font-semibold rounded-lg transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openCourseForm(courseId) {
+  document.getElementById('editing-course-id').value = courseId || '';
+  const modal = document.getElementById('modal-course-form');
+  const title = document.getElementById('modal-course-form-title');
+
+  if (courseId) {
+    const course = currentCourses.find(c => c.id === courseId);
+    if (!course) return;
+    title.textContent = 'Modifier la formation';
+    document.getElementById('cf-title').value = course.title || '';
+    document.getElementById('cf-description').value = course.description || '';
+    document.getElementById('cf-full-description').value = course.full_description || '';
+    document.getElementById('cf-price').value = course.price || '';
+    document.getElementById('cf-cover-url').value = course.cover_image_url || '';
+    document.getElementById('cf-file-url').value = course.file_url || '';
+    document.getElementById('cf-published').checked = !!course.is_published;
+    if (course.cover_image_url) {
+      document.getElementById('cf-cover-preview-img').src = course.cover_image_url;
+      document.getElementById('cf-cover-preview').classList.remove('hidden');
+    } else {
+      document.getElementById('cf-cover-preview').classList.add('hidden');
+    }
+  } else {
+    title.textContent = 'Nouvelle formation';
+    document.getElementById('form-course').reset();
+    document.getElementById('cf-cover-preview').classList.add('hidden');
+  }
+  modal.classList.remove('hidden');
+}
+
+async function handleCourseFormSubmit(e) {
+  e.preventDefault();
+  const courseId = document.getElementById('editing-course-id').value;
+  const payload = {
+    title: document.getElementById('cf-title').value.trim(),
+    description: document.getElementById('cf-description').value.trim(),
+    full_description: document.getElementById('cf-full-description').value.trim() || null,
+    price: parseFloat(document.getElementById('cf-price').value) || 0,
+    cover_image_url: document.getElementById('cf-cover-url').value.trim() || null,
+    file_url: document.getElementById('cf-file-url').value.trim() || null,
+    is_published: document.getElementById('cf-published').checked,
+    currency: 'XOF',
+    updated_at: new Date().toISOString()
+  };
+
+  const btn = document.getElementById('btn-save-course');
+  btn.disabled = true; btn.textContent = 'Enregistrement...';
+
+  let error;
+  if (courseId) {
+    ({ error } = await sb.from('courses').update(payload).eq('id', courseId));
+  } else {
+    ({ error } = await sb.from('courses').insert({ ...payload, created_by: ADMIN.state.adminUser?.id }));
+  }
+
+  btn.disabled = false; btn.textContent = btn.dataset.label;
+
+  if (error) { showToast('Erreur: ' + error.message, 'error'); return; }
+  showToast(courseId ? 'Formation mise à jour' : 'Formation créée avec succès', 'success');
+  closeModal('modal-course-form');
+  loadCourses();
+}
+
+async function togglePublished(courseId, current) {
+  const { error } = await sb.from('courses').update({ is_published: !current }).eq('id', courseId);
+  if (error) { showToast('Erreur: ' + error.message, 'error'); return; }
+  showToast(!current ? 'Formation publiée' : 'Formation dépubliée', 'success');
+  loadCourses();
+}
+
+async function deleteCourse(courseId) {
+  if (!confirm('Supprimer définitivement cette formation ?')) return;
+  const { error } = await sb.from('courses').delete().eq('id', courseId);
+  if (error) { showToast('Erreur: ' + error.message, 'error'); return; }
+  showToast('Formation supprimée', 'success');
+  loadCourses();
+}
+
+function uploadCoverImage() {
+  if (typeof cloudinary === 'undefined') { showToast('Widget Cloudinary non disponible', 'error'); return; }
+  cloudinary.createUploadWidget({
+    cloudName: CLOUDINARY_CLOUD_NAME,
+    uploadPreset: CLOUDINARY_PRESET_IMAGES,
+    folder: 'afrotv/text-images',
+    sources: ['local', 'url'],
+    resourceType: 'image',
+    maxFiles: 1,
+    maxFileSize: 10000000
+  }, (error, result) => {
+    if (error) { showToast('Erreur upload image: ' + error.message, 'error'); return; }
+    if (result.event === 'success') {
+      const url = result.info.secure_url;
+      document.getElementById('cf-cover-url').value = url;
+      document.getElementById('cf-cover-preview-img').src = url;
+      document.getElementById('cf-cover-preview').classList.remove('hidden');
+      showToast('Image uploadée avec succès', 'success');
+    }
+  }).open();
+}
+
+function uploadEbookFile() {
+  if (typeof cloudinary === 'undefined') { showToast('Widget Cloudinary non disponible', 'error'); return; }
+  cloudinary.createUploadWidget({
+    cloudName: CLOUDINARY_CLOUD_NAME,
+    uploadPreset: CLOUDINARY_PRESET_VIDEOS,
+    folder: 'afrotv/videos',
+    sources: ['local'],
+    resourceType: 'raw',
+    maxFiles: 1,
+    maxFileSize: 50000000,
+    clientAllowedFormats: ['pdf']
+  }, (error, result) => {
+    if (error) { showToast('Erreur upload PDF: ' + error.message, 'error'); return; }
+    if (result.event === 'success') {
+      document.getElementById('cf-file-url').value = result.info.secure_url;
+      showToast('PDF uploadé avec succès', 'success');
+    }
+  }).open();
+}
+
+// ═══════════════════════════════════════════════════
+// RETRAITS
+// ═══════════════════════════════════════════════════
+async function loadWithdrawals() {
+  const { data, error } = await sb.from('withdrawals')
+    .select('id, amount, currency, method, status, created_at, user_id, profiles(first_name, last_name)')
+    .order('created_at', { ascending: false });
+
+  if (error) { showToast('Erreur chargement retraits: ' + error.message, 'error'); return; }
+  const tbody = document.getElementById('withdrawals-table-body');
+
+  if (!data?.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-12 text-gray-400">Aucune demande de retrait</td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map(w => {
+    const name = w.profiles ? `${w.profiles.first_name} ${w.profiles.last_name}` : 'Inconnu';
+    const statusInfo = withdrawalStatusInfo(w.status);
+    return `
+    <tr class="hover:bg-gray-50 transition-colors">
+      <td class="px-6 py-4 font-medium text-gray-900">${escHtml(name)}</td>
+      <td class="px-6 py-4 text-right font-bold text-gray-800">${formatPrice(w.amount, w.currency)}</td>
+      <td class="px-6 py-4 text-gray-600">${methodLabel(w.method)}</td>
+      <td class="px-6 py-4"><span class="status-badge ${statusInfo.cls}">${statusInfo.label}</span></td>
+      <td class="px-6 py-4 text-gray-400 text-xs">${new Date(w.created_at).toLocaleDateString('fr-FR')}</td>
+      <td class="px-6 py-4 text-center">
+        ${w.status === 'en_attente' ? `
+          <div class="flex gap-2 justify-center">
+            <button onclick="validateWithdrawal('${w.id}', '${w.user_id}', ${w.amount})"
+              class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-lg transition-colors">
+              Valider
+            </button>
+            <button onclick="rejectWithdrawal('${w.id}')"
+              class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-lg transition-colors">
+              Rejeter
+            </button>
+          </div>
+        ` : '<span class="text-gray-400 text-xs">—</span>'}
+      </td>
+    </tr>
+  `}).join('');
+}
+
+async function validateWithdrawal(withdrawalId, userId, amount) {
+  if (!confirm(`Valider ce retrait de ${formatPrice(amount)} ? Le solde sera déduit automatiquement.`)) return;
+
+  // Update withdrawal status
+  const { error: wErr } = await sb.from('withdrawals').update({ status: 'complete', processed_at: new Date().toISOString() }).eq('id', withdrawalId);
+  if (wErr) { showToast('Erreur: ' + wErr.message, 'error'); return; }
+
+  // Deduct from user balance
+  const { data: profile } = await sb.from('profiles').select('balance').eq('id', userId).single();
+  if (profile) {
+    const newBalance = Math.max(0, parseFloat(profile.balance || 0) - parseFloat(amount));
+    await sb.from('profiles').update({ balance: newBalance }).eq('id', userId);
+  }
+
+  showToast('Retrait validé — solde déduit', 'success');
+  loadWithdrawals();
+  loadAdminStats();
+}
+
+async function rejectWithdrawal(withdrawalId) {
+  if (!confirm('Rejeter cette demande de retrait ?')) return;
+  const { error } = await sb.from('withdrawals').update({ status: 'rejete', processed_at: new Date().toISOString() }).eq('id', withdrawalId);
+  if (error) { showToast('Erreur: ' + error.message, 'error'); return; }
+  showToast('Demande rejetée', 'success');
+  loadWithdrawals();
+}
+
+// ═══════════════════════════════════════════════════
+// ATTESTATIONS
+// ═══════════════════════════════════════════════════
+async function loadPendingAttestations() {
+  // Get all completed purchases
+  const { data: purchases, error: pErr } = await sb.from('purchases')
+    .select('id, user_id, purchased_at, courses(title), profiles(first_name, last_name)')
+    .eq('status', 'complete')
+    .order('purchased_at', { ascending: false });
+
+  if (pErr) { showToast('Erreur: ' + pErr.message, 'error'); return; }
+
+  // Get purchases that already have certificates
+  const { data: certs } = await sb.from('certificates').select('course_id, user_id');
+  const certSet = new Set((certs || []).map(c => `${c.user_id}:${c.course_id}`));
+
+  // Filter purchases without certificate
+  const pending = (purchases || []).filter(p => {
+    const key = `${p.user_id}:${p.courses?.id}`;
+    return !certSet.has(key);
+  });
+
+  updateBadge('badge-attestations', pending.length);
+  renderPendingAttestations(pending, purchases?.length || 0);
+}
+
+function renderPendingAttestations(pending, total) {
+  const el = document.getElementById('attestations-admin-list');
+  if (!pending.length) {
+    el.innerHTML = '<div class="text-center py-16 text-gray-400"><div class="text-5xl mb-4">🏆</div><p class="font-medium">Toutes les attestations ont été envoyées !</p><p class="text-sm mt-1 text-gray-400">Total achats : ' + total + '</p></div>';
+    return;
+  }
+  el.innerHTML = pending.map(p => {
+    const name = p.profiles ? `${p.profiles.first_name} ${p.profiles.last_name}` : 'Inconnu';
+    return `
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
+      <div class="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
+        <span class="text-2xl">🏆</span>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="font-bold text-gray-900">${escHtml(name)}</div>
+        <div class="text-sm text-gray-500 mt-0.5">${escHtml(p.courses?.title || 'Formation')}</div>
+        <div class="text-xs text-gray-400 mt-1">Acheté le ${new Date(p.purchased_at).toLocaleDateString('fr-FR')}</div>
+      </div>
+      <button onclick="sendCertificate('${p.id}', '${p.user_id}', '${p.courses?.id || ''}')"
+        class="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-md shadow-blue-200">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+        Envoyer PDF
+      </button>
+    </div>
+  `}).join('');
+}
+
+function sendCertificate(purchaseId, userId, courseId) {
+  if (typeof cloudinary === 'undefined') { showToast('Widget Cloudinary non disponible', 'error'); return; }
+  cloudinary.createUploadWidget({
+    cloudName: CLOUDINARY_CLOUD_NAME,
+    uploadPreset: CLOUDINARY_PRESET_VIDEOS,
+    folder: 'afrotv/videos',
+    sources: ['local'],
+    resourceType: 'raw',
+    maxFiles: 1,
+    clientAllowedFormats: ['pdf'],
+    maxFileSize: 20000000
+  }, async (error, result) => {
+    if (error) { showToast('Erreur upload: ' + error.message, 'error'); return; }
+    if (result.event === 'success') {
+      const pdfUrl = result.info.secure_url;
+      const { error: insertErr } = await sb.from('certificates').insert({
+        user_id: userId,
+        course_id: courseId,
+        certificate_url: pdfUrl,
+        message: 'Félicitations ! Vous avez complété cette formation avec succès. Continuez à apprendre avec RIVO.'
+      });
+      if (insertErr) { showToast('Erreur enregistrement: ' + insertErr.message, 'error'); return; }
+      showToast('Attestation envoyée avec succès !', 'success');
+      loadPendingAttestations();
+    }
+  }).open();
+}
+
+// ═══════════════════════════════════════════════════
+// UTILITAIRES
+// ═══════════════════════════════════════════════════
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toast-container');
+  const colors = { success: 'bg-green-500', error: 'bg-red-500', info: 'bg-blue-600' };
+  const icons  = { success: '✓', error: '✕', info: 'ℹ' };
+  const toast = document.createElement('div');
+  toast.className = `${colors[type]} text-white px-4 py-3 rounded-2xl shadow-lg text-sm font-medium flex items-center gap-2 fade-in`;
+  toast.innerHTML = `<span class="font-bold text-base">${icons[type]}</span><span>${escHtml(message)}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 4500);
+}
+
+function formatPrice(amount, currency = 'XOF') {
+  const num = parseFloat(amount) || 0;
+  try {
+    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency, maximumFractionDigits: 0 }).format(num);
+  } catch { return `${num.toLocaleString('fr-FR')} ${currency}`; }
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function badgeLabel(level) {
+  return { debutant: 'Débutant', bronze: 'Bronze', argent: 'Argent', or: 'Or', diamant: 'Diamant', admin: 'Admin' }[level] || level;
+}
+
+function badgeClass(level) {
+  return {
+    debutant: 'bg-gray-100 text-gray-600',
+    bronze:   'bg-amber-100 text-amber-700',
+    argent:   'bg-gray-200 text-gray-700',
+    or:       'bg-yellow-100 text-yellow-700',
+    diamant:  'bg-blue-100 text-blue-700',
+    admin:    'bg-purple-100 text-purple-700'
+  }[level] || 'bg-gray-100 text-gray-600';
+}
+
+function withdrawalStatusInfo(status) {
+  return {
+    en_attente: { label: 'En attente', cls: 'bg-amber-100 text-amber-700' },
+    en_cours:   { label: 'En cours', cls: 'bg-blue-100 text-blue-700' },
+    complete:   { label: 'Validé', cls: 'bg-green-100 text-green-700' },
+    rejete:     { label: 'Rejeté', cls: 'bg-red-100 text-red-600' }
+  }[status] || { label: status, cls: 'bg-gray-100 text-gray-600' };
+}
+
+function methodLabel(method) {
+  return { mobile_money: '📱 Mobile Money', carte_bancaire: '💳 Carte bancaire', autre: '🏦 Autre' }[method] || method;
+}
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) {
+    document.getElementById('page-admin-login').classList.remove('hidden');
+  }
+})();
+</script>
+</body>
+</html>
