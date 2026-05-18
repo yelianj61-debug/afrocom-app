@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>RIVO – La plateforme qui transforme l'apprentissage en opportunité</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.fedapay.com/checkout.js?v=1.1.7"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box}
@@ -85,9 +84,9 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
           Commencer gratuitement
           <svg xmlns="http://www.w3.org/2000/svg" style="width:1.1rem;height:1.1rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M9 5l7 7-7 7"/></svg>
         </button>
-        <a href="#formations" style="display:inline-flex;align-items:center;gap:.5rem;color:white;font-weight:700;font-size:1.05rem;padding:.9rem 2rem;border-radius:.875rem;background:rgba(255,255,255,.18);backdrop-filter:blur(8px);text-decoration:none;transition:background .2s" onmouseover="this.style.background='rgba(255,255,255,.28)'" onmouseout="this.style.background='rgba(255,255,255,.18)'">
+        <button onclick="goTo('register')" style="display:inline-flex;align-items:center;gap:.5rem;color:white;font-weight:700;font-size:1.05rem;padding:.9rem 2rem;border-radius:.875rem;background:rgba(255,255,255,.18);backdrop-filter:blur(8px);border:none;cursor:pointer;transition:background .2s" onmouseover="this.style.background='rgba(255,255,255,.28)'" onmouseout="this.style.background='rgba(255,255,255,.18)'">
           Voir les formations
-        </a>
+        </button>
       </div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;max-width:380px;margin:3.5rem auto 0">
         <div style="text-align:center"><div style="font-size:2rem;font-weight:900;color:white">200+</div><div style="font-size:.8rem;color:#93c5fd;margin-top:.25rem">Formations</div></div>
@@ -111,22 +110,6 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
         <div class="card" style="padding:1.5rem"><div style="width:3.25rem;height:3.25rem;background:#ede9fe;border-radius:1rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:1.5rem">🎖️</div><h3 style="font-weight:800;margin-bottom:.5rem">Badges progressifs</h3><p style="color:#6b7280;font-size:.9rem">Évoluez de Débutant → Bronze → Argent → Or → Diamant selon vos achats.</p></div>
         <div class="card" style="padding:1.5rem"><div style="width:3.25rem;height:3.25rem;background:#fef9c3;border-radius:1rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:1.5rem">⚡</div><h3 style="font-weight:800;margin-bottom:.5rem">Accès immédiat</h3><p style="color:#6b7280;font-size:.9rem">Après paiement, téléchargez et consultez vos formations immédiatement.</p></div>
         <div class="card" style="padding:1.5rem"><div style="width:3.25rem;height:3.25rem;background:#fee2e2;border-radius:1rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:1.5rem">🔒</div><h3 style="font-weight:800;margin-bottom:.5rem">Paiement sécurisé</h3><p style="color:#6b7280;font-size:.9rem">Mobile Money, carte bancaire. Retraits traités en moins de 30 min.</p></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Formations -->
-  <section id="formations" style="padding:5rem 1.25rem">
-    <div style="max-width:1100px;margin:0 auto">
-      <div style="text-align:center;margin-bottom:3rem">
-        <h2 style="font-size:2.1rem;font-weight:900;color:#1F2937;margin-bottom:.75rem">Nos formations populaires</h2>
-        <p style="color:#6b7280;font-size:1.05rem">Découvrez nos meilleures formations.</p>
-      </div>
-      <div id="landing-courses" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:1.5rem">
-        <div style="grid-column:1/-1;text-align:center;padding:3rem"><div class="spin-blue" style="margin:0 auto"></div></div>
-      </div>
-      <div style="text-align:center;margin-top:2.5rem">
-        <button onclick="goTo('register')" class="btn-primary" style="font-size:1rem;padding:.85rem 2rem">Voir toutes les formations →</button>
       </div>
     </div>
   </section>
@@ -422,7 +405,7 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
   </div>
 
   <!-- Bottom nav -->
-  <nav class="bottom-nav">
+  <nav class="bottom-nav" id="bottom-nav" style="display:none">
     <button onclick="switchTab('bord')" id="bnav-bord" class="active"><span class="nav-icon">🏠</span><span>Bord</span></button>
     <button onclick="switchTab('formations')" id="bnav-formations"><span class="nav-icon">📚</span><span>Formations</span></button>
     <button onclick="switchTab('attestations')" id="bnav-attestations"><span class="nav-icon">🏆</span><span>Attests.</span></button>
@@ -476,6 +459,7 @@ function goTo(p){
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
   document.getElementById('page-'+p).classList.add('active');
   window.scrollTo(0,0);
+  document.getElementById('bottom-nav').style.display=p==='dashboard'?'flex':'none';
   if(p==='dashboard' && CU){
     if(!loaded.bord){loaded.bord=true; loadBord();}
     if(!loaded.notif){loaded.notif=true; loadNotifications();}
@@ -485,17 +469,33 @@ function goTo(p){
 // ── App start (called after CDN loads) ───────────────
 async function startApp(){
   try{
-    const {data:{session}}=await withTimeout(sb.auth.getSession());
-    if(session){CU=session.user;await loadProfileData();goTo('dashboard');}
+    const {data,error}=await withTimeout(sb.auth.getSession());
+    if(error){
+      console.warn('Session invalide:',error.message);
+      await sb.auth.signOut().catch(()=>{});
+    } else if(data?.session){
+      CU=data.session.user;
+      await loadProfileData();
+      goTo('dashboard');
+    }
     const ps=new URLSearchParams(location.search).get('payment');
     const pid=new URLSearchParams(location.search).get('pid');
     if(ps==='ok'&&pid){
       await sb.from('purchases').update({status:'complete'}).eq('id',pid);
       history.replaceState({},'',location.pathname);
-      if(session){goTo('dashboard');setTimeout(()=>toast('Paiement réussi ! 🎉'),500);}
+      if(data?.session){goTo('dashboard');setTimeout(()=>toast('Paiement réussi ! 🎉'),500);}
     }
   }catch(e){console.error('Init error:',e);}
-  loadLandingCourses();
+  loadFedaPayScript();
+}
+
+function loadFedaPayScript(){
+  if(typeof FedaPay!=='undefined'){window.fedaPayReady=true;return;}
+  const s=document.createElement('script');
+  s.src='https://cdn.fedapay.com/checkout.js?v=1.1.7';
+  s.onload=()=>{window.fedaPayReady=true;};
+  s.onerror=()=>{console.warn('FedaPay CDN inaccessible');};
+  document.head.appendChild(s);
 }
 
 // ── Dynamic CDN loader with fallback ─────────────────
@@ -653,8 +653,17 @@ function closePayModal(){document.getElementById('pay-modal').style.display='non
 
 async function confirmPay(){
   if(!pendingCourse)return;
-  if(typeof FedaPay==='undefined'){toast('FedaPay non chargé. Vérifiez votre connexion.','err');return;}
   setBtn('pay-btn','<span class="spin"></span>',true);
+  let wait=0;
+  while(!window.fedaPayReady && wait<12){
+    await new Promise(r=>setTimeout(r,500));
+    wait++;
+  }
+  if(!window.fedaPayReady || typeof FedaPay==='undefined'){
+    toast('Service de paiement non disponible. Vérifiez votre connexion.','err');
+    setBtn('pay-btn','⚡ Payer',false);
+    return;
+  }
   try{
     const{data:pur,error}=await withTimeout(sb.from('purchases').insert({
       user_id:CU.id,course_id:pendingCourse.id,amount:pendingCourse.price,
