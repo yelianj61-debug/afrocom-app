@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>RIVO – La plateforme qui transforme l'apprentissage en opportunité</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.fedapay.com/checkout.js?v=1.1.7"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box}
@@ -407,6 +408,11 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
           <div style="display:flex;flex-direction:column;gap:1rem;margin-bottom:1.25rem">
             <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Montant (FCFA)</label><input type="number" id="wd-amt" class="input" placeholder="Ex: 5000" min="1000"/><p style="font-size:.75rem;color:#9ca3af;margin-top:.3rem">Minimum : 1 000 FCFA</p></div>
             <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Méthode</label><select id="wd-mth" class="input"><option value="mobile_money">📱 Mobile Money</option><option value="carte_bancaire">💳 Carte bancaire</option><option value="autre">🔄 Autre</option></select></div>
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:.625rem">
+              <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Indicatif</label><select id="wd-cc" class="input" style="min-width:110px"><option value="+229">🇧🇯 +229</option><option value="+225">🇨🇮 +225</option><option value="+226">🇧🇫 +226</option><option value="+228">🇹🇬 +228</option><option value="+227">🇳🇪 +227</option><option value="+221">🇸🇳 +221</option><option value="+223">🇲🇱 +223</option><option value="+224">🇬🇳 +224</option><option value="+33">🇫🇷 +33</option></select></div>
+              <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Numéro de téléphone</label><input type="tel" id="wd-phone" class="input" placeholder="Ex: 97000000"/></div>
+            </div>
+            <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Opérateur Mobile Money</label><input type="text" id="wd-op" class="input" placeholder="MTN, Moov, Orange…"/></div>
           </div>
           <button onclick="doWithdrawal()" class="btn-primary">📤 Demander le retrait</button>
         </div>
@@ -444,7 +450,7 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
 // ── Config ────────────────────────────────────────────
 const SB_URL  = 'https://qwdttzsbbspayojzeugy.supabase.co';
 const SB_ANON = 'sb_publishable_tG64uzNsmT0XDV7pmglqFA_lxQ4xIFm';
-const FP_SK   = ['sk','live','taBqGtMfLEBXntvvAY4hqyNv'].join('_');
+const FP_PK   = 'pk_live_bqS58-NIs-uloGM3UDxkmzdT';
 let sb = null;
 
 // ── Globals ───────────────────────────────────────────
@@ -647,22 +653,32 @@ function closePayModal(){document.getElementById('pay-modal').style.display='non
 
 async function confirmPay(){
   if(!pendingCourse)return;
+  if(typeof FedaPay==='undefined'){toast('FedaPay non chargé. Vérifiez votre connexion.','err');return;}
   setBtn('pay-btn','<span class="spin"></span>',true);
   try{
-    const{data:pur,error}=await withTimeout(sb.from('purchases').insert({user_id:CU.id,course_id:pendingCourse.id,amount:pendingCourse.price,currency:pendingCourse.currency,status:'en_attente',payment_method:'fedapay'}).select().single());
+    const{data:pur,error}=await withTimeout(sb.from('purchases').insert({
+      user_id:CU.id,course_id:pendingCourse.id,amount:pendingCourse.price,
+      currency:pendingCourse.currency,status:'en_attente',payment_method:'fedapay'
+    }).select().single());
     if(error)throw new Error('Erreur création commande');
-    const base=location.href.split('?')[0];
-    const r=await withTimeout(fetch('https://api.fedapay.com/v1/transactions',{method:'POST',headers:{'Authorization':`Bearer ${FP_SK}`,'Content-Type':'application/json'},body:JSON.stringify({description:`RIVO - ${pendingCourse.title}`,amount:pendingCourse.price,currency:{iso:pendingCourse.currency==='XOF'?'XOF':pendingCourse.currency},callback_url:`${base}?payment=ok&pid=${pur.id}`,redirect_url:`${base}?payment=ok&pid=${pur.id}`,meta:{pid:pur.id,uid:CU.id,cid:pendingCourse.id}})}));
-    const d=await r.json();
-    const txId=d.v1?.transaction?.id||d.transaction?.id;
-    if(txId){
-      await sb.from('purchases').update({transaction_id:String(txId)}).eq('id',pur.id);
-      const tr=await withTimeout(fetch(`https://api.fedapay.com/v1/transactions/${txId}/token`,{method:'POST',headers:{'Authorization':`Bearer ${FP_SK}`,'Content-Type':'application/json'}}));
-      const td=await tr.json();
-      const token=td.v1?.token?.token||td.token?.token||td.token;
-      if(token){window.location.href=`https://checkout.fedapay.com/${token}`;return;}
-    }
-    throw new Error('Token de paiement manquant');
+    closePayModal();
+    FedaPay.init({
+      public_key:FP_PK,
+      transaction:{amount:pendingCourse.price,description:`RIVO - ${pendingCourse.title}`},
+      currency:{iso:pendingCourse.currency||'XOF'},
+      customer:{email:CU.email,firstname:CP?.first_name||'',lastname:CP?.last_name||''},
+      onComplete:async function(resp){
+        if(resp.reason===FedaPay.CHECKOUT_COMPLETED){
+          await sb.from('purchases').update({status:'complete'}).eq('id',pur.id);
+          await loadProfileData();
+          loaded.bord=false; loadBord();
+          toast('Paiement réussi ! 🎉');
+        }else{
+          await sb.from('purchases').update({status:'rejete'}).eq('id',pur.id);
+          toast('Paiement annulé','err');
+        }
+      }
+    }).open();
   }catch(err){
     toast(err.message||'Erreur paiement, réessayez','err');
   }finally{
@@ -780,12 +796,20 @@ async function loadRetrait(){
 async function doWithdrawal(){
   const amt=parseFloat(document.getElementById('wd-amt').value);
   const mth=document.getElementById('wd-mth').value;
+  const phone=document.getElementById('wd-phone').value.trim();
+  const cc=document.getElementById('wd-cc').value;
+  const op=document.getElementById('wd-op').value.trim();
   if(!amt||amt<1000){toast('Minimum : 1 000 FCFA','err');return;}
   if(!CP||amt>CP.balance){toast('Solde insuffisant','err');return;}
-  const{error}=await sb.from('withdrawals').insert({user_id:CU.id,amount:amt,currency:CP.currency||'XOF',method:mth,status:'en_attente'});
+  const{error}=await sb.from('withdrawals').insert({
+    user_id:CU.id,amount:amt,currency:CP.currency||'XOF',method:mth,status:'en_attente',
+    phone_number:phone||null,country_code:cc||null,operator:op||null
+  });
   if(error){toast('Erreur','err');return;}
   toast('Demande envoyée ! Traitement sous 30 min.');
   document.getElementById('wd-amt').value='';
+  document.getElementById('wd-phone').value='';
+  document.getElementById('wd-op').value='';
   loadRetrait();
 }
 
@@ -824,8 +848,11 @@ async function loadNotifications(){
     .gt('created_at',last)
     .order('created_at',{ascending:false});
   const count=(purchases||[]).length;
-  if(count>0){badge.textContent=count;badge.style.display='flex';}
-  else{badge.style.display='none';}
+  if(count>0){
+    badge.textContent=count;badge.style.display='flex';
+    const fn=purchases[0].profiles?.first_name||'votre filleul';
+    toast(`🎉 Vous avez gagné 1 000 FCFA grâce à ${fn} !`);
+  }else{badge.style.display='none';}
   if(!purchases||!purchases.length){
     list.innerHTML='<p style="padding:1rem;text-align:center;color:#9ca3af;font-size:.875rem">Aucune nouvelle notification</p>';
     return;

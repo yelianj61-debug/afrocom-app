@@ -594,7 +594,7 @@ async function saveCourse(e) {
     let coverUrl = document.getElementById('course-cover').value.trim() || null;
     let fileUrl  = document.getElementById('course-file').value.trim() || null;
     if (coverFile) coverUrl = await uploadCloudinary(coverFile, 'afrotv_images');
-    if (pdfFile)   fileUrl  = await uploadCloudinary(pdfFile, 'afrotv_videos');
+    if (pdfFile)   fileUrl  = await uploadCloudinary(pdfFile, pdfFile.type==='application/pdf' ? 'rivo_pdfs' : 'afrotv_videos');
     if (saveBtn) saveBtn.textContent = 'Enregistrement…';
     const payload = {
       title:            document.getElementById('course-title').value.trim(),
@@ -650,7 +650,10 @@ async function uploadCloudinary(file, preset) {
   const fd = new FormData();
   fd.append('file', file);
   fd.append('upload_preset', preset);
-  const type = file.type.startsWith('image') ? 'image' : 'video';
+  let type;
+  if (file.type === 'application/pdf') type = 'raw';
+  else if (file.type.startsWith('image')) type = 'image';
+  else type = 'video';
   const r = await fetch(`https://api.cloudinary.com/v1_1/dx0dzt35e/${type}/upload`, { method:'POST', body:fd });
   const d = await r.json();
   if (d.error) throw new Error(d.error.message);
