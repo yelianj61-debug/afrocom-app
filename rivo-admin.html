@@ -198,6 +198,7 @@
               <th>Solde</th>
               <th>Code parrainage</th>
               <th>Inscrit le</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody id="users-table">
@@ -340,6 +341,19 @@
         <button type="submit" class="btn-primary">Enregistrer</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- User Profile Modal -->
+<div id="user-profile-modal" class="modal-overlay hidden" style="display:none;align-items:flex-start;overflow-y:auto;z-index:200">
+  <div style="background:#1e1e2e;border:1px solid #374151;border-radius:1.5rem;padding:2rem;max-width:760px;width:100%;margin:2rem auto;box-shadow:0 25px 60px rgba(0,0,0,.5)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+      <h2 style="font-size:1.4rem;font-weight:800;color:white">👤 Fiche utilisateur</h2>
+      <button onclick="closeModal('user-profile-modal')" style="background:#374151;border:none;width:2.5rem;height:2.5rem;border-radius:.75rem;cursor:pointer;font-size:1.1rem;color:white">✕</button>
+    </div>
+    <div id="user-profile-content">
+      <div style="text-align:center;padding:4rem;color:#9ca3af">Chargement...</div>
+    </div>
   </div>
 </div>
 
@@ -510,7 +524,7 @@ function badgeClass(level) {
 
 function renderUsers(users) {
   const tb = document.getElementById('users-table');
-  if (!users.length) { tb.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500 py-8">Aucun utilisateur</td></tr>'; return; }
+  if (!users.length) { tb.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500 py-8">Aucun utilisateur</td></tr>'; return; }
   tb.innerHTML = users.map(u => {
     const initials = ((u.first_name||'?')[0] + (u.last_name||'?')[0]).toUpperCase();
     const date = u.created_at ? new Date(u.created_at).toLocaleDateString('fr-FR') : '—';
@@ -529,8 +543,96 @@ function renderUsers(users) {
       <td class="text-green-400 font-semibold">${(u.balance||0).toLocaleString('fr-FR')} FCFA</td>
       <td><code class="bg-gray-800 px-2 py-1 rounded text-xs text-purple-300">${u.referral_code||'—'}</code></td>
       <td class="text-gray-400">${date}</td>
+      <td><button onclick="viewUserProfile('${u.id}')" style="background:#7c3aed;color:white;border:none;border-radius:.5rem;padding:.4rem .875rem;cursor:pointer;font-size:.8rem;font-weight:700;white-space:nowrap">👤 Voir profil</button></td>
     </tr>`;
   }).join('');
+}
+
+async function viewUserProfile(userId){
+  const modal=document.getElementById('user-profile-modal');
+  modal.classList.remove('hidden'); modal.style.display='flex';
+  document.getElementById('user-profile-content').innerHTML=
+    '<div style="text-align:center;padding:4rem;color:#9ca3af">Chargement...</div>';
+  try{
+    const[{data:p},{data:purchases},{data:certs},{data:wds}]=await Promise.all([
+      sb.from('profiles').select('*').eq('id',userId).single(),
+      sb.from('purchases').select('*,courses(title,price,currency)')
+        .eq('user_id',userId).eq('status','complete').order('purchased_at',{ascending:false}),
+      sb.from('certificates').select('*,courses(title)').eq('user_id',userId)
+        .order('issued_at',{ascending:false}),
+      sb.from('withdrawals').select('*').eq('user_id',userId)
+        .order('created_at',{ascending:false})
+    ]);
+    const bClass=badgeClass(p.badge_level);
+    const bLabel=badgeLabel(p.badge_level);
+    const fmtDate=d=>d?new Date(d).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}):'—';
+    const fmtAmt=(a,c)=>new Intl.NumberFormat('fr-FR').format(a||0)+' '+(c||'FCFA');
+    const sColor={en_attente:'#f59e0b',en_cours:'#3b82f6',complete:'#10b981',rejete:'#ef4444'};
+    document.getElementById('user-profile-content').innerHTML=`
+      <div style="display:flex;align-items:center;gap:1.5rem;margin-bottom:1.5rem;padding:1.5rem;background:#111827;border-radius:1rem">
+        <div style="width:5rem;height:5rem;border-radius:9999px;flex-shrink:0;background:linear-gradient(135deg,#7c3aed,#4f46e5);display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:1.5rem;overflow:hidden">
+          ${p.avatar_url?`<img src="${p.avatar_url}" style="width:100%;height:100%;object-fit:cover"/>`
+            :((p.first_name||'?')[0]+(p.last_name||'?')[0]).toUpperCase()}
+        </div>
+        <div style="flex:1">
+          <div style="font-size:1.3rem;font-weight:800;color:white">${p.first_name||''} ${p.last_name||''}</div>
+          <div style="color:#9ca3af;font-size:.9rem;margin:.2rem 0">${p.email||'—'}</div>
+          <span class="${bClass}">${bLabel}</span>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:1.4rem;font-weight:900;color:#10b981">${fmtAmt(p.balance,p.currency)}</div>
+          <div style="color:#9ca3af;font-size:.75rem">Solde disponible</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem">
+        ${[['📧 Email',p.email||'—'],['📱 Téléphone',p.phone||'—'],
+           ['🎂 Date de naissance',fmtDate(p.birth_date)],['🎟️ Code parrainage',p.referral_code||'—'],
+           ['📅 Inscrit le',fmtDate(p.created_at)],['💰 Solde',fmtAmt(p.balance,p.currency)]]
+          .map(([l,v])=>`<div style="background:#111827;border-radius:.875rem;padding:1rem">
+            <div style="font-size:.75rem;color:#9ca3af;margin-bottom:.3rem">${l}</div>
+            <div style="font-weight:700;color:white;font-size:.9rem">${v}</div>
+          </div>`).join('')}
+      </div>
+      <div style="background:#111827;border-radius:1rem;padding:1.25rem;margin-bottom:1.25rem">
+        <h3 style="font-weight:700;color:white;margin-bottom:1rem">📚 Formations achetées (${purchases.length})</h3>
+        ${purchases.length===0?'<p style="color:#9ca3af;font-size:.875rem">Aucune formation achetée.</p>'
+          :purchases.map(pu=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:.625rem .875rem;background:#1e1e2e;border-radius:.75rem;margin-bottom:.5rem">
+            <span style="color:#e5e7eb;font-size:.875rem">${pu.courses?.title||'—'}</span>
+            <div style="text-align:right">
+              <div style="color:#7c3aed;font-weight:700;font-size:.85rem">${fmtAmt(pu.amount,pu.currency)}</div>
+              <div style="color:#9ca3af;font-size:.7rem">${fmtDate(pu.purchased_at)}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+      <div style="background:#111827;border-radius:1rem;padding:1.25rem;margin-bottom:1.25rem">
+        <h3 style="font-weight:700;color:white;margin-bottom:1rem">🏆 Attestations (${certs.length})</h3>
+        ${certs.length===0?'<p style="color:#9ca3af;font-size:.875rem">Aucune attestation.</p>'
+          :certs.map(c=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:.625rem .875rem;background:#1e1e2e;border-radius:.75rem;margin-bottom:.5rem">
+            <span style="color:#e5e7eb;font-size:.875rem">${c.courses?.title||'—'}</span>
+            <div style="text-align:right">
+              ${c.certificate_url?`<a href="${c.certificate_url}" target="_blank" style="color:#f59e0b;font-size:.8rem;font-weight:700">📄 Voir</a>`:''}
+              <div style="color:#9ca3af;font-size:.7rem">${fmtDate(c.issued_at)}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+      <div style="background:#111827;border-radius:1rem;padding:1.25rem">
+        <h3 style="font-weight:700;color:white;margin-bottom:1rem">💸 Historique des retraits (${wds.length})</h3>
+        ${wds.length===0?'<p style="color:#9ca3af;font-size:.875rem">Aucun retrait.</p>'
+          :wds.map(w=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:.625rem .875rem;background:#1e1e2e;border-radius:.75rem;margin-bottom:.5rem">
+            <div>
+              <span style="color:#e5e7eb;font-size:.875rem">${fmtAmt(w.amount,w.currency)}</span>
+              <span style="color:#9ca3af;font-size:.75rem;margin-left:.5rem">${w.method||'—'}</span>
+            </div>
+            <div style="text-align:right">
+              <span style="color:${sColor[w.status]||'#9ca3af'};font-weight:700;font-size:.8rem">${w.status||'—'}</span>
+              <div style="color:#9ca3af;font-size:.7rem">${fmtDate(w.created_at)}</div>
+            </div>
+          </div>`).join('')}
+      </div>`;
+  }catch(e){
+    document.getElementById('user-profile-content').innerHTML=
+      `<p style="color:#ef4444;text-align:center;padding:2rem">Erreur: ${e.message}</p>`;
+  }
 }
 
 /* ── Formations ───────────────────────────────────────── */

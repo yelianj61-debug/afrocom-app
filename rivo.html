@@ -346,7 +346,9 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
         <!-- Infos profil + stats -->
         <div style="display:grid;grid-template-columns:1fr 2fr;gap:1.25rem;margin-bottom:1.5rem">
           <div class="card" style="padding:1.5rem;text-align:center">
-            <div id="big-av" style="width:5rem;height:5rem;border-radius:9999px;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:1.5rem;margin:0 auto 1rem;box-shadow:0 0 0 4px #dbeafe">?</div>
+            <div id="big-av" onclick="document.getElementById('avatar-input').click()" style="width:5rem;height:5rem;border-radius:9999px;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:1.5rem;margin:0 auto .5rem;box-shadow:0 0 0 4px #dbeafe;cursor:pointer;position:relative;overflow:hidden">?</div>
+            <input type="file" id="avatar-input" accept="image/*" style="display:none" onchange="updateAvatar(this)"/>
+            <p style="font-size:.7rem;color:#9ca3af;margin-bottom:.75rem">Cliquez pour changer</p>
             <div id="prof-name" style="font-weight:800;font-size:1.1rem;color:#1F2937">...</div>
             <div id="prof-email" style="color:#9ca3af;font-size:.8rem;margin:.3rem 0 .75rem">...</div>
             <span id="prof-badge" class="badge" style="background:#dbeafe;color:#1d4ed8">🌱 Débutant</span>
@@ -368,13 +370,27 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
           <div id="st-ref-gain" style="font-size:1.3rem;font-weight:900;color:#10b981">0 FCFA</div>
         </div>
 
-        <div class="card" style="padding:1.5rem">
-          <h3 style="font-weight:800;font-size:1.05rem;color:#1F2937;margin-bottom:1.25rem">✏️ Modifier mes informations</h3>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
-            <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Prénom</label><input type="text" id="ed-fn" class="input"/></div>
-            <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Nom</label><input type="text" id="ed-ln" class="input"/></div>
+        <!-- Informations personnelles (lecture seule) -->
+        <div class="card" style="padding:1.25rem">
+          <h3 style="font-weight:800;font-size:1.05rem;color:#1F2937;margin-bottom:1rem">Informations personnelles</h3>
+          <div style="display:grid;gap:.75rem">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:.75rem;background:#f8fafc;border-radius:.75rem">
+              <span style="font-size:.85rem;color:#6b7280;font-weight:600">Nom complet</span>
+              <span id="info-name" style="font-weight:700;color:#1F2937">...</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:.75rem;background:#f8fafc;border-radius:.75rem">
+              <span style="font-size:.85rem;color:#6b7280;font-weight:600">Adresse email</span>
+              <span id="info-email" style="font-weight:700;color:#1F2937;font-size:.875rem">...</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:.75rem;background:#f8fafc;border-radius:.75rem">
+              <span style="font-size:.85rem;color:#6b7280;font-weight:600">Badge</span>
+              <span id="info-badge" class="badge" style="background:#dbeafe;color:#1d4ed8">🌱 Débutant</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:.75rem;background:#f8fafc;border-radius:.75rem">
+              <span style="font-size:.85rem;color:#6b7280;font-weight:600">Solde disponible</span>
+              <span id="info-solde" style="font-weight:700;color:#10b981">0 FCFA</span>
+            </div>
           </div>
-          <button onclick="saveProfile()" class="btn-primary">💾 Enregistrer</button>
         </div>
       </div>
 
@@ -653,6 +669,7 @@ function closePayModal(){document.getElementById('pay-modal').style.display='non
 
 async function confirmPay(){
   if(!pendingCourse)return;
+  const course={...pendingCourse};
   setBtn('pay-btn','<span class="spin"></span>',true);
   let wait=0;
   while(!window.fedaPayReady && wait<12){
@@ -666,15 +683,15 @@ async function confirmPay(){
   }
   try{
     const{data:pur,error}=await withTimeout(sb.from('purchases').insert({
-      user_id:CU.id,course_id:pendingCourse.id,amount:pendingCourse.price,
-      currency:pendingCourse.currency,status:'en_attente',payment_method:'fedapay'
+      user_id:CU.id,course_id:course.id,amount:course.price,
+      currency:course.currency,status:'en_attente',payment_method:'fedapay'
     }).select().single());
     if(error)throw new Error('Erreur création commande');
     closePayModal();
     FedaPay.init({
       public_key:FP_PK,
-      transaction:{amount:pendingCourse.price,description:`RIVO - ${pendingCourse.title}`},
-      currency:{iso:pendingCourse.currency||'XOF'},
+      transaction:{amount:course.price,description:`RIVO - ${course.title}`},
+      currency:{iso:course.currency||'XOF'},
       customer:{email:CU.email,firstname:CP?.first_name||'',lastname:CP?.last_name||''},
       onComplete:async function(resp){
         if(resp.reason===FedaPay.CHECKOUT_COMPLETED){
@@ -751,16 +768,21 @@ async function loadProfil(){
   if(!CP)return;
   const p=CP;
   const[ic,lb,bg,co]=badgeInfo(p.badge_level);
-  document.getElementById('prof-name').textContent=`${p.first_name} ${p.last_name}`;
+  const fullName=`${p.first_name} ${p.last_name}`;
+  document.getElementById('prof-name').textContent=fullName;
+  document.getElementById('info-name').textContent=fullName;
   const{data:{user}}=await sb.auth.getUser();
-  document.getElementById('prof-email').textContent=user?.email||'';
+  const email=user?.email||CU?.email||'';
+  document.getElementById('prof-email').textContent=email;
+  document.getElementById('info-email').textContent=email;
   const pb=document.getElementById('prof-badge');pb.textContent=`${ic} ${lb}`;pb.style.background=bg;pb.style.color=co;
+  const ib=document.getElementById('info-badge');ib.textContent=`${ic} ${lb}`;ib.style.background=bg;ib.style.color=co;
   document.getElementById('ref-code').textContent=p.referral_code||'...';
-  document.getElementById('st-b').textContent=fmt(p.balance||0,p.currency);
-  document.getElementById('ed-fn').value=p.first_name;
-  document.getElementById('ed-ln').value=p.last_name;
+  const solde=fmt(p.balance||0,p.currency);
+  document.getElementById('st-b').textContent=solde;
+  document.getElementById('info-solde').textContent=solde;
   const av=document.getElementById('big-av');
-  if(p.avatar_url)av.innerHTML=`<img src="${p.avatar_url}" style="width:100%;height:100%;border-radius:9999px;object-fit:cover"/>`;
+  if(p.avatar_url)av.innerHTML=`<img src="${p.avatar_url}" style="width:100%;height:100%;object-fit:cover"/>`;
   else av.textContent=(p.first_name[0]+p.last_name[0]).toUpperCase();
   const[{count:fc},{count:ac},{data:filleuls}]=await Promise.all([
     sb.from('purchases').select('*',{count:'exact',head:true}).eq('user_id',CU.id).eq('status','complete'),
@@ -776,16 +798,26 @@ async function loadProfil(){
 
 function copyRef(){const c=document.getElementById('ref-code').textContent;navigator.clipboard.writeText(c);toast('Code copié !');}
 
-async function saveProfile(){
-  const fn=document.getElementById('ed-fn').value.trim();
-  const ln=document.getElementById('ed-ln').value.trim();
-  if(!fn||!ln){toast('Prénom et nom requis','err');return;}
-  const{error}=await sb.from('profiles').update({first_name:fn,last_name:ln}).eq('id',CU.id);
-  if(error){toast('Erreur','err');return;}
-  CP={...CP,first_name:fn,last_name:ln};
-  document.getElementById('welcome-h').textContent=`Bienvenue ${fn} !!!`;
-  document.getElementById('prof-name').textContent=`${fn} ${ln}`;
-  toast('Profil mis à jour !');
+async function updateAvatar(input){
+  const file=input.files[0];
+  if(!file)return;
+  input.value='';
+  toast('Envoi en cours...');
+  try{
+    const fd=new FormData();
+    fd.append('file',file);
+    fd.append('upload_preset','afrotv_avatars');
+    const r=await fetch('https://api.cloudinary.com/v1_1/dx0dzt35e/image/upload',{method:'POST',body:fd});
+    const d=await r.json();
+    if(d.error)throw new Error(d.error.message);
+    await sb.from('profiles').update({avatar_url:d.secure_url}).eq('id',CU.id);
+    CP={...CP,avatar_url:d.secure_url};
+    const av=document.getElementById('big-av');
+    av.innerHTML=`<img src="${d.secure_url}" style="width:100%;height:100%;object-fit:cover"/>`;
+    toast('Photo mise à jour ! ✅');
+  }catch(e){
+    toast(e.message||'Erreur upload photo','err');
+  }
 }
 
 // ── Dashboard: Retrait ────────────────────────────────
