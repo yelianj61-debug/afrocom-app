@@ -907,10 +907,10 @@ async function loadNotifications(){
   const ids=filleuls.map(f=>f.id);
   const last=localStorage.getItem('rivo_notif_last')||'2020-01-01T00:00:00Z';
   const {data:purchases}=await sb.from('purchases')
-    .select('user_id,created_at,profiles(first_name)')
+    .select('user_id,purchased_at,profiles(first_name)')
     .in('user_id',ids).eq('status','complete')
-    .gt('created_at',last)
-    .order('created_at',{ascending:false});
+    .gt('purchased_at',last)
+    .order('purchased_at',{ascending:false});
   const count=(purchases||[]).length;
   if(count>0){
     badge.textContent=count;badge.style.display='flex';
@@ -922,7 +922,7 @@ async function loadNotifications(){
     return;
   }
   list.innerHTML=purchases.map(p=>{
-    const d=new Date(p.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+    const d=new Date(p.purchased_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
     return`<div style="padding:.75rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.875rem"><span style="font-weight:700">🎉 ${p.profiles?.first_name||'Un filleul'}</span> a acheté une formation — <span style="color:#10b981;font-weight:700">+1 000 FCFA</span><div style="font-size:.75rem;color:#9ca3af;margin-top:.2rem">${d}</div></div>`;
   }).join('');
 }
