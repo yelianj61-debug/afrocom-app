@@ -618,7 +618,7 @@ async function loadLandingCourses(){
   g.innerHTML=cs.map(c=>`
     <div class="card">
       <div style="height:11rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden">
-        ${c.cover_image_url?`<img src="${c.cover_image_url}" style="width:100%;height:100%;object-fit:cover"/>`:'<span style="font-size:3rem;opacity:.4">📚</span>'}
+        ${c.cover_url?`<img src="${c.cover_url}" style="width:100%;height:100%;object-fit:cover"/>`:'<span style="font-size:3rem;opacity:.4">📚</span>'}
         <span style="position:absolute;top:.625rem;right:.625rem;background:#F59E0B;color:white;font-weight:800;font-size:.78rem;padding:.2rem .75rem;border-radius:9999px">${fmt(c.price,c.currency)}</span>
       </div>
       <div style="padding:1.1rem">
@@ -646,7 +646,7 @@ async function loadBord(){
     const own=owned.has(c.id);
     return`<div class="card fade-in">
       <div style="height:10rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden">
-        ${c.cover_image_url?`<img src="${c.cover_image_url}" style="width:100%;height:100%;object-fit:cover"/>`:'<span style="font-size:2.5rem;opacity:.35">📚</span>'}
+        ${c.cover_url?`<img src="${c.cover_url}" style="width:100%;height:100%;object-fit:cover"/>`:'<span style="font-size:2.5rem;opacity:.35">📚</span>'}
         <span style="position:absolute;top:.5rem;right:.5rem;background:#F59E0B;color:white;font-weight:800;font-size:.75rem;padding:.2rem .65rem;border-radius:9999px">${fmt(c.price,c.currency)}</span>
         ${own?'<span style="position:absolute;top:.5rem;left:.5rem;background:#10b981;color:white;font-weight:800;font-size:.7rem;padding:.2rem .6rem;border-radius:9999px">✓ Acheté</span>':''}
       </div>
@@ -695,7 +695,8 @@ async function confirmPay(){
       currency:{iso:course.currency||'XOF'},
       customer:{email:CU.email,firstname:CP?.first_name||'',lastname:CP?.last_name||''},
       onComplete:async function(resp){
-        const paid=resp.reason===FedaPay.CHECKOUT_COMPLETED
+        const paid=resp.reason==='CHECKOUT_COMPLETED'
+          ||resp.reason===FedaPay.CHECKOUT_COMPLETED
           ||resp.transaction?.status==='approved'
           ||resp.transaction?.status==='success';
         if(paid){
@@ -734,17 +735,17 @@ async function confirmPay(){
 
 // ── Dashboard: Mes formations ─────────────────────────
 async function loadMesFormations(){
-  const{data}=await sb.from('purchases').select('*,courses(*)').eq('user_id',CU.id).eq('status','complete').order('created_at',{ascending:false});
+  const{data}=await sb.from('purchases').select('*,courses(*)').eq('user_id',CU.id).eq('status','complete').order('purchased_at',{ascending:false});
   const ps=data||[];
   document.getElementById('myf-count').textContent=`${ps.length} formation${ps.length!==1?'s':''} achetée${ps.length!==1?'s':''}`;
   if(ps.length===0){document.getElementById('myf-grid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#9ca3af"><p style="font-size:1.05rem;margin-bottom:1rem">Aucune formation achetée.</p><button onclick="switchTab(\'bord\')" class="btn-primary">Voir les formations</button></div>';return;}
   document.getElementById('myf-grid').innerHTML=ps.map(p=>{
     const c=p.courses;if(!c)return'';
-    const d=new Date(p.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+    const d=new Date(p.purchased_at||p.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
     return`<div class="card fade-in" style="padding:1.25rem">
       <div style="display:flex;gap:1rem;margin-bottom:1rem">
         <div style="width:4.5rem;height:4.5rem;flex-shrink:0;background:linear-gradient(135deg,#2563EB,#1D4ED8);border-radius:.875rem;overflow:hidden;display:flex;align-items:center;justify-content:center">
-          ${c.cover_image_url?`<img src="${c.cover_image_url}" style="width:100%;height:100%;object-fit:cover"/>`:'<span style="font-size:1.5rem;opacity:.4">📚</span>'}
+          ${c.cover_url?`<img src="${c.cover_url}" style="width:100%;height:100%;object-fit:cover"/>`:'<span style="font-size:1.5rem;opacity:.4">📚</span>'}
         </div>
         <div style="flex:1;min-width:0">
           <h3 style="font-weight:800;color:#1F2937;font-size:.95rem;margin-bottom:.25rem">${c.title}</h3>
