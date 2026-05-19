@@ -306,6 +306,15 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
           <p style="color:#bfdbfe;font-weight:600;margin-bottom:.25rem">RIVO, la plateforme qui transforme l'apprentissage en opportunité.</p>
           <p style="color:#93c5fd;font-size:.875rem">Développez vos compétences grâce à un apprentissage moderne, simple et accessible.</p>
         </div>
+        <div id="test-mode-bar" style="display:none;background:#fef3c7;border:1.5px solid #f59e0b;border-radius:.875rem;padding:.7rem 1rem;margin-bottom:1rem;align-items:center;justify-content:space-between">
+          <span style="font-size:.82rem;font-weight:700;color:#92400e">🧪 Mode test (admin)</span>
+          <div style="display:flex;align-items:center;gap:.6rem">
+            <span id="test-mode-label" style="font-size:.78rem;color:#92400e;font-weight:600">Désactivé</span>
+            <div onclick="toggleTestMode()" id="test-mode-toggle" style="width:44px;height:24px;background:#d1d5db;border-radius:9999px;position:relative;cursor:pointer;transition:background .25s;flex-shrink:0">
+              <div id="test-mode-knob" style="width:20px;height:20px;background:white;border-radius:9999px;position:absolute;top:2px;left:2px;transition:left .25s;box-shadow:0 1px 3px rgba(0,0,0,.25)"></div>
+            </div>
+          </div>
+        </div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
           <h2 style="font-size:1.25rem;font-weight:800;color:#1F2937">Formations disponibles</h2>
           <span id="courses-badge" style="background:#dbeafe;color:#1d4ed8;font-size:.8rem;font-weight:700;padding:.25rem .875rem;border-radius:9999px">...</span>
@@ -455,6 +464,7 @@ let sb = null;
 // ── Globals ───────────────────────────────────────────
 let CU = null, CP = null, pendingCourse = null;
 const loaded = {};
+let TEST_MODE = localStorage.getItem('rivo_test_mode') === '1';
 
 // ── Helpers ───────────────────────────────────────────
 function toast(msg, type='ok'){
@@ -633,8 +643,28 @@ async function loadLandingCourses(){
 }
 
 // ── Dashboard: Bord ───────────────────────────────────
+function updateTestModeUI(){
+  const toggle=document.getElementById('test-mode-toggle');
+  const knob=document.getElementById('test-mode-knob');
+  const label=document.getElementById('test-mode-label');
+  if(!toggle)return;
+  if(TEST_MODE){toggle.style.background='#10b981';knob.style.left='22px';label.textContent='Activé';}
+  else{toggle.style.background='#d1d5db';knob.style.left='2px';label.textContent='Désactivé';}
+}
+function toggleTestMode(){
+  TEST_MODE=!TEST_MODE;
+  localStorage.setItem('rivo_test_mode',TEST_MODE?'1':'0');
+  updateTestModeUI();
+  toast(TEST_MODE?'🧪 Mode test activé — paiements simulés':'Mode test désactivé — FedaPay actif');
+}
+
 async function loadBord(){
   if(!CU?.id) return;
+  const bar=document.getElementById('test-mode-bar');
+  if(bar){
+    if(CU.email==='assistancetrc416@gmail.com'){bar.style.display='flex';updateTestModeUI();}
+    else{bar.style.display='none';}
+  }
   const[{data:cs},{data:ps}]=await Promise.all([
     sb.from('courses').select('*').eq('is_published',true).order('created_at',{ascending:false}),
     sb.from('purchases').select('course_id').eq('user_id',CU.id).eq('status','complete')
@@ -671,6 +701,33 @@ function closePayModal(){document.getElementById('pay-modal').style.display='non
 async function confirmPay(){
   if(!pendingCourse)return;
   const course={...pendingCourse};
+  if(TEST_MODE){
+    setBtn('pay-btn','<span class="spin"></span>',true);
+    try{
+      const{data:pur,error}=await withTimeout(sb.from('purchases').insert({
+        user_id:CU.id,course_id:course.id,amount:course.price,
+        currency:course.currency,status:'complete',payment_method:'test'
+      }).select().single());
+      if(error)throw new Error('Erreur création commande test');
+      closePayModal();
+      await loadProfileData();
+      loaded.formations=false;
+      loaded.profil=false;
+      loadBord();
+      if(document.getElementById('tab-formations').classList.contains('active')){
+        loaded.formations=true;loadMesFormations();
+      }
+      if(document.getElementById('tab-profil').classList.contains('active')){
+        loaded.profil=true;loadProfil();
+      }
+      toast('🧪 Paiement test simulé avec succès !');
+    }catch(err){
+      toast(err.message||'Erreur paiement test','err');
+    }finally{
+      setBtn('pay-btn','⚡ Payer',false);
+    }
+    return;
+  }
   setBtn('pay-btn','<span class="spin"></span>',true);
   let wait=0;
   while(!window.fedaPayReady && wait<12){
