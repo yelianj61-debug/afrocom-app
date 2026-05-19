@@ -582,6 +582,15 @@ async function doLogin(e){
     const{data,error}=await sb.auth.signInWithPassword({email,password:pwd});
     if(error)throw error;
     CP=null;
+    document.getElementById('welcome-h').textContent='Bienvenue !!!';
+    document.getElementById('prof-name').textContent='...';
+    document.getElementById('prof-email').textContent='...';
+    document.getElementById('ref-code').textContent='...';
+    document.getElementById('big-av').innerHTML='?';
+    document.getElementById('st-f').textContent='0';
+    document.getElementById('st-a').textContent='0';
+    document.getElementById('st-b').textContent='0 FCFA';
+    document.getElementById('st-ref').textContent='0';
     Object.keys(loaded).forEach(k=>delete loaded[k]);
     CU=data.user;
     const{data:p}=await sb.from('profiles').select('badge_level').eq('id',CU.id).single();
@@ -881,7 +890,7 @@ async function loadMesFormations(){
         </div>
       </div>
       <div style="display:flex;gap:.625rem">
-        ${c.file_url?`<a href="${c.file_url}" target="_blank" class="btn-primary" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">🔗 Consulter</a><a href="${c.file_url.replace('/raw/upload/','/raw/upload/fl_attachment/')}" target="_blank" class="btn-outline" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">⬇️ Télécharger</a>`:'<div style="flex:1;text-align:center;padding:.5rem;font-size:.82rem;color:#d97706;background:#fef3c7;border-radius:.75rem;font-weight:600">⏳ Fichier bientôt disponible</div>'}
+        ${c.file_url?`<a href="${c.file_url}" target="_blank" class="btn-primary" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">🔗 Consulter</a><a href="${c.file_url}" target="_blank" class="btn-outline" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">⬇️ Télécharger</a>`:'<div style="flex:1;text-align:center;padding:.5rem;font-size:.82rem;color:#d97706;background:#fef3c7;border-radius:.75rem;font-weight:600">⏳ Fichier bientôt disponible</div>'}
       </div>
     </div>`;
   }).join('');
@@ -905,7 +914,7 @@ async function loadAttestations(){
         </div>
       </div>
       <div style="display:flex;gap:.625rem">
-        ${c.certificate_url?`<a href="${c.certificate_url}" target="_blank" class="btn-primary" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">📄 Voir</a><a href="${c.certificate_url.replace('/raw/upload/','/raw/upload/fl_attachment/')}" target="_blank" class="btn-outline" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">⬇️ PDF</a>`:'<div style="flex:1;text-align:center;padding:.5rem;font-size:.82rem;color:#d97706;background:#fef3c7;border-radius:.75rem;font-weight:600">⏳ En cours de préparation</div>'}
+        ${c.certificate_url?`<a href="${c.certificate_url}" target="_blank" class="btn-primary" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">📄 Voir</a><a href="${c.certificate_url}" target="_blank" class="btn-outline" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">⬇️ PDF</a>`:'<div style="flex:1;text-align:center;padding:.5rem;font-size:.82rem;color:#d97706;background:#fef3c7;border-radius:.75rem;font-weight:600">⏳ En cours de préparation</div>'}
       </div>
     </div>`;
   }).join('');

@@ -444,17 +444,17 @@ function confirm(title, msg, onOk) {
 async function loadDashboard() {
   try{
     const [usersRes, purchasesRes, withdrawalsRes, coursesRes] = await Promise.all([
-      withTimeout(sb.from('profiles').select('id', { count: 'exact', head: true })),
-      withTimeout(sb.from('purchases').select('id,amount', { count: 'exact' }).eq('status','complete')),
-      withTimeout(sb.from('withdrawals').select('id', { count: 'exact', head: true }).eq('status','en_attente')),
-      withTimeout(sb.from('courses').select('id', { count: 'exact', head: true }).eq('is_published', true)),
+      sb.from('profiles').select('id', { count: 'exact', head: true }),
+      sb.from('purchases').select('id,amount', { count: 'exact' }).eq('status','complete'),
+      sb.from('withdrawals').select('id', { count: 'exact', head: true }).eq('status','en_attente'),
+      sb.from('courses').select('id', { count: 'exact', head: true }).eq('is_published', true),
     ]);
 
     const revenue = (purchasesRes.data||[]).reduce((s,r) => s + Number(r.amount||0), 0);
 
     const [{ count: purchaseTotal }, { count: certTotal }] = await Promise.all([
-      withTimeout(sb.from('purchases').select('id', { count:'exact', head:true }).eq('status','complete')),
-      withTimeout(sb.from('certificates').select('id', { count:'exact', head:true })),
+      sb.from('purchases').select('id', { count:'exact', head:true }).eq('status','complete'),
+      sb.from('certificates').select('id', { count:'exact', head:true }),
     ]);
     const pendingCerts = Math.max(0, (purchaseTotal||0) - (certTotal||0));
 
@@ -466,12 +466,12 @@ async function loadDashboard() {
     document.getElementById('stat-courses').textContent = coursesRes.count ?? '—';
 
     // Recent purchases
-    const { data: rp } = await withTimeout(sb.from('purchases').select('id,amount,currency,purchased_at,user_id,course_id').eq('status','complete').order('purchased_at',{ascending:false}).limit(5));
+    const { data: rp } = await sb.from('purchases').select('id,amount,currency,purchased_at,user_id,course_id').eq('status','complete').order('purchased_at',{ascending:false}).limit(5);
     const uids2=[...new Set((rp||[]).map(p=>p.user_id))];
     const cids2=[...new Set((rp||[]).map(p=>p.course_id))];
     const [{data:rpProfs},{data:rpCourses}]=uids2.length?await Promise.all([
-      withTimeout(sb.from('profiles').select('id,first_name,last_name').in('id',uids2)),
-      withTimeout(sb.from('courses').select('id,title').in('id',cids2))
+      sb.from('profiles').select('id,first_name,last_name').in('id',uids2),
+      sb.from('courses').select('id,title').in('id',cids2)
     ]):[{data:[]},{data:[]}];
     const rpPM=Object.fromEntries((rpProfs||[]).map(p=>[p.id,p]));
     const rpCM=Object.fromEntries((rpCourses||[]).map(c=>[c.id,c]));
@@ -487,9 +487,9 @@ async function loadDashboard() {
       </div>`).join('');
 
     // Recent withdrawals
-    const { data: rw } = await withTimeout(sb.from('withdrawals').select('id,amount,status,method,created_at,user_id').order('created_at',{ascending:false}).limit(5));
+    const { data: rw } = await sb.from('withdrawals').select('id,amount,status,method,created_at,user_id').order('created_at',{ascending:false}).limit(5);
     const wuids=[...new Set((rw||[]).map(w=>w.user_id))];
-    const [{data:rwProfs}]=wuids.length?await Promise.all([withTimeout(sb.from('profiles').select('id,first_name,last_name').in('id',wuids))]):[{data:[]}];
+    const [{data:rwProfs}]=wuids.length?await Promise.all([sb.from('profiles').select('id,first_name,last_name').in('id',wuids)]):[{data:[]}];
     const rwPM=Object.fromEntries((rwProfs||[]).map(p=>[p.id,p]));
     const rwEl = document.getElementById('recent-withdrawals');
     if (!rw || rw.length === 0) { rwEl.innerHTML = '<p>Aucun retrait récent</p>'; }
