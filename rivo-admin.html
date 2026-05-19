@@ -837,15 +837,25 @@ async function rejectRetrait(id) {
 async function loadAttestations() {
   const [{ data: allPurchases }, { data: certs }] = await Promise.all([
     sb.from('purchases')
-      .select('id,created_at,profiles(id,first_name,last_name,email),courses(id,title)')
+      .select('id,purchased_at,user_id,course_id')
       .eq('status','complete')
-      .order('created_at',{ascending:false}),
+      .order('purchased_at',{ascending:false}),
     sb.from('certificates').select('user_id,course_id'),
   ]);
   const certSet = new Set((certs||[]).map(c => `${c.user_id}:${c.course_id}`));
-  const purchases = (allPurchases||[]).filter(p =>
-    p.profiles?.id && p.courses?.id && !certSet.has(`${p.profiles.id}:${p.courses.id}`)
-  );
+  const raw = (allPurchases||[]).filter(p => p.user_id && p.course_id && !certSet.has(`${p.user_id}:${p.course_id}`));
+  let purchases = raw;
+  if(raw.length > 0){
+    const uids=[...new Set(raw.map(p=>p.user_id))];
+    const cids=[...new Set(raw.map(p=>p.course_id))];
+    const [{data:profs},{data:courses}]=await Promise.all([
+      sb.from('profiles').select('id,first_name,last_name,email').in('id',uids),
+      sb.from('courses').select('id,title').in('id',cids)
+    ]);
+    const pm=Object.fromEntries((profs||[]).map(p=>[p.id,p]));
+    const cm=Object.fromEntries((courses||[]).map(c=>[c.id,c]));
+    purchases=raw.map(p=>({...p,profile:pm[p.user_id]||null,course:cm[p.course_id]||null}));
+  }
 
   const container = document.getElementById('attestations-list');
   if (!purchases || purchases.length === 0) {
@@ -857,11 +867,11 @@ async function loadAttestations() {
     <div class="card p-5" id="attest-${p.id}">
       <div class="flex flex-wrap items-start gap-4 mb-4">
         <div class="flex-1 min-w-0">
-          <div class="font-semibold text-white">${p.profiles?.first_name||''} ${p.profiles?.last_name||''}</div>
-          <div class="text-xs text-gray-500 mb-1">${p.profiles?.email||''}</div>
-          <div class="text-sm text-purple-300">📚 ${p.courses?.title||'—'}</div>
+          <div class="font-semibold text-white">${p.profile?.first_name||''} ${p.profile?.last_name||''}</div>
+          <div class="text-xs text-gray-500 mb-1">${p.profile?.email||''}</div>
+          <div class="text-sm text-purple-300">📚 ${p.course?.title||'—'}</div>
         </div>
-        <div class="text-xs text-gray-500">${p.created_at ? new Date(p.created_at).toLocaleDateString('fr-FR') : '—'}</div>
+        <div class="text-xs text-gray-500">${p.purchased_at ? new Date(p.purchased_at).toLocaleDateString('fr-FR') : '—'}</div>
       </div>
       <div class="space-y-2">
         <div style="display:flex;gap:.5rem;align-items:center">
@@ -870,7 +880,7 @@ async function loadAttestations() {
           <button type="button" onclick="document.getElementById('pdf-file-${p.id}').click()" id="pdf-btn-${p.id}" style="background:#7c3aed;color:white;border:none;border-radius:.5rem;padding:.5rem 1rem;cursor:pointer;font-size:.8rem;font-weight:700;white-space:nowrap">📎 Upload PDF</button>
         </div>
         <textarea id="msg-${p.id}" placeholder="Message personnalisé (optionnel)" class="input text-sm" rows="2"></textarea>
-        <button onclick="sendAttestation('${p.id}','${p.profiles?.id}','${p.courses?.id}')" class="btn-primary text-sm">Envoyer l'attestation</button>
+        <button onclick="sendAttestation('${p.id}','${p.user_id}','${p.course_id}')" class="btn-primary text-sm">Envoyer l'attestation</button>
       </div>
     </div>`).join('');
 }

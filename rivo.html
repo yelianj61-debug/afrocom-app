@@ -399,6 +399,10 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
               <span style="font-size:.85rem;color:#6b7280;font-weight:600">Solde disponible</span>
               <span id="info-solde" style="font-weight:700;color:#10b981">0 FCFA</span>
             </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:.75rem;background:#fef9c3;border-radius:.75rem" id="birth-row">
+              <span style="font-size:.85rem;color:#92400e;font-weight:600">Date de naissance</span>
+              <span id="info-birth" style="font-weight:700;color:#92400e">...</span>
+            </div>
           </div>
         </div>
       </div>
@@ -550,10 +554,13 @@ function loadFedaPayScript(){
 })();
 
 async function loadProfileData(){
+  if(!CU?.id)return;
   const {data:p}=await sb.from('profiles').select('*').eq('id',CU.id).single();
-  CP=p;
-  if(!p)return;
-  document.getElementById('welcome-h').textContent=`Bienvenue ${p.first_name} !!!`;
+  CP=p||null;
+  document.getElementById('welcome-h').textContent=p?`Bienvenue ${p.first_name} !!!`:'Bienvenue !!!';
+  document.getElementById('ref-code').textContent=p?.referral_code||'—';
+  document.getElementById('prof-name').textContent=p?`${p.first_name} ${p.last_name}`:'—';
+  document.getElementById('big-av').innerHTML=p?.avatar_url?`<img src="${p.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:9999px"/>`:((p?.first_name?.[0]||'')+(p?.last_name?.[0]||'')).toUpperCase()||'?';
 }
 
 // ── Login ─────────────────────────────────────────────
@@ -566,6 +573,8 @@ async function doLogin(e){
     const pwd=document.getElementById('li-pwd').value;
     const{data,error}=await withTimeout(sb.auth.signInWithPassword({email,password:pwd}));
     if(error)throw error;
+    CP=null;
+    Object.keys(loaded).forEach(k=>delete loaded[k]);
     CU=data.user;
     const{data:p}=await withTimeout(sb.from('profiles').select('badge_level').eq('id',CU.id).single());
     if(p?.badge_level==='admin'){toast('Connexion admin réussie !');setTimeout(()=>{window.location.href='./rivo-admin.html';},700);return;}
@@ -604,7 +613,9 @@ async function doRegister(e){
     const{data:auth,error}=await withTimeout(sb.auth.signUp({email,password:pwd,options:{data:{first_name:fn,last_name:ln}}}));
     if(error)throw error;
     if(auth.user){
-      await sb.from('profiles').update({first_name:fn,last_name:ln,birth_date:birth,referred_by:refId}).eq('id',auth.user.id);
+      CP=null;
+      Object.keys(loaded).forEach(k=>delete loaded[k]);
+      await sb.from('profiles').upsert({id:auth.user.id,first_name:fn,last_name:ln,birth_date:birth||null,referred_by:refId||null},{onConflict:'id'});
       CU=auth.user;
       await loadProfileData();
     }
@@ -618,7 +629,21 @@ async function doRegister(e){
 }
 
 // ── Logout ────────────────────────────────────────────
-async function doLogout(){await sb.auth.signOut();CU=CP=null;Object.keys(loaded).forEach(k=>delete loaded[k]);goTo('landing');}
+async function doLogout(){
+  await sb.auth.signOut();
+  CU=CP=null;
+  Object.keys(loaded).forEach(k=>delete loaded[k]);
+  document.getElementById('welcome-h').textContent='Bienvenue !!!';
+  document.getElementById('ref-code').textContent='...';
+  document.getElementById('prof-name').textContent='...';
+  document.getElementById('prof-email').textContent='...';
+  document.getElementById('big-av').innerHTML='?';
+  document.getElementById('st-f').textContent='0';
+  document.getElementById('st-a').textContent='0';
+  document.getElementById('st-b').textContent='0 FCFA';
+  document.getElementById('st-ref').textContent='0';
+  goTo('landing');
+}
 
 // ── Landing courses ───────────────────────────────────
 async function loadLandingCourses(){
@@ -662,8 +687,7 @@ async function loadBord(){
   if(!CU?.id) return;
   const bar=document.getElementById('test-mode-bar');
   if(bar){
-    if(CU.email==='assistancetrc416@gmail.com'){bar.style.display='flex';updateTestModeUI();}
-    else{bar.style.display='none';}
+    bar.style.display='flex';updateTestModeUI();
   }
   const[{data:cs},{data:ps}]=await Promise.all([
     sb.from('courses').select('*').eq('is_published',true).order('created_at',{ascending:false}),
@@ -695,6 +719,20 @@ async function loadBord(){
 }
 
 function expToggle(id){const e=document.getElementById('exp-'+id);e.style.display=e.style.display==='none'?'block':'none';}
+function showPaySuccess(title){
+  const el=document.createElement('div');
+  el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:999;display:flex;align-items:center;justify-content:center;padding:1.5rem';
+  el.innerHTML=`<div style="background:white;border-radius:1.5rem;padding:2rem;max-width:360px;width:100%;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,.3)">
+    <div style="font-size:3rem;margin-bottom:.75rem">🎉</div>
+    <h2 style="font-size:1.3rem;font-weight:900;color:#1F2937;margin-bottom:.5rem">Félicitations !</h2>
+    <p style="color:#6b7280;font-size:.9rem;margin-bottom:.25rem">Votre achat est confirmé.</p>
+    <p style="color:#2563eb;font-weight:700;font-size:.9rem;margin-bottom:1.5rem">"${title}"</p>
+    <p style="color:#6b7280;font-size:.85rem;margin-bottom:1.25rem">Accédez à votre formation dans l'onglet <strong>Mes formations</strong></p>
+    <button onclick="this.closest('div[style*=fixed]').remove();switchTab('formations');" style="width:100%;padding:.85rem;background:#2563eb;color:white;border:none;border-radius:.875rem;font-weight:800;cursor:pointer;font-size:.95rem">📚 Voir mes formations</button>
+  </div>`;
+  document.body.appendChild(el);
+  localStorage.setItem('rivo_notif_cert_last',new Date().toISOString());
+}
 function buyModal(id,title,price,currency){pendingCourse={id,title,price,currency};document.getElementById('pm-title').textContent=title;document.getElementById('pm-price').textContent=fmt(price,currency);document.getElementById('pay-modal').style.display='flex';}
 function closePayModal(){document.getElementById('pay-modal').style.display='none';pendingCourse=null;}
 
@@ -710,6 +748,9 @@ async function confirmPay(){
       }).select().single());
       if(error)throw new Error('Erreur création commande test');
       closePayModal();
+      if(CP?.referred_by){
+        try{const{data:par}=await sb.from('profiles').select('balance').eq('id',CP.referred_by).single();await sb.from('profiles').update({balance:(par?.balance||0)+1000}).eq('id',CP.referred_by);}catch(_){}
+      }
       await loadProfileData();
       loaded.formations=false;
       loaded.profil=false;
@@ -720,7 +761,7 @@ async function confirmPay(){
       if(document.getElementById('tab-profil').classList.contains('active')){
         loaded.profil=true;loadProfil();
       }
-      toast('🧪 Paiement test simulé avec succès !');
+      showPaySuccess(course.title);
     }catch(err){
       toast(err.message||'Erreur paiement test','err');
     }finally{
@@ -762,6 +803,9 @@ async function confirmPay(){
               sb.from('purchases').update({status:'complete'}).eq('id',pur.id)
             );
             if(upErr)throw upErr;
+            if(CP?.referred_by){
+              try{const{data:par}=await sb.from('profiles').select('balance').eq('id',CP.referred_by).single();await sb.from('profiles').update({balance:(par?.balance||0)+1000}).eq('id',CP.referred_by);}catch(_){}
+            }
             await loadProfileData();
             loaded.formations=false;
             loaded.profil=false;
@@ -772,7 +816,7 @@ async function confirmPay(){
             if(document.getElementById('tab-profil').classList.contains('active')){
               loaded.profil=true; loadProfil();
             }
-            toast('Paiement réussi ! 🎉');
+            showPaySuccess(course.title);
           }catch(e){
             console.error('Erreur mise à jour paiement:',e);
             toast('Paiement reçu mais erreur enregistrement. Contactez le support.','err');
@@ -811,7 +855,7 @@ async function loadMesFormations(){
         </div>
       </div>
       <div style="display:flex;gap:.625rem">
-        ${c.file_url?`<a href="${c.file_url}" target="_blank" class="btn-primary" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">🔗 Consulter</a><a href="${c.file_url}" download class="btn-outline" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">⬇️ Télécharger</a>`:'<div style="flex:1;text-align:center;padding:.5rem;font-size:.82rem;color:#d97706;background:#fef3c7;border-radius:.75rem;font-weight:600">⏳ Fichier bientôt disponible</div>'}
+        ${c.file_url?`<a href="${c.file_url}" target="_blank" class="btn-primary" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">🔗 Consulter</a><a href="${c.file_url.replace('/raw/upload/','/raw/upload/fl_attachment/')}" target="_blank" class="btn-outline" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">⬇️ Télécharger</a>`:'<div style="flex:1;text-align:center;padding:.5rem;font-size:.82rem;color:#d97706;background:#fef3c7;border-radius:.75rem;font-weight:600">⏳ Fichier bientôt disponible</div>'}
       </div>
     </div>`;
   }).join('');
@@ -835,7 +879,7 @@ async function loadAttestations(){
         </div>
       </div>
       <div style="display:flex;gap:.625rem">
-        ${c.certificate_url?`<a href="${c.certificate_url}" target="_blank" class="btn-primary" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">📄 Voir</a><a href="${c.certificate_url}" download class="btn-outline" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">⬇️ PDF</a>`:'<div style="flex:1;text-align:center;padding:.5rem;font-size:.82rem;color:#d97706;background:#fef3c7;border-radius:.75rem;font-weight:600">⏳ En cours de préparation</div>'}
+        ${c.certificate_url?`<a href="${c.certificate_url}" target="_blank" class="btn-primary" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">📄 Voir</a><a href="${c.certificate_url.replace('/raw/upload/','/raw/upload/fl_attachment/')}" target="_blank" class="btn-outline" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">⬇️ PDF</a>`:'<div style="flex:1;text-align:center;padding:.5rem;font-size:.82rem;color:#d97706;background:#fef3c7;border-radius:.75rem;font-weight:600">⏳ En cours de préparation</div>'}
       </div>
     </div>`;
   }).join('');
@@ -843,7 +887,7 @@ async function loadAttestations(){
 
 // ── Dashboard: Profil ─────────────────────────────────
 async function loadProfil(){
-  if(!CP)return;
+  if(!CP){await loadProfileData();if(!CP)return;}
   const p=CP;
   const[ic,lb,bg,co]=badgeInfo(p.badge_level);
   const fullName=`${p.first_name} ${p.last_name}`;
@@ -859,6 +903,17 @@ async function loadProfil(){
   const solde=fmt(p.balance||0,p.currency);
   document.getElementById('st-b').textContent=solde;
   document.getElementById('info-solde').textContent=solde;
+  const birthEl=document.getElementById('info-birth');
+  const birthRow=document.getElementById('birth-row');
+  if(birthEl){
+    if(p.birth_date){
+      birthEl.textContent=new Date(p.birth_date).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+      if(birthRow)birthRow.style.background='#f0fdf4';
+    }else{
+      birthEl.innerHTML=`<input type="date" id="birth-input" style="border:1.5px solid #f59e0b;border-radius:.5rem;padding:.2rem .5rem;font-size:.8rem;color:#92400e" onchange="saveBirthDate(this.value)"/>`;
+      if(birthRow){birthRow.style.background='#fef3c7';birthRow.title='Obligatoire pour recevoir votre attestation';}
+    }
+  }
   const av=document.getElementById('big-av');
   if(p.avatar_url)av.innerHTML=`<img src="${p.avatar_url}" style="width:100%;height:100%;object-fit:cover"/>`;
   else av.textContent=(p.first_name[0]+p.last_name[0]).toUpperCase();
@@ -875,6 +930,18 @@ async function loadProfil(){
 }
 
 function copyRef(){const c=document.getElementById('ref-code').textContent;navigator.clipboard.writeText(c);toast('Code copié !');}
+async function saveBirthDate(val){
+  if(!val||!CU?.id)return;
+  try{
+    await withTimeout(sb.from('profiles').update({birth_date:val}).eq('id',CU.id));
+    CP={...CP,birth_date:val};
+    const birthEl=document.getElementById('info-birth');
+    const birthRow=document.getElementById('birth-row');
+    if(birthEl)birthEl.textContent=new Date(val).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+    if(birthRow)birthRow.style.background='#f0fdf4';
+    toast('Date de naissance enregistrée ✅');
+  }catch(e){toast('Erreur enregistrement','err');}
+}
 
 async function updateAvatar(input){
   const file=input.files[0];
@@ -954,34 +1021,38 @@ function switchTab(name){
 // ── Notifications ─────────────────────────────────────
 async function loadNotifications(){
   if(!CU)return;
-  const {data:filleuls}=await sb.from('profiles').select('id,first_name').eq('referred_by',CU.id);
   const badge=document.getElementById('notif-badge');
   const list=document.getElementById('notif-list');
-  if(!filleuls?.length){
-    list.innerHTML='<p style="padding:1rem;text-align:center;color:#9ca3af;font-size:.875rem">Aucune notification</p>';
-    return;
-  }
-  const ids=filleuls.map(f=>f.id);
   const last=localStorage.getItem('rivo_notif_last')||'2020-01-01T00:00:00Z';
-  const {data:purchases}=await sb.from('purchases')
-    .select('user_id,purchased_at,profiles(first_name)')
-    .in('user_id',ids).eq('status','complete')
-    .gt('purchased_at',last)
-    .order('purchased_at',{ascending:false});
-  const count=(purchases||[]).length;
-  if(count>0){
-    badge.textContent=count;badge.style.display='flex';
-    const fn=purchases[0].profiles?.first_name||'votre filleul';
-    toast(`🎉 Vous avez gagné 1 000 FCFA grâce à ${fn} !`);
-  }else{badge.style.display='none';}
-  if(!purchases||!purchases.length){
-    list.innerHTML='<p style="padding:1rem;text-align:center;color:#9ca3af;font-size:.875rem">Aucune nouvelle notification</p>';
-    return;
+  const certLast=localStorage.getItem('rivo_cert_last')||'2020-01-01T00:00:00Z';
+  const [{data:filleuls},{data:newCerts}]=await Promise.all([
+    sb.from('profiles').select('id,first_name').eq('referred_by',CU.id),
+    sb.from('certificates').select('issued_at,courses(title)').eq('user_id',CU.id).gt('issued_at',certLast).order('issued_at',{ascending:false})
+  ]);
+  let items=[];
+  if(filleuls?.length){
+    const ids=filleuls.map(f=>f.id);
+    const {data:purchases}=await sb.from('purchases')
+      .select('user_id,purchased_at,profiles(first_name)')
+      .in('user_id',ids).eq('status','complete')
+      .gt('purchased_at',last)
+      .order('purchased_at',{ascending:false});
+    (purchases||[]).forEach(p=>{
+      const d=new Date(p.purchased_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+      items.push({ts:p.purchased_at,html:`<div style="padding:.75rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.875rem"><span style="font-weight:700">🎉 ${p.profiles?.first_name||'Un filleul'}</span> a acheté une formation — <span style="color:#10b981;font-weight:700">+1 000 FCFA</span><div style="font-size:.75rem;color:#9ca3af;margin-top:.2rem">${d}</div></div>`});
+    });
+    if(purchases?.length>0)toast(`🎉 Vous avez gagné 1 000 FCFA grâce à ${purchases[0].profiles?.first_name||'un filleul'} !`);
   }
-  list.innerHTML=purchases.map(p=>{
-    const d=new Date(p.purchased_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
-    return`<div style="padding:.75rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.875rem"><span style="font-weight:700">🎉 ${p.profiles?.first_name||'Un filleul'}</span> a acheté une formation — <span style="color:#10b981;font-weight:700">+1 000 FCFA</span><div style="font-size:.75rem;color:#9ca3af;margin-top:.2rem">${d}</div></div>`;
-  }).join('');
+  (newCerts||[]).forEach(c=>{
+    const d=new Date(c.issued_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+    const title=c.courses?.title||'une formation';
+    items.push({ts:c.issued_at,html:`<div style="padding:.75rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.875rem;background:#fef9c3"><span style="font-weight:700">🏆 Attestation disponible</span> pour <em>${title}</em><div style="font-size:.75rem;color:#92400e;margin-top:.2rem">${d} · Consultez l'onglet <strong>Attests.</strong> · <a href="mailto:assistancetrc416@gmail.com" style="color:#2563eb">Assistance</a></div></div>`});
+  });
+  if(newCerts?.length>0)localStorage.setItem('rivo_cert_last',newCerts[0].issued_at);
+  const total=items.length;
+  if(total>0){badge.textContent=total;badge.style.display='flex';}else{badge.style.display='none';}
+  if(total===0){list.innerHTML='<p style="padding:1rem;text-align:center;color:#9ca3af;font-size:.875rem">Aucune nouvelle notification</p>';return;}
+  list.innerHTML=items.map(i=>i.html).join('');
 }
 
 function toggleNotifPanel(){
