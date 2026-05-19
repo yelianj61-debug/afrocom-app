@@ -502,11 +502,8 @@ function goTo(p){
 // ── App start (called after CDN loads) ───────────────
 async function startApp(){
   try{
-    const {data,error}=await withTimeout(sb.auth.getSession());
-    if(error){
-      console.warn('Session invalide:',error.message);
-      await sb.auth.signOut().catch(()=>{});
-    } else if(data?.session){
+    const {data}=await sb.auth.getSession();
+    if(data?.session){
       CU=data.session.user;
       await loadProfileData();
       goTo('dashboard');
@@ -518,7 +515,7 @@ async function startApp(){
       history.replaceState({},'',location.pathname);
       if(data?.session){goTo('dashboard');setTimeout(()=>toast('Paiement réussi ! 🎉'),500);}
     }
-  }catch(e){console.warn('Init warning:',e?.message||e);}
+  }catch(e){}
   loadFedaPayScript();
 }
 
