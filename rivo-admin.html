@@ -449,7 +449,7 @@ async function loadDashboard() {
     sb.from('courses').select('id', { count: 'exact', head: true }).eq('is_published', true),
   ]);
 
-  const revenue = (purchasesRes.data||[]).reduce((s,r) => s + (r.amount||0), 0);
+  const revenue = (purchasesRes.data||[]).reduce((s,r) => s + Number(r.amount||0), 0);
 
   const [{ count: purchaseTotal }, { count: certTotal }] = await Promise.all([
     sb.from('purchases').select('id', { count:'exact', head:true }).eq('status','complete'),
@@ -459,7 +459,7 @@ async function loadDashboard() {
 
   document.getElementById('stat-users').textContent = usersRes.count ?? '—';
   document.getElementById('stat-purchases').textContent = purchasesRes.count ?? '—';
-  document.getElementById('stat-revenue').textContent = revenue.toLocaleString('fr-FR');
+  document.getElementById('stat-revenue').textContent = revenue.toLocaleString('fr-FR') + ' FCFA';
   document.getElementById('stat-withdrawals').textContent = withdrawalsRes.count ?? '—';
   document.getElementById('stat-certs').textContent = pendingCerts;
   document.getElementById('stat-courses').textContent = coursesRes.count ?? '—';
@@ -864,7 +864,11 @@ async function loadAttestations() {
         <div class="text-xs text-gray-500">${p.created_at ? new Date(p.created_at).toLocaleDateString('fr-FR') : '—'}</div>
       </div>
       <div class="space-y-2">
-        <input type="url" id="pdf-${p.id}" placeholder="URL du certificat PDF (Cloudinary, Drive…)" class="input text-sm"/>
+        <div style="display:flex;gap:.5rem;align-items:center">
+          <input type="text" id="pdf-${p.id}" placeholder="URL générée après upload du PDF…" class="input text-sm" style="flex:1" readonly/>
+          <input type="file" id="pdf-file-${p.id}" accept=".pdf,application/pdf" style="display:none" onchange="uploadCertPdf(this,'${p.id}')"/>
+          <button type="button" onclick="document.getElementById('pdf-file-${p.id}').click()" id="pdf-btn-${p.id}" style="background:#7c3aed;color:white;border:none;border-radius:.5rem;padding:.5rem 1rem;cursor:pointer;font-size:.8rem;font-weight:700;white-space:nowrap">📎 Upload PDF</button>
+        </div>
         <textarea id="msg-${p.id}" placeholder="Message personnalisé (optionnel)" class="input text-sm" rows="2"></textarea>
         <button onclick="sendAttestation('${p.id}','${p.profiles?.id}','${p.courses?.id}')" class="btn-primary text-sm">Envoyer l'attestation</button>
       </div>
@@ -890,6 +894,22 @@ async function sendAttestation(purchaseId, userId, courseId) {
   } catch(err) {
     toast(err.message || 'Erreur lors de l\'envoi', false);
     if (btn) { btn.disabled = false; btn.textContent = 'Envoyer l\'attestation'; }
+  }
+}
+
+async function uploadCertPdf(input, purchaseId){
+  const file=input.files[0];
+  if(!file)return;
+  const btn=document.getElementById('pdf-btn-'+purchaseId);
+  if(btn){btn.disabled=true;btn.textContent='⏳ Upload...';}
+  try{
+    const url=await uploadCloudinary(file,'rivo_pdfs');
+    document.getElementById('pdf-'+purchaseId).value=url;
+    if(btn){btn.disabled=false;btn.style.background='#10b981';btn.textContent='✅ Prêt';}
+    toast('PDF uploadé ! Cliquez "Envoyer l\'attestation" pour confirmer.');
+  }catch(e){
+    toast(e.message||'Erreur upload PDF','err');
+    if(btn){btn.disabled=false;btn.textContent='📎 Upload PDF';}
   }
 }
 

@@ -695,12 +695,31 @@ async function confirmPay(){
       customer:{email:CU.email,firstname:CP?.first_name||'',lastname:CP?.last_name||''},
       onComplete:async function(resp){
         if(resp.reason===FedaPay.CHECKOUT_COMPLETED){
-          await sb.from('purchases').update({status:'complete'}).eq('id',pur.id);
-          await loadProfileData();
-          loaded.bord=false; loadBord();
-          toast('Paiement réussi ! 🎉');
+          try{
+            const{error:upErr}=await withTimeout(
+              sb.from('purchases').update({status:'complete'}).eq('id',pur.id)
+            );
+            if(upErr)throw upErr;
+            await loadProfileData();
+            loaded.bord=false;
+            loaded.formations=false;
+            loaded.profil=false;
+            loadBord();
+            if(document.getElementById('tab-formations').classList.contains('active')){
+              loaded.formations=true;
+              loadMesFormations();
+            }
+            if(document.getElementById('tab-profil').classList.contains('active')){
+              loaded.profil=true;
+              loadProfil();
+            }
+            toast('Paiement réussi ! 🎉');
+          }catch(e){
+            console.error('Erreur mise à jour paiement:',e);
+            toast('Paiement reçu mais erreur enregistrement. Contactez le support.','err');
+          }
         }else{
-          await sb.from('purchases').update({status:'rejete'}).eq('id',pur.id);
+          try{await withTimeout(sb.from('purchases').update({status:'rejete'}).eq('id',pur.id));}catch(_){}
           toast('Paiement annulé','err');
         }
       }
@@ -714,13 +733,13 @@ async function confirmPay(){
 
 // ── Dashboard: Mes formations ─────────────────────────
 async function loadMesFormations(){
-  const{data}=await sb.from('purchases').select('*,courses(*)').eq('user_id',CU.id).eq('status','complete').order('purchased_at',{ascending:false});
+  const{data}=await sb.from('purchases').select('*,courses(*)').eq('user_id',CU.id).eq('status','complete').order('created_at',{ascending:false});
   const ps=data||[];
   document.getElementById('myf-count').textContent=`${ps.length} formation${ps.length!==1?'s':''} achetée${ps.length!==1?'s':''}`;
   if(ps.length===0){document.getElementById('myf-grid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#9ca3af"><p style="font-size:1.05rem;margin-bottom:1rem">Aucune formation achetée.</p><button onclick="switchTab(\'bord\')" class="btn-primary">Voir les formations</button></div>';return;}
   document.getElementById('myf-grid').innerHTML=ps.map(p=>{
     const c=p.courses;if(!c)return'';
-    const d=new Date(p.purchased_at).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+    const d=new Date(p.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
     return`<div class="card fade-in" style="padding:1.25rem">
       <div style="display:flex;gap:1rem;margin-bottom:1rem">
         <div style="width:4.5rem;height:4.5rem;flex-shrink:0;background:linear-gradient(135deg,#2563EB,#1D4ED8);border-radius:.875rem;overflow:hidden;display:flex;align-items:center;justify-content:center">
