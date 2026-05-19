@@ -442,56 +442,75 @@ function confirm(title, msg, onOk) {
 
 /* ── Dashboard ────────────────────────────────────────── */
 async function loadDashboard() {
-  const [usersRes, purchasesRes, withdrawalsRes, coursesRes] = await Promise.all([
-    sb.from('profiles').select('id', { count: 'exact', head: true }),
-    sb.from('purchases').select('id,amount', { count: 'exact' }).eq('status','complete'),
-    sb.from('withdrawals').select('id', { count: 'exact', head: true }).eq('status','en_attente'),
-    sb.from('courses').select('id', { count: 'exact', head: true }).eq('is_published', true),
-  ]);
+  try{
+    const [usersRes, purchasesRes, withdrawalsRes, coursesRes] = await Promise.all([
+      withTimeout(sb.from('profiles').select('id', { count: 'exact', head: true })),
+      withTimeout(sb.from('purchases').select('id,amount', { count: 'exact' }).eq('status','complete')),
+      withTimeout(sb.from('withdrawals').select('id', { count: 'exact', head: true }).eq('status','en_attente')),
+      withTimeout(sb.from('courses').select('id', { count: 'exact', head: true }).eq('is_published', true)),
+    ]);
 
-  const revenue = (purchasesRes.data||[]).reduce((s,r) => s + Number(r.amount||0), 0);
+    const revenue = (purchasesRes.data||[]).reduce((s,r) => s + Number(r.amount||0), 0);
 
-  const [{ count: purchaseTotal }, { count: certTotal }] = await Promise.all([
-    sb.from('purchases').select('id', { count:'exact', head:true }).eq('status','complete'),
-    sb.from('certificates').select('id', { count:'exact', head:true }),
-  ]);
-  const pendingCerts = Math.max(0, (purchaseTotal||0) - (certTotal||0));
+    const [{ count: purchaseTotal }, { count: certTotal }] = await Promise.all([
+      withTimeout(sb.from('purchases').select('id', { count:'exact', head:true }).eq('status','complete')),
+      withTimeout(sb.from('certificates').select('id', { count:'exact', head:true })),
+    ]);
+    const pendingCerts = Math.max(0, (purchaseTotal||0) - (certTotal||0));
 
-  document.getElementById('stat-users').textContent = usersRes.count ?? '—';
-  document.getElementById('stat-purchases').textContent = purchasesRes.count ?? '—';
-  document.getElementById('stat-revenue').textContent = revenue.toLocaleString('fr-FR') + ' FCFA';
-  document.getElementById('stat-withdrawals').textContent = withdrawalsRes.count ?? '—';
-  document.getElementById('stat-certs').textContent = pendingCerts;
-  document.getElementById('stat-courses').textContent = coursesRes.count ?? '—';
+    document.getElementById('stat-users').textContent = usersRes.count ?? '—';
+    document.getElementById('stat-purchases').textContent = purchasesRes.count ?? '—';
+    document.getElementById('stat-revenue').textContent = revenue.toLocaleString('fr-FR') + ' FCFA';
+    document.getElementById('stat-withdrawals').textContent = withdrawalsRes.count ?? '—';
+    document.getElementById('stat-certs').textContent = pendingCerts;
+    document.getElementById('stat-courses').textContent = coursesRes.count ?? '—';
 
-  // Recent purchases
-  const { data: rp } = await sb.from('purchases').select('id,amount,currency,created_at,profiles(first_name,last_name),courses(title)').eq('status','complete').order('created_at',{ascending:false}).limit(5);
-  const rpEl = document.getElementById('recent-purchases');
-  if (!rp || rp.length === 0) { rpEl.innerHTML = '<p>Aucun achat récent</p>'; }
-  else rpEl.innerHTML = rp.map(p => `
-    <div class="flex items-center justify-between py-2 border-b border-gray-700 last:border-0">
-      <div>
-        <div class="text-white font-medium">${p.profiles?.first_name||''} ${p.profiles?.last_name||''}</div>
-        <div class="text-xs text-gray-500">${p.courses?.title||'—'}</div>
-      </div>
-      <div class="text-green-400 font-semibold">${(p.amount||0).toLocaleString('fr-FR')} ${p.currency||'XOF'}</div>
-    </div>`).join('');
+    // Recent purchases
+    const { data: rp } = await withTimeout(sb.from('purchases').select('id,amount,currency,purchased_at,user_id,course_id').eq('status','complete').order('purchased_at',{ascending:false}).limit(5));
+    const uids2=[...new Set((rp||[]).map(p=>p.user_id))];
+    const cids2=[...new Set((rp||[]).map(p=>p.course_id))];
+    const [{data:rpProfs},{data:rpCourses}]=uids2.length?await Promise.all([
+      withTimeout(sb.from('profiles').select('id,first_name,last_name').in('id',uids2)),
+      withTimeout(sb.from('courses').select('id,title').in('id',cids2))
+    ]):[{data:[]},{data:[]}];
+    const rpPM=Object.fromEntries((rpProfs||[]).map(p=>[p.id,p]));
+    const rpCM=Object.fromEntries((rpCourses||[]).map(c=>[c.id,c]));
+    const rpEl = document.getElementById('recent-purchases');
+    if (!rp || rp.length === 0) { rpEl.innerHTML = '<p>Aucun achat récent</p>'; }
+    else rpEl.innerHTML = (rp||[]).map(p => `
+      <div class="flex items-center justify-between py-2 border-b border-gray-700 last:border-0">
+        <div>
+          <div class="text-white font-medium">${rpPM[p.user_id]?.first_name||''} ${rpPM[p.user_id]?.last_name||''}</div>
+          <div class="text-xs text-gray-500">${rpCM[p.course_id]?.title||'—'}</div>
+        </div>
+        <div class="text-green-400 font-semibold">${(p.amount||0).toLocaleString('fr-FR')} FCFA</div>
+      </div>`).join('');
 
-  // Recent withdrawals
-  const { data: rw } = await sb.from('withdrawals').select('id,amount,status,method,created_at,profiles(first_name,last_name)').order('created_at',{ascending:false}).limit(5);
-  const rwEl = document.getElementById('recent-withdrawals');
-  if (!rw || rw.length === 0) { rwEl.innerHTML = '<p>Aucun retrait récent</p>'; }
-  else rwEl.innerHTML = rw.map(w => `
-    <div class="flex items-center justify-between py-2 border-b border-gray-700 last:border-0">
-      <div>
-        <div class="text-white font-medium">${w.profiles?.first_name||''} ${w.profiles?.last_name||''}</div>
-        <div class="text-xs text-gray-500">${w.method||'—'}</div>
-      </div>
-      <div class="flex items-center gap-2">
-        <span class="font-semibold text-orange-300">${(w.amount||0).toLocaleString('fr-FR')} FCFA</span>
-        <span class="status-badge status-${w.status}">${w.status}</span>
-      </div>
-    </div>`).join('');
+    // Recent withdrawals
+    const { data: rw } = await withTimeout(sb.from('withdrawals').select('id,amount,status,method,created_at,user_id').order('created_at',{ascending:false}).limit(5));
+    const wuids=[...new Set((rw||[]).map(w=>w.user_id))];
+    const [{data:rwProfs}]=wuids.length?await Promise.all([withTimeout(sb.from('profiles').select('id,first_name,last_name').in('id',wuids))]):[{data:[]}];
+    const rwPM=Object.fromEntries((rwProfs||[]).map(p=>[p.id,p]));
+    const rwEl = document.getElementById('recent-withdrawals');
+    if (!rw || rw.length === 0) { rwEl.innerHTML = '<p>Aucun retrait récent</p>'; }
+    else rwEl.innerHTML = (rw||[]).map(w => `
+      <div class="flex items-center justify-between py-2 border-b border-gray-700 last:border-0">
+        <div>
+          <div class="text-white font-medium">${rwPM[w.user_id]?.first_name||''} ${rwPM[w.user_id]?.last_name||''}</div>
+          <div class="text-xs text-gray-500">${w.method||'—'}</div>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="font-semibold text-orange-300">${(w.amount||0).toLocaleString('fr-FR')} FCFA</span>
+          <span class="status-badge status-${w.status}">${w.status}</span>
+        </div>
+      </div>`).join('');
+  }catch(e){
+    console.error('loadDashboard error:',e?.message||e);
+    ['stat-users','stat-purchases','stat-revenue','stat-withdrawals','stat-certs','stat-courses']
+      .forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—';});
+    const rpEl=document.getElementById('recent-purchases');
+    if(rpEl)rpEl.innerHTML='<p style="color:#ef4444;font-size:.85rem">Erreur de connexion. Vérifiez que votre projet Supabase est actif (non pausé).</p>';
+  }
 }
 
 /* ── Utilisateurs ─────────────────────────────────────── */

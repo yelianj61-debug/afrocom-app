@@ -197,7 +197,10 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
           </button>
           <p id="li-err" style="display:none;color:#dc2626;font-size:.85rem;text-align:center;background:#fef2f2;border:1px solid #fecaca;border-radius:.75rem;padding:.625rem .875rem;margin-top:-.25rem"></p>
         </form>
-        <p style="text-align:center;color:#6b7280;margin-top:1.25rem;font-size:.875rem">
+        <p style="text-align:center;margin-top:.75rem">
+          <button type="button" onclick="forgotPassword()" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:.82rem;text-decoration:underline">Mot de passe oublié ?</button>
+        </p>
+        <p style="text-align:center;color:#6b7280;margin-top:.75rem;font-size:.875rem">
           Pas encore de compte ?
           <button onclick="goTo('register')" style="background:none;border:none;color:#2563EB;font-weight:700;cursor:pointer;font-size:.875rem">S'inscrire gratuitement</button>
         </p>
@@ -515,7 +518,7 @@ async function startApp(){
       history.replaceState({},'',location.pathname);
       if(data?.session){goTo('dashboard');setTimeout(()=>toast('Paiement réussi ! 🎉'),500);}
     }
-  }catch(e){console.error('Init error:',e);}
+  }catch(e){console.warn('Init warning:',e?.message||e);}
   loadFedaPayScript();
 }
 
@@ -555,12 +558,20 @@ function loadFedaPayScript(){
 
 async function loadProfileData(){
   if(!CU?.id)return;
-  const {data:p}=await sb.from('profiles').select('*').eq('id',CU.id).single();
-  CP=p||null;
-  document.getElementById('welcome-h').textContent=p?`Bienvenue ${p.first_name} !!!`:'Bienvenue !!!';
-  document.getElementById('ref-code').textContent=p?.referral_code||'—';
-  document.getElementById('prof-name').textContent=p?`${p.first_name} ${p.last_name}`:'—';
-  document.getElementById('big-av').innerHTML=p?.avatar_url?`<img src="${p.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:9999px"/>`:((p?.first_name?.[0]||'')+(p?.last_name?.[0]||'')).toUpperCase()||'?';
+  try{
+    const {data:p,error}=await withTimeout(sb.from('profiles').select('*').eq('id',CU.id).single());
+    if(error && error.code!=='PGRST116') console.warn('Profile fetch:',error.message);
+    CP=p||null;
+    document.getElementById('welcome-h').textContent=p?`Bienvenue ${p.first_name} !!!`:'Bienvenue !!!';
+    if(p){
+      document.getElementById('ref-code').textContent=p.referral_code||'—';
+      document.getElementById('prof-name').textContent=`${p.first_name} ${p.last_name}`;
+      const av=document.getElementById('big-av');
+      if(av)av.innerHTML=p.avatar_url?`<img src="${p.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:9999px"/>`:((p.first_name?.[0]||'')+(p.last_name?.[0]||'')).toUpperCase()||'?';
+    }
+  }catch(e){
+    console.warn('loadProfileData error:',e?.message||e);
+  }
 }
 
 // ── Login ─────────────────────────────────────────────
@@ -583,6 +594,23 @@ async function doLogin(e){
     setTimeout(()=>{goTo('dashboard');},500);
   }catch(err){
     showErr('li-err',err.message||'Email ou mot de passe incorrect');
+  }finally{
+    setBtn('li-btn','Se connecter',false);
+  }
+}
+
+async function forgotPassword(){
+  const email=document.getElementById('li-email').value.trim();
+  if(!email){showErr('li-err','Entrez votre email, puis cliquez "Mot de passe oublié".');return;}
+  setBtn('li-btn','<span class="spin"></span>',true);
+  try{
+    const{error}=await withTimeout(sb.auth.resetPasswordForEmail(email,
+      {redirectTo:window.location.origin+window.location.pathname}));
+    if(error)throw error;
+    showErr('li-err','');
+    toast('Email de réinitialisation envoyé ! Vérifiez votre boîte mail.');
+  }catch(e){
+    showErr('li-err',e.message||'Erreur envoi email');
   }finally{
     setBtn('li-btn','Se connecter',false);
   }
