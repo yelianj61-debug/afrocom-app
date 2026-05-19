@@ -593,8 +593,12 @@ async function doLogin(e){
     document.getElementById('st-ref').textContent='0';
     Object.keys(loaded).forEach(k=>delete loaded[k]);
     CU=data.user;
-    const{data:p}=await sb.from('profiles').select('badge_level').eq('id',CU.id).single();
-    if(p?.badge_level==='admin'){toast('Connexion admin réussie !');setTimeout(()=>{window.location.href='./rivo-admin.html';},700);return;}
+    let isAdmin=false;
+    try{
+      const{data:p}=await withTimeout(sb.from('profiles').select('badge_level').eq('id',CU.id).single());
+      isAdmin=p?.badge_level==='admin';
+    }catch(e){console.warn('Badge check:',e?.message);}
+    if(isAdmin){toast('Connexion admin réussie !');setTimeout(()=>{window.location.href='./rivo-admin.html';},700);return;}
     await loadProfileData();
     toast('Connexion réussie ! 🎉');
     setTimeout(()=>{goTo('dashboard');},500);
