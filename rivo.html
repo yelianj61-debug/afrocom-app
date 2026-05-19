@@ -485,7 +485,7 @@ function badgeInfo(l){const m={debutant:['🌱','Débutant','#dbeafe','#1d4ed8']
 function togglePwd(id){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';}
 function setBtn(id,html,dis=false){const b=document.getElementById(id);if(b){b.innerHTML=html;b.disabled=dis;}}
 function showErr(id,msg){const el=document.getElementById(id);if(!el)return;el.textContent=msg;el.style.display=msg?'block':'none';}
-function withTimeout(p,ms=15000){return Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('Délai dépassé. Vérifiez votre connexion internet.')),ms))]);}
+function withTimeout(p,ms=25000){return Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('Délai dépassé. Vérifiez votre connexion internet.')),ms))]);}
 
 // ── Navigation ───────────────────────────────────────
 function goTo(p){
@@ -590,7 +590,8 @@ async function doLogin(e){
     toast('Connexion réussie ! 🎉');
     setTimeout(()=>{goTo('dashboard');},500);
   }catch(err){
-    showErr('li-err',err.message||'Email ou mot de passe incorrect');
+    const msg=err.message||'';
+    showErr('li-err',msg.includes('Délai')?'Connexion trop lente. Réessayez dans quelques secondes.':msg||'Email ou mot de passe incorrect');
   }finally{
     setBtn('li-btn','Se connecter',false);
   }
@@ -647,7 +648,8 @@ async function doRegister(e){
     toast('Bienvenue sur RIVO ! 🎉');
     setTimeout(()=>{goTo('dashboard');},600);
   }catch(err){
-    showErr('rg-err',err.message||'Erreur lors de l\'inscription');
+    const msg=err.message||'';
+    showErr('rg-err',msg.includes('Délai')?'Inscription trop lente. Réessayez dans quelques secondes.':msg||'Erreur lors de l\'inscription');
   }finally{
     setBtn('rg-btn','Créer mon compte',false);
   }

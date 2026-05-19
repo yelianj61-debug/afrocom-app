@@ -377,7 +377,7 @@ const SB_URL  = 'https://qwdttzsbbspayojzeugy.supabase.co';
 const SB_ANON = 'sb_publishable_tG64uzNsmT0XDV7pmglqFA_lxQ4xIFm';
 let sb = null;
 
-function withTimeout(p, ms = 15000) {
+function withTimeout(p, ms = 25000) {
   return Promise.race([p, new Promise((_,rej) => setTimeout(() => rej(new Error('Délai dépassé. Vérifiez votre connexion internet.')), ms))]);
 }
 
