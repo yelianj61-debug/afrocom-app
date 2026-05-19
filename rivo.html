@@ -579,19 +579,18 @@ async function doLogin(e){
   try{
     const email=document.getElementById('li-email').value.trim();
     const pwd=document.getElementById('li-pwd').value;
-    const{data,error}=await withTimeout(sb.auth.signInWithPassword({email,password:pwd}));
+    const{data,error}=await sb.auth.signInWithPassword({email,password:pwd});
     if(error)throw error;
     CP=null;
     Object.keys(loaded).forEach(k=>delete loaded[k]);
     CU=data.user;
-    const{data:p}=await withTimeout(sb.from('profiles').select('badge_level').eq('id',CU.id).single());
+    const{data:p}=await sb.from('profiles').select('badge_level').eq('id',CU.id).single();
     if(p?.badge_level==='admin'){toast('Connexion admin réussie !');setTimeout(()=>{window.location.href='./rivo-admin.html';},700);return;}
     await loadProfileData();
     toast('Connexion réussie ! 🎉');
     setTimeout(()=>{goTo('dashboard');},500);
   }catch(err){
-    const msg=err.message||'';
-    showErr('li-err',msg.includes('Délai')?'Connexion trop lente. Réessayez dans quelques secondes.':msg||'Email ou mot de passe incorrect');
+    showErr('li-err',err.message||'Email ou mot de passe incorrect');
   }finally{
     setBtn('li-btn','Se connecter',false);
   }
@@ -636,7 +635,7 @@ async function doRegister(e){
       if(!r)throw new Error('Code de parrainage invalide');
       refId=r.id;
     }
-    const{data:auth,error}=await withTimeout(sb.auth.signUp({email,password:pwd,options:{data:{first_name:fn,last_name:ln}}}));
+    const{data:auth,error}=await sb.auth.signUp({email,password:pwd,options:{data:{first_name:fn,last_name:ln}}});
     if(error)throw error;
     if(auth.user){
       CP=null;
