@@ -477,7 +477,7 @@ function goTo(p){
   window.scrollTo(0,0);
   document.getElementById('bottom-nav').style.display=p==='dashboard'?'flex':'none';
   if(p==='dashboard' && CU){
-    if(!loaded.bord){loaded.bord=true; loadBord();}
+    loadBord();
     if(!loaded.notif){loaded.notif=true; loadNotifications();}
   }
 }
@@ -561,7 +561,7 @@ async function doLogin(e){
     if(p?.badge_level==='admin'){toast('Connexion admin réussie !');setTimeout(()=>{window.location.href='./rivo-admin.html';},700);return;}
     await loadProfileData();
     toast('Connexion réussie ! 🎉');
-    setTimeout(()=>{goTo('dashboard');if(!loaded.bord){loaded.bord=true;loadBord();}},500);
+    setTimeout(()=>{goTo('dashboard');},500);
   }catch(err){
     showErr('li-err',err.message||'Email ou mot de passe incorrect');
   }finally{
@@ -599,7 +599,7 @@ async function doRegister(e){
       await loadProfileData();
     }
     toast('Bienvenue sur RIVO ! 🎉');
-    setTimeout(()=>{goTo('dashboard');if(!loaded.bord){loaded.bord=true;loadBord();}},600);
+    setTimeout(()=>{goTo('dashboard');},600);
   }catch(err){
     showErr('rg-err',err.message||'Erreur lors de l\'inscription');
   }finally{
@@ -634,12 +634,13 @@ async function loadLandingCourses(){
 
 // ── Dashboard: Bord ───────────────────────────────────
 async function loadBord(){
+  if(!CU?.id) return;
   const[{data:cs},{data:ps}]=await Promise.all([
     sb.from('courses').select('*').eq('is_published',true).order('created_at',{ascending:false}),
     sb.from('purchases').select('course_id').eq('user_id',CU.id).eq('status','complete')
   ]);
   const owned=new Set((ps||[]).map(p=>p.course_id));
-  document.getElementById('courses-badge').textContent=`${(cs||[]).length} formation${(cs||[]).length!==1?'s':''}`;
+  document.getElementById('courses-badge').textContent=`${(cs||[]).length} cours au catalogue`;
   if(!cs||cs.length===0){document.getElementById('bord-grid').innerHTML='<p style="grid-column:1/-1;text-align:center;color:#9ca3af;padding:2rem">Aucune formation disponible.</p>';return;}
   document.getElementById('bord-grid').innerHTML=cs.map(c=>{
     const own=owned.has(c.id);
@@ -694,24 +695,24 @@ async function confirmPay(){
       currency:{iso:course.currency||'XOF'},
       customer:{email:CU.email,firstname:CP?.first_name||'',lastname:CP?.last_name||''},
       onComplete:async function(resp){
-        if(resp.reason===FedaPay.CHECKOUT_COMPLETED){
+        const paid=resp.reason===FedaPay.CHECKOUT_COMPLETED
+          ||resp.transaction?.status==='approved'
+          ||resp.transaction?.status==='success';
+        if(paid){
           try{
             const{error:upErr}=await withTimeout(
               sb.from('purchases').update({status:'complete'}).eq('id',pur.id)
             );
             if(upErr)throw upErr;
             await loadProfileData();
-            loaded.bord=false;
             loaded.formations=false;
             loaded.profil=false;
             loadBord();
             if(document.getElementById('tab-formations').classList.contains('active')){
-              loaded.formations=true;
-              loadMesFormations();
+              loaded.formations=true; loadMesFormations();
             }
             if(document.getElementById('tab-profil').classList.contains('active')){
-              loaded.profil=true;
-              loadProfil();
+              loaded.profil=true; loadProfil();
             }
             toast('Paiement réussi ! 🎉');
           }catch(e){
@@ -881,7 +882,9 @@ function switchTab(name){
   const bnav=document.getElementById('bnav-'+name);
   if(bnav)bnav.classList.add('active');
   document.getElementById('notif-panel').style.display='none';
-  if(!loaded[name]){
+  if(name==='bord'){
+    loadBord();
+  } else if(!loaded[name]){
     loaded[name]=true;
     if(name==='formations')loadMesFormations();
     if(name==='attestations')loadAttestations();
