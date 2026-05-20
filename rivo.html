@@ -478,7 +478,7 @@ function toast(msg, type='ok'){
   const el=document.createElement('div');
   el.className=`toast ${type}`;el.textContent=msg;
   document.getElementById('toasts').appendChild(el);
-  setTimeout(()=>el.remove(),4000);
+  setTimeout(()=>el.remove(),40000);
 }
 function fmt(n,c='XOF'){return c==='XOF'?new Intl.NumberFormat('fr-FR').format(n)+' FCFA':new Intl.NumberFormat('fr-FR',{style:'currency',currency:c}).format(n);}
 function badgeInfo(l){const m={debutant:['🌱','Débutant','#dbeafe','#1d4ed8'],bronze:['🥉','Bronze','#fef3c7','#92400e'],argent:['🥈','Argent','#f1f5f9','#475569'],or:['🥇','Or','#fef9c3','#854d0e'],diamant:['💎','Diamant','#dbeafe','#1d4ed8'],admin:['👑','Admin','#ede9fe','#6d28d9']};return m[l]||m.debutant;}
@@ -563,6 +563,8 @@ async function loadProfileData(){
     if(p){
       document.getElementById('ref-code').textContent=p.referral_code||'—';
       document.getElementById('prof-name').textContent=`${p.first_name} ${p.last_name}`;
+      const profEmail=document.getElementById('prof-email');
+      if(profEmail)profEmail.textContent=CU?.email||'—';
       const av=document.getElementById('big-av');
       if(av)av.innerHTML=p.avatar_url?`<img src="${p.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:9999px"/>`:((p.first_name?.[0]||'')+(p.last_name?.[0]||'')).toUpperCase()||'?';
     }
@@ -650,7 +652,23 @@ async function doRegister(e){
       CP=null;
       Object.keys(loaded).forEach(k=>delete loaded[k]);
       await sb.from('profiles').upsert({id:auth.user.id,first_name:fn,last_name:ln,birth_date:birth||null,referred_by:refId||null},{onConflict:'id'});
+      if(!auth.session){
+        toast('Compte créé ! Vérifiez votre boîte mail pour confirmer avant de vous connecter.');
+        setTimeout(()=>{goTo('landing');},2500);
+        return;
+      }
       CU=auth.user;
+      document.getElementById('welcome-h').textContent=`Bienvenue ${fn} !!!`;
+      document.getElementById('prof-name').textContent=`${fn} ${ln}`;
+      const profEmailEl=document.getElementById('prof-email');
+      if(profEmailEl)profEmailEl.textContent=email;
+      document.getElementById('ref-code').textContent='...';
+      const bigAv=document.getElementById('big-av');
+      if(bigAv)bigAv.innerHTML=(fn[0]+ln[0]).toUpperCase();
+      const stF=document.getElementById('st-f');if(stF)stF.textContent='0';
+      const stA=document.getElementById('st-a');if(stA)stA.textContent='0';
+      const stB=document.getElementById('st-b');if(stB)stB.textContent='0 FCFA';
+      const stRef=document.getElementById('st-ref');if(stRef)stRef.textContent='0';
       await loadProfileData();
     }
     toast('Bienvenue sur RIVO ! 🎉');
@@ -820,7 +838,10 @@ async function confirmPay(){
       user_id:CU.id,course_id:course.id,amount:course.price,
       currency:course.currency,status:'en_attente',payment_method:'fedapay'
     }).select().single());
-    if(error)throw new Error('Erreur création commande');
+    if(error){
+      const msg=error.code==='42501'?'Session expirée ou permissions insuffisantes. Reconnectez-vous.':`Erreur création de commande : ${error.message}`;
+      toast(msg,'err');setBtn('pay-btn','Payer maintenant',false);return;
+    }
     closePayModal();
     FedaPay.init({
       public_key:FP_PK,
@@ -890,7 +911,7 @@ async function loadMesFormations(){
         </div>
       </div>
       <div style="display:flex;gap:.625rem">
-        ${c.file_url?`<a href="${c.file_url}" target="_blank" class="btn-primary" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">🔗 Consulter</a><a href="${c.file_url}" target="_blank" class="btn-outline" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">⬇️ Télécharger</a>`:'<div style="flex:1;text-align:center;padding:.5rem;font-size:.82rem;color:#d97706;background:#fef3c7;border-radius:.75rem;font-weight:600">⏳ Fichier bientôt disponible</div>'}
+        ${c.file_url?`<a href="${c.file_url}" target="_blank" class="btn-primary" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">🔗 Consulter</a><a href="${c.file_url}" download target="_blank" class="btn-outline" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">⬇️ Télécharger</a>`:'<div style="flex:1;text-align:center;padding:.5rem;font-size:.82rem;color:#d97706;background:#fef3c7;border-radius:.75rem;font-weight:600">⏳ Fichier bientôt disponible</div>'}
       </div>
     </div>`;
   }).join('');
@@ -914,7 +935,7 @@ async function loadAttestations(){
         </div>
       </div>
       <div style="display:flex;gap:.625rem">
-        ${c.certificate_url?`<a href="${c.certificate_url}" target="_blank" class="btn-primary" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">📄 Voir</a><a href="${c.certificate_url}" target="_blank" class="btn-outline" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">⬇️ PDF</a>`:'<div style="flex:1;text-align:center;padding:.5rem;font-size:.82rem;color:#d97706;background:#fef3c7;border-radius:.75rem;font-weight:600">⏳ En cours de préparation</div>'}
+        ${c.certificate_url?`<a href="${c.certificate_url}" target="_blank" class="btn-primary" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">📄 Voir</a><a href="${c.certificate_url}" download target="_blank" class="btn-outline" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">⬇️ PDF</a>`:'<div style="flex:1;text-align:center;padding:.5rem;font-size:.82rem;color:#d97706;background:#fef3c7;border-radius:.75rem;font-weight:600">⏳ En cours de préparation</div>'}
       </div>
     </div>`;
   }).join('');
@@ -964,7 +985,23 @@ async function loadProfil(){
   document.getElementById('st-ref-gain').textContent=fmt(refCount*1000,'XOF');
 }
 
-function copyRef(){const c=document.getElementById('ref-code').textContent;navigator.clipboard.writeText(c);toast('Code copié !');}
+async function copyRef(){
+  const c=document.getElementById('ref-code').textContent;
+  if(!c||c==='...'||c==='—'){toast('Code non disponible','err');return;}
+  try{
+    await navigator.clipboard.writeText(c);
+    toast('Code copié !');
+  }catch(e){
+    try{
+      const ta=document.createElement('textarea');
+      ta.value=c;ta.style.cssText='position:fixed;opacity:0';
+      document.body.appendChild(ta);ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      toast('Code copié !');
+    }catch(_){toast('Impossible de copier (ouvrez depuis HTTPS)','err');}
+  }
+}
 async function saveBirthDate(val){
   if(!val||!CU?.id)return;
   try{
