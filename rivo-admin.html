@@ -114,9 +114,21 @@
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
         <span class="font-medium">Attestations</span>
       </button>
-      <button onclick="switchTab('messages')" id="tab-messages" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-gray-300 hover:bg-gray-700">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
-        <span class="font-medium">Messages <span id="msg-badge" style="display:none;background:#ef4444;color:white;border-radius:9999px;font-size:.65rem;padding:1px 6px;margin-left:.25rem">●</span></span>
+      <button onclick="switchTab('notifications')" id="tab-notifications" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-gray-300 hover:bg-gray-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        <span class="font-medium">📣 Notifications</span>
+      </button>
+      <button onclick="switchTab('videos')" id="tab-videos" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-gray-300 hover:bg-gray-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+        <span class="font-medium">🎬 Vidéos</span>
+      </button>
+      <button onclick="switchTab('events')" id="tab-events" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-gray-300 hover:bg-gray-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        <span class="font-medium">🏆 Événements</span>
+      </button>
+      <button onclick="switchTab('classement')" id="tab-classement" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-gray-300 hover:bg-gray-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        <span class="font-medium">🏅 Classement</span>
       </button>
     </nav>
 
@@ -264,31 +276,97 @@
       </div>
     </div>
 
-    <!-- ===== MESSAGES TAB ===== -->
-    <div id="page-messages" class="hidden" style="display:none;height:100vh">
-      <div style="display:flex;height:100%">
-        <!-- Conversation list -->
-        <div id="msg-list-panel" style="width:320px;flex-shrink:0;border-right:1px solid #2d2d4e;overflow-y:auto;background:#12122a">
-          <div style="padding:1.5rem 1rem 1rem;border-bottom:1px solid #2d2d4e">
-            <h2 style="font-size:1.1rem;font-weight:700;color:white">💬 Messages Support</h2>
-          </div>
-          <div id="msg-conv-list" style="padding:.5rem">
-            <p style="text-align:center;color:#6b7280;padding:2rem;font-size:.875rem">Chargement…</p>
-          </div>
-        </div>
-        <!-- Conversation detail -->
-        <div id="msg-detail-panel" style="flex:1;display:flex;flex-direction:column;background:#0f0f1a">
-          <div id="msg-detail-header" style="padding:1rem 1.5rem;border-bottom:1px solid #2d2d4e;background:#12122a">
-            <p style="color:#6b7280;font-size:.875rem">Sélectionnez une conversation</p>
-          </div>
-          <div id="msg-detail-history" style="flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.75rem"></div>
-          <div id="msg-reply-zone" style="display:none;padding:1rem;border-top:1px solid #2d2d4e;background:#12122a">
-            <div style="display:flex;gap:.75rem;align-items:flex-end">
-              <textarea id="msg-reply-input" rows="2" placeholder="Répondre en tant que Support RIVO…" style="flex:1;background:#111827;border:1px solid #374151;border-radius:.5rem;padding:.625rem;color:#e2e8f0;font-size:.875rem;resize:none;font-family:inherit;outline:none"></textarea>
-              <button onclick="sendAdminReply()" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:white;border:none;border-radius:.5rem;padding:.625rem 1rem;font-weight:700;cursor:pointer;font-size:.875rem;white-space:nowrap">Envoyer →</button>
+    <!-- ===== NOTIFICATIONS TAB ===== -->
+    <div id="page-notifications" class="p-8 hidden" style="display:none">
+      <div class="mb-6">
+        <h1 class="text-2xl font-bold text-white">📣 Notifications</h1>
+        <p class="text-gray-400 mt-1">Envoyez des notifications aux utilisateurs</p>
+      </div>
+      <div class="card p-6 mb-6">
+        <h2 class="font-semibold text-white mb-4">Nouvelle notification</h2>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm text-gray-400 mb-1">Destinataire (laisser vide pour envoyer à tous)</label>
+            <input type="text" id="notif-search-email" placeholder="Rechercher par email…" class="input" oninput="searchNotifUser()"/>
+            <div id="notif-search-results" style="margin-top:.5rem"></div>
+            <div id="notif-selected-user" style="display:none;background:#1e293b;border-radius:.5rem;padding:.5rem .875rem;margin-top:.5rem;font-size:.875rem;color:#a78bfa;align-items:center;justify-content:space-between">
+              <span id="notif-selected-name">—</span>
+              <button onclick="clearNotifUser()" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:.85rem">✕ Effacer</button>
             </div>
           </div>
+          <div>
+            <label class="block text-sm text-gray-400 mb-1">Titre *</label>
+            <input type="text" id="notif-title" placeholder="Ex: Votre dossier a été traité" class="input"/>
+          </div>
+          <div>
+            <label class="block text-sm text-gray-400 mb-1">Message *</label>
+            <textarea id="notif-message" rows="3" placeholder="Contenu de la notification…" class="input"></textarea>
+          </div>
+          <div style="display:flex;gap:.75rem;flex-wrap:wrap">
+            <button onclick="sendAdminNotification()" class="btn-primary">📣 Envoyer à l'utilisateur sélectionné</button>
+            <button onclick="sendNotifToAll()" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);color:white;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:.5rem">📢 Envoyer à tous</button>
+          </div>
         </div>
+      </div>
+      <div class="card p-6">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+          <h2 class="font-semibold text-white">Historique des notifications envoyées</h2>
+          <button onclick="loaded.notifications=false;loadNotifications_admin()" style="background:#374151;color:#d1d5db;border:none;border-radius:.5rem;padding:.375rem .75rem;cursor:pointer;font-size:.8rem">🔄 Actualiser</button>
+        </div>
+        <div id="notif-history" class="space-y-3">
+          <p class="text-gray-500 text-center py-4">Chargement…</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== VIDEOS TAB ===== -->
+    <div id="page-videos" class="p-8 hidden" style="display:none">
+      <div class="mb-6">
+        <h1 class="text-2xl font-bold text-white">🎬 Vidéos de recommandation</h1>
+        <p class="text-gray-400 mt-1">Examinez les vidéos soumises par les utilisateurs</p>
+      </div>
+      <div id="videos-list" class="space-y-4">
+        <p class="text-gray-500 text-center py-8">Chargement…</p>
+      </div>
+    </div>
+
+    <!-- ===== EVENTS TAB ===== -->
+    <div id="page-events" class="p-8 hidden" style="display:none">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h1 class="text-2xl font-bold text-white">🏆 Événements</h1>
+          <p class="text-gray-400 mt-1">Gérez les événements et récompenses</p>
+        </div>
+        <button onclick="openEventModal(null)" class="btn-primary">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Nouvel événement
+        </button>
+      </div>
+      <div id="events-list" class="space-y-4">
+        <p class="text-gray-500 text-center py-8">Chargement…</p>
+      </div>
+    </div>
+
+    <!-- ===== CLASSEMENT TAB ===== -->
+    <div id="page-classement" class="p-8 hidden" style="display:none">
+      <div class="mb-6">
+        <h1 class="text-2xl font-bold text-white">🏅 Classement</h1>
+        <p class="text-gray-400 mt-1">Utilisateurs classés par points décroissant</p>
+      </div>
+      <div class="card overflow-hidden">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Utilisateur</th>
+              <th>Badge</th>
+              <th>Points</th>
+            </tr>
+          </thead>
+          <tbody id="classement-table">
+            <tr><td colspan="4" class="text-center text-gray-500 py-8">Chargement…</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -383,6 +461,71 @@
   </div>
 </div>
 
+<!-- Event Modal -->
+<div id="event-modal" class="modal-overlay hidden" style="display:none">
+  <div class="modal">
+    <div class="flex items-center justify-between mb-6">
+      <h2 id="event-modal-title" class="text-xl font-bold text-white">Nouvel événement</h2>
+      <button onclick="closeModal('event-modal')" class="text-gray-400 hover:text-white">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form onsubmit="saveEvent(event)" class="space-y-4">
+      <div>
+        <label class="block text-sm text-gray-400 mb-1">Titre *</label>
+        <input id="ev-title" type="text" class="input" required/>
+      </div>
+      <div>
+        <label class="block text-sm text-gray-400 mb-1">Description</label>
+        <textarea id="ev-desc" class="input" rows="3"></textarea>
+      </div>
+      <div>
+        <label class="block text-sm text-gray-400 mb-1">Image URL (optionnel)</label>
+        <input id="ev-image" type="url" placeholder="https://…" class="input"/>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm text-gray-400 mb-1">Date de l'événement</label>
+          <input id="ev-date" type="date" class="input"/>
+        </div>
+        <div>
+          <label class="block text-sm text-gray-400 mb-1">Lieu</label>
+          <input id="ev-location" type="text" class="input"/>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm text-gray-400 mb-1">Récompense</label>
+          <select id="ev-reward" class="input">
+            <option value="">— Choisir —</option>
+            <option value="Visa">Visa</option>
+            <option value="Moto">Moto</option>
+            <option value="Voiture">Voiture</option>
+            <option value="Emploi">Emploi</option>
+            <option value="Voyage">Voyage</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm text-gray-400 mb-1">Points requis</label>
+          <input id="ev-points" type="number" min="0" value="1000" class="input"/>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm text-gray-400 mb-1">Conditions</label>
+        <textarea id="ev-conditions" class="input" rows="2"></textarea>
+      </div>
+      <div class="flex items-center gap-2">
+        <input id="ev-active" type="checkbox" checked class="w-4 h-4 accent-purple-600"/>
+        <label for="ev-active" class="text-sm text-gray-300">Événement actif</label>
+      </div>
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" onclick="closeModal('event-modal')" class="px-4 py-2 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700">Annuler</button>
+        <button type="submit" class="btn-primary">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Toast -->
 <div id="toast" class="fixed bottom-6 right-6 px-4 py-3 rounded-xl shadow-lg text-white text-sm font-medium transform translate-y-16 opacity-0 transition-all duration-300 z-50"></div>
 
@@ -411,24 +554,28 @@ async function doLogout() {
 
 /* ── Tab navigation ───────────────────────────────────── */
 function switchTab(name) {
-  ['dashboard','utilisateurs','formations','retraits','attestations','messages'].forEach(t => {
+  ['dashboard','utilisateurs','formations','retraits','attestations','notifications','videos','events','classement'].forEach(t => {
     const el = document.getElementById('page-' + t);
-    el.classList.add('hidden'); el.style.display = 'none';
-    document.getElementById('tab-' + t).classList.remove('active');
+    if(el){el.classList.add('hidden'); el.style.display = 'none';}
+    const btn = document.getElementById('tab-' + t);
+    if(btn) btn.classList.remove('active');
   });
   const active = document.getElementById('page-' + name);
-  active.classList.remove('hidden');
-  active.style.display = 'block';
-  document.getElementById('tab-' + name).classList.add('active');
+  if(active){active.classList.remove('hidden'); active.style.display = 'block';}
+  const activeBtn = document.getElementById('tab-' + name);
+  if(activeBtn) activeBtn.classList.add('active');
 
   if (!loaded[name]) {
     loaded[name] = true;
-    if (name === 'dashboard')    loadDashboard();
-    if (name === 'utilisateurs') loadUtilisateurs();
-    if (name === 'formations')   loadFormations();
-    if (name === 'retraits')     loadRetraits();
-    if (name === 'attestations') loadAttestations();
-    if (name === 'messages')     loadMessages();
+    if (name === 'dashboard')      loadDashboard();
+    if (name === 'utilisateurs')   loadUtilisateurs();
+    if (name === 'formations')     loadFormations();
+    if (name === 'retraits')       loadRetraits();
+    if (name === 'attestations')   loadAttestations();
+    if (name === 'notifications')  loadNotifications_admin();
+    if (name === 'videos')         loadVideos();
+    if (name === 'events')         loadEvents();
+    if (name === 'classement')     loadClassement();
   }
 }
 
@@ -707,7 +854,6 @@ function openCourseModal(course) {
   document.getElementById('course-price').value = course?.price || '';
   document.getElementById('course-currency').value = course?.currency || 'XOF';
   document.getElementById('course-cover').value = course?.cover_url || '';
-  document.getElementById('course-file').value  = course?.file_url || '';
   document.getElementById('course-file-url').value = course?.file_url || '';
   document.getElementById('course-published').checked = course?.is_published || false;
   document.getElementById('cover-file').value = '';
@@ -961,6 +1107,10 @@ async function sendAttestation(purchaseId, userId, courseId) {
     if (certErr) throw certErr;
 
     toast('Attestation envoyée avec succès !');
+    try{
+      const{data:up}=await sb.from('profiles').select('points').eq('id',userId).single();
+      await sb.from('profiles').update({points:(up?.points||0)+10}).eq('id',userId);
+    }catch(_){}
     document.getElementById('attest-' + purchaseId).remove();
     loaded.dashboard = false;
   } catch(err) {
@@ -969,109 +1119,270 @@ async function sendAttestation(purchaseId, userId, courseId) {
   }
 }
 
-/* ── Messages Support ─────────────────────────────────── */
-let currentMsgUserId = null;
-let currentMsgIds = [];
+/* ── Notifications Admin ──────────────────────────────── */
+let notifSelectedUserId = null;
 
-async function loadMessages() {
-  const convList = document.getElementById('msg-conv-list');
-  convList.innerHTML = '<p style="text-align:center;color:#6b7280;padding:2rem;font-size:.875rem">Chargement…</p>';
-  const { data: msgs } = await sb.from('support_messages')
-    .select('*,profiles(first_name,last_name,email)')
-    .order('created_at', { ascending: false });
-  if (!msgs || msgs.length === 0) {
-    convList.innerHTML = '<p style="text-align:center;color:#6b7280;padding:2rem;font-size:.875rem">Aucun message</p>';
+async function searchNotifUser() {
+  const q = document.getElementById('notif-search-email').value.trim();
+  const results = document.getElementById('notif-search-results');
+  if (q.length < 2) { results.innerHTML = ''; return; }
+  const { data } = await sb.from('profiles').select('id,first_name,last_name,email').ilike('email', `%${q}%`).limit(5);
+  if (!data || data.length === 0) { results.innerHTML = '<p style="font-size:.8rem;color:#9ca3af;padding:.25rem">Aucun résultat</p>'; return; }
+  results.innerHTML = data.map(u => `
+    <div onclick="selectNotifUser('${u.id}','${(u.first_name||'')} ${(u.last_name||'')} (${u.email||''})')" style="padding:.5rem .875rem;cursor:pointer;border-radius:.5rem;font-size:.875rem;color:#e2e8f0;background:#1e293b;margin-bottom:.25rem;transition:background .15s" onmouseover="this.style.background='#334155'" onmouseout="this.style.background='#1e293b'">
+      ${u.first_name||''} ${u.last_name||''} — <span style="color:#9ca3af">${u.email||''}</span>
+    </div>`).join('');
+}
+
+function selectNotifUser(userId, label) {
+  notifSelectedUserId = userId;
+  document.getElementById('notif-selected-name').textContent = label;
+  const sel = document.getElementById('notif-selected-user');
+  sel.style.display = 'flex';
+  document.getElementById('notif-search-results').innerHTML = '';
+  document.getElementById('notif-search-email').value = '';
+}
+
+function clearNotifUser() {
+  notifSelectedUserId = null;
+  document.getElementById('notif-selected-user').style.display = 'none';
+}
+
+async function sendAdminNotification() {
+  const title = document.getElementById('notif-title').value.trim();
+  const message = document.getElementById('notif-message').value.trim();
+  if (!title || !message) { toast('Renseignez le titre et le message.', false); return; }
+  if (!notifSelectedUserId) { toast('Sélectionnez d\'abord un utilisateur ou utilisez "Envoyer à tous".', false); return; }
+  const { error } = await sb.from('notifications').insert({ user_id: notifSelectedUserId, title, message, sender: 'Support RIVO' });
+  if (error) { toast(error.message || 'Erreur', false); return; }
+  toast('Notification envoyée !');
+  document.getElementById('notif-title').value = '';
+  document.getElementById('notif-message').value = '';
+  clearNotifUser();
+  loadNotifHistory();
+}
+
+async function sendNotifToAll() {
+  const title = document.getElementById('notif-title').value.trim();
+  const message = document.getElementById('notif-message').value.trim();
+  if (!title || !message) { toast('Renseignez le titre et le message.', false); return; }
+  const { data: users } = await sb.from('profiles').select('id');
+  if (!users || users.length === 0) { toast('Aucun utilisateur trouvé', false); return; }
+  const rows = users.map(u => ({ user_id: u.id, title, message, sender: 'Support RIVO' }));
+  const { error } = await sb.from('notifications').insert(rows);
+  if (error) { toast(error.message || 'Erreur', false); return; }
+  toast(`Notification envoyée à ${users.length} utilisateur(s) !`);
+  document.getElementById('notif-title').value = '';
+  document.getElementById('notif-message').value = '';
+  clearNotifUser();
+  loadNotifHistory();
+}
+
+async function loadNotifications_admin() {
+  loadNotifHistory();
+}
+
+async function loadNotifHistory() {
+  const container = document.getElementById('notif-history');
+  if (!container) return;
+  container.innerHTML = '<p class="text-gray-500 text-center py-4">Chargement…</p>';
+  const { data } = await sb.from('notifications')
+    .select('id,title,message,created_at,sender,is_read,user_id,profiles(first_name,last_name,email)')
+    .order('created_at', { ascending: false })
+    .limit(50);
+  if (!data || data.length === 0) {
+    container.innerHTML = '<p class="text-gray-500 text-center py-4">Aucune notification envoyée</p>';
     return;
   }
-  // Group by user_id — one entry per user, most recent message first
-  const byUser = {};
-  msgs.forEach(m => {
-    if (!byUser[m.user_id]) byUser[m.user_id] = { profile: m.profiles, msgs: [] };
-    byUser[m.user_id].msgs.push(m);
-  });
-  const unread = msgs.filter(m => !m.is_read_by_admin).map(m => m.user_id);
-  const unreadSet = new Set(unread);
-  const badge = document.getElementById('msg-badge');
-  if (badge) badge.style.display = unreadSet.size > 0 ? 'inline' : 'none';
-
-  convList.innerHTML = Object.entries(byUser).map(([uid, {profile, msgs: um}]) => {
-    const last = um[0];
-    const name = profile ? `${profile.first_name||''} ${profile.last_name||''}`.trim() || profile.email || '?' : '?';
-    const preview = (last.message||'').slice(0, 60) + (last.message?.length > 60 ? '…' : '');
-    const hasUnread = um.some(m => !m.is_read_by_admin);
-    return `<div onclick="openConversation('${uid}')" style="padding:.875rem 1rem;cursor:pointer;border-radius:.5rem;margin-bottom:.25rem;transition:background .15s;${currentMsgUserId===uid?'background:#2d2d4e;':''}" onmouseover="this.style.background='#2d2d4e'" onmouseout="this.style.background='${currentMsgUserId===uid?'#2d2d4e':'transparent'}'">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.2rem">
-        <span style="font-weight:600;color:white;font-size:.875rem">${name}</span>
-        ${hasUnread ? '<span style="background:#ef4444;color:white;border-radius:9999px;font-size:.65rem;padding:1px 6px">Non lu</span>' : ''}
+  container.innerHTML = data.map(n => {
+    const d = new Date(n.created_at).toLocaleDateString('fr-FR', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+    const name = n.profiles ? `${n.profiles.first_name||''} ${n.profiles.last_name||''}`.trim() || n.profiles.email || '?' : '?';
+    return `<div style="background:#1e293b;border-radius:.75rem;padding:1rem;border-left:3px solid ${n.is_read?'#374151':'#7c3aed'}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.4rem">
+        <div style="font-weight:700;color:white;font-size:.9rem">📣 ${n.title}</div>
+        <span style="font-size:.7rem;color:#9ca3af;white-space:nowrap">${d}</span>
       </div>
-      <div style="font-size:.78rem;color:#9ca3af;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${preview}</div>
+      <div style="font-size:.85rem;color:#d1d5db;margin-bottom:.4rem">${n.message}</div>
+      <div style="font-size:.75rem;color:#6b7280">→ ${name} · ${n.is_read ? '✅ Lu' : '⏳ Non lu'}</div>
     </div>`;
   }).join('');
 }
 
-async function openConversation(userId) {
-  currentMsgUserId = userId;
-  const header = document.getElementById('msg-detail-header');
-  const history = document.getElementById('msg-detail-history');
-  const replyZone = document.getElementById('msg-reply-zone');
-  history.innerHTML = '<p style="color:#6b7280;text-align:center;padding:2rem">Chargement…</p>';
-  replyZone.style.display = 'block';
-
-  const { data: msgs } = await sb.from('support_messages')
+/* ── Vidéos de recommandation ─────────────────────────── */
+async function loadVideos() {
+  const container = document.getElementById('videos-list');
+  container.innerHTML = '<p class="text-gray-500 text-center py-8">Chargement…</p>';
+  const { data } = await sb.from('recommendation_videos')
     .select('*,profiles(first_name,last_name,email)')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: true });
-
-  if (!msgs || msgs.length === 0) { history.innerHTML = ''; return; }
-  const p = msgs[0].profiles;
-  const name = p ? `${p.first_name||''} ${p.last_name||''}`.trim() || p.email || '?' : '?';
-  const wa = msgs.find(m => m.whatsapp)?.whatsapp;
-  const email = p?.email || msgs.find(m => m.contact_email)?.contact_email;
-  header.innerHTML = `<div><strong style="color:white">${name}</strong>${wa ? ` · <a href="https://wa.me/${wa.replace(/\D/g,'')}" target="_blank" style="color:#4ade80;font-size:.8rem">📱 ${wa}</a>` : ''}${email ? ` · <span style="color:#9ca3af;font-size:.8rem">${email}</span>` : ''}</div>`;
-
-  history.innerHTML = '';
-  msgs.forEach(m => {
-    const d = new Date(m.created_at).toLocaleDateString('fr-FR', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
-    const msgDiv = document.createElement('div');
-    msgDiv.style.cssText = 'display:flex;flex-direction:column;gap:.5rem';
-    let html = `<div style="align-self:flex-start;max-width:75%;background:#1e293b;border-radius:.75rem .75rem .75rem 0;padding:.625rem .875rem;font-size:.875rem;color:#e2e8f0">`;
-    if (m.photo_url) html += `<img src="${m.photo_url}" style="max-width:200px;border-radius:.5rem;margin-bottom:.25rem;display:block"/>`;
-    html += `${m.message}<div style="font-size:.7rem;color:#6b7280;margin-top:.2rem">${d}</div></div>`;
-    if (m.reply) {
-      const rd = new Date(m.replied_at).toLocaleDateString('fr-FR', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
-      html += `<div style="align-self:flex-end;max-width:75%;background:linear-gradient(135deg,#7c3aed,#6d28d9);border-radius:.75rem .75rem 0 .75rem;padding:.625rem .875rem;font-size:.875rem;color:white">${m.reply}<div style="font-size:.7rem;opacity:.7;margin-top:.2rem;text-align:right">Support RIVO · ${rd}</div></div>`;
-    }
-    msgDiv.innerHTML = html;
-    history.appendChild(msgDiv);
-  });
-  history.scrollTop = history.scrollHeight;
-
-  // Mark all as read by admin
-  const unreadIds = msgs.filter(m => !m.is_read_by_admin).map(m => m.id);
-  if (unreadIds.length > 0) {
-    await sb.from('support_messages').update({ is_read_by_admin: true }).in('id', unreadIds);
-    loadMessages();
+    .eq('status', 'pending')
+    .order('submitted_at', { ascending: false });
+  if (!data || data.length === 0) {
+    container.innerHTML = '<div class="card p-8 text-center text-gray-500">Aucune vidéo en attente de validation</div>';
+    return;
   }
-  currentMsgIds = msgs.map(m => m.id);
+  container.innerHTML = data.map(v => {
+    const d = v.submitted_at ? new Date(v.submitted_at).toLocaleDateString('fr-FR', { day:'numeric', month:'short', year:'numeric' }) : '—';
+    const name = v.profiles ? `${v.profiles.first_name||''} ${v.profiles.last_name||''}`.trim() || v.profiles.email || '?' : '?';
+    return `<div class="card p-5" id="video-${v.id}">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:.75rem">
+        <div>
+          <div style="font-weight:700;color:white">${name}</div>
+          <div style="font-size:.8rem;color:#9ca3af">${v.profiles?.email||'—'} · ${d}</div>
+        </div>
+        <span style="background:#fef3c7;color:#92400e;border-radius:9999px;font-size:.7rem;padding:2px 8px;font-weight:700;white-space:nowrap">En attente</span>
+      </div>
+      <a href="${v.video_url}" target="_blank" style="display:block;background:#111827;border-radius:.5rem;padding:.625rem;color:#60a5fa;font-size:.875rem;text-decoration:none;margin-bottom:.875rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">🎬 ${v.video_url}</a>
+      <div style="display:flex;gap:.75rem">
+        <button onclick="approveVideo('${v.id}','${v.user_id}')" class="btn-success" style="flex:1;padding:.625rem">✅ Approuver (+500 pts)</button>
+        <button onclick="rejectVideo('${v.id}')" class="btn-danger" style="flex:1;padding:.625rem">❌ Rejeter</button>
+      </div>
+    </div>`;
+  }).join('');
 }
 
-async function sendAdminReply() {
-  const input = document.getElementById('msg-reply-input');
-  const reply = input.value.trim();
-  if (!reply || !currentMsgUserId) return;
-  // Reply to the most recent unreplied message, or create standalone if needed
-  const { data: msgs } = await sb.from('support_messages')
-    .select('id,reply').eq('user_id', currentMsgUserId)
-    .order('created_at', { ascending: false });
-  const target = msgs?.find(m => !m.reply) || msgs?.[0];
-  if (!target) { toast('Aucun message trouvé', false); return; }
-  const { error } = await sb.from('support_messages').update({
-    reply, replied_at: new Date().toISOString(), is_read_by_user: false, is_read_by_admin: true
-  }).eq('id', target.id);
-  if (error) { toast(error.message || 'Erreur envoi', false); return; }
-  input.value = '';
-  toast('Réponse envoyée !');
-  await openConversation(currentMsgUserId);
+async function approveVideo(videoId, userId) {
+  const { error } = await sb.from('recommendation_videos')
+    .update({ status: 'approved', reviewed_at: new Date().toISOString() }).eq('id', videoId);
+  if (error) { toast(error.message || 'Erreur', false); return; }
+  const { data: up } = await sb.from('profiles').select('points').eq('id', userId).single();
+  await sb.from('profiles').update({ points: (up?.points||0) + 500 }).eq('id', userId);
+  toast('Vidéo approuvée ! +500 points attribués');
+  loaded.videos = false;
+  loadVideos();
+}
+
+async function rejectVideo(videoId) {
+  const { error } = await sb.from('recommendation_videos')
+    .update({ status: 'rejected', reviewed_at: new Date().toISOString() }).eq('id', videoId);
+  if (error) { toast(error.message || 'Erreur', false); return; }
+  toast('Vidéo rejetée');
+  loaded.videos = false;
+  loadVideos();
+}
+
+/* ── Événements ───────────────────────────────────────── */
+let currentEventId = null;
+
+async function loadEvents() {
+  const container = document.getElementById('events-list');
+  container.innerHTML = '<p class="text-gray-500 text-center py-8">Chargement…</p>';
+  const { data } = await sb.from('events').select('*').order('created_at', { ascending: false });
+  if (!data || data.length === 0) {
+    container.innerHTML = '<div class="card p-8 text-center text-gray-500">Aucun événement créé</div>';
+    return;
+  }
+  container.innerHTML = data.map(ev => {
+    const d = ev.event_date ? new Date(ev.event_date).toLocaleDateString('fr-FR') : '—';
+    return `<div class="card p-5">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:.75rem">
+        <div style="flex:1">
+          <div style="font-weight:700;color:white;font-size:1rem">${ev.title}</div>
+          <div style="font-size:.8rem;color:#9ca3af;margin-top:.25rem">${ev.location||'—'} · ${d} · ${ev.reward||'—'}</div>
+          <div style="font-size:.8rem;color:#a78bfa;margin-top:.2rem">⭐ ${ev.points_required||1000} pts requis</div>
+          ${ev.description ? `<div style="font-size:.85rem;color:#d1d5db;margin-top:.4rem">${ev.description}</div>` : ''}
+          ${ev.conditions ? `<div style="font-size:.8rem;color:#fbbf24;margin-top:.25rem">📋 ${ev.conditions}</div>` : ''}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.5rem;align-items:flex-end;flex-shrink:0">
+          <span style="background:${ev.is_active?'#d1fae5':'#374151'};color:${ev.is_active?'#065f46':'#9ca3af'};border-radius:9999px;font-size:.7rem;padding:2px 8px;font-weight:700">${ev.is_active?'Actif':'Inactif'}</span>
+          ${ev.image_url ? `<img src="${ev.image_url}" style="width:60px;height:40px;object-fit:cover;border-radius:.5rem"/>` : ''}
+        </div>
+      </div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+        <button onclick="openEventModal(${JSON.stringify(ev).replace(/"/g,'&quot;')})" class="btn-primary text-xs">✏️ Modifier</button>
+        <button onclick="deleteEvent('${ev.id}')" class="btn-danger text-xs">🗑️ Supprimer</button>
+        <button onclick="openSelectUserForEvent('${ev.id}')" style="background:#0ea5e9;color:white;border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.8rem;font-weight:600">👤 Sélectionner un utilisateur</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openEventModal(event) {
+  document.getElementById('event-modal-title').textContent = event ? 'Modifier l\'événement' : 'Nouvel événement';
+  currentEventId = event?.id || null;
+  document.getElementById('ev-title').value = event?.title || '';
+  document.getElementById('ev-desc').value = event?.description || '';
+  document.getElementById('ev-image').value = event?.image_url || '';
+  document.getElementById('ev-date').value = event?.event_date || '';
+  document.getElementById('ev-location').value = event?.location || '';
+  document.getElementById('ev-reward').value = event?.reward || '';
+  document.getElementById('ev-points').value = event?.points_required || 1000;
+  document.getElementById('ev-conditions').value = event?.conditions || '';
+  document.getElementById('ev-active').checked = event?.is_active !== false;
+  const mod = document.getElementById('event-modal');
+  mod.classList.remove('hidden'); mod.style.display = 'flex';
+}
+
+async function saveEvent(e) {
+  e.preventDefault();
+  const payload = {
+    title: document.getElementById('ev-title').value.trim(),
+    description: document.getElementById('ev-desc').value.trim() || null,
+    image_url: document.getElementById('ev-image').value.trim() || null,
+    event_date: document.getElementById('ev-date').value || null,
+    location: document.getElementById('ev-location').value.trim() || null,
+    reward: document.getElementById('ev-reward').value.trim() || null,
+    points_required: parseInt(document.getElementById('ev-points').value) || 1000,
+    conditions: document.getElementById('ev-conditions').value.trim() || null,
+    is_active: document.getElementById('ev-active').checked,
+  };
+  if (!payload.title) { toast('Titre obligatoire', false); return; }
+  let error;
+  if (currentEventId) {
+    ({ error } = await sb.from('events').update(payload).eq('id', currentEventId));
+  } else {
+    ({ error } = await sb.from('events').insert(payload));
+  }
+  if (error) { toast(error.message || 'Erreur', false); return; }
+  closeModal('event-modal');
+  toast(currentEventId ? 'Événement mis à jour !' : 'Événement créé !');
+  loaded.events = false;
+  loadEvents();
+}
+
+function deleteEvent(id) {
+  confirm('Supprimer l\'événement', 'Cette action est irréversible.', async () => {
+    const { error } = await sb.from('events').delete().eq('id', id);
+    if (error) { toast(error.message, false); return; }
+    toast('Événement supprimé');
+    loaded.events = false;
+    loadEvents();
+  });
+}
+
+async function openSelectUserForEvent(eventId) {
+  const email = prompt('Entrez l\'email de l\'utilisateur à sélectionner pour cet événement :');
+  if (!email) return;
+  const { data: users } = await sb.from('profiles').select('id,first_name,last_name,email').ilike('email', `%${email}%`).limit(1);
+  if (!users || users.length === 0) { toast('Utilisateur non trouvé', false); return; }
+  const user = users[0];
+  const { error } = await sb.from('user_events').insert({ user_id: user.id, event_id: eventId });
+  if (error) { toast(error.message || 'Erreur', false); return; }
+  toast(`${user.first_name||''} ${user.last_name||''} sélectionné pour cet événement !`);
+}
+
+/* ── Classement ───────────────────────────────────────── */
+async function loadClassement() {
+  const tb = document.getElementById('classement-table');
+  const { data } = await sb.from('profiles')
+    .select('id,first_name,last_name,email,points,badge_level')
+    .order('points', { ascending: false })
+    .limit(100);
+  if (!data || data.length === 0) {
+    tb.innerHTML = '<tr><td colspan="4" class="text-center text-gray-500 py-8">Aucun utilisateur</td></tr>';
+    return;
+  }
+  tb.innerHTML = data.map((u, i) => {
+    const rank = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i+1}`;
+    return `<tr>
+      <td style="font-weight:700;font-size:1rem">${rank}</td>
+      <td>
+        <div class="font-medium text-white">${u.first_name||''} ${u.last_name||''}</div>
+        <div class="text-xs text-gray-500">${u.email||''}</div>
+      </td>
+      <td><span class="${badgeClass(u.badge_level)}">${badgeLabel(u.badge_level)}</span></td>
+      <td style="color:#f59e0b;font-weight:700">${(u.points||0).toLocaleString('fr-FR')} pts</td>
+    </tr>`;
+  }).join('');
 }
 
 /* ── Dynamic CDN loader with fallback ────────────────── */

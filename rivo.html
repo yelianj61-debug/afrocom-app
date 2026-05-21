@@ -288,7 +288,7 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
         <button onclick="goTo('notifs')" style="background:none;border:none;cursor:pointer;font-size:1.4rem;padding:.25rem;line-height:1">🔔</button>
         <span id="notif-badge" style="display:none;position:absolute;top:-2px;right:-2px;background:#ef4444;color:white;font-size:.6rem;font-weight:800;min-width:1rem;height:1rem;border-radius:9999px;align-items:center;justify-content:center;padding:0 .2rem">0</span>
       </div>
-      <button onclick="openSupport()" style="background:none;border:1px solid #bfdbfe;cursor:pointer;font-size:.8rem;color:#2563EB;font-weight:600;padding:.35rem .75rem;border-radius:.5rem">📞 Support</button>
+      <button onclick="document.getElementById('support-modal').style.display='flex'" style="background:none;border:1px solid #bfdbfe;cursor:pointer;font-size:.8rem;color:#2563EB;font-weight:600;padding:.35rem .75rem;border-radius:.5rem">📞 Support</button>
       <button onclick="doLogout()" style="background:none;border:none;cursor:pointer;font-size:.8rem;color:#ef4444;font-weight:600;padding:.35rem .75rem;border-radius:.5rem;border:1px solid #fecaca">Déco.</button>
     </div>
   </header>
@@ -297,7 +297,7 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
   <div id="notif-panel" style="display:none;position:fixed;top:3.5rem;right:.75rem;width:min(320px,calc(100vw - 1.5rem));background:white;border-radius:1rem;box-shadow:0 8px 32px rgba(0,0,0,.18);z-index:200;max-height:400px;overflow-y:auto;border:1px solid #e5e7eb">
     <div style="padding:1rem;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center">
       <span style="font-weight:700;color:#1F2937;font-size:.95rem">Notifications</span>
-      <button onclick="clearNotifications()" style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:.8rem">Tout lire</button>
+      <button onclick="clearNotifications()" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:.8rem;font-weight:600">🗑️ Supprimer tout</button>
     </div>
     <div id="notif-list" style="padding:.5rem"></div>
   </div>
@@ -370,17 +370,26 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
             <div class="card" style="padding:1.25rem;text-align:center"><div id="st-f" style="font-size:2rem;font-weight:900;color:#2563EB">0</div><div style="color:#6b7280;font-size:.8rem;margin-top:.2rem">Formations achetées</div></div>
             <div class="card" style="padding:1.25rem;text-align:center"><div id="st-a" style="font-size:2rem;font-weight:900;color:#F59E0B">0</div><div style="color:#6b7280;font-size:.8rem;margin-top:.2rem">Attestations</div></div>
             <div class="card" style="padding:1.25rem;text-align:center"><div id="st-b" style="font-size:1.3rem;font-weight:900;color:#10b981">0 FCFA</div><div style="color:#6b7280;font-size:.8rem;margin-top:.2rem">Solde</div></div>
-            <div class="card" style="padding:1.25rem;text-align:center"><div id="st-ref" style="font-size:2rem;font-weight:900;color:#8b5cf6">0</div><div style="color:#6b7280;font-size:.8rem;margin-top:.2rem">Filleuls actifs</div></div>
+            <div class="card" style="padding:1.25rem;text-align:center"><div id="st-pts" style="font-size:1.6rem;font-weight:900;color:#f59e0b">0</div><div style="color:#6b7280;font-size:.8rem;margin-top:.2rem">⭐ Mes points</div></div>
           </div>
         </div>
 
-        <!-- Gains parrainage -->
-        <div class="card" style="padding:1.25rem;display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
-          <div>
-            <div style="font-weight:700;color:#1F2937">Gains de parrainage</div>
-            <div style="font-size:.8rem;color:#6b7280">1 000 FCFA × filleuls ayant acheté</div>
+        <!-- Mes points barre de progression -->
+        <div class="card" style="padding:1.25rem;margin-bottom:1.25rem">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem">
+            <div style="font-weight:700;color:#1F2937">⭐ Mes points</div>
+            <div id="prof-points" style="font-size:1.1rem;font-weight:900;color:#f59e0b">0 pts</div>
           </div>
-          <div id="st-ref-gain" style="font-size:1.3rem;font-weight:900;color:#10b981">0 FCFA</div>
+          <div style="background:#f1f5f9;border-radius:9999px;height:.625rem;overflow:hidden">
+            <div id="prof-points-bar" style="height:100%;background:linear-gradient(90deg,#f59e0b,#ef4444);border-radius:9999px;transition:width .5s;width:0%"></div>
+          </div>
+          <div id="prof-points-label" style="font-size:.75rem;color:#9ca3af;margin-top:.4rem;text-align:right">0 / 1000 pts pour accéder aux événements</div>
+        </div>
+
+        <!-- Boutons Récompenses + Vidéo -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.5rem">
+          <button onclick="openRecompenses()" style="background:linear-gradient(135deg,#f59e0b,#ef4444);color:white;border:none;border-radius:.875rem;padding:.875rem;font-weight:700;cursor:pointer;font-size:.85rem">🎁 Récompenses</button>
+          <button onclick="document.getElementById('video-modal').style.display='flex'" style="background:linear-gradient(135deg,#7c3aed,#4f46e5);color:white;border:none;border-radius:.875rem;padding:.875rem;font-weight:700;cursor:pointer;font-size:.85rem">🎬 Soumettre vidéo</button>
         </div>
 
         <!-- Informations personnelles (lecture seule) -->
@@ -466,7 +475,7 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
   <header style="position:sticky;top:0;z-index:30;background:white;border-bottom:1px solid #f1f5f9;padding:.75rem 1rem;display:flex;justify-content:space-between;align-items:center">
     <button onclick="goTo('dashboard')" style="background:none;border:none;cursor:pointer;font-size:.95rem;color:#2563EB;font-weight:700;padding:.35rem .75rem;border-radius:.5rem;border:1px solid #bfdbfe">← Fermer</button>
     <span style="font-size:1rem;font-weight:900;color:#1F2937">Mes notifications</span>
-    <button onclick="clearNotifications()" style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:.8rem">Tout lire</button>
+    <button onclick="clearNotifications()" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:.8rem;font-weight:600">🗑️ Supprimer tout</button>
   </header>
   <div style="padding:1rem;max-width:600px;margin:0 auto">
     <div id="notif-page-list"></div>
@@ -618,8 +627,14 @@ async function loadProfileData(){
     const profEmail=document.getElementById('prof-email');
     if(profEmail)profEmail.textContent=email;
     document.getElementById('st-b').textContent=solde;
+    const pts=p.points||0;
+    const ptsEl=document.getElementById('st-pts');if(ptsEl)ptsEl.textContent=pts;
+    const profPts=document.getElementById('prof-points');if(profPts)profPts.textContent=pts+' pts';
+    const bar=document.getElementById('prof-points-bar');if(bar)bar.style.width=Math.min(100,pts/10)+'%';
+    const lbl=document.getElementById('prof-points-label');if(lbl)lbl.textContent=`${pts} / 1000 pts pour accéder aux événements`;
     const pb=document.getElementById('prof-badge');
     if(pb){pb.textContent=`${ic} ${lb}`;pb.style.background=bg;pb.style.color=co;}
+    checkDailyLogin();
     // BUG 2 FIX: remplir TOUS les champs du profil pour ne jamais laisser "..."
     const infoName=document.getElementById('info-name');if(infoName)infoName.textContent=fullName;
     const infoEmail=document.getElementById('info-email');if(infoEmail)infoEmail.textContent=email;
@@ -658,7 +673,7 @@ async function doLogin(e){
     document.getElementById('st-f').textContent='0';
     document.getElementById('st-a').textContent='0';
     document.getElementById('st-b').textContent='0 FCFA';
-    document.getElementById('st-ref').textContent='0';
+    document.getElementById('st-pts').textContent='0';
     Object.keys(loaded).forEach(k=>delete loaded[k]);
     CU=data.user;
     const{data:p}=await sb.from('profiles').select('badge_level').eq('id',CU.id).single();
@@ -764,7 +779,7 @@ async function doLogout(){
   document.getElementById('st-f').textContent='0';
   document.getElementById('st-a').textContent='0';
   document.getElementById('st-b').textContent='0 FCFA';
-  document.getElementById('st-ref').textContent='0';
+  document.getElementById('st-pts').textContent='0';
   goTo('landing');
 }
 
@@ -853,8 +868,12 @@ async function confirmPay(){
       }).select().single());
       if(error)throw new Error('Erreur création commande test');
       closePayModal();
+      try{await addPoints(CU.id,10);}catch(_){}
       if(CP?.referred_by){
-        try{const{data:par}=await sb.from('profiles').select('balance').eq('id',CP.referred_by).single();await sb.from('profiles').update({balance:(par?.balance||0)+1000}).eq('id',CP.referred_by);}catch(_){}
+        try{
+          const{data:par}=await sb.from('profiles').select('balance,points').eq('id',CP.referred_by).single();
+          await sb.from('profiles').update({balance:(par?.balance||0)+1000,points:(par?.points||0)+20}).eq('id',CP.referred_by);
+        }catch(_){}
       }
       await loadProfileData();
       loaded.formations=false;
@@ -911,8 +930,12 @@ async function confirmPay(){
               sb.from('purchases').update({status:'complete'}).eq('id',pur.id)
             );
             if(upErr)throw upErr;
+            try{await addPoints(CU.id,10);}catch(_){}
             if(CP?.referred_by){
-              try{const{data:par}=await sb.from('profiles').select('balance').eq('id',CP.referred_by).single();await sb.from('profiles').update({balance:(par?.balance||0)+1000}).eq('id',CP.referred_by);}catch(_){}
+              try{
+                const{data:par}=await sb.from('profiles').select('balance,points').eq('id',CP.referred_by).single();
+                await sb.from('profiles').update({balance:(par?.balance||0)+1000,points:(par?.points||0)+20}).eq('id',CP.referred_by);
+              }catch(_){}
             }
             await loadProfileData();
             loaded.formations=false;
@@ -1043,7 +1066,7 @@ async function loadProfil(){
     document.getElementById('st-f').textContent=fc||0;
     document.getElementById('st-a').textContent=ac||0;
     const refCount=(filleuls||[]).length;
-    document.getElementById('st-ref').textContent=refCount;
+    document.getElementById('st-pts').textContent=refCount;
     const stRefGain=document.getElementById('st-ref-gain');
     if(stRefGain)stRefGain.textContent=fmt(refCount*1000,'XOF');
   }catch(e){
@@ -1170,34 +1193,38 @@ async function loadNotifications(){
   const coursesKey=`rivo_courses_last_${CU.id}`;
   const certLast=localStorage.getItem(certKey)||'2020-01-01T00:00:00Z';
   const coursesLast=localStorage.getItem(coursesKey)||'2020-01-01T00:00:00Z';
-  const [{data:newCerts},{data:newCourses},{data:supportReplies}]=await Promise.all([
+  const [{data:newCerts},{data:newCourses},{data:adminNotifs}]=await Promise.all([
     sb.from('certificates').select('issued_at,courses(title)').eq('user_id',CU.id).gt('issued_at',certLast).order('issued_at',{ascending:false}),
     sb.from('courses').select('title,created_at').eq('is_published',true).gt('created_at',coursesLast).order('created_at',{ascending:false}),
-    sb.from('support_messages').select('id,replied_at').eq('user_id',CU.id).not('reply','is',null).eq('is_read_by_user',false)
+    sb.from('notifications').select('id,title,message,created_at,sender').eq('user_id',CU.id).eq('is_read',false).order('created_at',{ascending:false})
   ]);
   let items=[];
   // Type A: Attestations
   (newCerts||[]).forEach(c=>{
     const d=new Date(c.issued_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
     const title=c.courses?.title||'une formation';
-    items.push({ts:c.issued_at,html:`<div style="padding:.75rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.875rem;background:#fef9c3"><span style="font-weight:700">🏆 Attestation disponible</span> pour <em>${title}</em><div style="font-size:.75rem;color:#92400e;margin-top:.2rem">${d} · Consultez l'onglet <strong>Attests.</strong></div></div>`});
+    items.push({ts:c.issued_at,summary:`🏆 Attestation disponible pour ${title}`,detail:`Attestation disponible pour <em>${title}</em> · ${d} · Consultez l'onglet Attests.`,bg:'#fef9c3',col:'#92400e'});
   });
   if(newCerts?.length>0)localStorage.setItem(certKey,newCerts[0].issued_at);
   // Type B: Nouvelles formations publiées
   (newCourses||[]).forEach(c=>{
     const d=new Date(c.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
-    items.push({ts:c.created_at,html:`<div style="padding:.75rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.875rem;background:#eff6ff"><span style="font-weight:700">📚 Nouvelle formation disponible</span> : <em>${c.title}</em><div style="font-size:.75rem;color:#1d4ed8;margin-top:.2rem">${d} · Consultez l'onglet <strong>Formations</strong></div></div>`});
+    items.push({ts:c.created_at,summary:`📚 Nouvelle formation : ${c.title}`,detail:`Nouvelle formation disponible : <em>${c.title}</em> · ${d} · Consultez l'onglet Formations`,bg:'#eff6ff',col:'#1d4ed8'});
   });
   localStorage.setItem(coursesKey,new Date().toISOString());
-  // Type C: Réponse du support
-  if(supportReplies?.length>0){
-    items.push({ts:new Date().toISOString(),html:`<div style="padding:.75rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.875rem;background:#f5f3ff"><span style="font-weight:700">💬 Réponse du support reçue</span><div style="font-size:.75rem;color:#7c3aed;margin-top:.2rem">Consultez 📞 Support</div></div>`});
-    await sb.from('support_messages').update({is_read_by_user:true}).eq('user_id',CU.id).not('reply','is',null).eq('is_read_by_user',false);
+  // Type D: Notifications admin
+  (adminNotifs||[]).forEach(n=>{
+    const d=new Date(n.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+    items.push({ts:n.created_at,summary:`📣 ${n.title}`,detail:`<strong>${n.title}</strong><br>${n.message}<div style="font-size:.7rem;color:#6b7280;margin-top:.35rem">${n.sender||'Support RIVO'} · ${d}</div>`,bg:'#f0fdf4',col:'#166534'});
+  });
+  if(adminNotifs?.length>0){
+    await sb.from('notifications').update({is_read:true}).eq('user_id',CU.id).eq('is_read',false);
   }
   const total=items.length;
   if(total>0){badge.textContent=total;badge.style.display='flex';}else{badge.style.display='none';}
-  if(total===0){list.innerHTML='<p style="padding:1rem;text-align:center;color:#9ca3af;font-size:.875rem">Aucune nouvelle notification</p>';}
-  else{list.innerHTML=items.map(i=>i.html).join('');}
+  const emptyMsg='<p style="padding:1rem;text-align:center;color:#9ca3af;font-size:.875rem">Aucune nouvelle notification</p>';
+  if(total===0){list.innerHTML=emptyMsg;}
+  else{list.innerHTML=items.map(it=>`<div style="padding:.75rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.875rem;background:${it.bg};cursor:pointer" onclick="this.nextElementSibling&&(this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none')"><span style="font-weight:700;color:${it.col}">${it.summary}</span></div><div style="display:none;padding:.5rem 1rem 1rem;font-size:.85rem;color:${it.col};background:${it.bg};border-bottom:1px solid #f1f5f9">${it.detail}</div>`).join('');}
   const pageList=document.getElementById('notif-page-list');
   if(!pageList)return;
   if(total===0){pageList.innerHTML='<p style="text-align:center;color:#9ca3af;padding:2rem;font-size:.95rem">Aucune nouvelle notification</p>';return;}
@@ -1205,9 +1232,8 @@ async function loadNotifications(){
   items.forEach(item=>{
     const wrapper=document.createElement('div');
     wrapper.style.cssText='margin-bottom:.75rem;border-radius:1rem;overflow:hidden;background:white;box-shadow:0 2px 8px rgba(0,0,0,.07)';
-    wrapper.innerHTML=item.html;
+    wrapper.innerHTML=`<div style="padding:.875rem 1rem;background:${item.bg};cursor:pointer;font-size:.875rem;font-weight:700;color:${item.col}" onclick="const d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none'">${item.summary}</div><div style="display:none;padding:.75rem 1rem;font-size:.875rem;color:${item.col};background:${item.bg}">${item.detail}</div>`;
     pageList.appendChild(wrapper);
-    setTimeout(()=>{wrapper.style.transition='opacity .5s';wrapper.style.opacity='0';setTimeout(()=>wrapper.remove(),500);},8000);
   });
 }
 
@@ -1226,141 +1252,121 @@ function clearNotifications(){
     const now=new Date().toISOString();
     localStorage.setItem(`rivo_cert_last_${CU.id}`,now);
     localStorage.setItem(`rivo_courses_last_${CU.id}`,now);
+    sb.from('notifications').update({is_read:true}).eq('user_id',CU.id).eq('is_read',false).then(()=>{});
   }
   delete loaded.notif;
   document.getElementById('notif-badge').style.display='none';
-  const msg='<p style="padding:1rem;text-align:center;color:#9ca3af;font-size:.875rem">Tout lu ✓</p>';
+  const msg='<p style="padding:1rem;text-align:center;color:#9ca3af;font-size:.875rem">Tout supprimé ✓</p>';
   document.getElementById('notif-list').innerHTML=msg;
   const pl=document.getElementById('notif-page-list');if(pl)pl.innerHTML=msg;
 }
 
-// ── Support Panel ─────────────────────────────────────
-let supportPhotoFile=null;
-let supportLastMsgId=null;
-
-function openSupport(){
-  const panel=document.getElementById('support-panel');
-  panel.style.display='flex';
-  if(CU)loadSupportMessages();
+// ── Gamification ──────────────────────────────────────
+async function checkDailyLogin(){
+  if(!CU||!CP)return;
+  const today=new Date().toISOString().split('T')[0];
+  if(CP.last_login_date===today)return;
+  const newPts=(CP.points||0)+5;
+  await sb.from('profiles').update({points:newPts,last_login_date:today}).eq('id',CU.id);
+  CP.points=newPts; CP.last_login_date=today;
+  const ptsEl=document.getElementById('st-pts');if(ptsEl)ptsEl.textContent=newPts;
+  const profPts=document.getElementById('prof-points');if(profPts)profPts.textContent=newPts+' pts';
+  const bar=document.getElementById('prof-points-bar');if(bar)bar.style.width=Math.min(100,newPts/10)+'%';
+  const lbl=document.getElementById('prof-points-label');if(lbl)lbl.textContent=`${newPts} / 1000 pts pour accéder aux événements`;
 }
 
-function closeSupport(){
-  document.getElementById('support-panel').style.display='none';
+async function addPoints(uid, amount){
+  const {data:p}=await sb.from('profiles').select('points').eq('id',uid).single();
+  await sb.from('profiles').update({points:(p?.points||0)+amount}).eq('id',uid);
+  if(uid===CU?.id && CP){CP.points=(p?.points||0)+amount;}
 }
 
-async function loadSupportMessages(){
-  const hist=document.getElementById('support-history');
-  hist.innerHTML='<p style="text-align:center;color:#9ca3af;font-size:.8rem;padding:.5rem">Chargement...</p>';
-  const {data:msgs}=await sb.from('support_messages').select('*').eq('user_id',CU.id).order('created_at',{ascending:true});
-  if(!msgs||msgs.length===0){
-    hist.innerHTML='<p style="text-align:center;color:#9ca3af;font-size:.8rem;padding:1rem">Aucun message. Posez votre question !</p>';
-    return;
-  }
-  hist.innerHTML='';
-  msgs.forEach(m=>{
-    const msgDiv=document.createElement('div');
-    msgDiv.style.cssText='display:flex;flex-direction:column;gap:.25rem';
-    const d=new Date(m.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
-    let html=`<div style="align-self:flex-end;max-width:80%;background:#2563eb;color:white;border-radius:.75rem .75rem 0 .75rem;padding:.5rem .75rem;font-size:.85rem">`;
-    if(m.photo_url)html+=`<img src="${m.photo_url}" style="max-width:100%;border-radius:.5rem;margin-bottom:.25rem;display:block"/>`;
-    html+=`${m.message}<div style="font-size:.7rem;opacity:.7;text-align:right;margin-top:.2rem">${d}</div></div>`;
-    if(m.reply){
-      const rd=new Date(m.replied_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
-      html+=`<div style="align-self:flex-start;max-width:80%;background:#f1f5f9;border-radius:.75rem .75rem .75rem 0;padding:.5rem .75rem;font-size:.85rem;color:#1f2937">${m.reply}<div style="font-size:.7rem;color:#94a3b8;margin-top:.2rem">Support RIVO · ${rd}</div></div>`;
-    }
-    msgDiv.innerHTML=html;
-    hist.appendChild(msgDiv);
-  });
-  hist.scrollTop=hist.scrollHeight;
+async function openRecompenses(){
+  document.getElementById('recompenses-modal').style.display='flex';
+  loadRecompensesTab('events');
 }
 
-function handleSupportPhoto(input){
-  if(!input.files[0])return;
-  supportPhotoFile=input.files[0];
-  const img=document.getElementById('support-photo-img');
-  img.src=URL.createObjectURL(supportPhotoFile);
-  document.getElementById('support-photo-preview').style.display='block';
-}
-
-function clearSupportPhoto(){
-  supportPhotoFile=null;
-  document.getElementById('support-photo-input').value='';
-  document.getElementById('support-photo-preview').style.display='none';
-}
-
-async function sendSupportMessage(){
-  if(!CU){toast('Connectez-vous pour envoyer un message.','err');return;}
-  const input=document.getElementById('support-input');
-  const text=input.value.trim();
-  if(!text){toast('Écrivez un message.','err');return;}
-  let photoUrl=null;
-  if(supportPhotoFile){
-    try{
-      const fd=new FormData();
-      fd.append('file',supportPhotoFile);
-      fd.append('upload_preset','afrotv_images');
-      const r=await fetch('https://api.cloudinary.com/v1_1/dx0dzt35e/image/upload',{method:'POST',body:fd});
-      const j=await r.json();
-      photoUrl=j.secure_url||null;
-    }catch(e){console.warn('Photo upload failed',e);}
-  }
-  const {data:inserted,error}=await sb.from('support_messages').insert({user_id:CU.id,message:text,photo_url:photoUrl}).select().single();
-  if(error){toast('Erreur envoi. Réessayez.','err');return;}
-  supportLastMsgId=inserted.id;
-  input.value='';
-  clearSupportPhoto();
-  await loadSupportMessages();
-  if(!localStorage.getItem(`rivo_support_info_${CU.id}`)){
-    const modal=document.getElementById('support-contact-modal');
-    modal.style.display='flex';
+async function loadRecompensesTab(tab){
+  document.getElementById('r-tab-events').style.fontWeight=tab==='events'?'700':'500';
+  document.getElementById('r-tab-mine').style.fontWeight=tab==='mine'?'700':'500';
+  document.getElementById('r-tab-events').style.borderBottom=tab==='events'?'2px solid #f59e0b':'2px solid transparent';
+  document.getElementById('r-tab-mine').style.borderBottom=tab==='mine'?'2px solid #f59e0b':'2px solid transparent';
+  const cont=document.getElementById('recompenses-content');
+  cont.innerHTML='<p style="text-align:center;color:#9ca3af;padding:2rem">Chargement...</p>';
+  if(tab==='events'){
+    const {data:evts}=await sb.from('events').select('*').eq('is_active',true).order('created_at',{ascending:false});
+    if(!evts||evts.length===0){cont.innerHTML='<p style="text-align:center;color:#9ca3af;padding:2rem">Aucun événement disponible pour le moment.</p>';return;}
+    const myPts=CP?.points||0;
+    cont.innerHTML=(evts||[]).map(e=>{
+      const eligible=myPts>=(e.points_required||1000);
+      const d=e.event_date?new Date(e.event_date).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}):'—';
+      return `<div style="background:white;border-radius:1rem;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08);margin-bottom:1rem">${e.image_url?`<img src="${e.image_url}" style="width:100%;height:140px;object-fit:cover"/>`:''}<div style="padding:1rem"><div style="font-weight:800;font-size:1rem;margin-bottom:.35rem">${e.title}</div>${e.description?`<p style="font-size:.85rem;color:#6b7280;margin-bottom:.75rem">${e.description}</p>`:''}<div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem"><span style="background:#fef3c7;color:#92400e;border-radius:9999px;padding:.2rem .75rem;font-size:.75rem;font-weight:700">🎁 ${e.reward||'Récompense'}</span>${e.location?`<span style="background:#eff6ff;color:#1d4ed8;border-radius:9999px;padding:.2rem .75rem;font-size:.75rem">📍 ${e.location}</span>`:''}<span style="background:#f0fdf4;color:#166534;border-radius:9999px;padding:.2rem .75rem;font-size:.75rem">📅 ${d}</span></div>${e.conditions?`<div style="font-size:.8rem;color:#6b7280;margin-bottom:.75rem">Conditions : ${e.conditions}</div>`:''}<div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:.85rem;color:#f59e0b;font-weight:700">⭐ ${e.points_required||1000} pts requis</span>${eligible?'<span style="background:#d1fae5;color:#065f46;border-radius:9999px;padding:.3rem .875rem;font-size:.8rem;font-weight:700">✅ Éligible</span>':`<span style="background:#fee2e2;color:#991b1b;border-radius:9999px;padding:.3rem .875rem;font-size:.8rem;font-weight:600">${(e.points_required||1000)-myPts} pts manquants</span>`}</div></div></div>`;
+    }).join('');
+  }else{
+    if(!CU)return;
+    const {data:ue}=await sb.from('user_events').select('*,events(title,reward,event_date,location,image_url)').eq('user_id',CU.id).order('selected_at',{ascending:false});
+    if(!ue||ue.length===0){cont.innerHTML='<p style="text-align:center;color:#9ca3af;padding:2rem">Vous n\'avez pas encore été sélectionné pour un événement.</p>';return;}
+    cont.innerHTML=(ue||[]).map(u=>{
+      const e=u.events||{};
+      const d=e.event_date?new Date(e.event_date).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}):'—';
+      return `<div style="background:white;border-radius:1rem;padding:1rem;box-shadow:0 2px 8px rgba(0,0,0,.07);margin-bottom:.75rem;border-left:4px solid #f59e0b"><div style="font-weight:800">${e.title||'—'}</div><div style="font-size:.85rem;color:#6b7280;margin-top:.25rem">🎁 ${e.reward||'—'} · 📅 ${d}${e.location?` · 📍 ${e.location}`:''}</div><div style="margin-top:.5rem;font-size:.8rem;color:#059669;font-weight:600">✅ Sélectionné</div></div>`;
+    }).join('');
   }
 }
 
-async function saveSupportContact(){
-  const wa=document.getElementById('support-wa').value.trim();
-  const em=document.getElementById('support-contact-email').value.trim();
-  if(supportLastMsgId&&(wa||em)){
-    await sb.from('support_messages').update({whatsapp:wa||null,contact_email:em||null}).eq('id',supportLastMsgId);
-  }
-  localStorage.setItem(`rivo_support_info_${CU.id}`,'1');
-  document.getElementById('support-contact-modal').style.display='none';
-  toast('Coordonnées enregistrées !');
+async function submitVideo(){
+  if(!CU){toast('Connectez-vous.','err');return;}
+  const url=document.getElementById('video-url-input').value.trim();
+  if(!url){toast('Entrez un lien valide.','err');return;}
+  const {error}=await sb.from('recommendation_videos').insert({user_id:CU.id,video_url:url});
+  if(error){toast('Erreur. Réessayez.','err');return;}
+  document.getElementById('video-submit-msg').style.display='block';
+  document.getElementById('video-submit-msg').textContent='Vidéo soumise ! Elle sera examinée sous peu. +500 pts si approuvée.';
+  document.getElementById('video-url-input').value='';
 }
+
+
 </script>
 
-<!-- Support Panel -->
-<div id="support-panel" style="display:none;position:fixed;bottom:1rem;right:1rem;width:340px;max-height:520px;background:white;border-radius:1rem;box-shadow:0 8px 32px rgba(0,0,0,.2);z-index:9999;flex-direction:column;overflow:hidden">
-  <div style="background:linear-gradient(135deg,#2563eb,#7c3aed);padding:.875rem 1rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
-    <span style="color:white;font-weight:700;font-size:.95rem">💬 Support RIVO</span>
-    <button onclick="closeSupport()" style="background:rgba(255,255,255,.2);border:none;color:white;cursor:pointer;border-radius:.5rem;padding:.25rem .5rem;font-size:.875rem">✕</button>
+<!-- Support Modal -->
+<div id="support-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:white;border-radius:1.25rem;padding:2rem;width:90%;max-width:380px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+    <h2 style="font-weight:900;font-size:1.2rem;margin-bottom:.5rem;color:#1F2937">Support RIVO</h2>
+    <p style="color:#6b7280;font-size:.875rem;margin-bottom:1.5rem;line-height:1.5">Contactez le support pour tout problème ou feedback.<br>Disponibles tous les jours de 08h à 13h et de 15h à 23h.</p>
+    <a href="https://wa.me/22945916177" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:.75rem;background:#25d366;color:white;border-radius:.75rem;padding:.875rem;font-weight:700;text-decoration:none;margin-bottom:.75rem;font-size:.95rem">📱 Contacter via WhatsApp</a>
+    <a href="mailto:assistancerivo@gmail.com" style="display:flex;align-items:center;justify-content:center;gap:.75rem;background:#ea4335;color:white;border-radius:.75rem;padding:.875rem;font-weight:700;text-decoration:none;margin-bottom:.75rem;font-size:.95rem">📧 Contacter via Gmail</a>
+    <a href="tel:+2290145916177" style="display:flex;align-items:center;justify-content:center;gap:.75rem;background:#2563eb;color:white;border-radius:.75rem;padding:.875rem;font-weight:700;text-decoration:none;margin-bottom:1rem;font-size:.95rem">📞 Contacter via appel</a>
+    <button onclick="document.getElementById('support-modal').style.display='none'" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:.875rem">Fermer</button>
   </div>
-  <div id="support-history" style="flex:1;overflow-y:auto;padding:.75rem;display:flex;flex-direction:column;gap:.5rem;min-height:180px;max-height:280px"></div>
-  <div style="padding:.75rem;border-top:1px solid #f1f5f9;flex-shrink:0">
-    <div style="display:flex;gap:.5rem;align-items:flex-end">
-      <textarea id="support-input" rows="2" placeholder="Votre message..." style="flex:1;border:1px solid #e2e8f0;border-radius:.5rem;padding:.5rem;font-size:.875rem;resize:none;font-family:inherit;outline:none"></textarea>
-      <div style="display:flex;flex-direction:column;gap:.25rem">
-        <button onclick="document.getElementById('support-photo-input').click()" style="background:#f1f5f9;border:none;cursor:pointer;border-radius:.5rem;padding:.4rem;font-size:1rem" title="Photo">📷</button>
-        <button onclick="sendSupportMessage()" style="background:#2563eb;color:white;border:none;cursor:pointer;border-radius:.5rem;padding:.4rem .6rem;font-size:.875rem;font-weight:700">→</button>
-      </div>
-    </div>
-    <input type="file" id="support-photo-input" accept="image/*" style="display:none" onchange="handleSupportPhoto(this)"/>
-    <div id="support-photo-preview" style="margin-top:.5rem;display:none;align-items:center;gap:.5rem">
-      <img id="support-photo-img" style="max-height:60px;border-radius:.5rem;border:1px solid #e2e8f0"/>
-      <button onclick="clearSupportPhoto()" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:.75rem">✕ Retirer</button>
+</div>
+
+<!-- Video Submission Modal -->
+<div id="video-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:white;border-radius:1.25rem;padding:1.5rem;width:90%;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+    <h3 style="font-weight:800;margin-bottom:.5rem;font-size:1rem;color:#1F2937">🎬 Vidéo de recommandation</h3>
+    <p style="font-size:.85rem;color:#6b7280;margin-bottom:1rem;line-height:1.5">Soumettez un lien YouTube ou Google Drive. Si approuvée par notre équipe, vous gagnez <strong style="color:#f59e0b">+500 points</strong> !</p>
+    <input type="url" id="video-url-input" placeholder="https://youtube.com/..." style="width:100%;border:2px solid #e2e8f0;border-radius:.625rem;padding:.625rem;font-size:.875rem;margin-bottom:1rem;box-sizing:border-box;font-family:inherit;outline:none"/>
+    <div id="video-submit-msg" style="font-size:.8rem;color:#10b981;display:none;margin-bottom:.75rem;font-weight:600"></div>
+    <div style="display:flex;gap:.75rem">
+      <button onclick="submitVideo()" style="flex:1;background:#7c3aed;color:white;border:none;border-radius:.5rem;padding:.625rem;font-weight:700;cursor:pointer">Envoyer</button>
+      <button onclick="document.getElementById('video-modal').style.display='none'" style="flex:1;background:#f1f5f9;border:none;border-radius:.5rem;padding:.625rem;font-weight:600;cursor:pointer;color:#374151">Annuler</button>
     </div>
   </div>
 </div>
 
-<!-- Support Contact Modal -->
-<div id="support-contact-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:10000;align-items:center;justify-content:center">
-  <div style="background:white;border-radius:1rem;padding:1.5rem;width:90%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,.2)">
-    <h3 style="font-weight:700;margin-bottom:.5rem;font-size:1rem">📲 Vos coordonnées</h3>
-    <p style="font-size:.85rem;color:#64748b;margin-bottom:1rem">Pour vous recontacter, laissez votre WhatsApp et/ou email (optionnel).</p>
-    <input type="tel" id="support-wa" placeholder="WhatsApp (ex: +229…)" style="width:100%;border:1px solid #e2e8f0;border-radius:.5rem;padding:.625rem;font-size:.875rem;margin-bottom:.75rem;box-sizing:border-box;font-family:inherit;outline:none"/>
-    <input type="email" id="support-contact-email" placeholder="Email (optionnel)" style="width:100%;border:1px solid #e2e8f0;border-radius:.5rem;padding:.625rem;font-size:.875rem;margin-bottom:1rem;box-sizing:border-box;font-family:inherit;outline:none"/>
-    <div style="display:flex;gap:.75rem">
-      <button onclick="saveSupportContact()" style="flex:1;background:#2563eb;color:white;border:none;border-radius:.5rem;padding:.625rem;font-weight:700;cursor:pointer">Enregistrer</button>
-      <button onclick="document.getElementById('support-contact-modal').style.display='none';localStorage.setItem('rivo_support_info_'+CU.id,'1')" style="flex:1;background:#f1f5f9;border:none;border-radius:.5rem;padding:.625rem;font-weight:600;cursor:pointer;color:#374151">Ignorer</button>
+<!-- Récompenses Modal -->
+<div id="recompenses-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:flex-start;justify-content:center;overflow-y:auto;padding:1rem">
+  <div style="background:#f8fafc;border-radius:1.25rem;width:100%;max-width:480px;box-shadow:0 8px 32px rgba(0,0,0,.2);overflow:hidden;margin:auto">
+    <div style="background:linear-gradient(135deg,#f59e0b,#ef4444);padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between">
+      <span style="color:white;font-weight:900;font-size:1.1rem">🎁 Récompenses</span>
+      <button onclick="document.getElementById('recompenses-modal').style.display='none'" style="background:rgba(255,255,255,.2);border:none;color:white;cursor:pointer;border-radius:.5rem;padding:.25rem .625rem;font-weight:700">✕</button>
+    </div>
+    <div style="display:flex;border-bottom:1px solid #e2e8f0;background:white">
+      <button id="r-tab-events" onclick="loadRecompensesTab('events')" style="flex:1;padding:.875rem;background:none;border:none;border-bottom:2px solid #f59e0b;cursor:pointer;font-weight:700;font-size:.9rem;color:#1F2937">Événements</button>
+      <button id="r-tab-mine" onclick="loadRecompensesTab('mine')" style="flex:1;padding:.875rem;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;font-weight:500;font-size:.9rem;color:#6b7280">Mes événements</button>
+    </div>
+    <div id="recompenses-content" style="padding:1rem;max-height:70vh;overflow-y:auto">
+      <p style="text-align:center;color:#9ca3af;padding:2rem">Chargement...</p>
     </div>
   </div>
 </div>
