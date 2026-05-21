@@ -958,46 +958,59 @@ async function loadAttestations(){
 
 // ── Dashboard: Profil ─────────────────────────────────
 async function loadProfil(){
-  if(!CP){await loadProfileData();if(!CP)return;}
-  const p=CP;
-  const[ic,lb,bg,co]=badgeInfo(p.badge_level);
-  const fullName=`${p.first_name} ${p.last_name}`;
-  document.getElementById('prof-name').textContent=fullName;
-  document.getElementById('info-name').textContent=fullName;
-  const{data:{user}}=await sb.auth.getUser();
-  const email=user?.email||CU?.email||'';
-  document.getElementById('prof-email').textContent=email;
-  document.getElementById('info-email').textContent=email;
-  const pb=document.getElementById('prof-badge');pb.textContent=`${ic} ${lb}`;pb.style.background=bg;pb.style.color=co;
-  const ib=document.getElementById('info-badge');ib.textContent=`${ic} ${lb}`;ib.style.background=bg;ib.style.color=co;
-  document.getElementById('ref-code').textContent=p.referral_code||'...';
-  const solde=fmt(p.balance||0,p.currency);
-  document.getElementById('st-b').textContent=solde;
-  document.getElementById('info-solde').textContent=solde;
-  const birthEl=document.getElementById('info-birth');
-  const birthRow=document.getElementById('birth-row');
-  if(birthEl){
-    if(p.birth_date){
-      birthEl.textContent=new Date(p.birth_date).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
-      if(birthRow)birthRow.style.background='#f0fdf4';
-    }else{
-      birthEl.innerHTML=`<input type="date" id="birth-input" style="border:1.5px solid #f59e0b;border-radius:.5rem;padding:.2rem .5rem;font-size:.8rem;color:#92400e" onchange="saveBirthDate(this.value)"/>`;
-      if(birthRow){birthRow.style.background='#fef3c7';birthRow.title='Obligatoire pour recevoir votre attestation';}
+  try{
+    if(!CP){await loadProfileData();if(!CP)return;}
+    const p=CP;
+    const[ic,lb,bg,co]=badgeInfo(p.badge_level);
+    const fn=p.first_name||'';
+    const ln=p.last_name||'';
+    const fullName=`${fn} ${ln}`.trim()||'Utilisateur';
+    document.getElementById('prof-name').textContent=fullName;
+    document.getElementById('info-name').textContent=fullName;
+    // Récupérer l'email sans crash si data est null
+    let email=CU?.email||'';
+    try{const res=await sb.auth.getUser();email=res?.data?.user?.email||email;}catch(_){}
+    document.getElementById('prof-email').textContent=email||'—';
+    document.getElementById('info-email').textContent=email||'—';
+    const pb=document.getElementById('prof-badge');
+    if(pb){pb.textContent=`${ic} ${lb}`;pb.style.background=bg;pb.style.color=co;}
+    const ib=document.getElementById('info-badge');
+    if(ib){ib.textContent=`${ic} ${lb}`;ib.style.background=bg;ib.style.color=co;}
+    document.getElementById('ref-code').textContent=p.referral_code||'—';
+    const solde=fmt(p.balance||0,p.currency);
+    document.getElementById('st-b').textContent=solde;
+    const infoSolde=document.getElementById('info-solde');
+    if(infoSolde)infoSolde.textContent=solde;
+    const birthEl=document.getElementById('info-birth');
+    const birthRow=document.getElementById('birth-row');
+    if(birthEl){
+      if(p.birth_date){
+        birthEl.textContent=new Date(p.birth_date).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+        if(birthRow)birthRow.style.background='#f0fdf4';
+      }else{
+        birthEl.innerHTML=`<input type="date" id="birth-input" style="border:1.5px solid #f59e0b;border-radius:.5rem;padding:.2rem .5rem;font-size:.8rem;color:#92400e" onchange="saveBirthDate(this.value)"/>`;
+        if(birthRow){birthRow.style.background='#fef3c7';birthRow.title='Obligatoire pour recevoir votre attestation';}
+      }
     }
+    const av=document.getElementById('big-av');
+    if(av){
+      if(p.avatar_url)av.innerHTML=`<img src="${p.avatar_url}" style="width:100%;height:100%;object-fit:cover"/>`;
+      else av.textContent=((fn[0]||'')+(ln[0]||'')).toUpperCase()||'?';
+    }
+    const[{count:fc},{count:ac},{data:filleuls}]=await Promise.all([
+      sb.from('purchases').select('*',{count:'exact',head:true}).eq('user_id',CU.id).eq('status','complete'),
+      sb.from('certificates').select('*',{count:'exact',head:true}).eq('user_id',CU.id),
+      sb.from('profiles').select('id').eq('referred_by',CU.id),
+    ]);
+    document.getElementById('st-f').textContent=fc||0;
+    document.getElementById('st-a').textContent=ac||0;
+    const refCount=(filleuls||[]).length;
+    document.getElementById('st-ref').textContent=refCount;
+    const stRefGain=document.getElementById('st-ref-gain');
+    if(stRefGain)stRefGain.textContent=fmt(refCount*1000,'XOF');
+  }catch(e){
+    console.error('[loadProfil] erreur:',e?.message||e);
   }
-  const av=document.getElementById('big-av');
-  if(p.avatar_url)av.innerHTML=`<img src="${p.avatar_url}" style="width:100%;height:100%;object-fit:cover"/>`;
-  else av.textContent=(p.first_name[0]+p.last_name[0]).toUpperCase();
-  const[{count:fc},{count:ac},{data:filleuls}]=await Promise.all([
-    sb.from('purchases').select('*',{count:'exact',head:true}).eq('user_id',CU.id).eq('status','complete'),
-    sb.from('certificates').select('*',{count:'exact',head:true}).eq('user_id',CU.id),
-    sb.from('profiles').select('id').eq('referred_by',CU.id),
-  ]);
-  document.getElementById('st-f').textContent=fc||0;
-  document.getElementById('st-a').textContent=ac||0;
-  const refCount=(filleuls||[]).length;
-  document.getElementById('st-ref').textContent=refCount;
-  document.getElementById('st-ref-gain').textContent=fmt(refCount*1000,'XOF');
 }
 
 async function copyRef(){
@@ -1100,11 +1113,13 @@ function switchTab(name){
   document.getElementById('notif-panel').style.display='none';
   if(name==='bord'){
     loadBord();
+  } else if(name==='profil'){
+    // Le profil se recharge à chaque visite pour afficher les données fraîches
+    loadProfil();
   } else if(!loaded[name]){
     loaded[name]=true;
     if(name==='formations')loadMesFormations();
     if(name==='attestations')loadAttestations();
-    if(name==='profil')loadProfil();
     if(name==='retrait')loadRetrait();
   }
 }
