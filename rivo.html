@@ -566,17 +566,41 @@ function loadFedaPayScript(){
   tryLoad(0);
 })();
 
-// ── BUG 1 FIX: guard anti-race-condition dans loadProfileData ─
-// Si CU change pendant l'appel async, on ignore les données périmées
+// ── BUG 1 & 2 FIX: guard race-condition + auto-création profil manquant ─
 async function loadProfileData(){
   if(!CU?.id)return;
   const expectedUserId=CU.id;
   try{
-    const {data:p,error}=await withTimeout(sb.from('profiles').select('*').eq('id',CU.id).single());
+    let {data:p,error}=await withTimeout(sb.from('profiles').select('*').eq('id',CU.id).single());
     if(error && error.code!=='PGRST116') console.warn('Profile fetch:',error.message);
-    // Guard : si l'utilisateur a changé pendant l'appel async, ignorer ces données
-    if(!p || p.id !== expectedUserId || p.id !== CU?.id){
-      console.warn('loadProfileData: données périmées ignorées (race condition)');
+    // Guard race condition : ignorer UNIQUEMENT si des données d'un AUTRE utilisateur arrivent
+    if(p && (p.id!==expectedUserId || p.id!==CU?.id)){
+      console.warn('loadProfileData: race condition détectée, données ignorées');
+      return;
+    }
+    // Profil introuvable → auto-création (résout aussi la FK purchases_user_id_fkey)
+    if(!p){
+      const meta=CU.user_metadata||{};
+      await sb.from('profiles').upsert(
+        {id:CU.id,first_name:meta.first_name||'',last_name:meta.last_name||''},
+        {onConflict:'id'}
+      );
+      const {data:p2}=await sb.from('profiles').select('*').eq('id',CU.id).single();
+      if(p2 && p2.id===CU.id) p=p2;
+    }
+    // Si toujours null (problème réseau/RLS), afficher les infos d'auth minimales
+    if(!p){
+      const email=CU.email||'—';
+      const meta=CU.user_metadata||{};
+      const fn0=meta.first_name||'';
+      const ln0=meta.last_name||'';
+      const name0=`${fn0} ${ln0}`.trim()||email.split('@')[0]||'Utilisateur';
+      document.getElementById('welcome-h').textContent=fn0?`Bienvenue ${fn0} !!!`:'Bienvenue !!!';
+      ['prof-name','info-name'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=name0;});
+      ['prof-email','info-email'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=email;});
+      const elRef=document.getElementById('ref-code');if(elRef)elRef.textContent='—';
+      document.getElementById('st-b').textContent='0 FCFA';
+      const infoSolde=document.getElementById('info-solde');if(infoSolde)infoSolde.textContent='0 FCFA';
       return;
     }
     CP=p;
@@ -814,6 +838,11 @@ function closePayModal(){document.getElementById('pay-modal').style.display='non
 async function confirmPay(){
   if(!pendingCourse)return;
   const course={...pendingCourse};
+  // Garantir que le profil existe avant l'achat (FK purchases_user_id_fkey → profiles.id)
+  if(!CP){
+    await loadProfileData();
+    if(!CP){toast('Profil introuvable. Déconnectez-vous et reconnectez-vous.','err');return;}
+  }
   if(TEST_MODE){
     setBtn('pay-btn','<span class="spin"></span>',true);
     try{
