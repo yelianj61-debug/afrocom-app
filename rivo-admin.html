@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RIVO Admin</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  /* ── Base ── */
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',sans-serif;background:#0f0f1a;color:#e2e8f0}
+  /* ── Critical layout (fallback sans Tailwind) ── */
+  .hidden{display:none!important}
+  #admin-app{display:flex;min-height:100vh}
+  .sidebar{width:256px;min-width:256px;flex-shrink:0;display:flex;flex-direction:column;background:#1a1a2e;border-right:1px solid #2d2d4e}
+  main{flex:1;overflow:auto}
+  .flex{display:flex}.flex-col{flex-direction:column}.flex-1{flex:1}.flex-wrap{flex-wrap:wrap}.flex-shrink-0{flex-shrink:0}
+  .items-center{align-items:center}.items-start{align-items:flex-start}.justify-between{justify-content:space-between}.justify-center{justify-content:center}
+  .grid{display:grid}
+  .grid-cols-2{grid-template-columns:repeat(2,1fr)}
+  .gap-2{gap:.5rem}.gap-3{gap:.75rem}.gap-4{gap:1rem}.gap-6{gap:1.5rem}
+  .p-4{padding:1rem}.p-5{padding:1.25rem}.p-6{padding:1.5rem}.p-8{padding:2rem}
+  .px-4{padding-left:1rem;padding-right:1rem}.py-3{padding-top:.75rem;padding-bottom:.75rem}.py-2{padding-top:.5rem;padding-bottom:.5rem}
+  .mb-1{margin-bottom:.25rem}.mb-2{margin-bottom:.5rem}.mb-3{margin-bottom:.75rem}.mb-4{margin-bottom:1rem}.mb-6{margin-bottom:1.5rem}.mb-8{margin-bottom:2rem}
+  .mt-1{margin-top:.25rem}.ml-1{margin-left:.25rem}
+  .w-full{width:100%}.w-9{width:2.25rem}.w-10{width:2.5rem}.h-9{height:2.25rem}.h-10{height:2.5rem}.h-40{height:10rem}.min-w-0{min-width:0}
+  .rounded-full{border-radius:9999px}.rounded-xl{border-radius:.75rem}.rounded-lg{border-radius:.5rem}
+  .border-b{border-bottom:1px solid #374151}.border-t{border-top:1px solid #374151}.border-gray-700{border-color:#374151}
+  .overflow-auto{overflow:auto}.overflow-hidden{overflow:hidden}.overflow-y-auto{overflow-y:auto}
+  .text-white{color:#fff}.text-gray-300{color:#d1d5db}.text-gray-400{color:#9ca3af}.text-gray-500{color:#6b7280}
+  .text-purple-400{color:#a78bfa}.text-purple-300{color:#c4b5fd}.text-green-400{color:#4ade80}.text-yellow-400{color:#facc15}
+  .text-orange-400{color:#fb923c}.text-orange-300{color:#fdba74}.text-blue-400{color:#60a5fa}.text-pink-400{color:#f472b6}.text-red-400{color:#f87171}
+  .font-bold{font-weight:700}.font-semibold{font-weight:600}.font-medium{font-weight:500}
+  .text-sm{font-size:.875rem}.text-xs{font-size:.75rem}.text-2xl{font-size:1.5rem}.text-lg{font-size:1.125rem}.text-3xl{font-size:1.875rem}
+  .truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .space-y-1>*+*{margin-top:.25rem}.space-y-2>*+*{margin-top:.5rem}.space-y-3>*+*{margin-top:.75rem}.space-y-4>*+*{margin-top:1rem}
+  .object-cover{object-fit:cover}.w-full.h-40{width:100%;height:10rem}
+  @media(min-width:768px){.md\:grid-cols-2{grid-template-columns:repeat(2,1fr)}}
+  @media(min-width:1024px){.lg\:grid-cols-3{grid-template-columns:repeat(3,1fr)}.lg\:grid-cols-2{grid-template-columns:repeat(2,1fr)}}
+  /* ── Components ── */
+  .tab-btn{transition:all .2s;cursor:pointer;background:none;border:none;color:#9ca3af;width:100%;text-align:left;padding:.75rem 1rem;border-radius:.5rem;display:flex;align-items:center;gap:.75rem;font-weight:500}
+  .tab-btn:hover{background:#374151}
+  .tab-btn.active{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff}
+  .card{background:#1a1a2e;border:1px solid #2d2d4e;border-radius:12px}
+  .btn-primary{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border-radius:8px;padding:8px 16px;cursor:pointer;transition:.2s;border:none;font-weight:600;display:inline-flex;align-items:center;gap:.5rem}
+  .btn-primary:hover{opacity:.9}
+  .btn-primary:disabled{opacity:.6;cursor:not-allowed}
+  .btn-success{background:#059669;color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.8rem;border:none;font-weight:600}
+  .btn-danger{background:#dc2626;color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.8rem;border:none;font-weight:600}
+  .btn-warning{background:#d97706;color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.8rem;border:none;font-weight:600}
+  .badge{display:inline-block;padding:2px 8px;border-radius:9999px;font-size:.7rem;font-weight:600}
+  .badge-admin{background:#7c3aed;color:#fff}.badge-or{background:#fbbf24;color:#000}.badge-argent{background:#9ca3af;color:#000}
+  .badge-bronze{background:#d97706;color:#fff}.badge-diamant{background:#06b6d4;color:#fff}.badge-debutant{background:#6b7280;color:#fff}
+  .status-badge{padding:2px 8px;border-radius:9999px;font-size:.75rem;font-weight:600}
+  .status-en_attente{background:#fef3c7;color:#92400e}.status-complete{background:#d1fae5;color:#065f46}.status-rejete{background:#fee2e2;color:#991b1b}
+  .input{background:#111827;border:1px solid #374151;border-radius:8px;padding:10px 14px;color:#e2e8f0;width:100%;outline:none;font-family:inherit;font-size:.875rem}
+  .input:focus{border-color:#7c3aed}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
+  .modal{background:#1a1a2e;border:1px solid #2d2d4e;border-radius:16px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;padding:24px}
+  .stat-card{background:linear-gradient(135deg,#1a1a2e,#2d2d4e);border:1px solid #3d3d6e;border-radius:12px;padding:20px}
+  table{width:100%;border-collapse:collapse}
+  th{background:#111827;padding:12px 16px;text-align:left;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af}
+  td{padding:12px 16px;border-bottom:1px solid #2d2d4e;font-size:.875rem}
+  tr:hover td{background:rgba(124,58,237,.05)}
+  code{background:#1f2937;padding:2px 6px;border-radius:4px}
+  ::-webkit-scrollbar{width:6px;height:6px}
+  ::-webkit-scrollbar-track{background:#111}
+  ::-webkit-scrollbar-thumb{background:#7c3aed;border-radius:3px}
+  #toast{position:fixed;bottom:1.5rem;right:1.5rem;padding:.75rem 1rem;border-radius:.75rem;box-shadow:0 4px 20px rgba(0,0,0,.4);color:#fff;font-size:.875rem;font-weight:500;z-index:50;transition:all .3s;transform:translateY(64px);opacity:0}
+  /* Sidebar bottom */
+  #admin-app aside .border-t{border-top:1px solid #374151}
+  /* Nav space */
+  nav.space-y-1{padding:.5rem}
+</style>
+</head>
+<body>
+
+<div id="loading-screen" style="display:none"></div>
+
+<!-- Admin App -->
+<div id="admin-app" class="min-h-screen flex">
+
+  <!-- Sidebar -->
+  <aside class="sidebar w-64 flex-shrink-0 flex flex-col">
+    <div class="p-6 border-b border-gray-700">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 to-violet-700 flex items-center justify-center font-bold text-white text-lg">R</div>
+        <div>
+          <div class="font-bold text-white">RIVO</div>
+          <div class="text-xs text-purple-400">Administration</div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="flex-1 p-4 space-y-1">
+      <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-gray-300 hover:bg-gray-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+        <span class="font-medium">Tableau de bord</span>
+      </button>
+      <button onclick="switchTab('utilisateurs')" id="tab-utilisateurs" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-gray-300 hover:bg-gray-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        <span class="font-medium">Utilisateurs</span>
+      </button>
+      <button onclick="switchTab('formations')" id="tab-formations" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-gray-300 hover:bg-gray-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        <span class="font-medium">Formations</span>
+      </button>
+      <button onclick="switchTab('retraits')" id="tab-retraits" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-gray-300 hover:bg-gray-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+        <span class="font-medium">Retraits</span>
+      </button>
+      <button onclick="switchTab('attestations')" id="tab-attestations" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-gray-300 hover:bg-gray-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+        <span class="font-medium">Attestations</span>
+      </button>
+      <button onclick="switchTab('messages')" id="tab-messages" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-gray-300 hover:bg-gray-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+        <span class="font-medium">Messages <span id="msg-badge" style="display:none;background:#ef4444;color:white;border-radius:9999px;font-size:.65rem;padding:1px 6px;margin-left:.25rem">●</span></span>
+      </button>
+    </nav>
+
+    <div class="p-4 border-t border-gray-700">
+      <div class="flex items-center gap-3 mb-3">
+        <div id="admin-avatar" class="w-9 h-9 rounded-full bg-purple-700 flex items-center justify-center font-bold text-sm text-white">A</div>
+        <div class="flex-1 min-w-0">
+          <div id="admin-name" class="text-sm font-medium text-white truncate">Admin</div>
+          <span class="badge badge-admin">Admin</span>
+        </div>
+      </div>
+      <button onclick="doLogout()" class="w-full text-left px-3 py-2 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-900/20 transition text-sm flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="flex-1 overflow-auto">
+
+    <!-- ===== DASHBOARD TAB ===== -->
+    <div id="page-dashboard" class="p-8">
+      <div class="mb-8">
+        <h1 class="text-2xl font-bold text-white">Tableau de bord</h1>
+        <p class="text-gray-400 mt-1">Vue d'ensemble de la plateforme RIVO</p>
+      </div>
+
+      <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8" id="stats-grid">
+        <div class="stat-card">
+          <div class="text-3xl font-bold text-purple-400" id="stat-users">—</div>
+          <div class="text-sm text-gray-400 mt-1">Utilisateurs</div>
+        </div>
+        <div class="stat-card">
+          <div class="text-3xl font-bold text-green-400" id="stat-purchases">—</div>
+          <div class="text-sm text-gray-400 mt-1">Achats total</div>
+        </div>
+        <div class="stat-card">
+          <div class="text-3xl font-bold text-yellow-400" id="stat-revenue">—</div>
+          <div class="text-sm text-gray-400 mt-1">Revenus (FCFA)</div>
+        </div>
+        <div class="stat-card">
+          <div class="text-3xl font-bold text-orange-400" id="stat-withdrawals">—</div>
+          <div class="text-sm text-gray-400 mt-1">Retraits en attente</div>
+        </div>
+        <div class="stat-card">
+          <div class="text-3xl font-bold text-blue-400" id="stat-certs">—</div>
+          <div class="text-sm text-gray-400 mt-1">Attestations à envoyer</div>
+        </div>
+        <div class="stat-card">
+          <div class="text-3xl font-bold text-pink-400" id="stat-courses">—</div>
+          <div class="text-sm text-gray-400 mt-1">Formations publiées</div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="card p-6">
+          <h3 class="font-semibold text-white mb-4">Derniers achats</h3>
+          <div id="recent-purchases" class="space-y-3 text-sm text-gray-400">Chargement…</div>
+        </div>
+        <div class="card p-6">
+          <h3 class="font-semibold text-white mb-4">Derniers retraits</h3>
+          <div id="recent-withdrawals" class="space-y-3 text-sm text-gray-400">Chargement…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== UTILISATEURS TAB ===== -->
+    <div id="page-utilisateurs" class="p-8 hidden" style="display:none">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h1 class="text-2xl font-bold text-white">Utilisateurs</h1>
+          <p class="text-gray-400 mt-1">Liste de tous les membres inscrits</p>
+        </div>
+      </div>
+      <div class="card p-4 mb-4">
+        <input id="search-users" type="text" placeholder="Rechercher par nom, email ou code parrainage…" class="input" oninput="filterUsers()"/>
+      </div>
+      <div class="card overflow-hidden">
+        <table>
+          <thead>
+            <tr>
+              <th>Utilisateur</th>
+              <th>Badge</th>
+              <th>Solde</th>
+              <th>Code parrainage</th>
+              <th>Inscrit le</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="users-table">
+            <tr><td colspan="5" class="text-center text-gray-500 py-8">Chargement…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== FORMATIONS TAB ===== -->
+    <div id="page-formations" class="p-8 hidden" style="display:none">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h1 class="text-2xl font-bold text-white">Formations</h1>
+          <p class="text-gray-400 mt-1">Gérez le catalogue de formations</p>
+        </div>
+        <button onclick="openCourseModal(null)" class="btn-primary flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Nouvelle formation
+        </button>
+      </div>
+      <div id="formations-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="text-gray-500 col-span-3 text-center py-8">Chargement…</div>
+      </div>
+    </div>
+
+    <!-- ===== RETRAITS TAB ===== -->
+    <div id="page-retraits" class="p-8 hidden" style="display:none">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h1 class="text-2xl font-bold text-white">Retraits</h1>
+          <p class="text-gray-400 mt-1">Validez ou rejetez les demandes de retrait</p>
+        </div>
+        <div class="flex gap-2">
+          <select id="retrait-filter" class="input w-auto" onchange="loaded.retraits=false;loadRetraits()">
+            <option value="en_attente">En attente</option>
+            <option value="complete">Complété</option>
+            <option value="rejete">Rejeté</option>
+            <option value="">Tous</option>
+          </select>
+          <button onclick="loaded.retraits=false;loadRetraits()" class="btn-primary" style="font-size:.85rem;padding:8px 12px">🔄 Actualiser</button>
+        </div>
+      </div>
+      <div id="retraits-table" style="display:flex;flex-direction:column;gap:1rem">
+        <p class="text-center text-gray-500 py-8">Chargement…</p>
+      </div>
+    </div>
+
+    <!-- ===== ATTESTATIONS TAB ===== -->
+    <div id="page-attestations" class="p-8 hidden" style="display:none">
+      <div class="mb-6">
+        <h1 class="text-2xl font-bold text-white">Attestations</h1>
+        <p class="text-gray-400 mt-1">Envoyez des certificats aux apprenants ayant terminé une formation</p>
+      </div>
+      <div id="attestations-list" class="space-y-4">
+        <div class="text-gray-500 text-center py-8">Chargement…</div>
+      </div>
+    </div>
+
+    <!-- ===== MESSAGES TAB ===== -->
+    <div id="page-messages" class="hidden" style="display:none;height:100vh">
+      <div style="display:flex;height:100%">
+        <!-- Conversation list -->
+        <div id="msg-list-panel" style="width:320px;flex-shrink:0;border-right:1px solid #2d2d4e;overflow-y:auto;background:#12122a">
+          <div style="padding:1.5rem 1rem 1rem;border-bottom:1px solid #2d2d4e">
+            <h2 style="font-size:1.1rem;font-weight:700;color:white">💬 Messages Support</h2>
+          </div>
+          <div id="msg-conv-list" style="padding:.5rem">
+            <p style="text-align:center;color:#6b7280;padding:2rem;font-size:.875rem">Chargement…</p>
+          </div>
+        </div>
+        <!-- Conversation detail -->
+        <div id="msg-detail-panel" style="flex:1;display:flex;flex-direction:column;background:#0f0f1a">
+          <div id="msg-detail-header" style="padding:1rem 1.5rem;border-bottom:1px solid #2d2d4e;background:#12122a">
+            <p style="color:#6b7280;font-size:.875rem">Sélectionnez une conversation</p>
+          </div>
+          <div id="msg-detail-history" style="flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.75rem"></div>
+          <div id="msg-reply-zone" style="display:none;padding:1rem;border-top:1px solid #2d2d4e;background:#12122a">
+            <div style="display:flex;gap:.75rem;align-items:flex-end">
+              <textarea id="msg-reply-input" rows="2" placeholder="Répondre en tant que Support RIVO…" style="flex:1;background:#111827;border:1px solid #374151;border-radius:.5rem;padding:.625rem;color:#e2e8f0;font-size:.875rem;resize:none;font-family:inherit;outline:none"></textarea>
+              <button onclick="sendAdminReply()" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:white;border:none;border-radius:.5rem;padding:.625rem 1rem;font-weight:700;cursor:pointer;font-size:.875rem;white-space:nowrap">Envoyer →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Course Modal -->
+<div id="course-modal" class="modal-overlay hidden" style="display:none">
+  <div class="modal">
+    <div class="flex items-center justify-between mb-6">
+      <h2 id="modal-title" class="text-xl font-bold text-white">Nouvelle formation</h2>
+      <button onclick="closeModal('course-modal')" class="text-gray-400 hover:text-white">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="course-form" onsubmit="saveCourse(event)" class="space-y-4">
+      <input type="hidden" id="course-id"/>
+      <div>
+        <label class="block text-sm text-gray-400 mb-1">Titre</label>
+        <input id="course-title" type="text" class="input" required/>
+      </div>
+      <div>
+        <label class="block text-sm text-gray-400 mb-1">Description courte</label>
+        <input id="course-short" type="text" class="input" required/>
+      </div>
+      <div>
+        <label class="block text-sm text-gray-400 mb-1">Description complète</label>
+        <textarea id="course-desc" class="input" rows="4"></textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm text-gray-400 mb-1">Prix</label>
+          <input id="course-price" type="number" min="0" class="input" required/>
+        </div>
+        <div>
+          <label class="block text-sm text-gray-400 mb-1">Devise</label>
+          <select id="course-currency" class="input">
+            <option value="XOF">XOF (FCFA)</option>
+            <option value="EUR">EUR (€)</option>
+            <option value="USD">USD ($)</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm text-gray-400 mb-1">Image de couverture</label>
+        <input type="file" id="cover-file" accept="image/*" style="display:none" onchange="document.getElementById('cover-name').textContent=this.files[0]?.name||'Aucun fichier'"/>
+        <input id="course-cover" type="hidden"/>
+        <div class="flex gap-2 items-center">
+          <button type="button" onclick="document.getElementById('cover-file').click()" class="btn-success" style="font-size:.8rem;padding:6px 12px">📷 Choisir image</button>
+          <span id="cover-name" class="text-sm text-gray-400">Aucun fichier</span>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm text-gray-400 mb-1">Lien du fichier formation (Google Drive, Dropbox, etc.)</label>
+        <input type="url" id="course-file-url" placeholder="https://drive.google.com/…" class="input w-full" style="font-size:.875rem"/>
+      </div>
+      <div class="flex items-center gap-2">
+        <input id="course-published" type="checkbox" class="w-4 h-4 accent-purple-600"/>
+        <label for="course-published" class="text-sm text-gray-300">Publier immédiatement</label>
+      </div>
+      <div id="course-error" class="hidden bg-red-900/30 border border-red-700 rounded-lg p-3 text-red-400 text-sm"></div>
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" onclick="closeModal('course-modal')" class="px-4 py-2 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700">Annuler</button>
+        <button type="submit" class="btn-primary">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- User Profile Modal -->
+<div id="user-profile-modal" class="modal-overlay hidden" style="display:none;align-items:flex-start;overflow-y:auto;z-index:200">
+  <div style="background:#1e1e2e;border:1px solid #374151;border-radius:1.5rem;padding:2rem;max-width:760px;width:100%;margin:2rem auto;box-shadow:0 25px 60px rgba(0,0,0,.5)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+      <h2 style="font-size:1.4rem;font-weight:800;color:white">👤 Fiche utilisateur</h2>
+      <button onclick="closeModal('user-profile-modal')" style="background:#374151;border:none;width:2.5rem;height:2.5rem;border-radius:.75rem;cursor:pointer;font-size:1.1rem;color:white">✕</button>
+    </div>
+    <div id="user-profile-content">
+      <div style="text-align:center;padding:4rem;color:#9ca3af">Chargement...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div id="confirm-modal" class="modal-overlay hidden" style="display:none">
+  <div class="modal max-w-sm">
+    <h2 id="confirm-title" class="text-lg font-bold text-white mb-3">Confirmer</h2>
+    <p id="confirm-message" class="text-gray-300 mb-6 text-sm"></p>
+    <div class="flex justify-end gap-3">
+      <button onclick="closeModal('confirm-modal')" class="px-4 py-2 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700">Annuler</button>
+      <button id="confirm-ok" class="btn-primary">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="fixed bottom-6 right-6 px-4 py-3 rounded-xl shadow-lg text-white text-sm font-medium transform translate-y-16 opacity-0 transition-all duration-300 z-50"></div>
+
+<script>
+const SB_URL  = 'https://qwdttzsbbspayojzeugy.supabase.co';
+const SB_ANON = 'sb_publishable_tG64uzNsmT0XDV7pmglqFA_lxQ4xIFm';
+let sb = null;
+
+function withTimeout(p, ms = 25000) {
+  return Promise.race([p, new Promise((_,rej) => setTimeout(() => rej(new Error('Délai dépassé. Vérifiez votre connexion internet.')), ms))]);
+}
+
+let adminUser = null;
+let adminProfile = null;
+let allUsers = [];
+let loaded = {};
+
+/* ── Init ─────────────────────────────────────────────── */
+function init() {
+  switchTab('dashboard');
+}
+
+async function doLogout() {
+  window.location.href = './rivo.html';
+}
+
+/* ── Tab navigation ───────────────────────────────────── */
+function switchTab(name) {
+  ['dashboard','utilisateurs','formations','retraits','attestations','messages'].forEach(t => {
+    const el = document.getElementById('page-' + t);
+    el.classList.add('hidden'); el.style.display = 'none';
+    document.getElementById('tab-' + t).classList.remove('active');
+  });
+  const active = document.getElementById('page-' + name);
+  active.classList.remove('hidden');
+  active.style.display = 'block';
+  document.getElementById('tab-' + name).classList.add('active');
+
+  if (!loaded[name]) {
+    loaded[name] = true;
+    if (name === 'dashboard')    loadDashboard();
+    if (name === 'utilisateurs') loadUtilisateurs();
+    if (name === 'formations')   loadFormations();
+    if (name === 'retraits')     loadRetraits();
+    if (name === 'attestations') loadAttestations();
+    if (name === 'messages')     loadMessages();
+  }
+}
+
+/* ── Toast ────────────────────────────────────────────── */
+function toast(msg, ok = true) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `fixed bottom-6 right-6 px-4 py-3 rounded-xl shadow-lg text-white text-sm font-medium z-50 transition-all duration-300 ${ok ? 'bg-green-700' : 'bg-red-700'}`;
+  el.style.transform = 'translateY(0)';
+  el.style.opacity = '1';
+  setTimeout(() => { el.style.transform = 'translateY(64px)'; el.style.opacity = '0'; }, 3000);
+}
+
+/* ── Modal helpers ────────────────────────────────────── */
+function closeModal(id) {
+  const el = document.getElementById(id);
+  el.classList.add('hidden'); el.style.display = 'none';
+}
+
+function confirm(title, msg, onOk) {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-message').textContent = msg;
+  const cm=document.getElementById('confirm-modal');cm.classList.remove('hidden');cm.style.display='flex';
+  const btn = document.getElementById('confirm-ok');
+  btn.onclick = () => { closeModal('confirm-modal'); onOk(); };
+}
+
+/* ── Dashboard ────────────────────────────────────────── */
+async function loadDashboard() {
+  try{
+    const [usersRes, purchasesRes, withdrawalsRes, coursesRes] = await Promise.all([
+      sb.from('profiles').select('id', { count: 'exact', head: true }),
+      sb.from('purchases').select('id,amount', { count: 'exact' }).eq('status','complete'),
+      sb.from('withdrawals').select('id', { count: 'exact', head: true }).eq('status','en_attente'),
+      sb.from('courses').select('id', { count: 'exact', head: true }).eq('is_published', true),
+    ]);
+
+    const revenue = (purchasesRes.data||[]).reduce((s,r) => s + Number(r.amount||0), 0);
+
+    const [{ count: purchaseTotal }, { count: certTotal }] = await Promise.all([
+      sb.from('purchases').select('id', { count:'exact', head:true }).eq('status','complete'),
+      sb.from('certificates').select('id', { count:'exact', head:true }),
+    ]);
+    const pendingCerts = Math.max(0, (purchaseTotal||0) - (certTotal||0));
+
+    document.getElementById('stat-users').textContent = usersRes.count ?? '—';
+    document.getElementById('stat-purchases').textContent = purchasesRes.count ?? '—';
+    document.getElementById('stat-revenue').textContent = revenue.toLocaleString('fr-FR') + ' FCFA';
+    document.getElementById('stat-withdrawals').textContent = withdrawalsRes.count ?? '—';
+    document.getElementById('stat-certs').textContent = pendingCerts;
+    document.getElementById('stat-courses').textContent = coursesRes.count ?? '—';
+
+    // Recent purchases
+    const { data: rp } = await sb.from('purchases').select('id,amount,currency,purchased_at,user_id,course_id').eq('status','complete').order('purchased_at',{ascending:false}).limit(5);
+    const uids2=[...new Set((rp||[]).map(p=>p.user_id))];
+    const cids2=[...new Set((rp||[]).map(p=>p.course_id))];
+    const [{data:rpProfs},{data:rpCourses}]=uids2.length?await Promise.all([
+      sb.from('profiles').select('id,first_name,last_name').in('id',uids2),
+      sb.from('courses').select('id,title').in('id',cids2)
+    ]):[{data:[]},{data:[]}];
+    const rpPM=Object.fromEntries((rpProfs||[]).map(p=>[p.id,p]));
+    const rpCM=Object.fromEntries((rpCourses||[]).map(c=>[c.id,c]));
+    const rpEl = document.getElementById('recent-purchases');
+    if (!rp || rp.length === 0) { rpEl.innerHTML = '<p>Aucun achat récent</p>'; }
+    else rpEl.innerHTML = (rp||[]).map(p => `
+      <div class="flex items-center justify-between py-2 border-b border-gray-700 last:border-0">
+        <div>
+          <div class="text-white font-medium">${rpPM[p.user_id]?.first_name||''} ${rpPM[p.user_id]?.last_name||''}</div>
+          <div class="text-xs text-gray-500">${rpCM[p.course_id]?.title||'—'}</div>
+        </div>
+        <div class="text-green-400 font-semibold">${(p.amount||0).toLocaleString('fr-FR')} FCFA</div>
+      </div>`).join('');
+
+    // Recent withdrawals
+    const { data: rw } = await sb.from('withdrawals').select('id,amount,status,method,created_at,user_id').order('created_at',{ascending:false}).limit(5);
+    const wuids=[...new Set((rw||[]).map(w=>w.user_id))];
+    const [{data:rwProfs}]=wuids.length?await Promise.all([sb.from('profiles').select('id,first_name,last_name').in('id',wuids)]):[{data:[]}];
+    const rwPM=Object.fromEntries((rwProfs||[]).map(p=>[p.id,p]));
+    const rwEl = document.getElementById('recent-withdrawals');
+    if (!rw || rw.length === 0) { rwEl.innerHTML = '<p>Aucun retrait récent</p>'; }
+    else rwEl.innerHTML = (rw||[]).map(w => `
+      <div class="flex items-center justify-between py-2 border-b border-gray-700 last:border-0">
+        <div>
+          <div class="text-white font-medium">${rwPM[w.user_id]?.first_name||''} ${rwPM[w.user_id]?.last_name||''}</div>
+          <div class="text-xs text-gray-500">${w.method||'—'}</div>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="font-semibold text-orange-300">${(w.amount||0).toLocaleString('fr-FR')} FCFA</span>
+          <span class="status-badge status-${w.status}">${w.status}</span>
+        </div>
+      </div>`).join('');
+  }catch(e){
+    console.error('loadDashboard error:',e?.message||e);
+    ['stat-users','stat-purchases','stat-revenue','stat-withdrawals','stat-certs','stat-courses']
+      .forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—';});
+    const rpEl=document.getElementById('recent-purchases');
+    if(rpEl)rpEl.innerHTML='<p style="color:#ef4444;font-size:.85rem">Erreur de connexion. Vérifiez que votre projet Supabase est actif (non pausé).</p>';
+  }
+}
+
+/* ── Utilisateurs ─────────────────────────────────────── */
+async function loadUtilisateurs() {
+  const { data } = await sb.from('profiles').select('*').order('created_at',{ascending:false});
+  allUsers = data || [];
+  renderUsers(allUsers);
+}
+
+function filterUsers() {
+  const q = document.getElementById('search-users').value.toLowerCase();
+  const filtered = allUsers.filter(u =>
+    (u.first_name||'').toLowerCase().includes(q) ||
+    (u.last_name||'').toLowerCase().includes(q) ||
+    (u.email||'').toLowerCase().includes(q) ||
+    (u.referral_code||'').toLowerCase().includes(q)
+  );
+  renderUsers(filtered);
+}
+
+function badgeLabel(level) {
+  const map = { admin:'Admin', or:'🥇 Or', argent:'🥈 Argent', bronze:'🥉 Bronze', diamant:'💎 Diamant', debutant:'🌱 Débutant' };
+  return map[level] || level || '🌱 Débutant';
+}
+
+function badgeClass(level) {
+  const map = { admin:'badge-admin', or:'badge-or', argent:'badge-argent', bronze:'badge-bronze', diamant:'badge-diamant' };
+  return 'badge ' + (map[level] || 'badge-debutant');
+}
+
+function renderUsers(users) {
+  const tb = document.getElementById('users-table');
+  if (!users.length) { tb.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500 py-8">Aucun utilisateur</td></tr>'; return; }
+  tb.innerHTML = users.map(u => {
+    const initials = ((u.first_name||'?')[0] + (u.last_name||'?')[0]).toUpperCase();
+    const date = u.created_at ? new Date(u.created_at).toLocaleDateString('fr-FR') : '—';
+    return `
+    <tr>
+      <td>
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-purple-700 flex items-center justify-center font-bold text-sm flex-shrink-0">${initials}</div>
+          <div>
+            <div class="font-medium text-white">${u.first_name||''} ${u.last_name||''}</div>
+            <div class="text-xs text-gray-500">${u.email||''}</div>
+          </div>
+        </div>
+      </td>
+      <td><span class="${badgeClass(u.badge_level)}">${badgeLabel(u.badge_level)}</span></td>
+      <td class="text-green-400 font-semibold">${(u.balance||0).toLocaleString('fr-FR')} FCFA</td>
+      <td><code class="bg-gray-800 px-2 py-1 rounded text-xs text-purple-300">${u.referral_code||'—'}</code></td>
+      <td class="text-gray-400">${date}</td>
+      <td><button onclick="viewUserProfile('${u.id}')" style="background:#7c3aed;color:white;border:none;border-radius:.5rem;padding:.4rem .875rem;cursor:pointer;font-size:.8rem;font-weight:700;white-space:nowrap">👤 Voir profil</button></td>
+    </tr>`;
+  }).join('');
+}
+
+async function viewUserProfile(userId){
+  const modal=document.getElementById('user-profile-modal');
+  modal.classList.remove('hidden'); modal.style.display='flex';
+  document.getElementById('user-profile-content').innerHTML=
+    '<div style="text-align:center;padding:4rem;color:#9ca3af">Chargement...</div>';
+  try{
+    const[{data:p},{data:purchases},{data:certs},{data:wds}]=await Promise.all([
+      sb.from('profiles').select('*').eq('id',userId).single(),
+      sb.from('purchases').select('*,courses(title,price,currency)')
+        .eq('user_id',userId).eq('status','complete').order('purchased_at',{ascending:false}),
+      sb.from('certificates').select('*,courses(title)').eq('user_id',userId)
+        .order('issued_at',{ascending:false}),
+      sb.from('withdrawals').select('*').eq('user_id',userId)
+        .order('created_at',{ascending:false})
+    ]);
+    const bClass=badgeClass(p.badge_level);
+    const bLabel=badgeLabel(p.badge_level);
+    const fmtDate=d=>d?new Date(d).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}):'—';
+    const fmtAmt=(a,c)=>new Intl.NumberFormat('fr-FR').format(a||0)+' '+(c||'FCFA');
+    const sColor={en_attente:'#f59e0b',en_cours:'#3b82f6',complete:'#10b981',rejete:'#ef4444'};
+    document.getElementById('user-profile-content').innerHTML=`
+      <div style="display:flex;align-items:center;gap:1.5rem;margin-bottom:1.5rem;padding:1.5rem;background:#111827;border-radius:1rem">
+        <div style="width:5rem;height:5rem;border-radius:9999px;flex-shrink:0;background:linear-gradient(135deg,#7c3aed,#4f46e5);display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:1.5rem;overflow:hidden">
+          ${p.avatar_url?`<img src="${p.avatar_url}" style="width:100%;height:100%;object-fit:cover"/>`
+            :((p.first_name||'?')[0]+(p.last_name||'?')[0]).toUpperCase()}
+        </div>
+        <div style="flex:1">
+          <div style="font-size:1.3rem;font-weight:800;color:white">${p.first_name||''} ${p.last_name||''}</div>
+          <div style="color:#9ca3af;font-size:.9rem;margin:.2rem 0">${p.email||'—'}</div>
+          <span class="${bClass}">${bLabel}</span>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:1.4rem;font-weight:900;color:#10b981">${fmtAmt(p.balance,p.currency)}</div>
+          <div style="color:#9ca3af;font-size:.75rem">Solde disponible</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem">
+        ${[['📧 Email',p.email||'—'],['📱 Téléphone',p.phone||'—'],
+           ['🎂 Date de naissance',fmtDate(p.birth_date)],['🎟️ Code parrainage',p.referral_code||'—'],
+           ['📅 Inscrit le',fmtDate(p.created_at)],['💰 Solde',fmtAmt(p.balance,p.currency)]]
+          .map(([l,v])=>`<div style="background:#111827;border-radius:.875rem;padding:1rem">
+            <div style="font-size:.75rem;color:#9ca3af;margin-bottom:.3rem">${l}</div>
+            <div style="font-weight:700;color:white;font-size:.9rem">${v}</div>
+          </div>`).join('')}
+      </div>
+      <div style="background:#111827;border-radius:1rem;padding:1.25rem;margin-bottom:1.25rem">
+        <h3 style="font-weight:700;color:white;margin-bottom:1rem">📚 Formations achetées (${purchases.length})</h3>
+        ${purchases.length===0?'<p style="color:#9ca3af;font-size:.875rem">Aucune formation achetée.</p>'
+          :purchases.map(pu=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:.625rem .875rem;background:#1e1e2e;border-radius:.75rem;margin-bottom:.5rem">
+            <span style="color:#e5e7eb;font-size:.875rem">${pu.courses?.title||'—'}</span>
+            <div style="text-align:right">
+              <div style="color:#7c3aed;font-weight:700;font-size:.85rem">${fmtAmt(pu.amount,pu.currency)}</div>
+              <div style="color:#9ca3af;font-size:.7rem">${fmtDate(pu.purchased_at)}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+      <div style="background:#111827;border-radius:1rem;padding:1.25rem;margin-bottom:1.25rem">
+        <h3 style="font-weight:700;color:white;margin-bottom:1rem">🏆 Attestations (${certs.length})</h3>
+        ${certs.length===0?'<p style="color:#9ca3af;font-size:.875rem">Aucune attestation.</p>'
+          :certs.map(c=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:.625rem .875rem;background:#1e1e2e;border-radius:.75rem;margin-bottom:.5rem">
+            <span style="color:#e5e7eb;font-size:.875rem">${c.courses?.title||'—'}</span>
+            <div style="text-align:right">
+              ${c.certificate_url?`<a href="${c.certificate_url}" target="_blank" style="color:#f59e0b;font-size:.8rem;font-weight:700">📄 Voir</a>`:''}
+              <div style="color:#9ca3af;font-size:.7rem">${fmtDate(c.issued_at)}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+      <div style="background:#111827;border-radius:1rem;padding:1.25rem">
+        <h3 style="font-weight:700;color:white;margin-bottom:1rem">💸 Historique des retraits (${wds.length})</h3>
+        ${wds.length===0?'<p style="color:#9ca3af;font-size:.875rem">Aucun retrait.</p>'
+          :wds.map(w=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:.625rem .875rem;background:#1e1e2e;border-radius:.75rem;margin-bottom:.5rem">
+            <div>
+              <span style="color:#e5e7eb;font-size:.875rem">${fmtAmt(w.amount,w.currency)}</span>
+              <span style="color:#9ca3af;font-size:.75rem;margin-left:.5rem">${w.method||'—'}</span>
+            </div>
+            <div style="text-align:right">
+              <span style="color:${sColor[w.status]||'#9ca3af'};font-weight:700;font-size:.8rem">${w.status||'—'}</span>
+              <div style="color:#9ca3af;font-size:.7rem">${fmtDate(w.created_at)}</div>
+            </div>
+          </div>`).join('')}
+      </div>`;
+  }catch(e){
+    document.getElementById('user-profile-content').innerHTML=
+      `<p style="color:#ef4444;text-align:center;padding:2rem">Erreur: ${e.message}</p>`;
+  }
+}
+
+/* ── Formations ───────────────────────────────────────── */
+async function loadFormations() {
+  const { data } = await sb.from('courses').select('*').order('created_at',{ascending:false});
+  renderFormations(data || []);
+}
+
+function renderFormations(courses) {
+  const grid = document.getElementById('formations-grid');
+  if (!courses.length) { grid.innerHTML = '<div class="col-span-3 text-center text-gray-500 py-8">Aucune formation</div>'; return; }
+  grid.innerHTML = courses.map(c => `
+    <div class="card overflow-hidden">
+      ${c.cover_url ? `<img src="${c.cover_url}" alt="" class="w-full h-40 object-cover"/>` : '<div class="w-full h-40 bg-gradient-to-br from-purple-900 to-violet-800 flex items-center justify-center text-3xl">📚</div>'}
+      <div class="p-4">
+        <div class="flex items-start justify-between gap-2 mb-1">
+          <h3 class="font-semibold text-white leading-snug">${c.title}</h3>
+          <span class="flex-shrink-0 text-xs px-2 py-1 rounded-full ${c.is_published ? 'bg-green-900/50 text-green-400' : 'bg-gray-700 text-gray-400'}">${c.is_published ? 'Publié' : 'Brouillon'}</span>
+        </div>
+        <p class="text-gray-400 text-xs mb-3 line-clamp-2">${c.description||''}</p>
+        <div class="text-purple-400 font-bold mb-4">${(c.price||0).toLocaleString('fr-FR')} ${c.currency||'XOF'}</div>
+        <div class="flex gap-2 flex-wrap">
+          <button onclick="togglePublish('${c.id}',${c.is_published})" class="${c.is_published ? 'btn-warning' : 'btn-success'} text-xs">${c.is_published ? 'Dépublier' : 'Publier'}</button>
+          <button onclick="openCourseModal(${JSON.stringify(c).replace(/"/g,'&quot;')})" class="btn-primary text-xs">Modifier</button>
+          <button onclick="deleteCourse('${c.id}')" class="btn-danger text-xs">Supprimer</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function openCourseModal(course) {
+  document.getElementById('modal-title').textContent = course ? 'Modifier la formation' : 'Nouvelle formation';
+  document.getElementById('course-id').value   = course?.id || '';
+  document.getElementById('course-title').value = course?.title || '';
+  document.getElementById('course-short').value = course?.description || '';
+  document.getElementById('course-desc').value  = course?.full_description || '';
+  document.getElementById('course-price').value = course?.price || '';
+  document.getElementById('course-currency').value = course?.currency || 'XOF';
+  document.getElementById('course-cover').value = course?.cover_url || '';
+  document.getElementById('course-file').value  = course?.file_url || '';
+  document.getElementById('course-file-url').value = course?.file_url || '';
+  document.getElementById('course-published').checked = course?.is_published || false;
+  document.getElementById('cover-file').value = '';
+  document.getElementById('cover-name').textContent = course?.cover_url ? 'Image actuelle ✓' : 'Aucun fichier';
+  document.getElementById('course-error').classList.add('hidden');
+  const mod=document.getElementById('course-modal');mod.classList.remove('hidden');mod.style.display='flex';
+}
+
+async function saveCourse(e) {
+  e.preventDefault();
+  const id    = document.getElementById('course-id').value;
+  const errEl = document.getElementById('course-error');
+  const saveBtn = e.submitter || document.querySelector('#course-form button[type=submit]');
+  errEl.classList.add('hidden');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Enregistrement…'; }
+  try {
+    if (saveBtn) saveBtn.textContent = 'Upload…';
+    const coverFile = document.getElementById('cover-file').files[0];
+    let coverUrl = document.getElementById('course-cover').value.trim() || null;
+    let fileUrl  = document.getElementById('course-file-url').value.trim() || null;
+    if (coverFile) coverUrl = await uploadCloudinary(coverFile, 'afrotv_images');
+    if (saveBtn) saveBtn.textContent = 'Enregistrement…';
+    const payload = {
+      title:            document.getElementById('course-title').value.trim(),
+      description:      document.getElementById('course-short').value.trim(),
+      full_description: document.getElementById('course-desc').value.trim(),
+      price:            parseFloat(document.getElementById('course-price').value) || 0,
+      currency:         document.getElementById('course-currency').value,
+      cover_url:        coverUrl,
+      file_url:         fileUrl,
+      is_published:     document.getElementById('course-published').checked,
+    };
+
+    let err;
+    if (id) {
+      ({ error: err } = await withTimeout(sb.from('courses').update(payload).eq('id', id)));
+    } else {
+      ({ error: err } = await withTimeout(sb.from('courses').insert(payload)));
+    }
+    if (err) throw err;
+
+    closeModal('course-modal');
+    toast(id ? 'Formation mise à jour !' : 'Formation créée !');
+    loaded.formations = false;
+    loadFormations();
+  } catch(err) {
+    errEl.textContent = err.message || 'Erreur lors de la sauvegarde';
+    errEl.classList.remove('hidden');
+  } finally {
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Enregistrer'; }
+  }
+}
+
+async function togglePublish(id, current) {
+  const { error } = await sb.from('courses').update({ is_published: !current }).eq('id', id);
+  if (error) { toast(error.message, false); return; }
+  toast(current ? 'Formation dépubliée' : 'Formation publiée !');
+  loaded.formations = false;
+  loadFormations();
+}
+
+function deleteCourse(id) {
+  confirm('Supprimer la formation', 'Cette action est irréversible. Confirmer la suppression ?', async () => {
+    const { error } = await sb.from('courses').delete().eq('id', id);
+    if (error) { toast(error.message, false); return; }
+    toast('Formation supprimée');
+    loaded.formations = false;
+    loadFormations();
+  });
+}
+
+/* ── Cloudinary upload ────────────────────────────────── */
+async function uploadCloudinary(file, preset) {
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('upload_preset', preset);
+  let type;
+  if (file.type === 'application/pdf') type = 'raw';
+  else if (file.type.startsWith('image')) type = 'image';
+  else type = 'video';
+  const r = await fetch(`https://api.cloudinary.com/v1_1/dx0dzt35e/${type}/upload`, { method:'POST', body:fd });
+  const d = await r.json();
+  if (d.error) throw new Error(d.error.message);
+  return d.secure_url;
+}
+
+/* ── Retraits ─────────────────────────────────────────── */
+async function loadRetraits() {
+  const tb = document.getElementById('retraits-table');
+  const filter = document.getElementById('retrait-filter').value;
+  let q = sb.from('withdrawals').select('*').order('created_at',{ascending:false});
+  if (filter) q = q.eq('status', filter);
+  const { data: wds, error } = await q;
+  if (error) {
+    tb.innerHTML = `<p style="color:#ef4444;text-align:center;padding:2rem">Erreur : ${error.message}</p>`;
+    return;
+  }
+  if (!wds || wds.length === 0) { renderRetraits([]); return; }
+  const uids = [...new Set(wds.map(w => w.user_id))];
+  const { data: profs } = await sb.from('profiles').select('id,first_name,last_name,email,balance').in('id', uids);
+  const pm = Object.fromEntries((profs||[]).map(p => [p.id, p]));
+  const merged = wds.map(w => ({ ...w, profiles: pm[w.user_id] || null }));
+  renderRetraits(merged);
+}
+
+function renderRetraits(rows) {
+  const tb = document.getElementById('retraits-table');
+  if (!rows.length) { tb.innerHTML = '<p class="text-center text-gray-500 py-8">Aucune demande de retrait</p>'; return; }
+  const sColors = {en_attente:'#f59e0b',complete:'#10b981',rejete:'#ef4444',en_cours:'#3b82f6'};
+  const sLabels = {en_attente:'⏳ En attente',complete:'✅ Complété',rejete:'❌ Rejeté',en_cours:'🔄 En cours'};
+  tb.innerHTML = rows.map(r => {
+    const date = r.created_at ? new Date(r.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}) : '—';
+    const color = sColors[r.status]||'#9ca3af';
+    const label = sLabels[r.status]||r.status;
+    const nom = `${r.profiles?.first_name||''} ${r.profiles?.last_name||''}`.trim()||'Utilisateur inconnu';
+    const actions = r.status === 'en_attente' ? `
+      <div style="display:flex;gap:.5rem;margin-top:1rem">
+        <button onclick="validateRetrait('${r.id}','${r.profiles?.id}',${r.amount})" style="flex:1;padding:.6rem;background:#10b981;color:white;border:none;border-radius:.75rem;font-weight:700;cursor:pointer;font-size:.9rem">✅ Valider</button>
+        <button onclick="rejectRetrait('${r.id}','${r.profiles?.id}',${r.amount})" style="flex:1;padding:.6rem;background:#ef4444;color:white;border:none;border-radius:.75rem;font-weight:700;cursor:pointer;font-size:.9rem">❌ Rejeter</button>
+      </div>` : '';
+    return `<div style="background:#1e293b;border:1px solid #334155;border-radius:1rem;padding:1.25rem;border-left:4px solid ${color}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem">
+        <div>
+          <div style="font-size:1.1rem;font-weight:700;color:white">${nom}</div>
+          <div style="font-size:.8rem;color:#9ca3af;margin-top:.2rem">${r.profiles?.email||'—'}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:1.5rem;font-weight:900;color:#f59e0b">${(r.amount||0).toLocaleString('fr-FR')} FCFA</div>
+          <div style="font-size:.75rem;font-weight:700;color:${color};margin-top:.2rem">${label}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.5rem;margin-top:1rem">
+        <div style="background:#0f172a;padding:.6rem .875rem;border-radius:.625rem">
+          <div style="font-size:.7rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em">Méthode</div>
+          <div style="font-size:.875rem;color:#e2e8f0;font-weight:600;margin-top:.15rem">${r.method||'—'}</div>
+        </div>
+        <div style="background:#0f172a;padding:.6rem .875rem;border-radius:.625rem">
+          <div style="font-size:.7rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em">Opérateur</div>
+          <div style="font-size:.875rem;color:#e2e8f0;font-weight:600;margin-top:.15rem">${r.operator||'—'}</div>
+        </div>
+        <div style="background:#0f172a;padding:.6rem .875rem;border-radius:.625rem">
+          <div style="font-size:.7rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em">Téléphone</div>
+          <div style="font-size:.875rem;color:#e2e8f0;font-weight:600;margin-top:.15rem">${r.country_code||''} ${r.phone_number||'—'}</div>
+        </div>
+        <div style="background:#0f172a;padding:.6rem .875rem;border-radius:.625rem">
+          <div style="font-size:.7rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em">Date</div>
+          <div style="font-size:.875rem;color:#e2e8f0;font-weight:600;margin-top:.15rem">${date}</div>
+        </div>
+      </div>
+      ${actions}
+    </div>`;
+  }).join('');
+}
+
+async function validateRetrait(id, userId, amount) {
+  confirm('Valider le retrait', `Confirmer la validation du retrait de ${(amount||0).toLocaleString('fr-FR')} FCFA ? (Le solde a déjà été déduit côté utilisateur)`, async () => {
+    try {
+      const { error } = await withTimeout(sb.from('withdrawals').update({ status: 'complete' }).eq('id', id));
+      if (error) throw new Error('Erreur lors de la validation');
+      toast('Retrait validé ✅');
+      loaded.retraits = false;
+      loadRetraits();
+      loaded.dashboard = false;
+    } catch(err) {
+      toast(err.message || 'Erreur lors de la validation', false);
+    }
+  });
+}
+
+async function rejectRetrait(id, userId, amount) {
+  confirm('Rejeter le retrait', `Rejeter cette demande et rembourser ${(amount||0).toLocaleString('fr-FR')} FCFA au compte de l'utilisateur ?`, async () => {
+    try {
+      const { data: prof } = await withTimeout(sb.from('profiles').select('balance').eq('id', userId).single());
+      if (!prof) throw new Error('Profil introuvable');
+      const newBalance = (prof.balance || 0) + amount;
+      const [r1, r2] = await withTimeout(Promise.all([
+        sb.from('withdrawals').update({ status: 'rejete' }).eq('id', id),
+        sb.from('profiles').update({ balance: newBalance }).eq('id', userId),
+      ]));
+      if (r1.error || r2.error) throw new Error('Erreur lors du rejet');
+      toast('Retrait rejeté, montant remboursé ✅');
+      loaded.retraits = false;
+      loadRetraits();
+    } catch(err) {
+      toast(err.message || 'Erreur lors du rejet', false);
+    }
+  });
+}
+
+/* ── Attestations ─────────────────────────────────────── */
+async function loadAttestations() {
+  const [{ data: allPurchases }, { data: certs }] = await Promise.all([
+    sb.from('purchases')
+      .select('id,purchased_at,user_id,course_id')
+      .eq('status','complete')
+      .order('purchased_at',{ascending:false}),
+    sb.from('certificates').select('user_id,course_id'),
+  ]);
+  const certSet = new Set((certs||[]).map(c => `${c.user_id}:${c.course_id}`));
+  const raw = (allPurchases||[]).filter(p => p.user_id && p.course_id && !certSet.has(`${p.user_id}:${p.course_id}`));
+  let purchases = raw;
+  if(raw.length > 0){
+    const uids=[...new Set(raw.map(p=>p.user_id))];
+    const cids=[...new Set(raw.map(p=>p.course_id))];
+    const [{data:profs},{data:courses}]=await Promise.all([
+      sb.from('profiles').select('id,first_name,last_name,email').in('id',uids),
+      sb.from('courses').select('id,title').in('id',cids)
+    ]);
+    const pm=Object.fromEntries((profs||[]).map(p=>[p.id,p]));
+    const cm=Object.fromEntries((courses||[]).map(c=>[c.id,c]));
+    purchases=raw.map(p=>({...p,profile:pm[p.user_id]||null,course:cm[p.course_id]||null}));
+  }
+
+  const container = document.getElementById('attestations-list');
+  if (!purchases || purchases.length === 0) {
+    container.innerHTML = '<div class="card p-8 text-center text-gray-500">Aucun certificat en attente d\'envoi</div>';
+    return;
+  }
+
+  container.innerHTML = purchases.map(p => `
+    <div class="card p-5" id="attest-${p.id}">
+      <div class="flex flex-wrap items-start gap-4 mb-4">
+        <div class="flex-1 min-w-0">
+          <div class="font-semibold text-white">${p.profile?.first_name||''} ${p.profile?.last_name||''}</div>
+          <div class="text-xs text-gray-500 mb-1">${p.profile?.email||''}</div>
+          <div class="text-sm text-purple-300">📚 ${p.course?.title||'—'}</div>
+        </div>
+        <div class="text-xs text-gray-500">${p.purchased_at ? new Date(p.purchased_at).toLocaleDateString('fr-FR') : '—'}</div>
+      </div>
+      <div class="space-y-2">
+        <div style="display:flex;gap:.5rem;align-items:center">
+          <input type="text" id="pdf-${p.id}" placeholder="Collez le lien Google Drive, Dropbox, etc." class="input text-sm" style="flex:1"/>
+        </div>
+        <textarea id="msg-${p.id}" placeholder="Message personnalisé (optionnel)" class="input text-sm" rows="2"></textarea>
+        <button onclick="sendAttestation('${p.id}','${p.user_id}','${p.course_id}')" class="btn-primary text-sm">Envoyer l'attestation</button>
+      </div>
+    </div>`).join('');
+}
+
+async function sendAttestation(purchaseId, userId, courseId) {
+  const certUrl = document.getElementById('pdf-' + purchaseId).value.trim();
+  const message = document.getElementById('msg-' + purchaseId).value.trim();
+  if (!certUrl) { toast('Veuillez entrer l\'URL du certificat', false); return; }
+
+  const btn = document.querySelector(`#attest-${purchaseId} button`);
+  if (btn) { btn.disabled = true; btn.textContent = 'Envoi…'; }
+  try {
+    const { error: certErr } = await withTimeout(sb.from('certificates').insert({
+      user_id: userId, course_id: courseId, certificate_url: certUrl, message: message || null,
+    }));
+    if (certErr) throw certErr;
+
+    toast('Attestation envoyée avec succès !');
+    document.getElementById('attest-' + purchaseId).remove();
+    loaded.dashboard = false;
+  } catch(err) {
+    toast(err.message || 'Erreur lors de l\'envoi', false);
+    if (btn) { btn.disabled = false; btn.textContent = 'Envoyer l\'attestation'; }
+  }
+}
+
+/* ── Messages Support ─────────────────────────────────── */
+let currentMsgUserId = null;
+let currentMsgIds = [];
+
+async function loadMessages() {
+  const convList = document.getElementById('msg-conv-list');
+  convList.innerHTML = '<p style="text-align:center;color:#6b7280;padding:2rem;font-size:.875rem">Chargement…</p>';
+  const { data: msgs } = await sb.from('support_messages')
+    .select('*,profiles(first_name,last_name,email)')
+    .order('created_at', { ascending: false });
+  if (!msgs || msgs.length === 0) {
+    convList.innerHTML = '<p style="text-align:center;color:#6b7280;padding:2rem;font-size:.875rem">Aucun message</p>';
+    return;
+  }
+  // Group by user_id — one entry per user, most recent message first
+  const byUser = {};
+  msgs.forEach(m => {
+    if (!byUser[m.user_id]) byUser[m.user_id] = { profile: m.profiles, msgs: [] };
+    byUser[m.user_id].msgs.push(m);
+  });
+  const unread = msgs.filter(m => !m.is_read_by_admin).map(m => m.user_id);
+  const unreadSet = new Set(unread);
+  const badge = document.getElementById('msg-badge');
+  if (badge) badge.style.display = unreadSet.size > 0 ? 'inline' : 'none';
+
+  convList.innerHTML = Object.entries(byUser).map(([uid, {profile, msgs: um}]) => {
+    const last = um[0];
+    const name = profile ? `${profile.first_name||''} ${profile.last_name||''}`.trim() || profile.email || '?' : '?';
+    const preview = (last.message||'').slice(0, 60) + (last.message?.length > 60 ? '…' : '');
+    const hasUnread = um.some(m => !m.is_read_by_admin);
+    return `<div onclick="openConversation('${uid}')" style="padding:.875rem 1rem;cursor:pointer;border-radius:.5rem;margin-bottom:.25rem;transition:background .15s;${currentMsgUserId===uid?'background:#2d2d4e;':''}" onmouseover="this.style.background='#2d2d4e'" onmouseout="this.style.background='${currentMsgUserId===uid?'#2d2d4e':'transparent'}'">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.2rem">
+        <span style="font-weight:600;color:white;font-size:.875rem">${name}</span>
+        ${hasUnread ? '<span style="background:#ef4444;color:white;border-radius:9999px;font-size:.65rem;padding:1px 6px">Non lu</span>' : ''}
+      </div>
+      <div style="font-size:.78rem;color:#9ca3af;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${preview}</div>
+    </div>`;
+  }).join('');
+}
+
+async function openConversation(userId) {
+  currentMsgUserId = userId;
+  const header = document.getElementById('msg-detail-header');
+  const history = document.getElementById('msg-detail-history');
+  const replyZone = document.getElementById('msg-reply-zone');
+  history.innerHTML = '<p style="color:#6b7280;text-align:center;padding:2rem">Chargement…</p>';
+  replyZone.style.display = 'block';
+
+  const { data: msgs } = await sb.from('support_messages')
+    .select('*,profiles(first_name,last_name,email)')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: true });
+
+  if (!msgs || msgs.length === 0) { history.innerHTML = ''; return; }
+  const p = msgs[0].profiles;
+  const name = p ? `${p.first_name||''} ${p.last_name||''}`.trim() || p.email || '?' : '?';
+  const wa = msgs.find(m => m.whatsapp)?.whatsapp;
+  const email = p?.email || msgs.find(m => m.contact_email)?.contact_email;
+  header.innerHTML = `<div><strong style="color:white">${name}</strong>${wa ? ` · <a href="https://wa.me/${wa.replace(/\D/g,'')}" target="_blank" style="color:#4ade80;font-size:.8rem">📱 ${wa}</a>` : ''}${email ? ` · <span style="color:#9ca3af;font-size:.8rem">${email}</span>` : ''}</div>`;
+
+  history.innerHTML = '';
+  msgs.forEach(m => {
+    const d = new Date(m.created_at).toLocaleDateString('fr-FR', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+    const msgDiv = document.createElement('div');
+    msgDiv.style.cssText = 'display:flex;flex-direction:column;gap:.5rem';
+    let html = `<div style="align-self:flex-start;max-width:75%;background:#1e293b;border-radius:.75rem .75rem .75rem 0;padding:.625rem .875rem;font-size:.875rem;color:#e2e8f0">`;
+    if (m.photo_url) html += `<img src="${m.photo_url}" style="max-width:200px;border-radius:.5rem;margin-bottom:.25rem;display:block"/>`;
+    html += `${m.message}<div style="font-size:.7rem;color:#6b7280;margin-top:.2rem">${d}</div></div>`;
+    if (m.reply) {
+      const rd = new Date(m.replied_at).toLocaleDateString('fr-FR', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+      html += `<div style="align-self:flex-end;max-width:75%;background:linear-gradient(135deg,#7c3aed,#6d28d9);border-radius:.75rem .75rem 0 .75rem;padding:.625rem .875rem;font-size:.875rem;color:white">${m.reply}<div style="font-size:.7rem;opacity:.7;margin-top:.2rem;text-align:right">Support RIVO · ${rd}</div></div>`;
+    }
+    msgDiv.innerHTML = html;
+    history.appendChild(msgDiv);
+  });
+  history.scrollTop = history.scrollHeight;
+
+  // Mark all as read by admin
+  const unreadIds = msgs.filter(m => !m.is_read_by_admin).map(m => m.id);
+  if (unreadIds.length > 0) {
+    await sb.from('support_messages').update({ is_read_by_admin: true }).in('id', unreadIds);
+    loadMessages();
+  }
+  currentMsgIds = msgs.map(m => m.id);
+}
+
+async function sendAdminReply() {
+  const input = document.getElementById('msg-reply-input');
+  const reply = input.value.trim();
+  if (!reply || !currentMsgUserId) return;
+  // Reply to the most recent unreplied message, or create standalone if needed
+  const { data: msgs } = await sb.from('support_messages')
+    .select('id,reply').eq('user_id', currentMsgUserId)
+    .order('created_at', { ascending: false });
+  const target = msgs?.find(m => !m.reply) || msgs?.[0];
+  if (!target) { toast('Aucun message trouvé', false); return; }
+  const { error } = await sb.from('support_messages').update({
+    reply, replied_at: new Date().toISOString(), is_read_by_user: false, is_read_by_admin: true
+  }).eq('id', target.id);
+  if (error) { toast(error.message || 'Erreur envoi', false); return; }
+  input.value = '';
+  toast('Réponse envoyée !');
+  await openConversation(currentMsgUserId);
+}
+
+/* ── Dynamic CDN loader with fallback ────────────────── */
+(function(){
+  var cdns=[
+    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js',
+    'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js'
+  ];
+  function showErr(msg){
+    document.getElementById('loading-screen').innerHTML='<div style="text-align:center;padding:2rem;color:#f87171;max-width:360px"><div style="font-size:2rem;margin-bottom:1rem">⚠️</div><p style="font-weight:700;margin-bottom:.5rem">Erreur de chargement</p><p style="font-size:.85rem;color:#9ca3af;margin-bottom:1.5rem">'+msg+'</p><button onclick="location.reload()" style="background:#7c3aed;color:#fff;border:none;border-radius:8px;padding:8px 20px;cursor:pointer;font-weight:600">🔄 Réessayer</button><br/><button onclick="window.location.href=\'./rivo.html\'" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:.8rem;margin-top:.75rem">Retour à l\'accueil</button></div>';
+  }
+  function tryLoad(i){
+    if(i>=cdns.length){showErr('Impossible de charger la bibliothèque Supabase.<br>Vérifiez votre connexion internet.');return;}
+    var s=document.createElement('script');
+    s.src=cdns[i];
+    s.onload=function(){
+      try{
+        sb=window.supabase.createClient(SB_URL,SB_ANON);
+        init();
+      }catch(e){tryLoad(i+1);}
+    };
+    s.onerror=function(){tryLoad(i+1);};
+    document.head.appendChild(s);
+  }
+  tryLoad(0);
+})();
+</script>
+</body>
+</html>

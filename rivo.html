@@ -288,6 +288,7 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
         <button onclick="goTo('notifs')" style="background:none;border:none;cursor:pointer;font-size:1.4rem;padding:.25rem;line-height:1">🔔</button>
         <span id="notif-badge" style="display:none;position:absolute;top:-2px;right:-2px;background:#ef4444;color:white;font-size:.6rem;font-weight:800;min-width:1rem;height:1rem;border-radius:9999px;align-items:center;justify-content:center;padding:0 .2rem">0</span>
       </div>
+      <button onclick="openSupport()" style="background:none;border:1px solid #bfdbfe;cursor:pointer;font-size:.8rem;color:#2563EB;font-weight:600;padding:.35rem .75rem;border-radius:.5rem">📞 Support</button>
       <button onclick="doLogout()" style="background:none;border:none;cursor:pointer;font-size:.8rem;color:#ef4444;font-weight:600;padding:.35rem .75rem;border-radius:.5rem;border:1px solid #fecaca">Déco.</button>
     </div>
   </header>
@@ -497,7 +498,7 @@ function badgeInfo(l){const m={debutant:['🌱','Débutant','#dbeafe','#1d4ed8']
 function togglePwd(id){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';}
 function setBtn(id,html,dis=false){const b=document.getElementById(id);if(b){b.innerHTML=html;b.disabled=dis;}}
 function showErr(id,msg){const el=document.getElementById(id);if(!el)return;el.textContent=msg;el.style.display=msg?'block':'none';}
-function withTimeout(p,ms=25000){return Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('Délai dépassé. Vérifiez votre connexion internet.')),ms))]);}
+function withTimeout(p,ms=25000){return Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('Erreur réseau. Réessayez.')),ms))]);}
 
 // ── Navigation ───────────────────────────────────────
 function goTo(p){
@@ -744,7 +745,7 @@ async function doRegister(e){
     setTimeout(()=>{goTo('dashboard');},600);
   }catch(err){
     const msg=err.message||'';
-    showErr('rg-err',msg.includes('Délai')?'Inscription trop lente. Réessayez dans quelques secondes.':msg||'Erreur lors de l\'inscription');
+    showErr('rg-err',msg||'Erreur. Réessayez.');
   }finally{
     setBtn('rg-btn','Créer mon compte',false);
   }
@@ -1161,51 +1162,42 @@ function switchTab(name){
 }
 
 // ── Notifications ─────────────────────────────────────
-// BUG 3b FIX: clés localStorage spécifiques à l'utilisateur pour éviter
-// le mélange des timestamps entre différents comptes sur le même navigateur
 async function loadNotifications(){
   if(!CU)return;
   const badge=document.getElementById('notif-badge');
   const list=document.getElementById('notif-list');
-  // Clés user-specific pour éviter le partage entre comptes
-  const notifKey=`rivo_notif_last_${CU.id}`;
   const certKey=`rivo_cert_last_${CU.id}`;
-  const last=localStorage.getItem(notifKey)||'2020-01-01T00:00:00Z';
+  const coursesKey=`rivo_courses_last_${CU.id}`;
   const certLast=localStorage.getItem(certKey)||'2020-01-01T00:00:00Z';
-  const [{data:filleuls},{data:newCerts}]=await Promise.all([
-    sb.from('profiles').select('id,first_name').eq('referred_by',CU.id),
-    sb.from('certificates').select('issued_at,courses(title)').eq('user_id',CU.id).gt('issued_at',certLast).order('issued_at',{ascending:false})
+  const coursesLast=localStorage.getItem(coursesKey)||'2020-01-01T00:00:00Z';
+  const [{data:newCerts},{data:newCourses},{data:supportReplies}]=await Promise.all([
+    sb.from('certificates').select('issued_at,courses(title)').eq('user_id',CU.id).gt('issued_at',certLast).order('issued_at',{ascending:false}),
+    sb.from('courses').select('title,created_at').eq('is_published',true).gt('created_at',coursesLast).order('created_at',{ascending:false}),
+    sb.from('support_messages').select('id,replied_at').eq('user_id',CU.id).not('reply','is',null).eq('is_read_by_user',false)
   ]);
   let items=[];
-  if(filleuls?.length){
-    const ids=filleuls.map(f=>f.id);
-    const {data:purchases}=await sb.from('purchases')
-      .select('user_id,purchased_at,profiles(first_name)')
-      .in('user_id',ids).eq('status','complete')
-      .gt('purchased_at',last)
-      .order('purchased_at',{ascending:false});
-    (purchases||[]).forEach(p=>{
-      const d=new Date(p.purchased_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
-      items.push({ts:p.purchased_at,html:`<div style="padding:.75rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.875rem"><span style="font-weight:700">🎉 ${p.profiles?.first_name||'Un filleul'}</span> a acheté une formation — <span style="color:#10b981;font-weight:700">+1 000 FCFA</span><div style="font-size:.75rem;color:#9ca3af;margin-top:.2rem">${d}</div></div>`});
-    });
-    // BUG 3b FIX: mettre à jour le timestamp IMMÉDIATEMENT après chargement
-    // pour éviter que le même toast réapparaisse à chaque visite
-    if(purchases?.length>0){
-      localStorage.setItem(notifKey,new Date().toISOString());
-      toast(`🎉 Vous avez gagné 1 000 FCFA grâce à ${purchases[0].profiles?.first_name||'un filleul'} !`);
-    }
-  }
+  // Type A: Attestations
   (newCerts||[]).forEach(c=>{
     const d=new Date(c.issued_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
     const title=c.courses?.title||'une formation';
-    items.push({ts:c.issued_at,html:`<div style="padding:.75rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.875rem;background:#fef9c3"><span style="font-weight:700">🏆 Attestation disponible</span> pour <em>${title}</em><div style="font-size:.75rem;color:#92400e;margin-top:.2rem">${d} · Consultez l'onglet <strong>Attests.</strong> · <a href="mailto:assistancetrc416@gmail.com" style="color:#2563eb">Assistance</a></div></div>`});
+    items.push({ts:c.issued_at,html:`<div style="padding:.75rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.875rem;background:#fef9c3"><span style="font-weight:700">🏆 Attestation disponible</span> pour <em>${title}</em><div style="font-size:.75rem;color:#92400e;margin-top:.2rem">${d} · Consultez l'onglet <strong>Attests.</strong></div></div>`});
   });
   if(newCerts?.length>0)localStorage.setItem(certKey,newCerts[0].issued_at);
+  // Type B: Nouvelles formations publiées
+  (newCourses||[]).forEach(c=>{
+    const d=new Date(c.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+    items.push({ts:c.created_at,html:`<div style="padding:.75rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.875rem;background:#eff6ff"><span style="font-weight:700">📚 Nouvelle formation disponible</span> : <em>${c.title}</em><div style="font-size:.75rem;color:#1d4ed8;margin-top:.2rem">${d} · Consultez l'onglet <strong>Formations</strong></div></div>`});
+  });
+  localStorage.setItem(coursesKey,new Date().toISOString());
+  // Type C: Réponse du support
+  if(supportReplies?.length>0){
+    items.push({ts:new Date().toISOString(),html:`<div style="padding:.75rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.875rem;background:#f5f3ff"><span style="font-weight:700">💬 Réponse du support reçue</span><div style="font-size:.75rem;color:#7c3aed;margin-top:.2rem">Consultez 📞 Support</div></div>`});
+    await sb.from('support_messages').update({is_read_by_user:true}).eq('user_id',CU.id).not('reply','is',null).eq('is_read_by_user',false);
+  }
   const total=items.length;
   if(total>0){badge.textContent=total;badge.style.display='flex';}else{badge.style.display='none';}
   if(total===0){list.innerHTML='<p style="padding:1rem;text-align:center;color:#9ca3af;font-size:.875rem">Aucune nouvelle notification</p>';}
   else{list.innerHTML=items.map(i=>i.html).join('');}
-  // Remplir la page dédiée avec auto-dismiss de 8 secondes
   const pageList=document.getElementById('notif-page-list');
   if(!pageList)return;
   if(total===0){pageList.innerHTML='<p style="text-align:center;color:#9ca3af;padding:2rem;font-size:.95rem">Aucune nouvelle notification</p>';return;}
@@ -1215,7 +1207,6 @@ async function loadNotifications(){
     wrapper.style.cssText='margin-bottom:.75rem;border-radius:1rem;overflow:hidden;background:white;box-shadow:0 2px 8px rgba(0,0,0,.07)';
     wrapper.innerHTML=item.html;
     pageList.appendChild(wrapper);
-    // BUG 4 FIX: durée réduite de 40 secondes à 8 secondes
     setTimeout(()=>{wrapper.style.transition='opacity .5s';wrapper.style.opacity='0';setTimeout(()=>wrapper.remove(),500);},8000);
   });
 }
@@ -1230,20 +1221,149 @@ function toggleNotifPanel(){
   }
 }
 
-// BUG 4 FIX: clearNotifications réinitialise loaded.notif et utilise les clés user-specific
 function clearNotifications(){
   if(CU?.id){
     const now=new Date().toISOString();
-    localStorage.setItem(`rivo_notif_last_${CU.id}`,now);
     localStorage.setItem(`rivo_cert_last_${CU.id}`,now);
+    localStorage.setItem(`rivo_courses_last_${CU.id}`,now);
   }
-  // Permettre le rechargement des notifications au prochain accès au dashboard
   delete loaded.notif;
   document.getElementById('notif-badge').style.display='none';
   const msg='<p style="padding:1rem;text-align:center;color:#9ca3af;font-size:.875rem">Tout lu ✓</p>';
   document.getElementById('notif-list').innerHTML=msg;
   const pl=document.getElementById('notif-page-list');if(pl)pl.innerHTML=msg;
 }
+
+// ── Support Panel ─────────────────────────────────────
+let supportPhotoFile=null;
+let supportLastMsgId=null;
+
+function openSupport(){
+  const panel=document.getElementById('support-panel');
+  panel.style.display='flex';
+  if(CU)loadSupportMessages();
+}
+
+function closeSupport(){
+  document.getElementById('support-panel').style.display='none';
+}
+
+async function loadSupportMessages(){
+  const hist=document.getElementById('support-history');
+  hist.innerHTML='<p style="text-align:center;color:#9ca3af;font-size:.8rem;padding:.5rem">Chargement...</p>';
+  const {data:msgs}=await sb.from('support_messages').select('*').eq('user_id',CU.id).order('created_at',{ascending:true});
+  if(!msgs||msgs.length===0){
+    hist.innerHTML='<p style="text-align:center;color:#9ca3af;font-size:.8rem;padding:1rem">Aucun message. Posez votre question !</p>';
+    return;
+  }
+  hist.innerHTML='';
+  msgs.forEach(m=>{
+    const msgDiv=document.createElement('div');
+    msgDiv.style.cssText='display:flex;flex-direction:column;gap:.25rem';
+    const d=new Date(m.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+    let html=`<div style="align-self:flex-end;max-width:80%;background:#2563eb;color:white;border-radius:.75rem .75rem 0 .75rem;padding:.5rem .75rem;font-size:.85rem">`;
+    if(m.photo_url)html+=`<img src="${m.photo_url}" style="max-width:100%;border-radius:.5rem;margin-bottom:.25rem;display:block"/>`;
+    html+=`${m.message}<div style="font-size:.7rem;opacity:.7;text-align:right;margin-top:.2rem">${d}</div></div>`;
+    if(m.reply){
+      const rd=new Date(m.replied_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+      html+=`<div style="align-self:flex-start;max-width:80%;background:#f1f5f9;border-radius:.75rem .75rem .75rem 0;padding:.5rem .75rem;font-size:.85rem;color:#1f2937">${m.reply}<div style="font-size:.7rem;color:#94a3b8;margin-top:.2rem">Support RIVO · ${rd}</div></div>`;
+    }
+    msgDiv.innerHTML=html;
+    hist.appendChild(msgDiv);
+  });
+  hist.scrollTop=hist.scrollHeight;
+}
+
+function handleSupportPhoto(input){
+  if(!input.files[0])return;
+  supportPhotoFile=input.files[0];
+  const img=document.getElementById('support-photo-img');
+  img.src=URL.createObjectURL(supportPhotoFile);
+  document.getElementById('support-photo-preview').style.display='block';
+}
+
+function clearSupportPhoto(){
+  supportPhotoFile=null;
+  document.getElementById('support-photo-input').value='';
+  document.getElementById('support-photo-preview').style.display='none';
+}
+
+async function sendSupportMessage(){
+  if(!CU){toast('Connectez-vous pour envoyer un message.','err');return;}
+  const input=document.getElementById('support-input');
+  const text=input.value.trim();
+  if(!text){toast('Écrivez un message.','err');return;}
+  let photoUrl=null;
+  if(supportPhotoFile){
+    try{
+      const fd=new FormData();
+      fd.append('file',supportPhotoFile);
+      fd.append('upload_preset','afrotv_images');
+      const r=await fetch('https://api.cloudinary.com/v1_1/dx0dzt35e/image/upload',{method:'POST',body:fd});
+      const j=await r.json();
+      photoUrl=j.secure_url||null;
+    }catch(e){console.warn('Photo upload failed',e);}
+  }
+  const {data:inserted,error}=await sb.from('support_messages').insert({user_id:CU.id,message:text,photo_url:photoUrl}).select().single();
+  if(error){toast('Erreur envoi. Réessayez.','err');return;}
+  supportLastMsgId=inserted.id;
+  input.value='';
+  clearSupportPhoto();
+  await loadSupportMessages();
+  if(!localStorage.getItem(`rivo_support_info_${CU.id}`)){
+    const modal=document.getElementById('support-contact-modal');
+    modal.style.display='flex';
+  }
+}
+
+async function saveSupportContact(){
+  const wa=document.getElementById('support-wa').value.trim();
+  const em=document.getElementById('support-contact-email').value.trim();
+  if(supportLastMsgId&&(wa||em)){
+    await sb.from('support_messages').update({whatsapp:wa||null,contact_email:em||null}).eq('id',supportLastMsgId);
+  }
+  localStorage.setItem(`rivo_support_info_${CU.id}`,'1');
+  document.getElementById('support-contact-modal').style.display='none';
+  toast('Coordonnées enregistrées !');
+}
 </script>
+
+<!-- Support Panel -->
+<div id="support-panel" style="display:none;position:fixed;bottom:1rem;right:1rem;width:340px;max-height:520px;background:white;border-radius:1rem;box-shadow:0 8px 32px rgba(0,0,0,.2);z-index:9999;flex-direction:column;overflow:hidden">
+  <div style="background:linear-gradient(135deg,#2563eb,#7c3aed);padding:.875rem 1rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+    <span style="color:white;font-weight:700;font-size:.95rem">💬 Support RIVO</span>
+    <button onclick="closeSupport()" style="background:rgba(255,255,255,.2);border:none;color:white;cursor:pointer;border-radius:.5rem;padding:.25rem .5rem;font-size:.875rem">✕</button>
+  </div>
+  <div id="support-history" style="flex:1;overflow-y:auto;padding:.75rem;display:flex;flex-direction:column;gap:.5rem;min-height:180px;max-height:280px"></div>
+  <div style="padding:.75rem;border-top:1px solid #f1f5f9;flex-shrink:0">
+    <div style="display:flex;gap:.5rem;align-items:flex-end">
+      <textarea id="support-input" rows="2" placeholder="Votre message..." style="flex:1;border:1px solid #e2e8f0;border-radius:.5rem;padding:.5rem;font-size:.875rem;resize:none;font-family:inherit;outline:none"></textarea>
+      <div style="display:flex;flex-direction:column;gap:.25rem">
+        <button onclick="document.getElementById('support-photo-input').click()" style="background:#f1f5f9;border:none;cursor:pointer;border-radius:.5rem;padding:.4rem;font-size:1rem" title="Photo">📷</button>
+        <button onclick="sendSupportMessage()" style="background:#2563eb;color:white;border:none;cursor:pointer;border-radius:.5rem;padding:.4rem .6rem;font-size:.875rem;font-weight:700">→</button>
+      </div>
+    </div>
+    <input type="file" id="support-photo-input" accept="image/*" style="display:none" onchange="handleSupportPhoto(this)"/>
+    <div id="support-photo-preview" style="margin-top:.5rem;display:none;align-items:center;gap:.5rem">
+      <img id="support-photo-img" style="max-height:60px;border-radius:.5rem;border:1px solid #e2e8f0"/>
+      <button onclick="clearSupportPhoto()" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:.75rem">✕ Retirer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Support Contact Modal -->
+<div id="support-contact-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:10000;align-items:center;justify-content:center">
+  <div style="background:white;border-radius:1rem;padding:1.5rem;width:90%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+    <h3 style="font-weight:700;margin-bottom:.5rem;font-size:1rem">📲 Vos coordonnées</h3>
+    <p style="font-size:.85rem;color:#64748b;margin-bottom:1rem">Pour vous recontacter, laissez votre WhatsApp et/ou email (optionnel).</p>
+    <input type="tel" id="support-wa" placeholder="WhatsApp (ex: +229…)" style="width:100%;border:1px solid #e2e8f0;border-radius:.5rem;padding:.625rem;font-size:.875rem;margin-bottom:.75rem;box-sizing:border-box;font-family:inherit;outline:none"/>
+    <input type="email" id="support-contact-email" placeholder="Email (optionnel)" style="width:100%;border:1px solid #e2e8f0;border-radius:.5rem;padding:.625rem;font-size:.875rem;margin-bottom:1rem;box-sizing:border-box;font-family:inherit;outline:none"/>
+    <div style="display:flex;gap:.75rem">
+      <button onclick="saveSupportContact()" style="flex:1;background:#2563eb;color:white;border:none;border-radius:.5rem;padding:.625rem;font-weight:700;cursor:pointer">Enregistrer</button>
+      <button onclick="document.getElementById('support-contact-modal').style.display='none';localStorage.setItem('rivo_support_info_'+CU.id,'1')" style="flex:1;background:#f1f5f9;border:none;border-radius:.5rem;padding:.625rem;font-weight:600;cursor:pointer;color:#374151">Ignorer</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
