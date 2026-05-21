@@ -574,12 +574,28 @@ async function loadProfileData(){
     CP=p||null;
     document.getElementById('welcome-h').textContent=p?`Bienvenue ${p.first_name} !!!`:'Bienvenue !!!';
     if(p){
+      const fn=p.first_name||'';
+      const ln=p.last_name||'';
+      const fullName=`${fn} ${ln}`.trim()||'Utilisateur';
+      const email=CU?.email||'—';
+      const solde=fmt(p.balance||0,p.currency);
+      const[ic,lb,bg,co]=badgeInfo(p.badge_level);
+      // Champs visibles partout
       document.getElementById('ref-code').textContent=p.referral_code||'—';
-      document.getElementById('prof-name').textContent=`${p.first_name} ${p.last_name}`;
+      document.getElementById('prof-name').textContent=fullName;
       const profEmail=document.getElementById('prof-email');
-      if(profEmail)profEmail.textContent=CU?.email||'—';
+      if(profEmail)profEmail.textContent=email;
+      document.getElementById('st-b').textContent=solde;
+      const pb=document.getElementById('prof-badge');
+      if(pb){pb.textContent=`${ic} ${lb}`;pb.style.background=bg;pb.style.color=co;}
+      // Champs onglet Profil — remplis dès maintenant pour ne jamais afficher "..."
+      const infoName=document.getElementById('info-name');if(infoName)infoName.textContent=fullName;
+      const infoEmail=document.getElementById('info-email');if(infoEmail)infoEmail.textContent=email;
+      const infoSolde=document.getElementById('info-solde');if(infoSolde)infoSolde.textContent=solde;
+      const ib=document.getElementById('info-badge');
+      if(ib){ib.textContent=`${ic} ${lb}`;ib.style.background=bg;ib.style.color=co;}
       const av=document.getElementById('big-av');
-      if(av)av.innerHTML=p.avatar_url?`<img src="${p.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:9999px"/>`:((p.first_name?.[0]||'')+(p.last_name?.[0]||'')).toUpperCase()||'?';
+      if(av)av.innerHTML=p.avatar_url?`<img src="${p.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:9999px"/>`:((fn[0]||'')+(ln[0]||'')).toUpperCase()||'?';
     }
   }catch(e){
     console.warn('loadProfileData error:',e?.message||e);
@@ -662,30 +678,23 @@ async function doRegister(e){
     }
     const{data:auth,error}=await sb.auth.signUp({email,password:pwd,options:{data:{first_name:fn,last_name:ln}}});
     if(error)throw error;
-    if(auth.user){
-      CP=null;
-      Object.keys(loaded).forEach(k=>delete loaded[k]);
-      const{error:upsertErr}=await sb.from('profiles').upsert({id:auth.user.id,first_name:fn,last_name:ln,birth_date:birth||null,referred_by:refId||null},{onConflict:'id'});
-      if(upsertErr)console.warn('[doRegister] upsert error:',upsertErr.message);
-      if(!auth.session){
-        toast('Compte créé ! Vérifiez votre boîte mail pour confirmer avant de vous connecter.');
-        setTimeout(()=>{goTo('landing');},2500);
-        return;
-      }
-      CU=auth.user;
-      document.getElementById('welcome-h').textContent=`Bienvenue ${fn} !!!`;
-      document.getElementById('prof-name').textContent=`${fn} ${ln}`;
-      const profEmailEl=document.getElementById('prof-email');
-      if(profEmailEl)profEmailEl.textContent=email;
-      document.getElementById('ref-code').textContent='...';
-      const bigAv=document.getElementById('big-av');
-      if(bigAv)bigAv.innerHTML=(fn[0]+ln[0]).toUpperCase();
-      const stF=document.getElementById('st-f');if(stF)stF.textContent='0';
-      const stA=document.getElementById('st-a');if(stA)stA.textContent='0';
-      const stB=document.getElementById('st-b');if(stB)stB.textContent='0 FCFA';
-      const stRef=document.getElementById('st-ref');if(stRef)stRef.textContent='0';
-      await loadProfileData();
+    if(!auth.user){
+      showErr('rg-err','Erreur lors de la création du compte. Réessayez.');
+      return;
     }
+    // Email confirmation requise → jamais vers le dashboard
+    if(!auth.session){
+      toast('Compte créé ! Vérifiez votre boîte mail pour confirmer avant de vous connecter.');
+      setTimeout(()=>{goTo('landing');},2500);
+      return;
+    }
+    // Session active → préparer le dashboard
+    CP=null;
+    CU=auth.user;
+    Object.keys(loaded).forEach(k=>delete loaded[k]);
+    const{error:upsertErr}=await sb.from('profiles').upsert({id:auth.user.id,first_name:fn,last_name:ln,birth_date:birth||null,referred_by:refId||null},{onConflict:'id'});
+    if(upsertErr)console.warn('[doRegister] upsert error:',upsertErr.message);
+    await loadProfileData();
     toast('Bienvenue sur RIVO ! 🎉');
     setTimeout(()=>{goTo('dashboard');},600);
   }catch(err){
