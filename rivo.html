@@ -285,7 +285,7 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
     </div>
     <div style="display:flex;align-items:center;gap:.75rem">
       <div style="position:relative">
-        <button onclick="toggleNotifPanel()" style="background:none;border:none;cursor:pointer;font-size:1.4rem;padding:.25rem;line-height:1">🔔</button>
+        <button onclick="goTo('notifs')" style="background:none;border:none;cursor:pointer;font-size:1.4rem;padding:.25rem;line-height:1">🔔</button>
         <span id="notif-badge" style="display:none;position:absolute;top:-2px;right:-2px;background:#ef4444;color:white;font-size:.6rem;font-weight:800;min-width:1rem;height:1rem;border-radius:9999px;align-items:center;justify-content:center;padding:0 .2rem">0</span>
       </div>
       <button onclick="doLogout()" style="background:none;border:none;cursor:pointer;font-size:.8rem;color:#ef4444;font-weight:600;padding:.35rem .75rem;border-radius:.5rem;border:1px solid #fecaca">Déco.</button>
@@ -460,6 +460,18 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
   </div>
 </div>
 
+<!-- ═══════════════ PAGE: NOTIFICATIONS ═══════════════ -->
+<div id="page-notifs" class="page">
+  <header style="position:sticky;top:0;z-index:30;background:white;border-bottom:1px solid #f1f5f9;padding:.75rem 1rem;display:flex;justify-content:space-between;align-items:center">
+    <button onclick="goTo('dashboard')" style="background:none;border:none;cursor:pointer;font-size:.95rem;color:#2563EB;font-weight:700;padding:.35rem .75rem;border-radius:.5rem;border:1px solid #bfdbfe">← Fermer</button>
+    <span style="font-size:1rem;font-weight:900;color:#1F2937">Mes notifications</span>
+    <button onclick="clearNotifications()" style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:.8rem">Tout lire</button>
+  </header>
+  <div style="padding:1rem;max-width:600px;margin:0 auto">
+    <div id="notif-page-list"></div>
+  </div>
+</div>
+
 <!-- ══════════════ SCRIPTS ══════════════ -->
 <script>
 // ── Config ────────────────────────────────────────────
@@ -478,7 +490,7 @@ function toast(msg, type='ok'){
   const el=document.createElement('div');
   el.className=`toast ${type}`;el.textContent=msg;
   document.getElementById('toasts').appendChild(el);
-  setTimeout(()=>el.remove(),40000);
+  setTimeout(()=>el.remove(),5000);
 }
 function fmt(n,c='XOF'){return c==='XOF'?new Intl.NumberFormat('fr-FR').format(n)+' FCFA':new Intl.NumberFormat('fr-FR',{style:'currency',currency:c}).format(n);}
 function badgeInfo(l){const m={debutant:['🌱','Débutant','#dbeafe','#1d4ed8'],bronze:['🥉','Bronze','#fef3c7','#92400e'],argent:['🥈','Argent','#f1f5f9','#475569'],or:['🥇','Or','#fef9c3','#854d0e'],diamant:['💎','Diamant','#dbeafe','#1d4ed8'],admin:['👑','Admin','#ede9fe','#6d28d9']};return m[l]||m.debutant;}
@@ -497,6 +509,7 @@ function goTo(p){
     loadBord();
     if(!loaded.notif){loaded.notif=true; loadNotifications();}
   }
+  if(p==='notifs' && CU) loadNotifications();
 }
 
 // ── App start (called after CDN loads) ───────────────
@@ -642,8 +655,9 @@ async function doRegister(e){
   try{
     let refId=null;
     if(ref){
-      const{data:r}=await withTimeout(sb.from('profiles').select('id').eq('referral_code',ref).single());
-      if(!r)throw new Error('Code de parrainage invalide');
+      const{data:r,error:rErr}=await withTimeout(sb.from('profiles').select('id').eq('referral_code',ref).single());
+      console.log('[parrainage] ref=',ref,'refId=',r?.id,'error=',rErr?.message);
+      if(!r)throw new Error('Code de parrainage invalide ou introuvable');
       refId=r.id;
     }
     const{data:auth,error}=await sb.auth.signUp({email,password:pwd,options:{data:{first_name:fn,last_name:ln}}});
@@ -651,7 +665,8 @@ async function doRegister(e){
     if(auth.user){
       CP=null;
       Object.keys(loaded).forEach(k=>delete loaded[k]);
-      await sb.from('profiles').upsert({id:auth.user.id,first_name:fn,last_name:ln,birth_date:birth||null,referred_by:refId||null},{onConflict:'id'});
+      const{error:upsertErr}=await sb.from('profiles').upsert({id:auth.user.id,first_name:fn,last_name:ln,birth_date:birth||null,referred_by:refId||null},{onConflict:'id'});
+      if(upsertErr)console.warn('[doRegister] upsert error:',upsertErr.message);
       if(!auth.session){
         toast('Compte créé ! Vérifiez votre boîte mail pour confirmer avant de vous connecter.');
         setTimeout(()=>{goTo('landing');},2500);
@@ -1047,7 +1062,7 @@ async function loadRetrait(){
   document.getElementById('wd-hist').innerHTML=ws.map(w=>{
     const[ic,lb,bg,co]=smap[w.status]||smap.en_attente;
     const d=new Date(w.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});
-    return`<div class="card fade-in" style="padding:1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.625rem"><div><div style="font-weight:700;color:#1F2937">${fmt(w.amount,w.currency)}</div><div style="font-size:.75rem;color:#9ca3af;margin-top:.2rem">${mmap[w.method]} • ${d}</div></div><span class="badge" style="background:${bg};color:${co}">${ic} ${lb}</span></div>`;
+    return`<div class="card fade-in" style="padding:1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.625rem"><div><div style="font-weight:700;color:#1F2937">${fmt(w.amount,w.currency)}</div><div style="font-size:.75rem;color:#9ca3af;margin-top:.2rem">${mmap[w.method]} • Demande du ${d}</div></div><span class="badge" style="background:${bg};color:${co}">${ic} ${lb}</span></div>`;
   }).join('');
 }
 
@@ -1063,7 +1078,11 @@ async function doWithdrawal(){
     user_id:CU.id,amount:amt,currency:CP.currency||'XOF',method:mth,status:'en_attente',
     phone_number:phone||null,country_code:cc||null,operator:op||null
   });
-  if(error){toast('Erreur','err');return;}
+  if(error){toast('Erreur lors de la demande','err');return;}
+  // Déduction immédiate du solde
+  const newBal=(CP.balance||0)-amt;
+  await sb.from('profiles').update({balance:newBal}).eq('id',CU.id);
+  CP.balance=newBal;
   toast('Demande envoyée ! Traitement sous 30 min.');
   document.getElementById('wd-amt').value='';
   document.getElementById('wd-phone').value='';
@@ -1123,8 +1142,20 @@ async function loadNotifications(){
   if(newCerts?.length>0)localStorage.setItem('rivo_cert_last',newCerts[0].issued_at);
   const total=items.length;
   if(total>0){badge.textContent=total;badge.style.display='flex';}else{badge.style.display='none';}
-  if(total===0){list.innerHTML='<p style="padding:1rem;text-align:center;color:#9ca3af;font-size:.875rem">Aucune nouvelle notification</p>';return;}
-  list.innerHTML=items.map(i=>i.html).join('');
+  if(total===0){list.innerHTML='<p style="padding:1rem;text-align:center;color:#9ca3af;font-size:.875rem">Aucune nouvelle notification</p>';}
+  else{list.innerHTML=items.map(i=>i.html).join('');}
+  // Remplir la page dédiée avec auto-dismiss 40s par item
+  const pageList=document.getElementById('notif-page-list');
+  if(!pageList)return;
+  if(total===0){pageList.innerHTML='<p style="text-align:center;color:#9ca3af;padding:2rem;font-size:.95rem">Aucune nouvelle notification</p>';return;}
+  pageList.innerHTML='';
+  items.forEach(item=>{
+    const wrapper=document.createElement('div');
+    wrapper.style.cssText='margin-bottom:.75rem;border-radius:1rem;overflow:hidden;background:white;box-shadow:0 2px 8px rgba(0,0,0,.07)';
+    wrapper.innerHTML=item.html;
+    pageList.appendChild(wrapper);
+    setTimeout(()=>{wrapper.style.transition='opacity .5s';wrapper.style.opacity='0';setTimeout(()=>wrapper.remove(),500);},40000);
+  });
 }
 
 function toggleNotifPanel(){
@@ -1140,7 +1171,9 @@ function toggleNotifPanel(){
 function clearNotifications(){
   localStorage.setItem('rivo_notif_last',new Date().toISOString());
   document.getElementById('notif-badge').style.display='none';
-  document.getElementById('notif-list').innerHTML='<p style="padding:1rem;text-align:center;color:#9ca3af;font-size:.875rem">Tout lu ✓</p>';
+  const msg='<p style="padding:1rem;text-align:center;color:#9ca3af;font-size:.875rem">Tout lu ✓</p>';
+  document.getElementById('notif-list').innerHTML=msg;
+  const pl=document.getElementById('notif-page-list');if(pl)pl.innerHTML=msg;
 }
 </script>
 </body>
