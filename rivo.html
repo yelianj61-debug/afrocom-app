@@ -578,6 +578,15 @@ async function startApp(){
     const {data}=await sb.auth.getSession();
     if(data?.session){
       CU=data.session.user;
+      // Garantir que le profil existe (au cas où l'upsert d'inscription n'a pas abouti)
+      const{data:existingP}=await sb.from('profiles').select('id').eq('id',CU.id).single();
+      if(!existingP){
+        const meta=CU.user_metadata||{};
+        await sb.from('profiles').upsert(
+          {id:CU.id,first_name:meta.first_name||'',last_name:meta.last_name||'',email:CU.email||''},
+          {onConflict:'id'}
+        );
+      }
       await loadProfileData();
       updateEmailBanner();
       goTo('dashboard');
@@ -633,7 +642,10 @@ async function loadProfileData(){
   const expectedUserId=CU.id;
   try{
     let {data:p,error}=await withTimeout(sb.from('profiles').select('*').eq('id',CU.id).single());
-    if(error && error.code!=='PGRST116') console.warn('Profile fetch:',error.message);
+    if(error && error.code!=='PGRST116'){
+      console.error('[RIVO] Profile fetch error:', error.code, error.message);
+      if(error.code==='42501') toast('Permissions manquantes sur votre profil. Contactez le support.','err');
+    }
     // Guard race condition : ignorer UNIQUEMENT si des données d'un AUTRE utilisateur arrivent
     if(p && (p.id!==expectedUserId || p.id!==CU?.id)){
       console.warn('loadProfileData: race condition détectée, données ignorées');
@@ -642,10 +654,11 @@ async function loadProfileData(){
     // Profil introuvable → auto-création (résout aussi la FK purchases_user_id_fkey)
     if(!p){
       const meta=CU.user_metadata||{};
-      await sb.from('profiles').upsert(
-        {id:CU.id,first_name:meta.first_name||'',last_name:meta.last_name||''},
+      const{error:createErr}=await sb.from('profiles').upsert(
+        {id:CU.id,first_name:meta.first_name||'',last_name:meta.last_name||'',email:CU.email||''},
         {onConflict:'id'}
       );
+      if(createErr) console.error('[RIVO] Profile auto-create error:', createErr.message);
       const {data:p2}=await sb.from('profiles').select('*').eq('id',CU.id).single();
       if(p2 && p2.id===CU.id) p=p2;
     }
@@ -924,7 +937,13 @@ async function confirmPay(){
   // Garantir que le profil existe avant l'achat (FK purchases_user_id_fkey → profiles.id)
   if(!CP){
     await loadProfileData();
-    if(!CP){toast('Profil introuvable. Déconnectez-vous et reconnectez-vous.','err');return;}
+    if(!CP){
+      // CP toujours null (RLS ou réseau) : profil minimal depuis auth pour ne pas bloquer
+      const meta=CU?.user_metadata||{};
+      CP={id:CU.id,first_name:meta.first_name||'',last_name:meta.last_name||'',
+          currency:'XOF',balance:0,points:0,referred_by:null};
+      console.warn('[RIVO] CP null — using minimal profile from auth metadata');
+    }
   }
   if(TEST_MODE){
     setBtn('pay-btn','<span class="spin"></span>',true);
