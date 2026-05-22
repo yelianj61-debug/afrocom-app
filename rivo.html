@@ -196,6 +196,7 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
             Se connecter
           </button>
           <p id="li-err" style="display:none;color:#dc2626;font-size:.85rem;text-align:center;background:#fef2f2;border:1px solid #fecaca;border-radius:.75rem;padding:.625rem .875rem;margin-top:-.25rem"></p>
+          <button id="li-resend" type="button" onclick="resendConfirmation()" style="display:none;width:100%;background:#fef3c7;border:1px solid #fcd34d;color:#92400e;border-radius:.75rem;padding:.625rem;font-size:.85rem;font-weight:600;cursor:pointer;margin-top:-.25rem">📧 Renvoyer l'email de confirmation</button>
         </form>
         <p style="text-align:center;margin-top:.75rem">
           <button type="button" onclick="forgotPassword()" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:.82rem;text-decoration:underline">Mot de passe oublié ?</button>
@@ -435,12 +436,26 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
           <h2 style="font-weight:800;font-size:1.05rem;color:#1F2937;margin-bottom:1.25rem">Nouvelle demande de retrait</h2>
           <div style="display:flex;flex-direction:column;gap:1rem;margin-bottom:1.25rem">
             <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Montant (FCFA)</label><input type="number" id="wd-amt" class="input" placeholder="Ex: 5000" min="1000"/><p style="font-size:.75rem;color:#9ca3af;margin-top:.3rem">Minimum : 1 000 FCFA</p></div>
-            <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Méthode</label><select id="wd-mth" class="input"><option value="mobile_money">📱 Mobile Money</option><option value="carte_bancaire">💳 Carte bancaire</option><option value="autre">🔄 Autre</option></select></div>
-            <div style="display:grid;grid-template-columns:auto 1fr;gap:.625rem">
-              <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Indicatif</label><select id="wd-cc" class="input" style="min-width:110px"><option value="+229">🇧🇯 +229</option><option value="+225">🇨🇮 +225</option><option value="+226">🇧🇫 +226</option><option value="+228">🇹🇬 +228</option><option value="+227">🇳🇪 +227</option><option value="+221">🇸🇳 +221</option><option value="+223">🇲🇱 +223</option><option value="+224">🇬🇳 +224</option><option value="+33">🇫🇷 +33</option></select></div>
-              <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Numéro de téléphone</label><input type="tel" id="wd-phone" class="input" placeholder="Ex: 97000000"/></div>
+            <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Méthode</label><select id="wd-mth" class="input" onchange="switchWithdrawalMethod()"><option value="mobile_money">📱 Mobile Money</option><option value="carte_bancaire">💳 Carte bancaire</option><option value="autre">🔄 Autre</option></select></div>
+            <!-- Section Mobile Money -->
+            <div id="wd-section-mm">
+              <div style="display:grid;grid-template-columns:auto 1fr;gap:.625rem;margin-bottom:1rem">
+                <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Indicatif</label><select id="wd-cc" class="input" style="min-width:110px"><option value="+229">🇧🇯 +229</option><option value="+225">🇨🇮 +225</option><option value="+226">🇧🇫 +226</option><option value="+228">🇹🇬 +228</option><option value="+227">🇳🇪 +227</option><option value="+221">🇸🇳 +221</option><option value="+223">🇲🇱 +223</option><option value="+224">🇬🇳 +224</option><option value="+33">🇫🇷 +33</option></select></div>
+                <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Numéro de téléphone</label><input type="tel" id="wd-phone" class="input" placeholder="Ex: 97000000"/></div>
+              </div>
+              <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Opérateur</label><input type="text" id="wd-op" class="input" placeholder="MTN, Moov, Orange…"/></div>
             </div>
-            <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Opérateur Mobile Money</label><input type="text" id="wd-op" class="input" placeholder="MTN, Moov, Orange…"/></div>
+            <!-- Section Carte bancaire -->
+            <div id="wd-section-card" style="display:none">
+              <div style="margin-bottom:1rem"><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Titulaire du compte</label><input type="text" id="wd-iban-name" class="input" placeholder="Prénom Nom (comme sur la carte)"/></div>
+              <div style="margin-bottom:1rem"><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">IBAN</label><input type="text" id="wd-iban" class="input" placeholder="FR76 3000 6000 0112 3456 7890 189"/></div>
+              <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">BIC / SWIFT</label><input type="text" id="wd-bic" class="input" placeholder="BNPAFRPPXXX"/></div>
+            </div>
+            <!-- Section Autre (PayPal, Western Union…) -->
+            <div id="wd-section-other" style="display:none">
+              <div style="margin-bottom:1rem"><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Moyen de paiement</label><input type="text" id="wd-other-method" class="input" placeholder="PayPal, Western Union, Wise…"/></div>
+              <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Identifiant / Email / Numéro</label><input type="text" id="wd-other-detail" class="input" placeholder="Email PayPal, numéro de compte…"/></div>
+            </div>
           </div>
           <button onclick="doWithdrawal()" class="btn-primary">📤 Demander le retrait</button>
         </div>
@@ -692,6 +707,7 @@ async function loadProfileData(){
 async function doLogin(e){
   e.preventDefault();
   showErr('li-err','');
+  document.getElementById('li-resend').style.display='none';
   setBtn('li-btn','<span class="spin"></span> Connexion...',true);
   try{
     const email=document.getElementById('li-email').value.trim();
@@ -718,7 +734,13 @@ async function doLogin(e){
     toast('Connexion réussie ! 🎉');
     setTimeout(()=>{goTo('dashboard');},500);
   }catch(err){
-    showErr('li-err',err.message||'Email ou mot de passe incorrect');
+    const em=err.message||'';
+    if(em.toLowerCase().includes('email not confirmed')||em.toLowerCase().includes('email_not_confirmed')){
+      showErr('li-err','Confirmez votre email avant de vous connecter.');
+      document.getElementById('li-resend').style.display='block';
+    }else{
+      showErr('li-err',em||'Email ou mot de passe incorrect');
+    }
   }finally{
     setBtn('li-btn','Se connecter',false);
   }
@@ -739,6 +761,14 @@ async function forgotPassword(){
   }finally{
     setBtn('li-btn','Se connecter',false);
   }
+}
+
+async function resendConfirmation(){
+  const email=document.getElementById('li-email').value.trim();
+  if(!email){showErr('li-err','Entrez votre email ci-dessus.');return;}
+  const{error}=await sb.auth.resend({type:'signup',email});
+  if(error){toast(error.message,'err');return;}
+  toast('Email de confirmation renvoyé ! Vérifiez votre boîte mail.');
 }
 
 // ── Register ──────────────────────────────────────────
@@ -782,7 +812,13 @@ async function doRegister(e){
       email:email
     },{onConflict:'id'});
     if(upsertErr)console.warn('[doRegister] upsert error:',upsertErr.message);
-    // Toujours aller au dashboard — bannière si email non confirmé
+    if(!auth.session){
+      // Confirmation email requise : aller à la page login
+      toast('Compte créé ! Vérifiez votre boîte mail pour confirmer avant de vous connecter.');
+      setTimeout(()=>{ goTo('login'); },2200);
+      return;
+    }
+    // Accès direct (confirmation désactivée dans Supabase)
     CP=null;
     CU=auth.user;
     Object.keys(loaded).forEach(k=>delete loaded[k]);
@@ -1168,17 +1204,39 @@ async function loadRetrait(){
   }).join('');
 }
 
+function switchWithdrawalMethod(){
+  const m=document.getElementById('wd-mth').value;
+  document.getElementById('wd-section-mm').style.display   =(m==='mobile_money')  ?'block':'none';
+  document.getElementById('wd-section-card').style.display =(m==='carte_bancaire')?'block':'none';
+  document.getElementById('wd-section-other').style.display=(m==='autre')         ?'block':'none';
+}
+
 async function doWithdrawal(){
   const amt=parseFloat(document.getElementById('wd-amt').value);
   const mth=document.getElementById('wd-mth').value;
-  const phone=document.getElementById('wd-phone').value.trim();
-  const cc=document.getElementById('wd-cc').value;
-  const op=document.getElementById('wd-op').value.trim();
   if(!amt||amt<1000){toast('Minimum : 1 000 FCFA','err');return;}
   if(!CP||amt>CP.balance){toast('Solde insuffisant','err');return;}
+  let extra={};
+  if(mth==='mobile_money'){
+    const phone=document.getElementById('wd-phone').value.trim();
+    const cc=document.getElementById('wd-cc').value;
+    const op=document.getElementById('wd-op').value.trim();
+    if(!phone){toast('Numéro de téléphone requis','err');return;}
+    extra={phone_number:cc+phone,country_code:cc,operator:op||null};
+  }else if(mth==='carte_bancaire'){
+    const iban=document.getElementById('wd-iban').value.trim();
+    const bic=document.getElementById('wd-bic').value.trim();
+    const holder=document.getElementById('wd-iban-name').value.trim();
+    if(!iban){toast('IBAN requis','err');return;}
+    extra={iban:iban||null,bic:bic||null,account_holder:holder||null};
+  }else{
+    const om=document.getElementById('wd-other-method').value.trim();
+    const od=document.getElementById('wd-other-detail').value.trim();
+    if(!om||!od){toast('Moyen et identifiant requis','err');return;}
+    extra={other_method:om,other_detail:od};
+  }
   const{error}=await sb.from('withdrawals').insert({
-    user_id:CU.id,amount:amt,currency:CP.currency||'XOF',method:mth,status:'en_attente',
-    phone_number:phone||null,country_code:cc||null,operator:op||null
+    user_id:CU.id,amount:amt,currency:CP.currency||'XOF',method:mth,status:'en_attente',...extra
   });
   if(error){toast('Erreur lors de la demande','err');return;}
   const newBal=(CP.balance||0)-amt;
@@ -1186,8 +1244,6 @@ async function doWithdrawal(){
   CP.balance=newBal;
   toast('Demande envoyée ! Traitement sous 30 min.');
   document.getElementById('wd-amt').value='';
-  document.getElementById('wd-phone').value='';
-  document.getElementById('wd-op').value='';
   loadRetrait();
 }
 

@@ -182,6 +182,14 @@
           <div class="text-3xl font-bold text-pink-400" id="stat-courses">—</div>
           <div class="text-sm text-gray-400 mt-1">Formations publiées</div>
         </div>
+        <div class="stat-card">
+          <div class="text-3xl font-bold text-violet-400" id="stat-applications">—</div>
+          <div class="text-sm text-gray-400 mt-1">Candidatures en attente</div>
+        </div>
+        <div class="stat-card">
+          <div class="text-3xl font-bold text-cyan-400" id="stat-videos">—</div>
+          <div class="text-sm text-gray-400 mt-1">Vidéos à valider</div>
+        </div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -561,11 +569,19 @@ let allUsers = [];
 let loaded = {};
 
 /* ── Init ─────────────────────────────────────────────── */
-function init() {
+async function init() {
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) { window.location.href = './rivo.html'; return; }
+  const { data: p } = await sb.from('profiles').select('badge_level,first_name,last_name').eq('id', user.id).single();
+  if (p?.badge_level !== 'admin') { window.location.href = './rivo.html'; return; }
+  adminUser = user;
+  const nameEl = document.getElementById('admin-name');
+  if (nameEl) nameEl.textContent = (p.first_name||'') + ' ' + (p.last_name||'');
   switchTab('dashboard');
 }
 
 async function doLogout() {
+  await sb.auth.signOut();
   window.location.href = './rivo.html';
 }
 
@@ -623,11 +639,13 @@ function confirm(title, msg, onOk) {
 /* ── Dashboard ────────────────────────────────────────── */
 async function loadDashboard() {
   try{
-    const [usersRes, purchasesRes, withdrawalsRes, coursesRes] = await Promise.all([
+    const [usersRes, purchasesRes, withdrawalsRes, coursesRes, appsRes, videosRes] = await Promise.all([
       sb.from('profiles').select('id', { count: 'exact', head: true }),
       sb.from('purchases').select('id,amount', { count: 'exact' }).eq('status','complete'),
       sb.from('withdrawals').select('id', { count: 'exact', head: true }).eq('status','en_attente'),
       sb.from('courses').select('id', { count: 'exact', head: true }).eq('is_published', true),
+      sb.from('user_events').select('id', { count: 'exact', head: true }).eq('status','pending'),
+      sb.from('recommendation_videos').select('id', { count: 'exact', head: true }).eq('status','pending'),
     ]);
 
     const revenue = (purchasesRes.data||[]).reduce((s,r) => s + Number(r.amount||0), 0);
@@ -644,6 +662,8 @@ async function loadDashboard() {
     document.getElementById('stat-withdrawals').textContent = withdrawalsRes.count ?? '—';
     document.getElementById('stat-certs').textContent = pendingCerts;
     document.getElementById('stat-courses').textContent = coursesRes.count ?? '—';
+    document.getElementById('stat-applications').textContent = appsRes.count ?? '—';
+    document.getElementById('stat-videos').textContent = videosRes.count ?? '—';
 
     // Recent purchases
     const { data: rp } = await sb.from('purchases').select('id,amount,currency,purchased_at,user_id,course_id').eq('status','complete').order('purchased_at',{ascending:false}).limit(5);
@@ -1470,18 +1490,33 @@ async function loadPendingApplications() {
 }
 
 async function approveApplication(appId, userId) {
+  // Récupérer event_id et points_required avant d'approuver
+  const { data: app } = await sb.from('user_events').select('event_id').eq('id', appId).single();
+  const { data: ev } = app?.event_id
+    ? await sb.from('events').select('points_required,title').eq('id', app.event_id).single()
+    : { data: null };
+
   const { error } = await sb.from('user_events').update({ status: 'approved' }).eq('id', appId);
   if (error) { toast(error.message, false); return; }
+
+  // Déduire les points requis du profil utilisateur
+  const ptsRequired = ev?.points_required || 0;
+  if (ptsRequired > 0) {
+    const { data: profile } = await sb.from('profiles').select('points').eq('id', userId).single();
+    const newPoints = Math.max(0, (profile?.points || 0) - ptsRequired);
+    await sb.from('profiles').update({ points: newPoints }).eq('id', userId);
+  }
+
   await sb.from('notifications').insert({
     user_id: userId,
     title: 'Candidature approuvée ! 🎉',
-    message: 'Votre candidature pour un événement a été approuvée. Félicitations !',
+    message: `Votre candidature pour "${ev?.title || 'l\'événement'}" a été approuvée !${ptsRequired > 0 ? ` ${ptsRequired} points ont été déduits de votre solde.` : ''} Félicitations !`,
     sender: 'Support RIVO'
   });
-  toast('Candidature approuvée !');
+  toast(`Candidature approuvée !${ptsRequired > 0 ? ` −${ptsRequired} pts déduits.` : ''}`);
   document.getElementById('app-' + appId)?.remove();
   const container = document.getElementById('applications-list');
-  if (container && container.children.length === 0) {
+  if (container && container.querySelectorAll('[id^="app-"]').length === 0) {
     container.innerHTML = '<div class="card p-6 text-center text-gray-500">Aucune candidature en attente</div>';
   }
 }
