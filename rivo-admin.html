@@ -570,14 +570,30 @@ let loaded = {};
 
 /* ── Init ─────────────────────────────────────────────── */
 async function init() {
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) { window.location.href = './rivo.html'; return; }
-  const { data: p } = await sb.from('profiles').select('badge_level,first_name,last_name').eq('id', user.id).single();
-  if (p?.badge_level !== 'admin') { window.location.href = './rivo.html'; return; }
-  adminUser = user;
-  const nameEl = document.getElementById('admin-name');
-  if (nameEl) nameEl.textContent = (p.first_name||'') + ' ' + (p.last_name||'');
-  switchTab('dashboard');
+  try{
+    const { data: { user }, error: authErr } = await sb.auth.getUser();
+    if(authErr || !user){ window.location.href='./rivo.html'; return; }
+    adminUser = user;
+    const { data: p } = await sb.from('profiles')
+      .select('badge_level,first_name,last_name').eq('id', user.id).single();
+    // Si la requête profiles échoue (RLS ou réseau), on vérifie via auth uniquement
+    if(p && p.badge_level !== 'admin'){ window.location.href='./rivo.html'; return; }
+    const nameEl = document.getElementById('admin-name');
+    if(nameEl && p) nameEl.textContent = (p.first_name||'') + ' ' + (p.last_name||'');
+    switchTab('dashboard');
+  }catch(e){
+    console.error('[Admin init]', e);
+    document.body.insertAdjacentHTML('afterbegin',
+      `<div style="position:fixed;inset:0;background:#0f172a;display:flex;align-items:center;
+       justify-content:center;z-index:9999;color:white;text-align:center;padding:2rem">
+       <div><p style="font-size:2rem;margin-bottom:.5rem">⚠️</p>
+       <p style="font-weight:700;font-size:1.1rem;margin-bottom:.5rem">Erreur d'initialisation</p>
+       <p style="font-size:.85rem;color:#9ca3af;margin-bottom:1.5rem">${e.message||'Connexion impossible'}</p>
+       <a href="./rivo.html" style="background:#7c3aed;color:white;padding:.75rem 1.5rem;
+        border-radius:.75rem;text-decoration:none;font-weight:700">Retour à l'accueil</a>
+       </div></div>`
+    );
+  }
 }
 
 async function doLogout() {
@@ -638,46 +654,48 @@ function confirm(title, msg, onOk) {
 
 /* ── Dashboard ────────────────────────────────────────── */
 async function loadDashboard() {
+  const ss = (id, val) => { const el=document.getElementById(id); if(el) el.textContent=val; };
+
+  // Chaque stat est indépendante — une erreur n'empêche pas les autres
+  try{ const{count}=await sb.from('profiles').select('id',{count:'exact',head:true});
+       ss('stat-users',count??'0'); }catch(_){}
+
+  try{ const{data,count}=await sb.from('purchases').select('id,amount',{count:'exact'}).eq('status','complete');
+       ss('stat-purchases',count??'0');
+       ss('stat-revenue',(data||[]).reduce((s,r)=>s+Number(r.amount||0),0).toLocaleString('fr-FR')+' FCFA');
+  }catch(_){}
+
+  try{ const{count}=await sb.from('withdrawals').select('id',{count:'exact',head:true}).eq('status','en_attente');
+       ss('stat-withdrawals',count??'0'); }catch(_){}
+
+  try{ const{count}=await sb.from('courses').select('id',{count:'exact',head:true}).eq('is_published',true);
+       ss('stat-courses',count??'0'); }catch(_){}
+
+  try{ const[{count:pt},{count:ct}]=await Promise.all([
+         sb.from('purchases').select('id',{count:'exact',head:true}).eq('status','complete'),
+         sb.from('certificates').select('id',{count:'exact',head:true})]);
+       ss('stat-certs',Math.max(0,(pt||0)-(ct||0))); }catch(_){}
+
+  try{ const{count}=await sb.from('user_events').select('id',{count:'exact',head:true}).eq('status','pending');
+       ss('stat-applications',count??'0'); }catch(_){}
+
+  try{ const{count}=await sb.from('recommendation_videos').select('id',{count:'exact',head:true}).eq('status','pending');
+       ss('stat-videos',count??'0'); }catch(_){}
+
+  // Derniers achats
   try{
-    const [usersRes, purchasesRes, withdrawalsRes, coursesRes, appsRes, videosRes] = await Promise.all([
-      sb.from('profiles').select('id', { count: 'exact', head: true }),
-      sb.from('purchases').select('id,amount', { count: 'exact' }).eq('status','complete'),
-      sb.from('withdrawals').select('id', { count: 'exact', head: true }).eq('status','en_attente'),
-      sb.from('courses').select('id', { count: 'exact', head: true }).eq('is_published', true),
-      sb.from('user_events').select('id', { count: 'exact', head: true }).eq('status','pending'),
-      sb.from('recommendation_videos').select('id', { count: 'exact', head: true }).eq('status','pending'),
+    const{data:rp}=await sb.from('purchases').select('id,amount,currency,purchased_at,user_id,course_id').eq('status','complete').order('purchased_at',{ascending:false}).limit(5);
+    const rpEl=document.getElementById('recent-purchases');
+    if(!rp||rp.length===0){rpEl.innerHTML='<p>Aucun achat récent</p>';return;}
+    const uids=[...new Set(rp.map(p=>p.user_id))];
+    const cids=[...new Set(rp.map(p=>p.course_id))];
+    const[{data:rpProfs},{data:rpCourses}]=await Promise.all([
+      sb.from('profiles').select('id,first_name,last_name').in('id',uids),
+      sb.from('courses').select('id,title').in('id',cids)
     ]);
-
-    const revenue = (purchasesRes.data||[]).reduce((s,r) => s + Number(r.amount||0), 0);
-
-    const [{ count: purchaseTotal }, { count: certTotal }] = await Promise.all([
-      sb.from('purchases').select('id', { count:'exact', head:true }).eq('status','complete'),
-      sb.from('certificates').select('id', { count:'exact', head:true }),
-    ]);
-    const pendingCerts = Math.max(0, (purchaseTotal||0) - (certTotal||0));
-
-    document.getElementById('stat-users').textContent = usersRes.count ?? '—';
-    document.getElementById('stat-purchases').textContent = purchasesRes.count ?? '—';
-    document.getElementById('stat-revenue').textContent = revenue.toLocaleString('fr-FR') + ' FCFA';
-    document.getElementById('stat-withdrawals').textContent = withdrawalsRes.count ?? '—';
-    document.getElementById('stat-certs').textContent = pendingCerts;
-    document.getElementById('stat-courses').textContent = coursesRes.count ?? '—';
-    document.getElementById('stat-applications').textContent = appsRes.count ?? '—';
-    document.getElementById('stat-videos').textContent = videosRes.count ?? '—';
-
-    // Recent purchases
-    const { data: rp } = await sb.from('purchases').select('id,amount,currency,purchased_at,user_id,course_id').eq('status','complete').order('purchased_at',{ascending:false}).limit(5);
-    const uids2=[...new Set((rp||[]).map(p=>p.user_id))];
-    const cids2=[...new Set((rp||[]).map(p=>p.course_id))];
-    const [{data:rpProfs},{data:rpCourses}]=uids2.length?await Promise.all([
-      sb.from('profiles').select('id,first_name,last_name').in('id',uids2),
-      sb.from('courses').select('id,title').in('id',cids2)
-    ]):[{data:[]},{data:[]}];
     const rpPM=Object.fromEntries((rpProfs||[]).map(p=>[p.id,p]));
     const rpCM=Object.fromEntries((rpCourses||[]).map(c=>[c.id,c]));
-    const rpEl = document.getElementById('recent-purchases');
-    if (!rp || rp.length === 0) { rpEl.innerHTML = '<p>Aucun achat récent</p>'; }
-    else rpEl.innerHTML = (rp||[]).map(p => `
+    rpEl.innerHTML=rp.map(p=>`
       <div class="flex items-center justify-between py-2 border-b border-gray-700 last:border-0">
         <div>
           <div class="text-white font-medium">${rpPM[p.user_id]?.first_name||''} ${rpPM[p.user_id]?.last_name||''}</div>
@@ -685,15 +703,17 @@ async function loadDashboard() {
         </div>
         <div class="text-green-400 font-semibold">${(p.amount||0).toLocaleString('fr-FR')} FCFA</div>
       </div>`).join('');
+  }catch(_){ const el=document.getElementById('recent-purchases'); if(el)el.innerHTML='<p>Données indisponibles</p>'; }
 
-    // Recent withdrawals
-    const { data: rw } = await sb.from('withdrawals').select('id,amount,status,method,created_at,user_id').order('created_at',{ascending:false}).limit(5);
-    const wuids=[...new Set((rw||[]).map(w=>w.user_id))];
-    const [{data:rwProfs}]=wuids.length?await Promise.all([sb.from('profiles').select('id,first_name,last_name').in('id',wuids)]):[{data:[]}];
+  // Derniers retraits
+  try{
+    const{data:rw}=await sb.from('withdrawals').select('id,amount,status,method,created_at,user_id').order('created_at',{ascending:false}).limit(5);
+    const rwEl=document.getElementById('recent-withdrawals');
+    if(!rw||rw.length===0){rwEl.innerHTML='<p>Aucun retrait récent</p>';return;}
+    const wuids=[...new Set(rw.map(w=>w.user_id))];
+    const[{data:rwProfs}]=await Promise.all([sb.from('profiles').select('id,first_name,last_name').in('id',wuids)]);
     const rwPM=Object.fromEntries((rwProfs||[]).map(p=>[p.id,p]));
-    const rwEl = document.getElementById('recent-withdrawals');
-    if (!rw || rw.length === 0) { rwEl.innerHTML = '<p>Aucun retrait récent</p>'; }
-    else rwEl.innerHTML = (rw||[]).map(w => `
+    rwEl.innerHTML=rw.map(w=>`
       <div class="flex items-center justify-between py-2 border-b border-gray-700 last:border-0">
         <div>
           <div class="text-white font-medium">${rwPM[w.user_id]?.first_name||''} ${rwPM[w.user_id]?.last_name||''}</div>
@@ -704,13 +724,7 @@ async function loadDashboard() {
           <span class="status-badge status-${w.status}">${w.status}</span>
         </div>
       </div>`).join('');
-  }catch(e){
-    console.error('loadDashboard error:',e?.message||e);
-    ['stat-users','stat-purchases','stat-revenue','stat-withdrawals','stat-certs','stat-courses']
-      .forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—';});
-    const rpEl=document.getElementById('recent-purchases');
-    if(rpEl)rpEl.innerHTML='<p style="color:#ef4444;font-size:.85rem">Erreur de connexion. Vérifiez que votre projet Supabase est actif (non pausé).</p>';
-  }
+  }catch(_){ const el=document.getElementById('recent-withdrawals'); if(el)el.innerHTML='<p>Données indisponibles</p>'; }
 }
 
 /* ── Utilisateurs ─────────────────────────────────────── */

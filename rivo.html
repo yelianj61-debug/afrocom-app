@@ -457,7 +457,7 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
               <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Identifiant / Email / Numéro</label><input type="text" id="wd-other-detail" class="input" placeholder="Email PayPal, numéro de compte…"/></div>
             </div>
           </div>
-          <button onclick="doWithdrawal()" class="btn-primary">📤 Demander le retrait</button>
+          <button id="wd-submit-btn" onclick="doWithdrawal()" class="btn-primary">📤 Demander le retrait</button>
         </div>
         <div><h2 style="font-weight:800;font-size:1.05rem;color:#1F2937;margin-bottom:1rem">Historique des retraits</h2><div id="wd-hist">...</div></div>
       </div>
@@ -539,6 +539,7 @@ let sb = null;
 let CU = null, CP = null, pendingCourse = null;
 const loaded = {};
 let TEST_MODE = localStorage.getItem('rivo_test_mode') === '1';
+let wdInProgress = false;
 
 // ── Helpers ───────────────────────────────────────────
 function toast(msg, type='ok'){
@@ -956,10 +957,7 @@ async function confirmPay(){
       closePayModal();
       try{await addPoints(CU.id,10);}catch(_){}
       if(CP?.referred_by){
-        try{
-          const{data:par}=await sb.from('profiles').select('balance,points').eq('id',CP.referred_by).single();
-          await sb.from('profiles').update({balance:(par?.balance||0)+1000,points:(par?.points||0)+20}).eq('id',CP.referred_by);
-        }catch(_){}
+        try{ await sb.rpc('credit_parrain',{p_parrain_id:CP.referred_by,p_fcfa:1000,p_points:20}); }catch(_){}
       }
       await loadProfileData();
       loaded.formations=false;
@@ -1231,6 +1229,11 @@ function switchWithdrawalMethod(){
 }
 
 async function doWithdrawal(){
+  if(wdInProgress)return;
+  wdInProgress=true;
+  const btn=document.getElementById('wd-submit-btn');
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span> Traitement…';}
+  try{
   const amt=parseFloat(document.getElementById('wd-amt').value);
   const mth=document.getElementById('wd-mth').value;
   if(!amt||amt<1000){toast('Minimum : 1 000 FCFA','err');return;}
@@ -1264,6 +1267,11 @@ async function doWithdrawal(){
   toast('Demande envoyée ! Traitement sous 30 min.');
   document.getElementById('wd-amt').value='';
   loadRetrait();
+  }finally{
+    wdInProgress=false;
+    const btn=document.getElementById('wd-submit-btn');
+    if(btn){btn.disabled=false;btn.innerHTML='📤 Demander le retrait';}
+  }
 }
 
 // ── Tab switching ─────────────────────────────────────
