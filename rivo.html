@@ -288,10 +288,15 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
         <button onclick="goTo('notifs')" style="background:none;border:none;cursor:pointer;font-size:1.4rem;padding:.25rem;line-height:1">🔔</button>
         <span id="notif-badge" style="display:none;position:absolute;top:-2px;right:-2px;background:#ef4444;color:white;font-size:.6rem;font-weight:800;min-width:1rem;height:1rem;border-radius:9999px;align-items:center;justify-content:center;padding:0 .2rem">0</span>
       </div>
-      <button onclick="document.getElementById('support-modal').style.display='flex'" style="background:none;border:1px solid #bfdbfe;cursor:pointer;font-size:.8rem;color:#2563EB;font-weight:600;padding:.35rem .75rem;border-radius:.5rem">📞 Support</button>
+      <button onclick="switchTab('support')" style="background:none;border:1px solid #bfdbfe;cursor:pointer;font-size:.8rem;color:#2563EB;font-weight:600;padding:.35rem .75rem;border-radius:.5rem">📞 Support</button>
       <button onclick="doLogout()" style="background:none;border:none;cursor:pointer;font-size:.8rem;color:#ef4444;font-weight:600;padding:.35rem .75rem;border-radius:.5rem;border:1px solid #fecaca">Déco.</button>
     </div>
   </header>
+
+  <!-- Email confirmation banner -->
+  <div id="email-confirm-banner" style="display:none;background:#fef3c7;border-bottom:2px solid #fcd34d;padding:.625rem 1rem;text-align:center;font-size:.8rem;color:#92400e;font-weight:600">
+    ⚠️ Veuillez confirmer votre email dans votre boîte mail. Ce bandeau disparaîtra après confirmation.
+  </div>
 
   <!-- Notification panel -->
   <div id="notif-panel" style="display:none;position:fixed;top:3.5rem;right:.75rem;width:min(320px,calc(100vw - 1.5rem));background:white;border-radius:1rem;box-shadow:0 8px 32px rgba(0,0,0,.18);z-index:200;max-height:400px;overflow-y:auto;border:1px solid #e5e7eb">
@@ -388,12 +393,12 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
 
         <!-- Boutons Récompenses + Vidéo -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.5rem">
-          <button onclick="openRecompenses()" style="background:linear-gradient(135deg,#f59e0b,#ef4444);color:white;border:none;border-radius:.875rem;padding:.875rem;font-weight:700;cursor:pointer;font-size:.85rem">🎁 Récompenses</button>
+          <button onclick="switchTab('recompenses')" style="background:linear-gradient(135deg,#f59e0b,#ef4444);color:white;border:none;border-radius:.875rem;padding:.875rem;font-weight:700;cursor:pointer;font-size:.85rem">🎁 Récompenses</button>
           <button onclick="document.getElementById('video-modal').style.display='flex'" style="background:linear-gradient(135deg,#7c3aed,#4f46e5);color:white;border:none;border-radius:.875rem;padding:.875rem;font-weight:700;cursor:pointer;font-size:.85rem">🎬 Soumettre vidéo</button>
         </div>
 
         <!-- Informations personnelles (lecture seule) -->
-        <div class="card" style="padding:1.25rem">
+        <div class="card" style="padding:1.25rem;margin-bottom:1.5rem">
           <h3 style="font-weight:800;font-size:1.05rem;color:#1F2937;margin-bottom:1rem">Informations personnelles</h3>
           <div style="display:grid;gap:.75rem">
             <div style="display:flex;justify-content:space-between;align-items:center;padding:.75rem;background:#f8fafc;border-radius:.75rem">
@@ -418,11 +423,9 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Retrait -->
-      <div id="tab-retrait" class="tab-panel fade-in">
-        <h1 style="font-size:1.5rem;font-weight:800;color:#1F2937;margin-bottom:1.5rem">Retrait</h1>
+        <!-- ── Retrait intégré dans Profil ── -->
+        <h2 style="font-size:1.2rem;font-weight:800;color:#1F2937;margin-bottom:1rem">💸 Retrait</h2>
         <div style="border-radius:1.5rem;padding:1.5rem;color:white;margin-bottom:1.75rem;background:linear-gradient(135deg,#2563EB,#1D4ED8)">
           <div style="font-size:.95rem;font-weight:600;margin-bottom:.4rem">💳 Solde disponible</div>
           <div id="bal-display" style="font-size:2.5rem;font-weight:900">0 FCFA</div>
@@ -441,7 +444,34 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
           </div>
           <button onclick="doWithdrawal()" class="btn-primary">📤 Demander le retrait</button>
         </div>
-        <div><h2 style="font-weight:800;font-size:1.05rem;color:#1F2937;margin-bottom:1rem">Historique</h2><div id="wd-hist">...</div></div>
+        <div><h2 style="font-weight:800;font-size:1.05rem;color:#1F2937;margin-bottom:1rem">Historique des retraits</h2><div id="wd-hist">...</div></div>
+      </div>
+
+      <!-- ══ Récompenses ══ -->
+      <div id="tab-recompenses" class="tab-panel fade-in">
+        <h1 style="font-size:1.5rem;font-weight:800;color:#1F2937;margin-bottom:1.25rem">🎁 Récompenses</h1>
+        <div style="display:flex;border-bottom:2px solid #f1f5f9;margin-bottom:1.25rem;overflow-x:auto">
+          <button id="rt-events" onclick="loadRecompensesTab('events')" style="flex:1;padding:.875rem .5rem;background:none;border:none;border-bottom:3px solid #f59e0b;cursor:pointer;font-weight:700;font-size:.875rem;color:#1F2937;white-space:nowrap">🎉 Événements</button>
+          <button id="rt-mine" onclick="loadRecompensesTab('mine')" style="flex:1;padding:.875rem .5rem;background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;font-weight:500;font-size:.875rem;color:#6b7280;white-space:nowrap">📋 Mes événements</button>
+          <button id="rt-points" onclick="loadRecompensesTab('points')" style="flex:1;padding:.875rem .5rem;background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;font-weight:500;font-size:.875rem;color:#6b7280;white-space:nowrap">⭐ Mes points</button>
+        </div>
+        <div id="recompenses-content">
+          <p style="text-align:center;color:#9ca3af;padding:2rem">Chargement...</p>
+        </div>
+      </div>
+
+      <!-- ══ Support ══ -->
+      <div id="tab-support" class="tab-panel fade-in">
+        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem">
+          <button onclick="switchTab('bord')" style="background:none;border:1px solid #bfdbfe;color:#2563eb;border-radius:.5rem;padding:.35rem .75rem;font-weight:700;cursor:pointer;font-size:.85rem">← Retour</button>
+          <h1 style="font-size:1.5rem;font-weight:800;color:#1F2937">📞 Support RIVO</h1>
+        </div>
+        <p style="color:#6b7280;font-size:.9rem;margin-bottom:2rem;line-height:1.6">Contactez le support pour tout problème ou feedback.<br>Disponibles tous les jours de <strong>08h à 13h</strong> et de <strong>15h à 23h</strong>.</p>
+        <div style="display:flex;flex-direction:column;gap:.875rem;max-width:400px">
+          <a href="https://wa.me/22945916177" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:.75rem;background:#25d366;color:white;border-radius:.875rem;padding:1rem;font-weight:700;text-decoration:none;font-size:.95rem">📱 Contacter via WhatsApp</a>
+          <a href="mailto:assistancerivo@gmail.com" style="display:flex;align-items:center;justify-content:center;gap:.75rem;background:#ea4335;color:white;border-radius:.875rem;padding:1rem;font-weight:700;text-decoration:none;font-size:.95rem">📧 Contacter via Gmail</a>
+          <a href="tel:+2290145916177" style="display:flex;align-items:center;justify-content:center;gap:.75rem;background:#2563eb;color:white;border-radius:.875rem;padding:1rem;font-weight:700;text-decoration:none;font-size:.95rem">📞 Contacter via appel</a>
+        </div>
       </div>
     </div>
   </div>
@@ -451,7 +481,7 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
     <button onclick="switchTab('bord')" id="bnav-bord" class="active"><span class="nav-icon">🏠</span><span>Bord</span></button>
     <button onclick="switchTab('formations')" id="bnav-formations"><span class="nav-icon">📚</span><span>Formations</span></button>
     <button onclick="switchTab('attestations')" id="bnav-attestations"><span class="nav-icon">🏆</span><span>Attests.</span></button>
-    <button onclick="switchTab('retrait')" id="bnav-retrait"><span class="nav-icon">💸</span><span>Retrait</span></button>
+    <button onclick="switchTab('recompenses')" id="bnav-recompenses"><span class="nav-icon">🎁</span><span>Récompenses</span></button>
     <button onclick="switchTab('profil')" id="bnav-profil"><span class="nav-icon">👤</span><span>Profil</span></button>
   </nav>
 
@@ -523,12 +553,18 @@ function goTo(p){
 }
 
 // ── App start (called after CDN loads) ───────────────
+function updateEmailBanner(){
+  const banner=document.getElementById('email-confirm-banner');
+  if(banner) banner.style.display=(CU&&!CU.email_confirmed_at)?'block':'none';
+}
+
 async function startApp(){
   try{
     const {data}=await sb.auth.getSession();
     if(data?.session){
       CU=data.session.user;
       await loadProfileData();
+      updateEmailBanner();
       goTo('dashboard');
     }
     const ps=new URLSearchParams(location.search).get('payment');
@@ -742,20 +778,15 @@ async function doRegister(e){
       first_name:fn,
       last_name:ln,
       birth_date:birth||null,
-      referred_by:refId||null
+      referred_by:refId||null,
+      email:email
     },{onConflict:'id'});
     if(upsertErr)console.warn('[doRegister] upsert error:',upsertErr.message);
-    // Email confirmation requise → jamais vers le dashboard
-    if(!auth.session){
-      toast('Compte créé ! Vérifiez votre boîte mail pour confirmer avant de vous connecter.');
-      setTimeout(()=>{goTo('landing');},2500);
-      return;
-    }
-    // Session active → préparer le dashboard
+    // Toujours aller au dashboard — bannière si email non confirmé
     CP=null;
     CU=auth.user;
     Object.keys(loaded).forEach(k=>delete loaded[k]);
-    await loadProfileData();
+    try{ await loadProfileData(); }catch(_){}
     toast('Bienvenue sur RIVO ! 🎉');
     setTimeout(()=>{goTo('dashboard');},600);
   }catch(err){
@@ -1058,17 +1089,14 @@ async function loadProfil(){
       if(p.avatar_url)av.innerHTML=`<img src="${p.avatar_url}" style="width:100%;height:100%;object-fit:cover"/>`;
       else av.textContent=((fn[0]||'')+(ln[0]||'')).toUpperCase()||'?';
     }
-    const[{count:fc},{count:ac},{data:filleuls}]=await Promise.all([
+    const[{count:fc},{count:ac}]=await Promise.all([
       sb.from('purchases').select('*',{count:'exact',head:true}).eq('user_id',CU.id).eq('status','complete'),
       sb.from('certificates').select('*',{count:'exact',head:true}).eq('user_id',CU.id),
-      sb.from('profiles').select('id').eq('referred_by',CU.id),
     ]);
     document.getElementById('st-f').textContent=fc||0;
     document.getElementById('st-a').textContent=ac||0;
-    const refCount=(filleuls||[]).length;
-    document.getElementById('st-pts').textContent=refCount;
-    const stRefGain=document.getElementById('st-ref-gain');
-    if(stRefGain)stRefGain.textContent=fmt(refCount*1000,'XOF');
+    // Retrait intégré dans le profil — charger le solde et l'historique
+    loadRetrait();
   }catch(e){
     console.error('[loadProfil] erreur:',e?.message||e);
   }
@@ -1167,15 +1195,17 @@ async function doWithdrawal(){
 function switchTab(name){
   document.querySelectorAll('.tab-panel').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.bottom-nav button').forEach(n=>n.classList.remove('active'));
-  document.getElementById('tab-'+name).classList.add('active');
+  const tabEl=document.getElementById('tab-'+name);
+  if(tabEl)tabEl.classList.add('active');
   const bnav=document.getElementById('bnav-'+name);
   if(bnav)bnav.classList.add('active');
   document.getElementById('notif-panel').style.display='none';
   if(name==='bord'){
     loadBord();
   } else if(name==='profil'){
-    // BUG 2 FIX: toujours recharger le profil à chaque visite (loadProfil appelle loadProfileData)
     loadProfil();
+  } else if(name==='recompenses'){
+    loadRecompensesTab('events');
   } else if(!loaded[name]){
     loaded[name]=true;
     if(name==='formations')loadMesFormations();
@@ -1205,21 +1235,16 @@ async function loadNotifications(){
     const title=c.courses?.title||'une formation';
     items.push({ts:c.issued_at,summary:`🏆 Attestation disponible pour ${title}`,detail:`Attestation disponible pour <em>${title}</em> · ${d} · Consultez l'onglet Attests.`,bg:'#fef9c3',col:'#92400e'});
   });
-  if(newCerts?.length>0)localStorage.setItem(certKey,newCerts[0].issued_at);
   // Type B: Nouvelles formations publiées
   (newCourses||[]).forEach(c=>{
     const d=new Date(c.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
     items.push({ts:c.created_at,summary:`📚 Nouvelle formation : ${c.title}`,detail:`Nouvelle formation disponible : <em>${c.title}</em> · ${d} · Consultez l'onglet Formations`,bg:'#eff6ff',col:'#1d4ed8'});
   });
-  localStorage.setItem(coursesKey,new Date().toISOString());
-  // Type D: Notifications admin
+  // Type D: Notifications admin — ne PAS marquer is_read ici (persistant jusqu'à "Supprimer tout")
   (adminNotifs||[]).forEach(n=>{
     const d=new Date(n.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
-    items.push({ts:n.created_at,summary:`📣 ${n.title}`,detail:`<strong>${n.title}</strong><br>${n.message}<div style="font-size:.7rem;color:#6b7280;margin-top:.35rem">${n.sender||'Support RIVO'} · ${d}</div>`,bg:'#f0fdf4',col:'#166534'});
+    items.push({ts:n.created_at,summary:`📣 ${n.title}`,detail:`<strong>${n.title}</strong><br>${n.message}<div style="font-size:.7rem;color:#6b7280;margin-top:.35rem">${n.sender||'Support RIVO'} · ${d}</div>`,bg:'#f0fdf4',col:'#166634'});
   });
-  if(adminNotifs?.length>0){
-    await sb.from('notifications').update({is_read:true}).eq('user_id',CU.id).eq('is_read',false);
-  }
   const total=items.length;
   if(total>0){badge.textContent=total;badge.style.display='flex';}else{badge.style.display='none';}
   const emptyMsg='<p style="padding:1rem;text-align:center;color:#9ca3af;font-size:.875rem">Aucune nouvelle notification</p>';
@@ -1281,37 +1306,139 @@ async function addPoints(uid, amount){
   if(uid===CU?.id && CP){CP.points=(p?.points||0)+amount;}
 }
 
-async function openRecompenses(){
-  document.getElementById('recompenses-modal').style.display='flex';
-  loadRecompensesTab('events');
+function openRecompenses(){
+  switchTab('recompenses');
 }
 
+let currentApplyEventId=null;
+
 async function loadRecompensesTab(tab){
-  document.getElementById('r-tab-events').style.fontWeight=tab==='events'?'700':'500';
-  document.getElementById('r-tab-mine').style.fontWeight=tab==='mine'?'700':'500';
-  document.getElementById('r-tab-events').style.borderBottom=tab==='events'?'2px solid #f59e0b':'2px solid transparent';
-  document.getElementById('r-tab-mine').style.borderBottom=tab==='mine'?'2px solid #f59e0b':'2px solid transparent';
+  // Highlight active tab
+  ['events','mine','points'].forEach(t=>{
+    const btn=document.getElementById('rt-'+t);
+    if(btn){
+      btn.style.fontWeight=tab===t?'700':'500';
+      btn.style.borderBottom=tab===t?'3px solid #f59e0b':'3px solid transparent';
+      btn.style.color=tab===t?'#1F2937':'#6b7280';
+    }
+  });
   const cont=document.getElementById('recompenses-content');
   cont.innerHTML='<p style="text-align:center;color:#9ca3af;padding:2rem">Chargement...</p>';
   if(tab==='events'){
-    const {data:evts}=await sb.from('events').select('*').eq('is_active',true).order('created_at',{ascending:false});
+    if(!CU){cont.innerHTML='<p style="text-align:center;color:#9ca3af;padding:2rem">Connectez-vous pour voir les événements.</p>';return;}
+    const [{data:evts},{data:myApps}]=await Promise.all([
+      sb.from('events').select('*').eq('is_active',true).order('created_at',{ascending:false}),
+      sb.from('user_events').select('event_id,status').eq('user_id',CU.id)
+    ]);
     if(!evts||evts.length===0){cont.innerHTML='<p style="text-align:center;color:#9ca3af;padding:2rem">Aucun événement disponible pour le moment.</p>';return;}
+    const appliedMap=Object.fromEntries((myApps||[]).map(a=>[a.event_id,a.status]));
     const myPts=CP?.points||0;
     cont.innerHTML=(evts||[]).map(e=>{
       const eligible=myPts>=(e.points_required||1000);
+      const pct=Math.min(100,Math.round((myPts/(e.points_required||1000))*100));
       const d=e.event_date?new Date(e.event_date).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}):'—';
-      return `<div style="background:white;border-radius:1rem;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08);margin-bottom:1rem">${e.image_url?`<img src="${e.image_url}" style="width:100%;height:140px;object-fit:cover"/>`:''}<div style="padding:1rem"><div style="font-weight:800;font-size:1rem;margin-bottom:.35rem">${e.title}</div>${e.description?`<p style="font-size:.85rem;color:#6b7280;margin-bottom:.75rem">${e.description}</p>`:''}<div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem"><span style="background:#fef3c7;color:#92400e;border-radius:9999px;padding:.2rem .75rem;font-size:.75rem;font-weight:700">🎁 ${e.reward||'Récompense'}</span>${e.location?`<span style="background:#eff6ff;color:#1d4ed8;border-radius:9999px;padding:.2rem .75rem;font-size:.75rem">📍 ${e.location}</span>`:''}<span style="background:#f0fdf4;color:#166534;border-radius:9999px;padding:.2rem .75rem;font-size:.75rem">📅 ${d}</span></div>${e.conditions?`<div style="font-size:.8rem;color:#6b7280;margin-bottom:.75rem">Conditions : ${e.conditions}</div>`:''}<div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:.85rem;color:#f59e0b;font-weight:700">⭐ ${e.points_required||1000} pts requis</span>${eligible?'<span style="background:#d1fae5;color:#065f46;border-radius:9999px;padding:.3rem .875rem;font-size:.8rem;font-weight:700">✅ Éligible</span>':`<span style="background:#fee2e2;color:#991b1b;border-radius:9999px;padding:.3rem .875rem;font-size:.8rem;font-weight:600">${(e.points_required||1000)-myPts} pts manquants</span>`}</div></div></div>`;
+      const appStatus=appliedMap[e.id];
+      let joinBtn='';
+      if(appStatus){
+        const label=appStatus==='approved'||appStatus==='selected'?'✅ Approuvé':appStatus==='rejected'?'❌ Rejeté':'✅ Demande envoyée';
+        joinBtn=`<button disabled style="background:#e5e7eb;color:#6b7280;border:none;border-radius:.75rem;padding:.625rem 1rem;font-weight:700;font-size:.8rem;cursor:not-allowed">${label}</button>`;
+      }else if(eligible){
+        joinBtn=`<button onclick="openEventApply('${e.id}','${e.title.replace(/'/g,'\\\'')}')" style="background:linear-gradient(135deg,#f59e0b,#ef4444);color:white;border:none;border-radius:.75rem;padding:.625rem 1rem;font-weight:700;font-size:.8rem;cursor:pointer">🎉 Rejoindre cet événement</button>`;
+      }
+      return `<div style="background:white;border-radius:1rem;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08);margin-bottom:1rem">
+        ${e.image_url?`<img src="${e.image_url}" style="width:100%;height:140px;object-fit:cover"/>`:''}
+        <div style="padding:1rem">
+          <div style="font-weight:800;font-size:1rem;margin-bottom:.35rem">${e.title}</div>
+          ${e.description?`<p style="font-size:.85rem;color:#6b7280;margin-bottom:.75rem">${e.description}</p>`:''}
+          <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem">
+            <span style="background:#fef3c7;color:#92400e;border-radius:9999px;padding:.2rem .75rem;font-size:.75rem;font-weight:700">🎁 ${e.reward||'Récompense'}</span>
+            ${e.location?`<span style="background:#eff6ff;color:#1d4ed8;border-radius:9999px;padding:.2rem .75rem;font-size:.75rem">📍 ${e.location}</span>`:''}
+            <span style="background:#f0fdf4;color:#166534;border-radius:9999px;padding:.2rem .75rem;font-size:.75rem">📅 ${d}</span>
+          </div>
+          ${e.conditions?`<div style="font-size:.8rem;color:#6b7280;margin-bottom:.75rem">📋 Conditions : ${e.conditions}</div>`:''}
+          <div style="margin-bottom:.75rem">
+            <div style="display:flex;justify-content:space-between;font-size:.8rem;color:#6b7280;margin-bottom:.3rem">
+              <span>⭐ ${myPts} / ${e.points_required||1000} pts</span>
+              <span>${pct}%</span>
+            </div>
+            <div style="background:#f1f5f9;border-radius:9999px;height:.5rem;overflow:hidden">
+              <div style="height:100%;background:linear-gradient(90deg,#f59e0b,#ef4444);border-radius:9999px;width:${pct}%;transition:width .5s"></div>
+            </div>
+            ${!eligible?`<p style="font-size:.75rem;color:#ef4444;margin-top:.3rem">Il vous manque ${(e.points_required||1000)-myPts} pts</p>`:''}
+          </div>
+          <div style="display:flex;justify-content:flex-end">${joinBtn}</div>
+        </div>
+      </div>`;
     }).join('');
-  }else{
-    if(!CU)return;
-    const {data:ue}=await sb.from('user_events').select('*,events(title,reward,event_date,location,image_url)').eq('user_id',CU.id).order('selected_at',{ascending:false});
-    if(!ue||ue.length===0){cont.innerHTML='<p style="text-align:center;color:#9ca3af;padding:2rem">Vous n\'avez pas encore été sélectionné pour un événement.</p>';return;}
+  }else if(tab==='mine'){
+    if(!CU){cont.innerHTML='<p style="text-align:center;color:#9ca3af;padding:2rem">Connectez-vous.</p>';return;}
+    const {data:ue}=await sb.from('user_events').select('*,events(title,reward,event_date,location,image_url,points_required)').eq('user_id',CU.id).order('selected_at',{ascending:false});
+    if(!ue||ue.length===0){cont.innerHTML='<p style="text-align:center;color:#9ca3af;padding:2rem">Vous n\'avez postulé à aucun événement pour l\'instant.</p>';return;}
+    const statusLabel={pending:'⏳ Demande envoyée',selected:'✅ Approuvé',approved:'✅ Approuvé',rejected:'❌ Rejeté'};
+    const statusColor={pending:'#f59e0b',selected:'#059669',approved:'#059669',rejected:'#ef4444'};
     cont.innerHTML=(ue||[]).map(u=>{
       const e=u.events||{};
       const d=e.event_date?new Date(e.event_date).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}):'—';
-      return `<div style="background:white;border-radius:1rem;padding:1rem;box-shadow:0 2px 8px rgba(0,0,0,.07);margin-bottom:.75rem;border-left:4px solid #f59e0b"><div style="font-weight:800">${e.title||'—'}</div><div style="font-size:.85rem;color:#6b7280;margin-top:.25rem">🎁 ${e.reward||'—'} · 📅 ${d}${e.location?` · 📍 ${e.location}`:''}</div><div style="margin-top:.5rem;font-size:.8rem;color:#059669;font-weight:600">✅ Sélectionné</div></div>`;
+      const st=u.status||'pending';
+      const approved=st==='selected'||st==='approved';
+      return `<div style="background:white;border-radius:1rem;padding:1rem;box-shadow:0 2px 8px rgba(0,0,0,.07);margin-bottom:.75rem;border-left:4px solid ${statusColor[st]||'#9ca3af'}">
+        <div style="font-weight:800">${e.title||'—'}</div>
+        <div style="font-size:.85rem;color:#6b7280;margin-top:.25rem">🎁 ${e.reward||'—'} · 📅 ${d}${e.location?` · 📍 ${e.location}`:''}</div>
+        <div style="margin-top:.5rem;font-size:.8rem;font-weight:700;color:${statusColor[st]||'#9ca3af'}">${statusLabel[st]||st}</div>
+        ${approved?`<div style="margin-top:.4rem;font-size:.8rem;color:#059669">Nous vous contacterons via WhatsApp ou Gmail.</div>`:''}
+        ${st==='rejected'&&u.rejection_reason?`<div style="margin-top:.4rem;font-size:.8rem;color:#ef4444">Motif : ${u.rejection_reason}</div>`:''}
+      </div>`;
     }).join('');
+  }else{
+    // Mes points
+    const pts=CP?.points||0;
+    const pct=Math.min(100,Math.round(pts/10));
+    cont.innerHTML=`
+      <div style="background:white;border-radius:1rem;padding:1.5rem;box-shadow:0 2px 12px rgba(0,0,0,.08);margin-bottom:1.25rem;text-align:center">
+        <div style="font-size:.85rem;color:#6b7280;margin-bottom:.5rem">Vos points RIVO</div>
+        <div style="font-size:3rem;font-weight:900;color:#f59e0b">${pts.toLocaleString('fr-FR')}</div>
+        <div style="font-size:.85rem;color:#9ca3af;margin-bottom:1rem">points</div>
+        <div style="background:#f1f5f9;border-radius:9999px;height:.75rem;overflow:hidden;margin-bottom:.4rem">
+          <div style="height:100%;background:linear-gradient(90deg,#f59e0b,#ef4444);border-radius:9999px;width:${pct}%;transition:width .5s"></div>
+        </div>
+        <div style="font-size:.8rem;color:#9ca3af">${pts} / 1000 pts pour accéder aux événements</div>
+      </div>
+      <div style="background:white;border-radius:1rem;padding:1.25rem;box-shadow:0 2px 8px rgba(0,0,0,.07)">
+        <h3 style="font-weight:800;font-size:1rem;color:#1F2937;margin-bottom:1rem">💡 Comment gagner des points ?</h3>
+        <div style="display:flex;flex-direction:column;gap:.625rem">
+          ${[['⭐ +10 pts','Achat d\'une formation'],['⭐ +10 pts','Réception d\'une attestation'],['⭐ +20 pts','Votre filleul achète une formation'],['⭐ +5 pts','Connexion quotidienne'],['⭐ +500 pts','Vidéo de recommandation approuvée']].map(([pts,desc])=>`
+          <div style="display:flex;align-items:center;gap:.875rem;padding:.75rem;background:#f8fafc;border-radius:.75rem">
+            <span style="font-weight:800;color:#f59e0b;white-space:nowrap;font-size:.9rem">${pts}</span>
+            <span style="font-size:.875rem;color:#374151">${desc}</span>
+          </div>`).join('')}
+        </div>
+      </div>`;
   }
+}
+
+function openEventApply(eventId,eventTitle){
+  currentApplyEventId=eventId;
+  document.getElementById('apply-event-title').textContent='Événement : '+eventTitle;
+  document.getElementById('apply-name').value=`${CP?.first_name||''} ${CP?.last_name||''}`.trim();
+  document.getElementById('apply-whatsapp').value='';
+  document.getElementById('apply-country').value='';
+  document.getElementById('apply-msg').style.display='none';
+  document.getElementById('event-apply-popup').style.display='flex';
+}
+
+async function submitEventApplication(){
+  const whatsapp=document.getElementById('apply-whatsapp').value.trim();
+  const country=document.getElementById('apply-country').value.trim();
+  if(!whatsapp){toast('WhatsApp requis.','err');return;}
+  if(!CU){toast('Connectez-vous.','err');return;}
+  const {error}=await sb.from('user_events').insert({user_id:CU.id,event_id:currentApplyEventId,whatsapp,country,status:'pending'});
+  if(error){toast('Erreur. Réessayez.','err');return;}
+  document.getElementById('apply-msg').style.display='block';
+  document.getElementById('apply-msg').textContent='Merci pour votre participation. Vous serez notifié si vous êtes sélectionné.';
+  setTimeout(()=>{
+    document.getElementById('event-apply-popup').style.display='none';
+    loadRecompensesTab('events');
+  },2500);
 }
 
 async function submitVideo(){
@@ -1328,15 +1455,30 @@ async function submitVideo(){
 
 </script>
 
-<!-- Support Modal -->
-<div id="support-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center">
-  <div style="background:white;border-radius:1.25rem;padding:2rem;width:90%;max-width:380px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.2)">
-    <h2 style="font-weight:900;font-size:1.2rem;margin-bottom:.5rem;color:#1F2937">Support RIVO</h2>
-    <p style="color:#6b7280;font-size:.875rem;margin-bottom:1.5rem;line-height:1.5">Contactez le support pour tout problème ou feedback.<br>Disponibles tous les jours de 08h à 13h et de 15h à 23h.</p>
-    <a href="https://wa.me/22945916177" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:.75rem;background:#25d366;color:white;border-radius:.75rem;padding:.875rem;font-weight:700;text-decoration:none;margin-bottom:.75rem;font-size:.95rem">📱 Contacter via WhatsApp</a>
-    <a href="mailto:assistancerivo@gmail.com" style="display:flex;align-items:center;justify-content:center;gap:.75rem;background:#ea4335;color:white;border-radius:.75rem;padding:.875rem;font-weight:700;text-decoration:none;margin-bottom:.75rem;font-size:.95rem">📧 Contacter via Gmail</a>
-    <a href="tel:+2290145916177" style="display:flex;align-items:center;justify-content:center;gap:.75rem;background:#2563eb;color:white;border-radius:.75rem;padding:.875rem;font-weight:700;text-decoration:none;margin-bottom:1rem;font-size:.95rem">📞 Contacter via appel</a>
-    <button onclick="document.getElementById('support-modal').style.display='none'" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:.875rem">Fermer</button>
+<!-- Event Application Popup -->
+<div id="event-apply-popup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:white;border-radius:1.25rem;padding:1.5rem;width:90%;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,.25)">
+    <h3 style="font-weight:800;font-size:1.05rem;color:#1F2937;margin-bottom:.4rem">🎉 Rejoindre l'événement</h3>
+    <p id="apply-event-title" style="font-size:.85rem;color:#6b7280;margin-bottom:1.25rem"></p>
+    <div style="display:flex;flex-direction:column;gap:.875rem;margin-bottom:1.25rem">
+      <div>
+        <label style="display:block;font-size:.8rem;font-weight:700;color:#374151;margin-bottom:.3rem">Nom complet</label>
+        <input id="apply-name" type="text" readonly style="width:100%;border:1.5px solid #e5e7eb;border-radius:.625rem;padding:.625rem;font-size:.875rem;background:#f8fafc;box-sizing:border-box;font-family:inherit"/>
+      </div>
+      <div>
+        <label style="display:block;font-size:.8rem;font-weight:700;color:#374151;margin-bottom:.3rem">Numéro WhatsApp *</label>
+        <input id="apply-whatsapp" type="tel" placeholder="+22900000000" style="width:100%;border:1.5px solid #e5e7eb;border-radius:.625rem;padding:.625rem;font-size:.875rem;box-sizing:border-box;font-family:inherit;outline:none"/>
+      </div>
+      <div>
+        <label style="display:block;font-size:.8rem;font-weight:700;color:#374151;margin-bottom:.3rem">Pays</label>
+        <input id="apply-country" type="text" placeholder="Ex: Bénin" style="width:100%;border:1.5px solid #e5e7eb;border-radius:.625rem;padding:.625rem;font-size:.875rem;box-sizing:border-box;font-family:inherit;outline:none"/>
+      </div>
+    </div>
+    <div id="apply-msg" style="display:none;font-size:.85rem;color:#059669;font-weight:600;margin-bottom:.875rem;text-align:center;line-height:1.5"></div>
+    <div style="display:flex;gap:.75rem">
+      <button onclick="submitEventApplication()" style="flex:1;background:linear-gradient(135deg,#f59e0b,#ef4444);color:white;border:none;border-radius:.75rem;padding:.75rem;font-weight:700;cursor:pointer;font-size:.875rem">Envoyer ma candidature</button>
+      <button onclick="document.getElementById('event-apply-popup').style.display='none'" style="flex:1;background:#f1f5f9;border:none;border-radius:.75rem;padding:.75rem;font-weight:600;cursor:pointer;color:#374151;font-size:.875rem">Annuler</button>
+    </div>
   </div>
 </div>
 
@@ -1354,22 +1496,6 @@ async function submitVideo(){
   </div>
 </div>
 
-<!-- Récompenses Modal -->
-<div id="recompenses-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:flex-start;justify-content:center;overflow-y:auto;padding:1rem">
-  <div style="background:#f8fafc;border-radius:1.25rem;width:100%;max-width:480px;box-shadow:0 8px 32px rgba(0,0,0,.2);overflow:hidden;margin:auto">
-    <div style="background:linear-gradient(135deg,#f59e0b,#ef4444);padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between">
-      <span style="color:white;font-weight:900;font-size:1.1rem">🎁 Récompenses</span>
-      <button onclick="document.getElementById('recompenses-modal').style.display='none'" style="background:rgba(255,255,255,.2);border:none;color:white;cursor:pointer;border-radius:.5rem;padding:.25rem .625rem;font-weight:700">✕</button>
-    </div>
-    <div style="display:flex;border-bottom:1px solid #e2e8f0;background:white">
-      <button id="r-tab-events" onclick="loadRecompensesTab('events')" style="flex:1;padding:.875rem;background:none;border:none;border-bottom:2px solid #f59e0b;cursor:pointer;font-weight:700;font-size:.9rem;color:#1F2937">Événements</button>
-      <button id="r-tab-mine" onclick="loadRecompensesTab('mine')" style="flex:1;padding:.875rem;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;font-weight:500;font-size:.9rem;color:#6b7280">Mes événements</button>
-    </div>
-    <div id="recompenses-content" style="padding:1rem;max-height:70vh;overflow-y:auto">
-      <p style="text-align:center;color:#9ca3af;padding:2rem">Chargement...</p>
-    </div>
-  </div>
-</div>
 
 </body>
 </html>
