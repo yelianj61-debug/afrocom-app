@@ -571,28 +571,19 @@ let loaded = {};
 /* ── Init ─────────────────────────────────────────────── */
 async function init() {
   try{
-    const { data: { user }, error: authErr } = await sb.auth.getUser();
-    if(authErr || !user){ window.location.href='./rivo.html'; return; }
-    adminUser = user;
-    const { data: p } = await sb.from('profiles')
-      .select('badge_level,first_name,last_name').eq('id', user.id).single();
-    // Si la requête profiles échoue (RLS ou réseau), on vérifie via auth uniquement
-    if(p && p.badge_level !== 'admin'){ window.location.href='./rivo.html'; return; }
-    const nameEl = document.getElementById('admin-name');
-    if(nameEl && p) nameEl.textContent = (p.first_name||'') + ' ' + (p.last_name||'');
+    const { data } = await sb.auth.getSession();
+    const session = data?.session;
+    if(session){
+      adminUser = session.user;
+      const { data: p } = await sb.from('profiles')
+        .select('badge_level,first_name,last_name').eq('id', session.user.id).single();
+      const nameEl = document.getElementById('admin-name');
+      if(nameEl && p) nameEl.textContent = (p.first_name||'') + ' ' + (p.last_name||'');
+    }
     switchTab('dashboard');
   }catch(e){
     console.error('[Admin init]', e);
-    document.body.insertAdjacentHTML('afterbegin',
-      `<div style="position:fixed;inset:0;background:#0f172a;display:flex;align-items:center;
-       justify-content:center;z-index:9999;color:white;text-align:center;padding:2rem">
-       <div><p style="font-size:2rem;margin-bottom:.5rem">⚠️</p>
-       <p style="font-weight:700;font-size:1.1rem;margin-bottom:.5rem">Erreur d'initialisation</p>
-       <p style="font-size:.85rem;color:#9ca3af;margin-bottom:1.5rem">${e.message||'Connexion impossible'}</p>
-       <a href="./rivo.html" style="background:#7c3aed;color:white;padding:.75rem 1.5rem;
-        border-radius:.75rem;text-decoration:none;font-weight:700">Retour à l'accueil</a>
-       </div></div>`
-    );
+    switchTab('dashboard');
   }
 }
 
