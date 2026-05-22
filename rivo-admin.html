@@ -729,9 +729,15 @@ async function loadDashboard() {
 
 /* ── Utilisateurs ─────────────────────────────────────── */
 async function loadUtilisateurs() {
-  const { data } = await sb.from('profiles').select('*').order('created_at',{ascending:false});
-  allUsers = data || [];
-  renderUsers(allUsers);
+  const tb = document.getElementById('users-table');
+  try{
+    const { data, error } = await sb.from('profiles').select('*').order('created_at',{ascending:false});
+    if(error) throw error;
+    allUsers = data || [];
+    renderUsers(allUsers);
+  }catch(e){
+    if(tb) tb.innerHTML=`<tr><td colspan="6" style="text-align:center;color:#ef4444;padding:2rem">Erreur : ${e.message}</td></tr>`;
+  }
 }
 
 function filterUsers() {
@@ -870,8 +876,14 @@ async function viewUserProfile(userId){
 
 /* ── Formations ───────────────────────────────────────── */
 async function loadFormations() {
-  const { data } = await sb.from('courses').select('*').order('created_at',{ascending:false});
-  renderFormations(data || []);
+  const grid = document.getElementById('formations-grid');
+  try{
+    const { data, error } = await sb.from('courses').select('*').order('created_at',{ascending:false});
+    if(error) throw error;
+    renderFormations(data || []);
+  }catch(e){
+    if(grid) grid.innerHTML=`<div class="col-span-3 text-center py-8" style="color:#ef4444">Erreur : ${e.message}</div>`;
+  }
 }
 
 function renderFormations(courses) {
@@ -1041,6 +1053,7 @@ function renderRetraits(rows) {
           <div style="font-size:.7rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em">Méthode</div>
           <div style="font-size:.875rem;color:#e2e8f0;font-weight:600;margin-top:.15rem">${r.method||'—'}</div>
         </div>
+        ${r.method==='mobile_money'||r.method==='Mobile Money'?`
         <div style="background:#0f172a;padding:.6rem .875rem;border-radius:.625rem">
           <div style="font-size:.7rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em">Opérateur</div>
           <div style="font-size:.875rem;color:#e2e8f0;font-weight:600;margin-top:.15rem">${r.operator||'—'}</div>
@@ -1048,7 +1061,29 @@ function renderRetraits(rows) {
         <div style="background:#0f172a;padding:.6rem .875rem;border-radius:.625rem">
           <div style="font-size:.7rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em">Téléphone</div>
           <div style="font-size:.875rem;color:#e2e8f0;font-weight:600;margin-top:.15rem">${r.country_code||''} ${r.phone_number||'—'}</div>
+        </div>`:''}
+        ${r.method==='bank_transfer'||r.method==='Carte bancaire'?`
+        <div style="background:#0f172a;padding:.6rem .875rem;border-radius:.625rem">
+          <div style="font-size:.7rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em">Titulaire</div>
+          <div style="font-size:.875rem;color:#e2e8f0;font-weight:600;margin-top:.15rem">${r.account_holder||'—'}</div>
         </div>
+        <div style="background:#0f172a;padding:.6rem .875rem;border-radius:.625rem">
+          <div style="font-size:.7rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em">IBAN</div>
+          <div style="font-size:.8rem;color:#e2e8f0;font-weight:600;margin-top:.15rem;word-break:break-all">${r.iban||'—'}</div>
+        </div>
+        <div style="background:#0f172a;padding:.6rem .875rem;border-radius:.625rem">
+          <div style="font-size:.7rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em">BIC / SWIFT</div>
+          <div style="font-size:.875rem;color:#e2e8f0;font-weight:600;margin-top:.15rem">${r.bic||'—'}</div>
+        </div>`:''}
+        ${r.method==='other'||r.method==='Autre'?`
+        <div style="background:#0f172a;padding:.6rem .875rem;border-radius:.625rem">
+          <div style="font-size:.7rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em">Via</div>
+          <div style="font-size:.875rem;color:#e2e8f0;font-weight:600;margin-top:.15rem">${r.other_method||'—'}</div>
+        </div>
+        <div style="background:#0f172a;padding:.6rem .875rem;border-radius:.625rem;grid-column:span 2">
+          <div style="font-size:.7rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em">Détail</div>
+          <div style="font-size:.875rem;color:#e2e8f0;font-weight:600;margin-top:.15rem">${r.other_detail||'—'}</div>
+        </div>`:''}
         <div style="background:#0f172a;padding:.6rem .875rem;border-radius:.625rem">
           <div style="font-size:.7rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em">Date</div>
           <div style="font-size:.875rem;color:#e2e8f0;font-weight:600;margin-top:.15rem">${date}</div>
@@ -1504,34 +1539,44 @@ async function loadPendingApplications() {
 }
 
 async function approveApplication(appId, userId) {
-  // Récupérer event_id et points_required avant d'approuver
-  const { data: app } = await sb.from('user_events').select('event_id').eq('id', appId).single();
-  const { data: ev } = app?.event_id
-    ? await sb.from('events').select('points_required,title').eq('id', app.event_id).single()
-    : { data: null };
+  try{
+    const { data: app } = await sb.from('user_events').select('event_id').eq('id', appId).single();
+    const { data: ev } = app?.event_id
+      ? await sb.from('events').select('points_required,title').eq('id', app.event_id).single()
+      : { data: null };
+    const ptsRequired = ev?.points_required || 0;
 
-  const { error } = await sb.from('user_events').update({ status: 'approved' }).eq('id', appId);
-  if (error) { toast(error.message, false); return; }
+    // Vérifier si l'utilisateur a assez de points
+    const { data: profile } = await sb.from('profiles').select('points,first_name,last_name').eq('id', userId).single();
+    const currentPts = profile?.points || 0;
+    if(ptsRequired > 0 && currentPts < ptsRequired){
+      const name = `${profile?.first_name||''} ${profile?.last_name||''}`.trim() || 'cet utilisateur';
+      toast(`⚠️ ${name} n'a que ${currentPts.toLocaleString('fr-FR')} pts (requis : ${ptsRequired.toLocaleString('fr-FR')} pts). Approbation annulée.`, false);
+      return;
+    }
 
-  // Déduire les points requis du profil utilisateur
-  const ptsRequired = ev?.points_required || 0;
-  if (ptsRequired > 0) {
-    const { data: profile } = await sb.from('profiles').select('points').eq('id', userId).single();
-    const newPoints = Math.max(0, (profile?.points || 0) - ptsRequired);
-    await sb.from('profiles').update({ points: newPoints }).eq('id', userId);
-  }
+    const { error } = await sb.from('user_events').update({ status: 'approved' }).eq('id', appId);
+    if(error) throw error;
 
-  await sb.from('notifications').insert({
-    user_id: userId,
-    title: 'Candidature approuvée ! 🎉',
-    message: `Votre candidature pour "${ev?.title || 'l\'événement'}" a été approuvée !${ptsRequired > 0 ? ` ${ptsRequired} points ont été déduits de votre solde.` : ''} Félicitations !`,
-    sender: 'Support RIVO'
-  });
-  toast(`Candidature approuvée !${ptsRequired > 0 ? ` −${ptsRequired} pts déduits.` : ''}`);
-  document.getElementById('app-' + appId)?.remove();
-  const container = document.getElementById('applications-list');
-  if (container && container.querySelectorAll('[id^="app-"]').length === 0) {
-    container.innerHTML = '<div class="card p-6 text-center text-gray-500">Aucune candidature en attente</div>';
+    if(ptsRequired > 0){
+      const newPoints = Math.max(0, currentPts - ptsRequired);
+      await sb.from('profiles').update({ points: newPoints }).eq('id', userId);
+    }
+
+    await sb.from('notifications').insert({
+      user_id: userId,
+      title: 'Candidature approuvée ! 🎉',
+      message: `Votre candidature pour "${ev?.title || 'l\'événement'}" a été approuvée !${ptsRequired > 0 ? ` ${ptsRequired} points ont été déduits de votre solde.` : ''} Félicitations !`,
+      sender: 'Support RIVO'
+    });
+    toast(`Candidature approuvée !${ptsRequired > 0 ? ` −${ptsRequired.toLocaleString('fr-FR')} pts déduits.` : ''}`);
+    document.getElementById('app-' + appId)?.remove();
+    const container = document.getElementById('applications-list');
+    if(container && container.querySelectorAll('[id^="app-"]').length === 0){
+      container.innerHTML = '<div class="card p-6 text-center text-gray-500">Aucune candidature en attente</div>';
+    }
+  }catch(e){
+    toast(e.message || 'Erreur lors de l\'approbation', false);
   }
 }
 
@@ -1552,10 +1597,18 @@ async function rejectApplication(appId) {
 /* ── Classement ───────────────────────────────────────── */
 async function loadClassement() {
   const tb = document.getElementById('classement-table');
-  const { data } = await sb.from('profiles')
-    .select('id,first_name,last_name,email,points,badge_level')
-    .order('points', { ascending: false })
-    .limit(100);
+  let data;
+  try{
+    const res = await sb.from('profiles')
+      .select('id,first_name,last_name,email,points,badge_level')
+      .order('points', { ascending: false })
+      .limit(100);
+    if(res.error) throw res.error;
+    data = res.data;
+  }catch(e){
+    if(tb) tb.innerHTML=`<tr><td colspan="4" style="text-align:center;color:#ef4444;padding:2rem">Erreur : ${e.message}</td></tr>`;
+    return;
+  }
   if (!data || data.length === 0) {
     tb.innerHTML = '<tr><td colspan="4" class="text-center text-gray-500 py-8">Aucun utilisateur</td></tr>';
     return;
