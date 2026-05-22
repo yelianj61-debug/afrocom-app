@@ -4,6 +4,13 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>RIVO – La plateforme qui transforme l'apprentissage en opportunité</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2563EB">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="RIVO">
+<link rel="apple-touch-icon" href="icon-192.png">
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <style>
@@ -36,6 +43,16 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
 .spin-blue{width:2rem;height:2rem;border:3px solid #dbeafe;border-top-color:#2563EB;border-radius:50%;animation:rot .65s linear infinite}
 .fade-in{animation:fi .4s ease}
 @keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes bounceIn{0%{opacity:0;transform:scale(.85)}60%{transform:scale(1.04)}100%{opacity:1;transform:scale(1)}}
+@keyframes pulse-soft{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(37,99,235,0)}50%{box-shadow:0 0 18px 4px rgba(37,99,235,.25)}}
+.anim-up{animation:slideUp .45s ease both}
+.anim-bounce{animation:bounceIn .4s cubic-bezier(.34,1.56,.64,1) both}
+.anim-pulse{animation:pulse-soft 2.5s ease infinite}
+.card{background:white;border-radius:1rem;box-shadow:0 2px 20px rgba(0,0,0,.07);overflow:hidden;transition:box-shadow .3s,transform .25s}
+.card:hover{transform:translateY(-3px);box-shadow:0 10px 35px rgba(0,0,0,.13)}
+.btn-primary:active,.btn-accent:active{transform:scale(.96)}
 /* Bottom nav */
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:2px solid #e5e7eb;display:flex;z-index:100;box-shadow:0 -4px 20px rgba(0,0,0,.08)}
 .bottom-nav button{flex:1;padding:.6rem .25rem .5rem;border:none;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:.2rem;font-size:.65rem;font-weight:600;color:#9ca3af;transition:.2s;font-family:'Inter',sans-serif}
@@ -316,15 +333,6 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
           <p style="color:#bfdbfe;font-weight:600;margin-bottom:.25rem">RIVO, la plateforme qui transforme l'apprentissage en opportunité.</p>
           <p style="color:#93c5fd;font-size:.875rem">Développez vos compétences grâce à un apprentissage moderne, simple et accessible.</p>
         </div>
-        <div id="test-mode-bar" style="display:none;background:#fef3c7;border:1.5px solid #f59e0b;border-radius:.875rem;padding:.7rem 1rem;margin-bottom:1rem;align-items:center;justify-content:space-between">
-          <span style="font-size:.82rem;font-weight:700;color:#92400e">🧪 Mode test (admin)</span>
-          <div style="display:flex;align-items:center;gap:.6rem">
-            <span id="test-mode-label" style="font-size:.78rem;color:#92400e;font-weight:600">Désactivé</span>
-            <div onclick="toggleTestMode()" id="test-mode-toggle" style="width:44px;height:24px;background:#d1d5db;border-radius:9999px;position:relative;cursor:pointer;transition:background .25s;flex-shrink:0">
-              <div id="test-mode-knob" style="width:20px;height:20px;background:white;border-radius:9999px;position:absolute;top:2px;left:2px;transition:left .25s;box-shadow:0 1px 3px rgba(0,0,0,.25)"></div>
-            </div>
-          </div>
-        </div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
           <h2 style="font-size:1.25rem;font-weight:800;color:#1F2937">Formations disponibles</h2>
           <span id="courses-badge" style="background:#dbeafe;color:#1d4ed8;font-size:.8rem;font-weight:700;padding:.25rem .875rem;border-radius:9999px">...</span>
@@ -378,24 +386,6 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
             <div class="card" style="padding:1.25rem;text-align:center"><div id="st-b" style="font-size:1.3rem;font-weight:900;color:#10b981">0 FCFA</div><div style="color:#6b7280;font-size:.8rem;margin-top:.2rem">Solde</div></div>
             <div class="card" style="padding:1.25rem;text-align:center"><div id="st-pts" style="font-size:1.6rem;font-weight:900;color:#f59e0b">0</div><div style="color:#6b7280;font-size:.8rem;margin-top:.2rem">⭐ Mes points</div></div>
           </div>
-        </div>
-
-        <!-- Mes points barre de progression -->
-        <div class="card" style="padding:1.25rem;margin-bottom:1.25rem">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem">
-            <div style="font-weight:700;color:#1F2937">⭐ Mes points</div>
-            <div id="prof-points" style="font-size:1.1rem;font-weight:900;color:#f59e0b">0 pts</div>
-          </div>
-          <div style="background:#f1f5f9;border-radius:9999px;height:.625rem;overflow:hidden">
-            <div id="prof-points-bar" style="height:100%;background:linear-gradient(90deg,#f59e0b,#ef4444);border-radius:9999px;transition:width .5s;width:0%"></div>
-          </div>
-          <div id="prof-points-label" style="font-size:.75rem;color:#9ca3af;margin-top:.4rem;text-align:right">0 / 1000 pts pour accéder aux événements</div>
-        </div>
-
-        <!-- Boutons Récompenses + Vidéo -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.5rem">
-          <button onclick="switchTab('recompenses')" style="background:linear-gradient(135deg,#f59e0b,#ef4444);color:white;border:none;border-radius:.875rem;padding:.875rem;font-weight:700;cursor:pointer;font-size:.85rem">🎁 Récompenses</button>
-          <button onclick="document.getElementById('video-modal').style.display='flex'" style="background:linear-gradient(135deg,#7c3aed,#4f46e5);color:white;border:none;border-radius:.875rem;padding:.875rem;font-weight:700;cursor:pointer;font-size:.85rem">🎬 Soumettre vidéo</button>
         </div>
 
         <!-- Informations personnelles (lecture seule) -->
@@ -865,27 +855,8 @@ async function doLogout(){
 }
 
 // ── Dashboard: Bord ───────────────────────────────────
-function updateTestModeUI(){
-  const toggle=document.getElementById('test-mode-toggle');
-  const knob=document.getElementById('test-mode-knob');
-  const label=document.getElementById('test-mode-label');
-  if(!toggle)return;
-  if(TEST_MODE){toggle.style.background='#10b981';knob.style.left='22px';label.textContent='Activé';}
-  else{toggle.style.background='#d1d5db';knob.style.left='2px';label.textContent='Désactivé';}
-}
-function toggleTestMode(){
-  TEST_MODE=!TEST_MODE;
-  localStorage.setItem('rivo_test_mode',TEST_MODE?'1':'0');
-  updateTestModeUI();
-  toast(TEST_MODE?'🧪 Mode test activé — paiements simulés':'Mode test désactivé — FedaPay actif');
-}
-
 async function loadBord(){
   if(!CU?.id) return;
-  const bar=document.getElementById('test-mode-bar');
-  if(bar){
-    bar.style.display='flex';updateTestModeUI();
-  }
   const[{data:cs},{data:ps}]=await Promise.all([
     sb.from('courses').select('*').eq('is_published',true).order('created_at',{ascending:false}),
     sb.from('purchases').select('course_id').eq('user_id',CU.id).eq('status','complete')
@@ -1486,7 +1457,7 @@ async function loadRecompensesTab(tab){
         </div>
         <div style="font-size:.8rem;color:#9ca3af">${pts} / 1000 pts pour accéder aux événements</div>
       </div>
-      <div style="background:white;border-radius:1rem;padding:1.25rem;box-shadow:0 2px 8px rgba(0,0,0,.07)">
+      <div style="background:white;border-radius:1rem;padding:1.25rem;box-shadow:0 2px 8px rgba(0,0,0,.07);margin-bottom:1rem">
         <h3 style="font-weight:800;font-size:1rem;color:#1F2937;margin-bottom:1rem">💡 Comment gagner des points ?</h3>
         <div style="display:flex;flex-direction:column;gap:.625rem">
           ${[['⭐ +10 pts','Achat d\'une formation'],['⭐ +10 pts','Réception d\'une attestation'],['⭐ +20 pts','Votre filleul achète une formation'],['⭐ +5 pts','Connexion quotidienne'],['⭐ +500 pts','Vidéo de recommandation approuvée']].map(([pts,desc])=>`
@@ -1495,6 +1466,24 @@ async function loadRecompensesTab(tab){
             <span style="font-size:.875rem;color:#374151">${desc}</span>
           </div>`).join('')}
         </div>
+      </div>
+      <div style="background:linear-gradient(135deg,#f3e8ff,#ede9fe);border:2px solid #ddd6fe;border-radius:1rem;padding:1.25rem">
+        <h3 style="font-weight:800;font-size:1rem;color:#4c1d95;margin-bottom:.5rem">🎬 Soumettre une vidéo — +500 pts</h3>
+        <p style="font-size:.85rem;color:#5b21b6;margin-bottom:1rem;line-height:1.6">
+          Faites une vidéo où vous <strong>présentez et recommandez l'application RIVO</strong>.
+          Publiez-la sur YouTube, TikTok ou Instagram, copiez le lien et collez-le ici.
+          Si notre équipe approuve votre vidéo, vous recevez <strong style="color:#f59e0b">+500 points</strong> automatiquement ! 🎉
+        </p>
+        <input type="url" id="video-url-input" placeholder="https://youtube.com/... ou https://tiktok.com/..."
+          style="width:100%;border:2px solid #ddd6fe;border-radius:.75rem;padding:.75rem;
+          font-size:.875rem;margin-bottom:.75rem;box-sizing:border-box;font-family:'Inter',sans-serif;
+          outline:none;background:white"/>
+        <div id="video-submit-msg" style="font-size:.85rem;color:#059669;display:none;margin-bottom:.75rem;font-weight:600;padding:.75rem;background:#d1fae5;border-radius:.75rem"></div>
+        <button onclick="submitVideo()" style="width:100%;background:linear-gradient(135deg,#7c3aed,#4f46e5);
+          color:white;border:none;border-radius:.75rem;padding:.875rem;font-weight:700;cursor:pointer;
+          font-size:.9rem;transition:opacity .2s">
+          📤 Envoyer ma vidéo
+        </button>
       </div>`;
   }
 }
@@ -1525,15 +1514,43 @@ async function submitEventApplication(){
 }
 
 async function submitVideo(){
-  if(!CU){toast('Connectez-vous.','err');return;}
-  const url=document.getElementById('video-url-input').value.trim();
-  if(!url){toast('Entrez un lien valide.','err');return;}
+  if(!CU){toast('Connectez-vous pour soumettre une vidéo.','err');return;}
+  const urlEl=document.getElementById('video-url-input');
+  const msgEl=document.getElementById('video-submit-msg');
+  const url=urlEl?.value.trim();
+  if(!url){toast('Entrez un lien YouTube/TikTok valide.','err');return;}
   const {error}=await sb.from('recommendation_videos').insert({user_id:CU.id,video_url:url});
   if(error){toast('Erreur. Réessayez.','err');return;}
-  document.getElementById('video-submit-msg').style.display='block';
-  document.getElementById('video-submit-msg').textContent='Vidéo soumise ! Elle sera examinée sous peu. +500 pts si approuvée.';
-  document.getElementById('video-url-input').value='';
+  if(msgEl){msgEl.style.display='block';msgEl.textContent='✅ Vidéo soumise ! Elle sera examinée sous peu. +500 pts si approuvée.';}
+  if(urlEl) urlEl.value='';
+  toast('Vidéo soumise ! En attente de validation.');
 }
+
+// ── PWA ────────────────────────────────────────────────
+let _deferredPrompt;
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  });
+}
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault(); _deferredPrompt=e;
+  const b=document.getElementById('pwa-banner');
+  if(b) b.style.display='flex';
+});
+function installPWA(){
+  if(!_deferredPrompt)return;
+  _deferredPrompt.prompt();
+  _deferredPrompt.userChoice.then(()=>{
+    _deferredPrompt=null;
+    const b=document.getElementById('pwa-banner');
+    if(b) b.style.display='none';
+  });
+}
+window.addEventListener('appinstalled',()=>{
+  const b=document.getElementById('pwa-banner');
+  if(b) b.style.display='none';
+});
 
 
 </script>
@@ -1565,20 +1582,25 @@ async function submitVideo(){
   </div>
 </div>
 
-<!-- Video Submission Modal -->
-<div id="video-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center">
-  <div style="background:white;border-radius:1.25rem;padding:1.5rem;width:90%;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,.2)">
-    <h3 style="font-weight:800;margin-bottom:.5rem;font-size:1rem;color:#1F2937">🎬 Vidéo de recommandation</h3>
-    <p style="font-size:.85rem;color:#6b7280;margin-bottom:1rem;line-height:1.5">Soumettez un lien YouTube ou Google Drive. Si approuvée par notre équipe, vous gagnez <strong style="color:#f59e0b">+500 points</strong> !</p>
-    <input type="url" id="video-url-input" placeholder="https://youtube.com/..." style="width:100%;border:2px solid #e2e8f0;border-radius:.625rem;padding:.625rem;font-size:.875rem;margin-bottom:1rem;box-sizing:border-box;font-family:inherit;outline:none"/>
-    <div id="video-submit-msg" style="font-size:.8rem;color:#10b981;display:none;margin-bottom:.75rem;font-weight:600"></div>
-    <div style="display:flex;gap:.75rem">
-      <button onclick="submitVideo()" style="flex:1;background:#7c3aed;color:white;border:none;border-radius:.5rem;padding:.625rem;font-weight:700;cursor:pointer">Envoyer</button>
-      <button onclick="document.getElementById('video-modal').style.display='none'" style="flex:1;background:#f1f5f9;border:none;border-radius:.5rem;padding:.625rem;font-weight:600;cursor:pointer;color:#374151">Annuler</button>
-    </div>
+<!-- PWA Install Banner -->
+<div id="pwa-banner" style="display:none;position:fixed;bottom:5rem;left:1rem;right:1rem;
+  background:linear-gradient(135deg,#1e3a8a,#2563EB);color:white;border-radius:1.25rem;
+  padding:1rem 1.25rem;align-items:center;gap:.875rem;z-index:200;
+  box-shadow:0 8px 32px rgba(37,99,235,.45);animation:slideUp .4s ease">
+  <div style="font-size:2rem;flex-shrink:0">📲</div>
+  <div style="flex:1">
+    <div style="font-weight:800;font-size:.95rem">Installer RIVO</div>
+    <div style="font-size:.78rem;opacity:.85;margin-top:.1rem">Accès rapide depuis votre écran d'accueil</div>
   </div>
+  <button onclick="installPWA()" style="background:white;color:#1e3a8a;border:none;
+    border-radius:.75rem;padding:.5rem 1.1rem;font-weight:800;cursor:pointer;font-size:.85rem;
+    flex-shrink:0;transition:transform .15s" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+    Installer
+  </button>
+  <button onclick="document.getElementById('pwa-banner').style.display='none'"
+    style="background:none;border:none;color:rgba(255,255,255,.75);cursor:pointer;font-size:1.3rem;
+    padding:.2rem;flex-shrink:0;line-height:1">✕</button>
 </div>
-
 
 </body>
 </html>

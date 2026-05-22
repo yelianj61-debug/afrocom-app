@@ -140,6 +140,19 @@
           <span class="badge badge-admin">Admin</span>
         </div>
       </div>
+      <!-- Mode test toggle -->
+      <div style="background:#111827;border-radius:.75rem;padding:.75rem;margin-bottom:.75rem">
+        <div style="font-size:.7rem;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.625rem">🧪 Mode Test</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.35rem">
+          <span style="font-size:.85rem;color:#e2e8f0;font-weight:600">Achats gratuits</span>
+          <div onclick="toggleAdminTestMode()" id="tm-toggle"
+            style="width:44px;height:24px;background:#374151;border-radius:9999px;position:relative;cursor:pointer;transition:background .25s;flex-shrink:0">
+            <div id="tm-knob" style="width:20px;height:20px;background:white;border-radius:9999px;position:absolute;top:2px;left:2px;transition:left .25s;box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>
+          </div>
+        </div>
+        <div id="tm-status" style="font-size:.72rem;color:#6b7280">Désactivé — FedaPay actif</div>
+      </div>
+
       <button onclick="doLogout()" class="w-full text-left px-3 py-2 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-900/20 transition text-sm flex items-center gap-2">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
         Déconnexion
@@ -568,6 +581,28 @@ let adminProfile = null;
 let allUsers = [];
 let loaded = {};
 
+/* ── Test Mode Toggle ─────────────────────────────────── */
+function toggleAdminTestMode(){
+  const on = localStorage.getItem('rivo_test_mode') !== '1';
+  localStorage.setItem('rivo_test_mode', on ? '1' : '0');
+  const tog=document.getElementById('tm-toggle');
+  const knob=document.getElementById('tm-knob');
+  const status=document.getElementById('tm-status');
+  if(tog) tog.style.background = on ? '#10b981' : '#374151';
+  if(knob) knob.style.left = on ? '22px' : '2px';
+  if(status) status.textContent = on ? '✅ Activé — achats GRATUITS' : 'Désactivé — FedaPay actif';
+  toast(on ? '🧪 Mode test ON — achats gratuits sur RIVO' : '✅ Mode test désactivé — FedaPay actif', on);
+}
+function initTestModeUI(){
+  const on = localStorage.getItem('rivo_test_mode') === '1';
+  const tog=document.getElementById('tm-toggle');
+  const knob=document.getElementById('tm-knob');
+  const status=document.getElementById('tm-status');
+  if(tog) tog.style.background = on ? '#10b981' : '#374151';
+  if(knob) knob.style.left = on ? '22px' : '2px';
+  if(status) status.textContent = on ? '✅ Activé — achats GRATUITS' : 'Désactivé — FedaPay actif';
+}
+
 /* ── Init ─────────────────────────────────────────────── */
 async function init() {
   try{
@@ -580,6 +615,7 @@ async function init() {
       const nameEl = document.getElementById('admin-name');
       if(nameEl && p) nameEl.textContent = (p.first_name||'') + ' ' + (p.last_name||'');
     }
+    initTestModeUI();
     switchTab('dashboard');
   }catch(e){
     console.error('[Admin init]', e);
@@ -1158,7 +1194,10 @@ async function loadAttestations() {
           <div class="text-xs text-gray-500 mb-1">${p.profile?.email||''}</div>
           <div class="text-sm text-purple-300">📚 ${p.course?.title||'—'}</div>
         </div>
-        <div class="text-xs text-gray-500">${p.purchased_at ? new Date(p.purchased_at).toLocaleDateString('fr-FR') : '—'}</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.4rem">
+          <div class="text-xs text-gray-500">${p.purchased_at ? new Date(p.purchased_at).toLocaleDateString('fr-FR') : '—'}</div>
+          <button onclick="viewUserProfile('${p.user_id}')" style="background:#7c3aed;color:white;border:none;border-radius:.5rem;padding:.3rem .75rem;cursor:pointer;font-size:.75rem;font-weight:700;white-space:nowrap">👤 Voir profil</button>
+        </div>
       </div>
       <div class="space-y-2">
         <div style="display:flex;gap:.5rem;align-items:center">
@@ -1550,8 +1589,14 @@ async function approveApplication(appId, userId) {
     if(error) throw error;
 
     if(ptsRequired > 0){
-      const newPoints = Math.max(0, currentPts - ptsRequired);
-      await sb.from('profiles').update({ points: newPoints }).eq('id', userId);
+      const { error: deductErr } = await sb.rpc('admin_deduct_points', {
+        p_user_id: userId,
+        p_points: ptsRequired
+      });
+      if(deductErr){
+        console.warn('[Admin] Déduction points échouée:', deductErr.message);
+        toast(`⚠️ Points non déduits (${deductErr.message}) — vérifiez SQL`, false);
+      }
     }
 
     await sb.from('notifications').insert({
