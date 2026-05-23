@@ -729,25 +729,25 @@ async function loadProfileData(){
     if(error && error.code!=='PGRST116'){
       console.error('[RIVO] Profile fetch error:', error.code, error.message);
     }
-    // Profil introuvable → créer depuis localStorage (données saisies à l'inscription)
+    // Profil introuvable → créer via sbAdmin (service_role, bypass RLS)
     if(!p){
       const pending=JSON.parse(localStorage.getItem('rivo_pending_profile')||'null')||{};
-      const nameParts=(FBU.displayName||'').split(' ');
-      // Utiliser sbAdmin (service_role) pour contourner la politique RLS "TO authenticated"
-      const _uid=crypto.randomUUID();
+      const uid=crypto.randomUUID();
+      const refCode='RIVO-'+Math.random().toString(36).substring(2,8).toUpperCase();
       const{data:newP,error:insertFallbackErr}=await withTimeout(sbAdmin.from('profiles').insert({
-        id:_uid,
-        first_name:pending.first_name||nameParts[0]||'',
-        last_name:pending.last_name||nameParts.slice(1).join(' ')||'',
+        id:uid,
+        first_name:pending.first_name||FBU.displayName?.split(' ')[0]||'',
+        last_name:pending.last_name||FBU.displayName?.split(' ').slice(1).join(' ')||'',
         email:FBU.email,
+        referral_code:refCode,
+        badge_level:'debutant', balance:0, currency:'XOF',
         birth_date:pending.birth_date||null,
         referred_by:pending.referred_by||null,
       }).select().single());
       if(insertFallbackErr){
-        console.error('[loadProfileData] insert fallback ÉCHOUÉ:',
-          insertFallbackErr.code, insertFallbackErr.message);
+        console.error('[loadProfileData] insert fallback ÉCHOUÉ:',insertFallbackErr.code,insertFallbackErr.message);
       } else {
-        console.log('[loadProfileData] insert fallback réussi:', newP?.id);
+        console.log('[loadProfileData] profil créé:',newP?.id);
       }
       if(newP) p=newP;
       if(pending.first_name) localStorage.removeItem('rivo_pending_profile');
@@ -942,55 +942,44 @@ async function doRegister(e){
   const pwd=document.getElementById('rg-pwd').value;
   const cpwd=document.getElementById('rg-cpwd').value;
   const ref=document.getElementById('rg-ref').value.trim().toUpperCase();
-  if(fn.length<2||ln.length<2){showErr('rg-err','Prénom et nom requis (min 2 caractères)');return;}
+  if(fn.length<2||ln.length<2){showErr('rg-err','Prénom et nom requis');return;}
   if(pwd.length<8){showErr('rg-err','Mot de passe : minimum 8 caractères');return;}
   if(pwd!==cpwd){showErr('rg-err','Les mots de passe ne correspondent pas');return;}
   setBtn('rg-btn','<span class="spin"></span> Création...',true);
   try{
     let refId=null;
     if(ref){
-      const{data:r,error:rErr}=await withTimeout(sb.from('profiles').select('id').eq('referral_code',ref).single());
-      console.log('[parrainage] ref=',ref,'refId=',r?.id,'error=',rErr?.message);
+      const{data:r}=await sb.from('profiles').select('id').eq('referral_code',ref).single();
+      console.log('[parrainage] ref=',ref,'refId=',r?.id);
       if(!r)throw new Error('Code de parrainage invalide ou introuvable');
       refId=r.id;
     }
-    // 2. Créer le compte Firebase
     const cred=await fbAuth.createUserWithEmailAndPassword(email,pwd);
     const fbNewUser=cred.user;
     await fbNewUser.updateProfile({displayName:`${fn} ${ln}`});
 
-    // 3. Créer le profil dans Supabase via sbAdmin (service_role, bypass RLS)
-    const{data:newProf,error:insertErr}=await withTimeout(sbAdmin.from('profiles').insert({
-      id:crypto.randomUUID(),
-      first_name:fn, last_name:ln, email,
-      birth_date:birth||null, referred_by:refId||null
-    }).select().single());
-    if(insertErr){
-      console.error('[doRegister] profile insert error:', insertErr.code, insertErr.message);
-    } else {
-      console.log('[doRegister] profil créé en BDD:', newProf?.id);
-    }
-
-    // 4. Sauvegarder en localStorage (backup si insert a échoué)
-    localStorage.setItem('rivo_pending_profile',JSON.stringify({
-      first_name:fn, last_name:ln,
+    // Créer le profil via sbAdmin (service_role) — bypass RLS "TO authenticated"
+    const uid=crypto.randomUUID();
+    const refCode='RIVO-'+Math.random().toString(36).substring(2,8).toUpperCase();
+    const{error:insertErr}=await withTimeout(sbAdmin.from('profiles').insert({
+      id:uid, first_name:fn, last_name:ln, email,
+      referral_code:refCode, badge_level:'debutant', balance:0, currency:'XOF',
       birth_date:birth||null, referred_by:refId||null
     }));
+    if(insertErr) console.warn('[doRegister] insert error:',insertErr.code, insertErr.message);
+    else console.log('[doRegister] profil créé:', uid);
 
-    // 5. Email de vérification Firebase
+    localStorage.setItem('rivo_pending_profile',JSON.stringify({
+      first_name:fn, last_name:ln, birth_date:birth||null, referred_by:refId||null
+    }));
     await fbNewUser.sendEmailVerification();
-
-    // 6. Déconnexion Firebase (l'utilisateur doit confirmer son email avant)
     await fbAuth.signOut();
-
     toast('Compte créé ! 📧 Vérifiez votre boîte mail pour confirmer avant de vous connecter.');
     setTimeout(()=>{ goTo('login'); },2200);
   }catch(err){
-    const code=err.code||'';
     const msg=err.message||'';
-    if(code.includes('email-already-in-use')) showErr('rg-err','Cet email est déjà utilisé. Connectez-vous ou réinitialisez votre mot de passe.');
-    else if(code.includes('weak-password')) showErr('rg-err','Mot de passe trop faible (minimum 6 caractères).');
-    else if(code.includes('invalid-email')) showErr('rg-err','Adresse email invalide.');
+    if(msg.includes('email-already-in-use'))showErr('rg-err','Cet email est déjà utilisé.');
+    else if(msg.includes('weak-password'))showErr('rg-err','Mot de passe trop faible.');
     else showErr('rg-err',msg||'Erreur. Réessayez.');
   }finally{
     setBtn('rg-btn','Créer mon compte',false);
