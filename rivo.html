@@ -719,7 +719,9 @@ async function loadProfileData(){
   const expectedEmail=FBU.email;
   try{
     // Cherche le profil par email (pas besoin de Supabase Auth)
+    console.log('[loadProfileData] recherche profil pour email:', FBU.email);
     let {data:p,error}=await withTimeout(sb.from('profiles').select('*').eq('email',FBU.email).single());
+    console.log('[loadProfileData] résultat → data:', p, '| error:', error?.code, error?.message);
     if(error && error.code!=='PGRST116'){
       console.error('[RIVO] Profile fetch error:', error.code, error.message);
     }
