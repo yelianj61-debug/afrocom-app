@@ -924,12 +924,12 @@ async function doRegister(e){
     const fbNewUser=cred.user;
     await fbNewUser.updateProfile({displayName:`${fn} ${ln}`});
 
-    // 3. Créer le profil dans Supabase (données uniquement, pas d'auth Supabase)
-    const{error:insertErr}=await withTimeout(sb.from('profiles').insert({
+    // 3. Créer/mettre à jour le profil dans Supabase (upsert sur email)
+    const{error:upsertErr}=await withTimeout(sb.from('profiles').upsert({
       first_name:fn, last_name:ln, email,
       birth_date:birth||null, referred_by:refId||null
-    }));
-    if(insertErr) console.warn('[doRegister] profile insert:', insertErr.message);
+    },{onConflict:'email'}));
+    if(upsertErr) console.error('[doRegister] profile upsert error:', upsertErr.code, upsertErr.message);
 
     // 4. Sauvegarder en localStorage (backup si insert a échoué)
     localStorage.setItem('rivo_pending_profile',JSON.stringify({
