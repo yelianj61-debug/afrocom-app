@@ -728,19 +728,19 @@ async function loadProfileData(){
     if(!p){
       const pending=JSON.parse(localStorage.getItem('rivo_pending_profile')||'null')||{};
       const nameParts=(FBU.displayName||'').split(' ');
-      const{data:newP,error:upsertFallbackErr}=await withTimeout(sb.from('profiles').upsert({
+      const{data:newP,error:insertFallbackErr}=await withTimeout(sb.from('profiles').insert({
         first_name:pending.first_name||nameParts[0]||'',
         last_name:pending.last_name||nameParts.slice(1).join(' ')||'',
         email:FBU.email,
         birth_date:pending.birth_date||null,
         referred_by:pending.referred_by||null,
-      },{onConflict:'email'}).select().single());
-      if(upsertFallbackErr){
-        console.error('[loadProfileData] upsert fallback ÉCHOUÉ:',
-          upsertFallbackErr.code, upsertFallbackErr.message,
-          upsertFallbackErr.details, upsertFallbackErr.hint);
+      }).select().single());
+      if(insertFallbackErr){
+        console.error('[loadProfileData] insert fallback ÉCHOUÉ:',
+          insertFallbackErr.code, insertFallbackErr.message,
+          insertFallbackErr.details, insertFallbackErr.hint);
       } else {
-        console.log('[loadProfileData] upsert fallback réussi:', newP);
+        console.log('[loadProfileData] insert fallback réussi:', newP);
       }
       if(newP) p=newP;
       if(pending.first_name) localStorage.removeItem('rivo_pending_profile');
@@ -754,17 +754,31 @@ async function loadProfileData(){
       const ln0=nameParts.slice(1).join(' ')||'';
       // Profil minimal en mémoire pour ne pas bloquer la connexion
       CP={id:null,first_name:fn0,last_name:ln0,email:FBU.email,
-          balance:0,points:0,badge_level:'bronze',referral_code:'—',currency:'XOF'};
+          balance:0,points:0,badge_level:'debutant',referral_code:'—',currency:'XOF'};
       CU={id:null,email:FBU.email};
       console.warn('[loadProfileData] mode dégradé — profil non trouvé en BDD, connexion via Firebase');
-      const email=FBU.email||'—';
-      const name0=fn0||email.split('@')[0]||'Utilisateur';
+      // Remplir TOUS les champs du DOM depuis Firebase
+      const _em=FBU.email||'—';
+      const _full=`${fn0} ${ln0}`.trim()||'Utilisateur';
+      const[_ic,_lb,_bg,_co]=badgeInfo('debutant');
       document.getElementById('welcome-h').textContent=`Bienvenue ${fn0} !!!`;
-      ['prof-name','info-name'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=name0;});
-      ['prof-email','info-email'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=email;});
+      ['prof-name','info-name'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=_full;});
+      ['prof-email','info-email'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=_em;});
       const elRef=document.getElementById('ref-code');if(elRef)elRef.textContent='—';
       document.getElementById('st-b').textContent='0 FCFA';
-      const infoSolde=document.getElementById('info-solde');if(infoSolde)infoSolde.textContent='0 FCFA';
+      document.getElementById('st-pts').textContent='0';
+      document.getElementById('st-f').textContent='0';
+      document.getElementById('st-a').textContent='0';
+      const _infoSolde=document.getElementById('info-solde');if(_infoSolde)_infoSolde.textContent='0 FCFA';
+      const _pb=document.getElementById('prof-badge');
+      if(_pb){_pb.textContent=`${_ic} ${_lb}`;_pb.style.background=_bg;_pb.style.color=_co;}
+      const _ib=document.getElementById('info-badge');
+      if(_ib){_ib.textContent=`${_ic} ${_lb}`;_ib.style.background=_bg;_ib.style.color=_co;}
+      const _ptsEl=document.getElementById('prof-points');if(_ptsEl)_ptsEl.textContent='0 pts';
+      const _bar=document.getElementById('prof-points-bar');if(_bar)_bar.style.width='0%';
+      const _lbl=document.getElementById('prof-points-label');if(_lbl)_lbl.textContent='0 / 1000 pts pour accéder aux événements';
+      const _av=document.getElementById('big-av');
+      if(_av)_av.innerHTML=((fn0[0]||'')+(ln0[0]||'')).toUpperCase()||'?';
       return;
     }
     CP=p;
@@ -938,12 +952,12 @@ async function doRegister(e){
     const fbNewUser=cred.user;
     await fbNewUser.updateProfile({displayName:`${fn} ${ln}`});
 
-    // 3. Créer/mettre à jour le profil dans Supabase (upsert sur email)
-    const{error:upsertErr}=await withTimeout(sb.from('profiles').upsert({
+    // 3. Créer le profil dans Supabase (insert — pas d'upsert car email sans contrainte UNIQUE)
+    const{error:insertErr}=await withTimeout(sb.from('profiles').insert({
       first_name:fn, last_name:ln, email,
       birth_date:birth||null, referred_by:refId||null
-    },{onConflict:'email'}));
-    if(upsertErr) console.error('[doRegister] profile upsert error:', upsertErr.code, upsertErr.message);
+    }));
+    if(insertErr) console.error('[doRegister] profile insert error:', insertErr.code, insertErr.message);
 
     // 4. Sauvegarder en localStorage (backup si insert a échoué)
     localStorage.setItem('rivo_pending_profile',JSON.stringify({
@@ -990,14 +1004,27 @@ async function doLogout(){
 
 // ── Dashboard: Bord ───────────────────────────────────
 async function loadBord(){
-  if(!CU?.id) return;
-  const[{data:cs},{data:ps}]=await Promise.all([
-    sb.from('courses').select('*').eq('is_published',true).order('created_at',{ascending:false}),
-    sb.from('purchases').select('course_id').eq('user_id',CU.id).eq('status','complete')
-  ]);
-  const owned=new Set((ps||[]).map(p=>p.course_id));
+  const grid=document.getElementById('bord-grid');
+  // Charger les formations (pas besoin de CU.id — public)
+  const{data:cs,error:csErr}=await sb.from('courses').select('*').eq('is_published',true).order('created_at',{ascending:false});
+  if(csErr) console.error('[loadBord] courses error:',csErr.code,csErr.message);
+
+  // Charger les achats seulement si on a un profil Supabase (id réel)
+  let owned=new Set();
+  if(CU?.id){
+    const{data:ps}=await sb.from('purchases').select('course_id').eq('user_id',CU.id).eq('status','complete');
+    owned=new Set((ps||[]).map(p=>p.course_id));
+  }
+
   document.getElementById('courses-badge').textContent=`${(cs||[]).length} cours au catalogue`;
-  if(!cs||cs.length===0){document.getElementById('bord-grid').innerHTML='<p style="grid-column:1/-1;text-align:center;color:#9ca3af;padding:2rem">Aucune formation disponible.</p>';return;}
+  if(!cs||cs.length===0){
+    grid.innerHTML='<p style="grid-column:1/-1;text-align:center;color:#9ca3af;padding:2rem">Aucune formation disponible.</p>';
+    return;
+  }
+  if(csErr){
+    grid.innerHTML='<p style="grid-column:1/-1;text-align:center;color:#ef4444;padding:2rem">Erreur de chargement. Vérifiez votre connexion.</p>';
+    return;
+  }
   document.getElementById('bord-grid').innerHTML=cs.map(c=>{
     const own=owned.has(c.id);
     return`<div class="card fade-in">
