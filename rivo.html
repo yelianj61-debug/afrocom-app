@@ -728,25 +728,38 @@ async function loadProfileData(){
     if(!p){
       const pending=JSON.parse(localStorage.getItem('rivo_pending_profile')||'null')||{};
       const nameParts=(FBU.displayName||'').split(' ');
-      const{data:newP}=await withTimeout(sb.from('profiles').insert({
+      const{data:newP,error:upsertFallbackErr}=await withTimeout(sb.from('profiles').upsert({
         first_name:pending.first_name||nameParts[0]||'',
         last_name:pending.last_name||nameParts.slice(1).join(' ')||'',
         email:FBU.email,
         birth_date:pending.birth_date||null,
         referred_by:pending.referred_by||null,
-      }).select().single());
+      },{onConflict:'email'}).select().single());
+      if(upsertFallbackErr){
+        console.error('[loadProfileData] upsert fallback ÉCHOUÉ:',
+          upsertFallbackErr.code, upsertFallbackErr.message,
+          upsertFallbackErr.details, upsertFallbackErr.hint);
+      } else {
+        console.log('[loadProfileData] upsert fallback réussi:', newP);
+      }
       if(newP) p=newP;
       if(pending.first_name) localStorage.removeItem('rivo_pending_profile');
     }
     // Guard : mauvais email (race condition)
     if(p && p.email!==expectedEmail){ console.warn('Race condition profil, ignoré'); return; }
-    // Toujours null → afficher infos minimales depuis Firebase
+    // Toujours null → mode dégradé : profil en mémoire depuis Firebase (RLS ou réseau)
     if(!p){
-      const email=FBU.email||'—';
       const nameParts=(FBU.displayName||'').split(' ');
-      const fn0=nameParts[0]||'';
+      const fn0=nameParts[0]||FBU.email.split('@')[0]||'Utilisateur';
+      const ln0=nameParts.slice(1).join(' ')||'';
+      // Profil minimal en mémoire pour ne pas bloquer la connexion
+      CP={id:null,first_name:fn0,last_name:ln0,email:FBU.email,
+          balance:0,points:0,badge_level:'bronze',referral_code:'—',currency:'XOF'};
+      CU={id:null,email:FBU.email};
+      console.warn('[loadProfileData] mode dégradé — profil non trouvé en BDD, connexion via Firebase');
+      const email=FBU.email||'—';
       const name0=fn0||email.split('@')[0]||'Utilisateur';
-      document.getElementById('welcome-h').textContent=fn0?`Bienvenue ${fn0} !!!`:'Bienvenue !!!';
+      document.getElementById('welcome-h').textContent=`Bienvenue ${fn0} !!!`;
       ['prof-name','info-name'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=name0;});
       ['prof-email','info-email'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=email;});
       const elRef=document.getElementById('ref-code');if(elRef)elRef.textContent='—';
@@ -835,7 +848,7 @@ async function doLogin(e){
 
     // 4. Charger le profil depuis Supabase (données uniquement)
     await loadProfileData();
-    if(!CP) throw new Error('Profil introuvable. Contactez le support.');
+    // loadProfileData() définit toujours CP (mode dégradé Firebase si BDD indisponible)
 
     // 5. Redirection admin
     if(CP.badge_level==='admin'){
