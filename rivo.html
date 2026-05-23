@@ -591,7 +591,7 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
 const SB_URL  = 'https://qwdttzsbbspayojzeugy.supabase.co';
 const SB_ANON = 'sb_publishable_tG64uzNsmT0XDV7pmglqFA_lxQ4xIFm';
 const SB_SERVICE = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3ZHR0enNiYnNwYXlvanpldWd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODk3MTQzNSwiZXhwIjoyMDk0NTQ3NDM1fQ.Qh-1b3NA4wH5Km4W1v-nU0aGagkeIByet2INxccz3tw';
-const FP_PK   = 'pk_live_bqS58-NIs-uloGM3UDxkmzdT';
+const PP_ID   = 'PP-F92222';
 let sb = null;
 let sbAdmin = null; // client service_role (bypass RLS) — utilisé uniquement pour créer les profils
 
@@ -664,24 +664,26 @@ async function startApp(){
       }
     }
 
-    // Retour paiement
-    const ps=new URLSearchParams(location.search).get('payment');
-    const pid=new URLSearchParams(location.search).get('pid');
-    if(ps==='ok'&&pid){
-      await sb.from('purchases').update({status:'complete'}).eq('id',pid);
-      history.replaceState({},'',location.pathname);
-      if(FBU&&CU){goTo('dashboard');setTimeout(()=>toast('Paiement réussi ! 🎉'),500);}
+    // Retour paiement PaiementPro (returnContext=purchase_id=<uuid>)
+    const returnCtx=new URLSearchParams(location.search).get('returnContext');
+    if(returnCtx){
+      const purchaseId=new URLSearchParams(returnCtx).get('purchase_id');
+      if(purchaseId){
+        await sb.from('purchases').update({status:'complete'}).eq('id',purchaseId);
+        history.replaceState({},'',location.pathname);
+        if(FBU&&CU){goTo('dashboard');setTimeout(()=>toast('Paiement réussi ! 🎉'),500);}
+      }
     }
   }catch(e){console.warn('[startApp]',e?.message||e);}
-  loadFedaPayScript();
+  loadPaiementProScript();
 }
 
-function loadFedaPayScript(){
-  if(typeof FedaPay!=='undefined'){window.fedaPayReady=true;return;}
+function loadPaiementProScript(){
+  if(typeof PaiementPro!=='undefined'){window.paiementProReady=true;return;}
   const s=document.createElement('script');
-  s.src='https://cdn.fedapay.com/checkout.js?v=1.1.7';
-  s.onload=()=>{window.fedaPayReady=true;};
-  s.onerror=()=>{console.warn('FedaPay CDN inaccessible');};
+  s.src='https://www.paiementpro.net/webservice/onlinepayment/js/paiementpro.v1.0.1.js';
+  s.onload=()=>{window.paiementProReady=true;};
+  s.onerror=()=>{console.warn('PaiementPro CDN inaccessible');};
   document.head.appendChild(s);
 }
 
@@ -1069,80 +1071,62 @@ async function confirmPay(){
   if(!pendingCourse)return;
   const course={...pendingCourse};
 
-  // Vérifier que le profil Supabase existe (CU.id non null)
   if(!CU?.id){
     closePayModal();
-    toast('⚠️ Votre profil n\'est pas encore synchronisé. Déconnectez-vous et reconnectez-vous, puis réessayez.','err');
+    toast('⚠️ Profil non synchronisé. Déconnectez-vous et reconnectez-vous.','err');
     return;
   }
   setBtn('pay-btn','<span class="spin"></span>',true);
+
+  // Attendre que le script PaiementPro soit chargé (max 6s)
   let wait=0;
-  while(!window.fedaPayReady && wait<12){
+  while(!window.paiementProReady && wait<12){
     await new Promise(r=>setTimeout(r,500));
     wait++;
   }
-  if(!window.fedaPayReady || typeof FedaPay==='undefined'){
+  if(!window.paiementProReady||typeof PaiementPro==='undefined'){
     toast('Service de paiement non disponible. Vérifiez votre connexion.','err');
     setBtn('pay-btn','⚡ Payer',false);
     return;
   }
+
   try{
+    // 1. Créer la commande en BDD (statut en_attente)
     const{data:pur,error}=await withTimeout(sb.from('purchases').insert({
-      user_id:CU.id,course_id:course.id,amount:course.price,
-      currency:course.currency,status:'en_attente',payment_method:'fedapay'
+      user_id:CU.id, course_id:course.id, amount:course.price,
+      currency:course.currency, status:'en_attente', payment_method:'paiementpro'
     }).select().single());
     if(error){
-      const msg=error.code==='42501'?'Session expirée ou permissions insuffisantes. Reconnectez-vous.':`Erreur création de commande : ${error.message}`;
-      toast(msg,'err');setBtn('pay-btn','Payer maintenant',false);return;
+      const msg=error.code==='42501'
+        ?'Session expirée. Reconnectez-vous.'
+        :`Erreur création de commande : ${error.message}`;
+      toast(msg,'err'); setBtn('pay-btn','⚡ Payer',false); return;
     }
-    closePayModal();
-    FedaPay.init({
-      public_key:FP_PK,
-      transaction:{amount:course.price,description:`RIVO - ${course.title}`},
-      currency:{iso:course.currency||'XOF'},
-      customer:{email:CU.email,firstname:CP?.first_name||'',lastname:CP?.last_name||''},
-      onComplete:async function(resp){
-        const paid=resp.reason==='CHECKOUT_COMPLETED'
-          ||resp.reason===FedaPay.CHECKOUT_COMPLETED
-          ||resp.transaction?.status==='approved'
-          ||resp.transaction?.status==='success';
-        if(paid){
-          try{
-            const{error:upErr}=await withTimeout(
-              sb.from('purchases').update({status:'complete'}).eq('id',pur.id)
-            );
-            if(upErr)throw upErr;
-            try{await addPoints(CU.id,10);}catch(_){}
-            if(CP?.referred_by){
-              try{
-                const{data:par}=await sb.from('profiles').select('balance,points').eq('id',CP.referred_by).single();
-                await sb.from('profiles').update({balance:(par?.balance||0)+1000,points:(par?.points||0)+20}).eq('id',CP.referred_by);
-              }catch(_){}
-            }
-            await loadProfileData();
-            loaded.formations=false;
-            loaded.profil=false;
-            loadBord();
-            if(document.getElementById('tab-formations').classList.contains('active')){
-              loaded.formations=true; loadMesFormations();
-            }
-            if(document.getElementById('tab-profil').classList.contains('active')){
-              loaded.profil=true; loadProfil();
-            }
-            showPaySuccess(course.title);
-          }catch(e){
-            console.error('Erreur mise à jour paiement:',e);
-            toast('Paiement reçu mais erreur enregistrement. Contactez le support.','err');
-          }
-        }else{
-          try{await withTimeout(sb.from('purchases').update({status:'rejete'}).eq('id',pur.id));}catch(_){}
-          toast('Paiement annulé','err');
-        }
-      }
-    }).open();
+
+    // 2. Initialiser PaiementPro et obtenir l'URL
+    const pp=new PaiementPro(PP_ID);
+    pp.amount              = course.price;
+    pp.description         = 'RIVO - '+course.title;
+    pp.channel             = 'CARD';
+    pp.referenceNumber     = 'RIVO-'+Date.now();
+    pp.customerEmail       = CU.email;
+    pp.customerFirstName   = CP?.first_name||'';
+    pp.customerLastName    = CP?.last_name||'';
+    pp.customerPhoneNumber = CP?.phone||'';
+    pp.returnURL           = window.location.origin+window.location.pathname;
+    pp.returnContext       = 'purchase_id='+pur.id;
+
+    await pp.getUrlPayment();
+
+    if(pp.success){
+      closePayModal();
+      window.location=pp.url; // Redirection vers la page de paiement
+    } else {
+      toast('Erreur de paiement. Réessayez.','err');
+      setBtn('pay-btn','⚡ Payer',false);
+    }
   }catch(err){
     toast(err.message||'Erreur paiement, réessayez','err');
-  }finally{
     setBtn('pay-btn','⚡ Payer',false);
   }
 }
@@ -1655,7 +1639,7 @@ async function submitVideo(){
 // ── Tutoriel guidé ────────────────────────────────────
 const _tutSteps = [
   {icon:'👋', title:'Bienvenue sur RIVO !', desc:'Découvrez les formations disponibles sur le Tableau de bord. Apprenez à votre rythme et obtenez une attestation officielle.', tab:'bord'},
-  {icon:'🛒', title:'Achetez une formation', desc:'Cliquez sur "Acheter" sur n\'importe quelle formation. Suivez les instructions de paiement sécurisé via FedaPay (Mobile Money, carte…).', tab:'bord'},
+  {icon:'🛒', title:'Achetez une formation', desc:'Cliquez sur "Acheter" sur n\'importe quelle formation. Suivez les instructions de paiement sécurisé via PaiementPro (Mobile Money, carte…).', tab:'bord'},
   {icon:'📖', title:'Mes formations', desc:'Retrouvez toutes vos formations achetées dans l\'onglet "Mes formations". Accédez aux contenus quand vous voulez.', tab:'formations'},
   {icon:'🏆', title:'Attestations', desc:'Après validation par notre équipe, vous recevrez votre attestation officielle RIVO directement sur votre profil. Consultez-la à tout moment.', tab:'profil'},
   {icon:'🎁', title:'Récompenses', desc:'Cumulez des points et participez aux événements exclusifs : Visa, Moto, Voiture, Emploi, Voyage… Vos efforts sont récompensés !', tab:'recompenses'},
@@ -1938,7 +1922,7 @@ const _legalContent={
       <li>Achats et formations consultées</li>
     </ul>
     <h3>3.3 Données de paiement</h3>
-    <div class="highlight"><p>Les transactions sont entièrement gérées par <strong>FedaPay</strong>. RIVO ne stocke ni ne voit jamais vos données bancaires, numéros de carte ou identifiants Mobile Money.</p></div>
+    <div class="highlight"><p>Les transactions sont entièrement gérées par <strong>PaiementPro (Xpaye)</strong>. RIVO ne stocke ni ne voit jamais vos données bancaires, numéros de carte ou identifiants Mobile Money.</p></div>
   </div>
 
   <div class="section" id="usage">
@@ -2050,7 +2034,7 @@ const _legalContent={
     <h3>4.2 Méthodes de paiement</h3>
     <ul>
       <li>Mobile Money (MTN, Moov, Orange, etc.)</li>
-      <li>FedaPay (paiement en ligne sécurisé)</li>
+      <li>PaiementPro / Xpaye (paiement en ligne sécurisé)</li>
     </ul>
     <h3>4.3 Politique de remboursement</h3>
     <div class="highlight"><p>Les formations étant des contenus numériques accessibles immédiatement, aucun remboursement n'est possible après accès à la formation.</p></div>
