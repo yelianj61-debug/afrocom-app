@@ -1,0 +1,2234 @@
+<?php
+/**
+ * RIVO — Application complète (PHP + HTML dans un seul fichier)
+ * Le bloc PHP gère PaiementPro, le HTML suit dessous
+ */
+define('MERCHANT_ID',   'PP-F92222');
+define('CURRENCY_CODE', '952');
+define('WSDL_URL',      'https://www.paiementpro.net/webservice/OnlineServicePayment_v2.php?wsdl');
+define('PP_PROCESSING', 'https://www.paiementpro.net/webservice/onlinepayment/processing_v2.php');
+define('SUPABASE_URL',  'https://qwdttzsbbspayojzeugy.supabase.co');
+define('SUPABASE_KEY',  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3ZHR0enNiYnNwYXlvanpldWd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODk3MTQzNSwiZXhwIjoyMDk0NTQ3NDM1fQ.Qh-1b3NA4wH5Km4W1v-nU0aGagkeIByet2INxccz3tw');
+
+function rivoBaseUrl(): string {
+    $s = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    return $s . '://' . $_SERVER['HTTP_HOST'];
+}
+function rivoScriptBase(): string {
+    return strtok($_SERVER['REQUEST_URI'], '?');
+}
+function rivoUpdatePurchase(string $id, string $status): void {
+    $ch = curl_init(SUPABASE_URL . '/rest/v1/purchases?id=eq.' . urlencode($id));
+    curl_setopt_array($ch, [
+        CURLOPT_CUSTOMREQUEST  => 'PATCH',
+        CURLOPT_POSTFIELDS     => json_encode(['status' => $status]),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER     => [
+            'Content-Type: application/json',
+            'apikey: '           . SUPABASE_KEY,
+            'Authorization: Bearer ' . SUPABASE_KEY,
+            'Prefer: return=minimal',
+        ],
+    ]);
+    curl_exec($ch);
+    curl_close($ch);
+}
+function rivoJson(array $d, int $code = 200): void {
+    http_response_code($code);
+    header('Content-Type: application/json; charset=utf-8');
+    header('Access-Control-Allow-Origin: *');
+    echo json_encode($d);
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: POST,GET,OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type');
+    http_response_code(204); exit;
+}
+
+$action = $_GET['action'] ?? '';
+
+// ACTION init : appel SOAP PaiementPro, retourne l'URL de redirection
+if ($action === 'init') {
+    $input      = json_decode(file_get_contents('php://input'), true) ?: [];
+    $amount     = intval($input['amount']             ?? 0);
+    $purchaseId = trim($input['purchase_id']          ?? '');
+    $title      = trim($input['course_title']         ?? 'Formation RIVO');
+    $email      = trim($input['customer_email']       ?? '');
+    $firstName  = trim($input['customer_first_name']  ?? '');
+    $lastName   = trim($input['customer_last_name']   ?? '');
+    $phone      = preg_replace('/\D/', '', $input['customer_phone'] ?? '');
+    if (!$phone) $phone = '00000000';
+    if ($amount <= 0 || !$purchaseId || !$email)
+        rivoJson(['success' => false, 'error' => 'Parametres manquants'], 400);
+    $base   = rivoBaseUrl() . rivoScriptBase();
+    ini_set('soap.wsdl_cache_enabled', 0);
+    try {
+        $client = new SoapClient(WSDL_URL, ['cache_wsdl' => WSDL_CACHE_NONE, 'connection_timeout' => 30]);
+        $r = $client->initTransact([
+            'merchantId'          => MERCHANT_ID,
+            'countryCurrencyCode' => CURRENCY_CODE,
+            'amount'              => $amount,
+            'referenceNumber'     => 'RIVO-' . time(),
+            'customerEmail'       => $email,
+            'customerFirstName'   => $firstName ?: 'Client',
+            'customerLastname'    => $lastName  ?: 'RIVO',
+            'customerPhoneNumber' => $phone,
+            'description'         => 'RIVO - ' . $title,
+            'notificationURL'     => $base . '?action=notification',
+            'returnURL'           => $base . '?action=retour',
+            'returnContext'       => 'purchase_id=' . $purchaseId,
+        ]);
+        if ($r->Code == 0)
+            rivoJson(['success' => true, 'url' => PP_PROCESSING . '?sessionid=' . $r->Sessionid]);
+        else
+            rivoJson(['success' => false, 'error' => ($r->Description ?? 'Erreur PP'), 'code' => $r->Code]);
+    } catch (Exception $e) {
+        rivoJson(['success' => false, 'error' => $e->getMessage()], 500);
+    }
+}
+
+// ACTION notification : webhook PaiementPro (serveur vers serveur)
+elseif ($action === 'notification') {
+    parse_str($_POST['returnContext'] ?? '', $ctx);
+    $pid = $ctx['purchase_id'] ?? '';
+    if ($pid) rivoUpdatePurchase($pid, ($_POST['responsecode'] ?? '') === '0' ? 'complete' : 'rejete');
+    http_response_code(200); echo 'OK'; exit;
+}
+
+// ACTION retour : redirection client apres paiement
+elseif ($action === 'retour') {
+    parse_str($_GET['returnContext'] ?? '', $ctx);
+    $pid  = $ctx['purchase_id'] ?? '';
+    $base = rivoScriptBase();
+    header('Location: ' . $base . ($pid ? '?payment=ok&pid=' . urlencode($pid) : '?payment=erreur'));
+    exit;
+}
+// Sinon : afficher l'app HTML (suit ci-dessous)
+?>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>RIVO – La plateforme qui transforme l'apprentissage en opportunité</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2563EB">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="RIVO">
+<link rel="apple-touch-icon" href="icon-192.png">
+<!-- Firebase Auth (compat SDK — accès via firebase.auth() global) -->
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
+.page{display:none}.page.active{display:block}
+.gradient-hero{background:linear-gradient(135deg,#1e3a8a 0%,#2563EB 55%,#3b82f6 100%)}
+.card{background:white;border-radius:1rem;box-shadow:0 2px 20px rgba(0,0,0,.07);overflow:hidden;transition:box-shadow .3s}
+.card:hover{box-shadow:0 6px 30px rgba(0,0,0,.12)}
+.btn-primary{background:#2563EB;color:white;font-weight:700;padding:.7rem 1.4rem;border-radius:.875rem;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:.5rem;transition:all .2s;font-size:.9rem}
+.btn-primary:hover{background:#1D4ED8;transform:translateY(-1px);box-shadow:0 4px 15px rgba(37,99,235,.4)}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.btn-accent{background:#F59E0B;color:white;font-weight:700;padding:.7rem 1.4rem;border-radius:.875rem;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:.5rem;transition:all .2s;font-size:.9rem}
+.btn-accent:hover{background:#D97706;transform:translateY(-1px);box-shadow:0 4px 15px rgba(245,158,11,.4)}
+.btn-accent:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.btn-outline{background:white;color:#2563EB;border:2px solid #2563EB;font-weight:700;padding:.65rem 1.4rem;border-radius:.875rem;cursor:pointer;display:inline-flex;align-items:center;gap:.5rem;transition:all .2s;font-size:.9rem}
+.btn-outline:hover{background:#2563EB;color:white}
+.input{width:100%;padding:.75rem 1rem;border:2px solid #e5e7eb;border-radius:.75rem;outline:none;font-size:.95rem;transition:border-color .2s;font-family:'Inter',sans-serif}
+.input:focus{border-color:#2563EB}
+.input-icon{position:relative}.input-icon .ic{position:absolute;left:.85rem;top:50%;transform:translateY(-50%);color:#9ca3af;pointer-events:none}.input-icon input{padding-left:2.75rem}
+.badge{display:inline-flex;align-items:center;gap:.25rem;padding:.2rem .75rem;border-radius:9999px;font-size:.78rem;font-weight:700}
+.tab-btn{padding:.6rem 1.1rem;border-radius:.75rem;border:none;cursor:pointer;font-weight:600;font-size:.85rem;transition:all .2s;background:none;color:#6b7280}
+.tab-btn.active{background:#2563EB;color:white;box-shadow:0 3px 12px rgba(37,99,235,.3)}
+.tab-panel{display:none}.tab-panel.active{display:block}
+.toast{position:fixed;top:1.25rem;right:1.25rem;padding:.875rem 1.25rem;border-radius:1rem;font-weight:700;color:white;z-index:9999;animation:slideIn .3s ease;max-width:320px;font-size:.9rem}
+.toast.ok{background:#10b981}.toast.err{background:#ef4444}
+@keyframes slideIn{from{transform:translateX(110px);opacity:0}to{transform:translateX(0);opacity:1}}
+.spin{width:1.25rem;height:1.25rem;border:2.5px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:rot .65s linear infinite;display:inline-block}
+@keyframes rot{to{transform:rotate(360deg)}}
+.spin-blue{width:2rem;height:2rem;border:3px solid #dbeafe;border-top-color:#2563EB;border-radius:50%;animation:rot .65s linear infinite}
+.fade-in{animation:fi .4s ease}
+@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes bounceIn{0%{opacity:0;transform:scale(.85)}60%{transform:scale(1.04)}100%{opacity:1;transform:scale(1)}}
+@keyframes pulse-soft{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(37,99,235,0)}50%{box-shadow:0 0 18px 4px rgba(37,99,235,.25)}}
+.anim-up{animation:slideUp .45s ease both}
+.anim-bounce{animation:bounceIn .4s cubic-bezier(.34,1.56,.64,1) both}
+.anim-pulse{animation:pulse-soft 2.5s ease infinite}
+.card{background:white;border-radius:1rem;box-shadow:0 2px 20px rgba(0,0,0,.07);overflow:hidden;transition:box-shadow .3s,transform .25s}
+.card:hover{transform:translateY(-3px);box-shadow:0 10px 35px rgba(0,0,0,.13)}
+.btn-primary:active,.btn-accent:active{transform:scale(.96)}
+/* Bottom nav */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:2px solid #e5e7eb;display:flex;z-index:100;box-shadow:0 -4px 20px rgba(0,0,0,.08)}
+.bottom-nav button{flex:1;padding:.6rem .25rem .5rem;border:none;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:.2rem;font-size:.65rem;font-weight:600;color:#9ca3af;transition:.2s;font-family:'Inter',sans-serif}
+.bottom-nav button.active{color:#2563EB}
+.bottom-nav button .nav-icon{font-size:1.25rem}
+/* nav landing */
+.top-nav{position:fixed;top:0;width:100%;z-index:60;background:rgba(255,255,255,.93);backdrop-filter:blur(14px);box-shadow:0 1px 18px rgba(0,0,0,.07)}
+
+/* ── Legal Modal Styles ──────────────────────────────── */
+#legal-modal-body .section{background:#f8fafc;border-radius:1.25rem;padding:1.75rem;box-shadow:0 2px 16px rgba(0,0,0,.06);margin-bottom:1.25rem}
+#legal-modal-body .section h2{font-size:1.15rem;font-weight:800;color:#1d4ed8;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:2px solid #eff6ff;display:flex;align-items:center;gap:.4rem}
+#legal-modal-body .section h3{font-size:.95rem;font-weight:700;color:#374151;margin:1rem 0 .5rem}
+#legal-modal-body .section p{color:#374151;font-size:.9rem;line-height:1.8;margin-bottom:.75rem}
+#legal-modal-body .section p:last-child{margin-bottom:0}
+#legal-modal-body .section ul{padding-left:1.25rem;display:flex;flex-direction:column;gap:.4rem;margin-bottom:.75rem}
+#legal-modal-body .section ul li{color:#4b5563;font-size:.9rem;line-height:1.7}
+#legal-modal-body .toc{background:#f8fafc;border-radius:1.25rem;padding:1.5rem;box-shadow:0 2px 16px rgba(0,0,0,.06);margin-bottom:1.25rem}
+#legal-modal-body .toc h3{font-size:1rem;font-weight:800;color:#1F2937;margin-bottom:.875rem}
+#legal-modal-body .toc ol{padding-left:1.25rem;display:flex;flex-direction:column;gap:.4rem}
+#legal-modal-body .toc li a{color:#2563EB;font-size:.875rem;text-decoration:none;font-weight:600}
+#legal-modal-body .toc li a:hover{text-decoration:underline}
+#legal-modal-body .highlight{background:#eff6ff;border-left:4px solid #2563EB;border-radius:0 .75rem .75rem 0;padding:1rem 1.25rem;margin:.75rem 0}
+#legal-modal-body .highlight p{color:#1e3a8a;font-weight:600;margin:0}
+#legal-modal-body .important{background:#fee2e2;border-left:4px solid #ef4444;border-radius:0 .75rem .75rem 0;padding:1rem 1.25rem;margin:.75rem 0}
+#legal-modal-body .important p{color:#991b1b;font-weight:600;margin:0}
+#legal-modal-body .contact-box{background:linear-gradient(135deg,#eff6ff,#dbeafe);border:2px solid #bfdbfe;border-radius:1rem;padding:1.5rem;text-align:center;margin-top:1rem}
+#legal-modal-body .contact-box p{color:#1d4ed8;font-size:.9rem;margin-bottom:.35rem}
+#legal-modal-body .values-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-top:.75rem}
+#legal-modal-body .value-card{background:white;border-radius:1rem;padding:1.25rem;border-left:4px solid #2563EB}
+#legal-modal-body .value-card strong{display:block;font-weight:800;color:#1F2937;margin-bottom:.35rem}
+#legal-modal-body .value-card span{font-size:.875rem;color:#6b7280;line-height:1.6}
+#legal-modal-body .offers{display:flex;flex-direction:column;gap:.75rem;margin-top:.75rem}
+#legal-modal-body .offer-item{display:flex;align-items:flex-start;gap:.875rem;padding:.875rem;background:#f0fdf4;border-radius:.875rem}
+#legal-modal-body .offer-icon{font-size:1.2rem;flex-shrink:0;margin-top:.1rem}
+#legal-modal-body .offer-text{font-size:.9rem;color:#374151;line-height:1.6}
+#legal-modal-body .badge-row{display:flex;flex-wrap:wrap;justify-content:center;gap:.75rem;margin-top:1rem}
+#legal-modal-body .badge{background:linear-gradient(135deg,#2563EB,#1D4ED8);color:white;border-radius:9999px;padding:.5rem 1.25rem;font-size:.85rem;font-weight:700}
+</style>
+</head>
+<body>
+<div id="toasts"></div>
+
+<!-- ═══════════════════ PAGE: LANDING ═══════════════════ -->
+<div id="page-landing" class="page active">
+  <!-- Topbar -->
+  <nav class="top-nav">
+    <div style="max-width:1200px;margin:0 auto;padding:0 1.25rem;height:4rem;display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:.6rem">
+        <div style="width:2.25rem;height:2.25rem;border-radius:.75rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center">
+          <svg xmlns="http://www.w3.org/2000/svg" style="width:1.2rem;height:1.2rem" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2.5"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        </div>
+        <span style="font-size:1.25rem;font-weight:900;color:#1F2937">RIVO</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:.75rem">
+        <button onclick="goTo('login')" class="btn-outline" style="padding:.5rem 1.1rem">Connexion</button>
+        <button onclick="goTo('register')" class="btn-accent" style="padding:.5rem 1.1rem">S'inscrire</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="gradient-hero" style="padding:7rem 1.25rem 5rem">
+    <div style="max-width:900px;margin:0 auto;text-align:center">
+      <div style="display:inline-flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.18);backdrop-filter:blur(8px);color:white;padding:.5rem 1.25rem;border-radius:9999px;font-size:.85rem;font-weight:600;margin-bottom:1.5rem">
+        ⚡ La plateforme #1 de formation en ligne
+      </div>
+      <h1 style="font-size:clamp(2.2rem,5vw,3.75rem);font-weight:900;color:white;line-height:1.15;margin-bottom:1.25rem">
+        Transformez votre avenir<br><span style="color:#F59E0B">grâce au savoir</span>
+      </h1>
+      <p style="font-size:1.15rem;color:#bfdbfe;margin-bottom:.75rem">
+        Plus de <strong style="color:white">200 formations disponibles</strong>. Apprenez à votre rythme et obtenez une attestation reconnue.
+      </p>
+      <p style="font-style:italic;color:#93c5fd;font-size:1.05rem;margin-bottom:2.5rem">"RIVO, la plateforme qui transforme l'apprentissage en opportunité."</p>
+      <div style="display:flex;flex-wrap:wrap;gap:1rem;justify-content:center">
+        <button onclick="goTo('register')" class="btn-accent" style="font-size:1.05rem;padding:.9rem 2rem">
+          Commencer gratuitement
+          <svg xmlns="http://www.w3.org/2000/svg" style="width:1.1rem;height:1.1rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+        <button onclick="goTo('register')" style="display:inline-flex;align-items:center;gap:.5rem;color:white;font-weight:700;font-size:1.05rem;padding:.9rem 2rem;border-radius:.875rem;background:rgba(255,255,255,.18);backdrop-filter:blur(8px);border:none;cursor:pointer;transition:background .2s" onmouseover="this.style.background='rgba(255,255,255,.28)'" onmouseout="this.style.background='rgba(255,255,255,.18)'">
+          Voir les formations
+        </button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;max-width:380px;margin:3.5rem auto 0">
+        <div style="text-align:center"><div style="font-size:2rem;font-weight:900;color:white">200+</div><div style="font-size:.8rem;color:#93c5fd;margin-top:.25rem">Formations</div></div>
+        <div style="text-align:center"><div style="font-size:2rem;font-weight:900;color:white">5K+</div><div style="font-size:.8rem;color:#93c5fd;margin-top:.25rem">Apprenants</div></div>
+        <div style="text-align:center"><div style="font-size:2rem;font-weight:900;color:white">98%</div><div style="font-size:.8rem;color:#93c5fd;margin-top:.25rem">Satisfaction</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Avantages -->
+  <section style="padding:5rem 1.25rem;background:#f8fafc">
+    <div style="max-width:1100px;margin:0 auto">
+      <div style="text-align:center;margin-bottom:3rem">
+        <h2 style="font-size:2.1rem;font-weight:900;color:#1F2937;margin-bottom:.75rem">Pourquoi choisir RIVO ?</h2>
+        <p style="color:#6b7280;font-size:1.05rem">Une plateforme pensée pour votre réussite.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem">
+        <div class="card" style="padding:1.5rem"><div style="width:3.25rem;height:3.25rem;background:#dbeafe;border-radius:1rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:1.5rem">📚</div><h3 style="font-weight:800;margin-bottom:.5rem">Formations de qualité</h3><p style="color:#6b7280;font-size:.9rem">Des contenus soigneusement sélectionnés par des experts du domaine.</p></div>
+        <div class="card" style="padding:1.5rem"><div style="width:3.25rem;height:3.25rem;background:#fef3c7;border-radius:1rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:1.5rem">🏆</div><h3 style="font-weight:800;margin-bottom:.5rem">Attestation reconnue</h3><p style="color:#6b7280;font-size:.9rem">Obtenez une attestation officielle après chaque formation validée.</p></div>
+        <div class="card" style="padding:1.5rem"><div style="width:3.25rem;height:3.25rem;background:#d1fae5;border-radius:1rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:1.5rem">🤝</div><h3 style="font-weight:800;margin-bottom:.5rem">Parrainage lucratif</h3><p style="color:#6b7280;font-size:.9rem">Gagnez <strong>1 000 FCFA</strong> pour chaque ami parrainé qui achète une formation.</p></div>
+        <div class="card" style="padding:1.5rem"><div style="width:3.25rem;height:3.25rem;background:#ede9fe;border-radius:1rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:1.5rem">🎖️</div><h3 style="font-weight:800;margin-bottom:.5rem">Badges progressifs</h3><p style="color:#6b7280;font-size:.9rem">Évoluez de Débutant → Bronze → Argent → Or → Diamant selon vos achats.</p></div>
+        <div class="card" style="padding:1.5rem"><div style="width:3.25rem;height:3.25rem;background:#fef9c3;border-radius:1rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:1.5rem">⚡</div><h3 style="font-weight:800;margin-bottom:.5rem">Accès immédiat</h3><p style="color:#6b7280;font-size:.9rem">Après paiement, téléchargez et consultez vos formations immédiatement.</p></div>
+        <div class="card" style="padding:1.5rem"><div style="width:3.25rem;height:3.25rem;background:#fee2e2;border-radius:1rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:1.5rem">🔒</div><h3 style="font-weight:800;margin-bottom:.5rem">Paiement sécurisé</h3><p style="color:#6b7280;font-size:.9rem">Mobile Money, carte bancaire. Retraits traités en moins de 30 min.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Parrainage + Badges -->
+  <section style="padding:5rem 1.25rem;background:#eff6ff">
+    <div style="max-width:900px;margin:0 auto;text-align:center">
+      <div style="display:inline-flex;align-items:center;gap:.5rem;background:#dbeafe;color:#1d4ed8;padding:.4rem 1rem;border-radius:9999px;font-size:.85rem;font-weight:700;margin-bottom:1.25rem">🤝 Programme de parrainage</div>
+      <h2 style="font-size:2.1rem;font-weight:900;color:#1F2937;margin-bottom:1rem">Gagnez de l'argent en parrainant</h2>
+      <p style="color:#4b5563;font-size:1.05rem;margin-bottom:2.5rem;max-width:600px;margin-left:auto;margin-right:auto">Pour chaque ami qui achète une formation via votre code, vous recevez <strong style="color:#2563EB">1 000 FCFA</strong> directement sur votre solde RIVO.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.25rem;margin-bottom:2.5rem">
+        <div class="card" style="padding:1.5rem;text-align:left"><div style="width:2.5rem;height:2.5rem;border-radius:.875rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:1.1rem;margin-bottom:.875rem">1</div><h3 style="font-weight:800;margin-bottom:.4rem">Inscrivez-vous</h3><p style="color:#6b7280;font-size:.875rem">Créez votre compte et récupérez votre code unique.</p></div>
+        <div class="card" style="padding:1.5rem;text-align:left"><div style="width:2.5rem;height:2.5rem;border-radius:.875rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:1.1rem;margin-bottom:.875rem">2</div><h3 style="font-weight:800;margin-bottom:.4rem">Partagez</h3><p style="color:#6b7280;font-size:.875rem">Envoyez votre code à vos amis, famille, collègues.</p></div>
+        <div class="card" style="padding:1.5rem;text-align:left"><div style="width:2.5rem;height:2.5rem;border-radius:.875rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:1.1rem;margin-bottom:.875rem">3</div><h3 style="font-weight:800;margin-bottom:.4rem">Gagnez</h3><p style="color:#6b7280;font-size:.875rem">1 000 FCFA crédités à chaque achat de votre filleul.</p></div>
+      </div>
+      <div style="border-radius:1.5rem;padding:2rem;color:white;background:linear-gradient(135deg,#2563EB,#1D4ED8)">
+        <h3 style="font-size:1.3rem;font-weight:800;margin-bottom:.5rem">Niveaux de badges RIVO</h3>
+        <p style="color:#bfdbfe;margin-bottom:1.5rem;font-size:.9rem">Plus vous achetez, plus vous montez en grade !</p>
+        <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:.875rem">
+          <div style="background:rgba(255,255,255,.18);border-radius:.875rem;padding:.75rem 1.25rem;text-align:center;min-width:90px"><div style="font-size:1.75rem;margin-bottom:.3rem">🌱</div><div style="font-weight:700;font-size:.85rem">Débutant</div><div style="color:#bfdbfe;font-size:.7rem">0 formation</div></div>
+          <div style="background:rgba(255,255,255,.18);border-radius:.875rem;padding:.75rem 1.25rem;text-align:center;min-width:90px"><div style="font-size:1.75rem;margin-bottom:.3rem">🥉</div><div style="font-weight:700;font-size:.85rem">Bronze</div><div style="color:#bfdbfe;font-size:.7rem">5+ formations</div></div>
+          <div style="background:rgba(255,255,255,.18);border-radius:.875rem;padding:.75rem 1.25rem;text-align:center;min-width:90px"><div style="font-size:1.75rem;margin-bottom:.3rem">🥈</div><div style="font-weight:700;font-size:.85rem">Argent</div><div style="color:#bfdbfe;font-size:.7rem">10+ formations</div></div>
+          <div style="background:rgba(255,255,255,.18);border-radius:.875rem;padding:.75rem 1.25rem;text-align:center;min-width:90px"><div style="font-size:1.75rem;margin-bottom:.3rem">🥇</div><div style="font-weight:700;font-size:.85rem">Or</div><div style="color:#bfdbfe;font-size:.7rem">20+ formations</div></div>
+          <div style="background:rgba(255,255,255,.18);border-radius:.875rem;padding:.75rem 1.25rem;text-align:center;min-width:90px"><div style="font-size:1.75rem;margin-bottom:.3rem">💎</div><div style="font-weight:700;font-size:.85rem">Diamant</div><div style="color:#bfdbfe;font-size:.7rem">50+ formations</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="gradient-hero" style="padding:5rem 1.25rem;text-align:center">
+    <h2 style="font-size:2.5rem;font-weight:900;color:white;margin-bottom:1rem">Prêt à transformer votre avenir ?</h2>
+    <p style="color:#bfdbfe;font-size:1.1rem;margin-bottom:2.5rem">Rejoignez des milliers d'apprenants sur RIVO dès aujourd'hui.</p>
+    <button onclick="goTo('register')" class="btn-accent" style="font-size:1.1rem;padding:1rem 2.5rem">Créer mon compte gratuitement →</button>
+  </section>
+
+  <!-- Footer -->
+  <footer style="background:#111827;color:#9ca3af;padding:3rem 1.25rem 2rem">
+    <div style="max-width:1100px;margin:0 auto">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:2rem;margin-bottom:2rem">
+        <!-- Brand -->
+        <div>
+          <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:1rem">
+            <div style="width:2.25rem;height:2.25rem;border-radius:.75rem;background:#2563EB;display:flex;align-items:center;justify-content:center;font-size:1rem">📚</div>
+            <span style="color:white;font-weight:900;font-size:1.2rem">RIVO</span>
+          </div>
+          <p style="font-size:.875rem;line-height:1.7;margin-bottom:1rem">La plateforme qui transforme l'apprentissage en opportunité. Fondée par <strong style="color:white">Martial Gbesso</strong>.</p>
+          <p style="font-size:.8rem">📧 assistancerivo@gmail.com<br>📞 +229 01 45 91 61 77</p>
+        </div>
+        <!-- Liens -->
+        <div>
+          <h4 style="color:white;font-weight:700;margin-bottom:1rem;font-size:.95rem">Plateforme</h4>
+          <div style="display:flex;flex-direction:column;gap:.6rem">
+            <button onclick="goTo('register')" style="background:none;border:none;color:#9ca3af;cursor:pointer;text-align:left;font-size:.875rem;padding:0;transition:color .2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='#9ca3af'">📚 Nos formations</button>
+            <button onclick="goTo('login')" style="background:none;border:none;color:#9ca3af;cursor:pointer;text-align:left;font-size:.875rem;padding:0;transition:color .2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='#9ca3af'">🔑 Se connecter</button>
+            <button onclick="goTo('register')" style="background:none;border:none;color:#9ca3af;cursor:pointer;text-align:left;font-size:.875rem;padding:0;transition:color .2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='#9ca3af'">✨ S'inscrire gratuitement</button>
+          </div>
+        </div>
+        <!-- Légal -->
+        <div>
+          <h4 style="color:white;font-weight:700;margin-bottom:1rem;font-size:.95rem">Informations</h4>
+          <div style="display:flex;flex-direction:column;gap:.6rem">
+            <button onclick="showLegal('about')" style="background:none;border:none;color:#9ca3af;font-size:.875rem;cursor:pointer;padding:0;text-align:left;transition:color .2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='#9ca3af'">ℹ️ À propos de RIVO</button>
+            <button onclick="showLegal('privacy')" style="background:none;border:none;color:#9ca3af;font-size:.875rem;cursor:pointer;padding:0;text-align:left;transition:color .2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='#9ca3af'">🔒 Politique de confidentialité</button>
+            <button onclick="showLegal('terms')" style="background:none;border:none;color:#9ca3af;font-size:.875rem;cursor:pointer;padding:0;text-align:left;transition:color .2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='#9ca3af'">📋 Conditions d'utilisation</button>
+          </div>
+        </div>
+      </div>
+      <div style="border-top:1px solid #374151;padding-top:1.5rem;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:1rem">
+        <p style="font-size:.8rem">© 2026 RIVO — Créé par <strong style="color:white">Martial Gbesso</strong>. Tous droits réservés.</p>
+        <div style="display:flex;gap:1.5rem;font-size:.8rem">
+          <button onclick="showLegal('privacy')" style="background:none;border:none;color:#6b7280;cursor:pointer;padding:0;font-size:inherit;transition:color .2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='#6b7280'">Confidentialité</button>
+          <button onclick="showLegal('terms')" style="background:none;border:none;color:#6b7280;cursor:pointer;padding:0;font-size:inherit;transition:color .2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='#6b7280'">Conditions</button>
+          <button onclick="showLegal('about')" style="background:none;border:none;color:#6b7280;cursor:pointer;padding:0;font-size:inherit;transition:color .2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='#6b7280'">À propos</button>
+        </div>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- ═══════════════════ PAGE: LOGIN ═══════════════════ -->
+<div id="page-login" class="page">
+  <div class="gradient-hero" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem 1.25rem">
+    <div style="width:100%;max-width:420px">
+      <div style="text-align:center;margin-bottom:2rem">
+        <button onclick="goTo('landing')" style="display:inline-flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.18);border:none;color:white;padding:.5rem 1rem;border-radius:.75rem;cursor:pointer;margin-bottom:1.25rem;font-weight:600;font-size:.85rem">← Accueil</button>
+        <div style="display:flex;align-items:center;justify-content:center;gap:.6rem;margin-bottom:.75rem">
+          <div style="width:3rem;height:3rem;border-radius:1rem;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:1.5rem">📚</div>
+          <span style="font-size:2rem;font-weight:900;color:white">RIVO</span>
+        </div>
+        <h1 style="font-size:1.6rem;font-weight:800;color:white;margin-bottom:.4rem">Bienvenue !</h1>
+        <p style="color:#93c5fd">Connectez-vous à votre compte</p>
+      </div>
+      <div style="background:white;border-radius:1.5rem;padding:2rem;box-shadow:0 20px 60px rgba(0,0,0,.25)">
+        <form id="login-form" onsubmit="doLogin(event)" style="display:flex;flex-direction:column;gap:1.1rem">
+          <div>
+            <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.4rem">Adresse email</label>
+            <div class="input-icon">
+              <svg class="ic" xmlns="http://www.w3.org/2000/svg" style="width:1.1rem;height:1.1rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              <input type="email" id="li-email" class="input" placeholder="votre@email.com" required/>
+            </div>
+          </div>
+          <div>
+            <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.4rem">Mot de passe</label>
+            <div class="input-icon" style="position:relative">
+              <svg class="ic" xmlns="http://www.w3.org/2000/svg" style="width:1.1rem;height:1.1rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input type="password" id="li-pwd" class="input" placeholder="••••••••" required style="padding-left:2.75rem;padding-right:2.75rem"/>
+              <button type="button" onclick="togglePwd('li-pwd')" style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;font-size:1.1rem">👁</button>
+            </div>
+          </div>
+          <button type="submit" id="li-btn" class="btn-primary" style="width:100%;justify-content:center;padding:.875rem;font-size:1rem">
+            Se connecter
+          </button>
+          <p id="li-err" style="display:none;color:#dc2626;font-size:.85rem;text-align:center;background:#fef2f2;border:1px solid #fecaca;border-radius:.75rem;padding:.625rem .875rem;margin-top:-.25rem"></p>
+          <button id="li-resend" type="button" onclick="resendConfirmation()" style="display:none;width:100%;background:#fef3c7;border:1px solid #fcd34d;color:#92400e;border-radius:.75rem;padding:.625rem;font-size:.85rem;font-weight:600;cursor:pointer;margin-top:-.25rem">📧 Renvoyer l'email de confirmation</button>
+        </form>
+        <p style="text-align:center;margin-top:.75rem">
+          <button type="button" onclick="forgotPassword()" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:.82rem;text-decoration:underline">Mot de passe oublié ?</button>
+        </p>
+        <p style="text-align:center;color:#6b7280;margin-top:.75rem;font-size:.875rem">
+          Pas encore de compte ?
+          <button onclick="goTo('register')" style="background:none;border:none;color:#2563EB;font-weight:700;cursor:pointer;font-size:.875rem">S'inscrire gratuitement</button>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE: REGISTER ═══════════════════ -->
+<div id="page-register" class="page">
+  <div class="gradient-hero" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem 1.25rem">
+    <div style="width:100%;max-width:500px">
+      <div style="text-align:center;margin-bottom:2rem">
+        <button onclick="goTo('landing')" style="display:inline-flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.18);border:none;color:white;padding:.5rem 1rem;border-radius:.75rem;cursor:pointer;margin-bottom:1.25rem;font-weight:600;font-size:.85rem">← Accueil</button>
+        <div style="display:flex;align-items:center;justify-content:center;gap:.6rem;margin-bottom:.75rem">
+          <div style="width:3rem;height:3rem;border-radius:1rem;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:1.5rem">📚</div>
+          <span style="font-size:2rem;font-weight:900;color:white">RIVO</span>
+        </div>
+        <h1 style="font-size:1.6rem;font-weight:800;color:white;margin-bottom:.4rem">Créer un compte</h1>
+        <p style="color:#93c5fd">Rejoignez des milliers d'apprenants</p>
+      </div>
+      <div style="background:white;border-radius:1.5rem;padding:2rem;box-shadow:0 20px 60px rgba(0,0,0,.25)">
+        <form id="reg-form" onsubmit="doRegister(event)" style="display:flex;flex-direction:column;gap:1rem">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.875rem">
+            <div>
+              <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.4rem">Prénom</label>
+              <input type="text" id="rg-fn" class="input" placeholder="Jean" required/>
+            </div>
+            <div>
+              <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.4rem">Nom</label>
+              <input type="text" id="rg-ln" class="input" placeholder="Dupont" required/>
+            </div>
+          </div>
+          <div>
+            <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.4rem">Adresse email</label>
+            <div class="input-icon">
+              <svg class="ic" xmlns="http://www.w3.org/2000/svg" style="width:1.1rem;height:1.1rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              <input type="email" id="rg-email" class="input" placeholder="votre@email.com" required/>
+            </div>
+          </div>
+          <div>
+            <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.4rem">Date de naissance</label>
+            <input type="date" id="rg-birth" class="input" required/>
+          </div>
+          <div>
+            <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.4rem">Mot de passe</label>
+            <div class="input-icon" style="position:relative">
+              <svg class="ic" xmlns="http://www.w3.org/2000/svg" style="width:1.1rem;height:1.1rem" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input type="password" id="rg-pwd" class="input" placeholder="Min. 8 caractères" required style="padding-left:2.75rem;padding-right:2.75rem"/>
+              <button type="button" onclick="togglePwd('rg-pwd')" style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;font-size:1.1rem">👁</button>
+            </div>
+          </div>
+          <div>
+            <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.4rem">Confirmer le mot de passe</label>
+            <input type="password" id="rg-cpwd" class="input" placeholder="••••••••" required/>
+          </div>
+          <div>
+            <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.4rem">Code de parrainage <span style="color:#9ca3af;font-weight:400">(optionnel)</span></label>
+            <input type="text" id="rg-ref" class="input" placeholder="Ex: RIVO2024" style="text-transform:uppercase"/>
+          </div>
+          <button type="submit" id="rg-btn" class="btn-accent" style="width:100%;justify-content:center;padding:.875rem;font-size:1rem;margin-top:.25rem">
+            Créer mon compte
+          </button>
+          <p id="rg-err" style="display:none;color:#dc2626;font-size:.85rem;text-align:center;background:#fef2f2;border:1px solid #fecaca;border-radius:.75rem;padding:.625rem .875rem"></p>
+        </form>
+        <p style="text-align:center;color:#6b7280;margin-top:1.25rem;font-size:.875rem">
+          Déjà inscrit ?
+          <button onclick="goTo('login')" style="background:none;border:none;color:#2563EB;font-weight:700;cursor:pointer;font-size:.875rem">Se connecter</button>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE: DASHBOARD ═══════════════════ -->
+<div id="page-dashboard" class="page">
+  <!-- Header -->
+  <header style="position:sticky;top:0;z-index:30;background:white;border-bottom:1px solid #f1f5f9;padding:.75rem 1rem;display:flex;justify-content:space-between;align-items:center">
+    <div style="display:flex;align-items:center;gap:.6rem">
+      <div style="width:2.25rem;height:2.25rem;border-radius:.75rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;font-size:1rem">📚</div>
+      <span style="font-size:1.1rem;font-weight:900;color:#1F2937">RIVO</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:.75rem">
+      <div style="position:relative">
+        <button onclick="goTo('notifs')" style="background:none;border:none;cursor:pointer;font-size:1.4rem;padding:.25rem;line-height:1">🔔</button>
+        <span id="notif-badge" style="display:none;position:absolute;top:-2px;right:-2px;background:#ef4444;color:white;font-size:.6rem;font-weight:800;min-width:1rem;height:1rem;border-radius:9999px;align-items:center;justify-content:center;padding:0 .2rem">0</span>
+      </div>
+      <button onclick="switchTab('support')" style="background:none;border:1px solid #bfdbfe;cursor:pointer;font-size:.8rem;color:#2563EB;font-weight:600;padding:.35rem .75rem;border-radius:.5rem">📞 Support</button>
+      <button onclick="doLogout()" style="background:none;border:none;cursor:pointer;font-size:.8rem;color:#ef4444;font-weight:600;padding:.35rem .75rem;border-radius:.5rem;border:1px solid #fecaca">Déco.</button>
+    </div>
+  </header>
+
+  <!-- Email confirmation banner -->
+  <div id="email-confirm-banner" style="display:none;background:#fef3c7;border-bottom:2px solid #fcd34d;padding:.625rem 1rem;text-align:center;font-size:.8rem;color:#92400e;font-weight:600">
+    ⚠️ Veuillez confirmer votre email dans votre boîte mail. Ce bandeau disparaîtra après confirmation.
+  </div>
+
+  <!-- Notification panel -->
+  <div id="notif-panel" style="display:none;position:fixed;top:3.5rem;right:.75rem;width:min(320px,calc(100vw - 1.5rem));background:white;border-radius:1rem;box-shadow:0 8px 32px rgba(0,0,0,.18);z-index:200;max-height:400px;overflow-y:auto;border:1px solid #e5e7eb">
+    <div style="padding:1rem;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-weight:700;color:#1F2937;font-size:.95rem">Notifications</span>
+      <button onclick="clearNotifications()" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:.8rem;font-weight:600">🗑️ Supprimer tout</button>
+    </div>
+    <div id="notif-list" style="padding:.5rem"></div>
+  </div>
+
+  <div style="padding:1.5rem;max-width:1100px;padding-bottom:80px">
+      <!-- Bord -->
+      <div id="tab-bord" class="tab-panel active fade-in">
+        <div style="border-radius:1.5rem;padding:2rem;color:white;margin-bottom:2rem;background:linear-gradient(135deg,#2563EB,#1D4ED8)">
+          <h1 id="welcome-h" style="font-size:1.75rem;font-weight:900;margin-bottom:.4rem">Bienvenue !!!</h1>
+          <p style="color:#bfdbfe;font-weight:600;margin-bottom:.25rem">RIVO, la plateforme qui transforme l'apprentissage en opportunité.</p>
+          <p style="color:#93c5fd;font-size:.875rem">Développez vos compétences grâce à un apprentissage moderne, simple et accessible.</p>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+          <h2 style="font-size:1.25rem;font-weight:800;color:#1F2937">Formations disponibles</h2>
+          <span id="courses-badge" style="background:#dbeafe;color:#1d4ed8;font-size:.8rem;font-weight:700;padding:.25rem .875rem;border-radius:9999px">...</span>
+        </div>
+        <div id="bord-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.25rem">
+          <div style="grid-column:1/-1;text-align:center;padding:3rem"><div class="spin-blue" style="margin:0 auto"></div></div>
+        </div>
+      </div>
+
+      <!-- Mes formations -->
+      <div id="tab-formations" class="tab-panel fade-in">
+        <div style="margin-bottom:1.5rem"><h1 style="font-size:1.5rem;font-weight:800;color:#1F2937">Mes formations</h1><p id="myf-count" style="color:#6b7280;margin-top:.3rem;font-size:.9rem">...</p></div>
+        <div id="myf-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem">
+          <div style="grid-column:1/-1;text-align:center;padding:3rem"><div class="spin-blue" style="margin:0 auto"></div></div>
+        </div>
+      </div>
+
+      <!-- Attestations -->
+      <div id="tab-attestations" class="tab-panel fade-in">
+        <div style="margin-bottom:1.5rem"><h1 style="font-size:1.5rem;font-weight:800;color:#1F2937">Mes attestations</h1><p id="certs-count" style="color:#6b7280;margin-top:.3rem;font-size:.9rem">...</p></div>
+        <div id="certs-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem">
+          <div style="grid-column:1/-1;text-align:center;padding:3rem"><div class="spin-blue" style="margin:0 auto"></div></div>
+        </div>
+      </div>
+
+      <!-- Profil -->
+      <div id="tab-profil" class="tab-panel fade-in">
+        <h1 style="font-size:1.5rem;font-weight:800;color:#1F2937;margin-bottom:1.5rem">Mon profil</h1>
+
+        <!-- Code parrainage proéminent -->
+        <div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:2px dashed #3b82f6;border-radius:1rem;padding:1.5rem;text-align:center;margin-bottom:1.5rem">
+          <p style="font-size:.8rem;color:#6b7280;margin-bottom:.5rem">Votre code de parrainage</p>
+          <p id="ref-code" style="font-size:2rem;font-weight:900;color:#1d4ed8;letter-spacing:.15em">...</p>
+          <p style="font-size:.75rem;color:#6b7280;margin:.5rem 0 1rem">Partagez ce code · Gagnez 1 000 FCFA par achat de vos filleuls</p>
+          <button onclick="copyRef()" style="background:#2563eb;color:#fff;border:none;border-radius:.75rem;padding:.6rem 1.5rem;font-weight:700;cursor:pointer;font-size:.875rem">📋 Copier le code</button>
+        </div>
+
+        <!-- Infos profil + stats -->
+        <div style="display:grid;grid-template-columns:1fr 2fr;gap:1.25rem;margin-bottom:1.5rem">
+          <div class="card" style="padding:1.5rem;text-align:center">
+            <div id="big-av" onclick="document.getElementById('avatar-input').click()" style="width:5rem;height:5rem;border-radius:9999px;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:1.5rem;margin:0 auto .5rem;box-shadow:0 0 0 4px #dbeafe;cursor:pointer;position:relative;overflow:hidden">?</div>
+            <input type="file" id="avatar-input" accept="image/*" style="display:none" onchange="updateAvatar(this)"/>
+            <p style="font-size:.7rem;color:#9ca3af;margin-bottom:.75rem">Cliquez pour changer</p>
+            <div id="prof-name" style="font-weight:800;font-size:1.1rem;color:#1F2937">...</div>
+            <div id="prof-email" style="color:#9ca3af;font-size:.8rem;margin:.3rem 0 .75rem">...</div>
+            <span id="prof-badge" class="badge" style="background:#dbeafe;color:#1d4ed8">🌱 Débutant</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div class="card" style="padding:1.25rem;text-align:center"><div id="st-f" style="font-size:2rem;font-weight:900;color:#2563EB">0</div><div style="color:#6b7280;font-size:.8rem;margin-top:.2rem">Formations achetées</div></div>
+            <div class="card" style="padding:1.25rem;text-align:center"><div id="st-a" style="font-size:2rem;font-weight:900;color:#F59E0B">0</div><div style="color:#6b7280;font-size:.8rem;margin-top:.2rem">Attestations</div></div>
+            <div class="card" style="padding:1.25rem;text-align:center"><div id="st-b" style="font-size:1.3rem;font-weight:900;color:#10b981">0 FCFA</div><div style="color:#6b7280;font-size:.8rem;margin-top:.2rem">Solde</div></div>
+            <div class="card" style="padding:1.25rem;text-align:center"><div id="st-pts" style="font-size:1.6rem;font-weight:900;color:#f59e0b">0</div><div style="color:#6b7280;font-size:.8rem;margin-top:.2rem">⭐ Mes points</div></div>
+          </div>
+        </div>
+
+        <!-- Informations personnelles (lecture seule) -->
+        <div class="card" style="padding:1.25rem;margin-bottom:1.5rem">
+          <h3 style="font-weight:800;font-size:1.05rem;color:#1F2937;margin-bottom:1rem">Informations personnelles</h3>
+          <div style="display:grid;gap:.75rem">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:.75rem;background:#f8fafc;border-radius:.75rem">
+              <span style="font-size:.85rem;color:#6b7280;font-weight:600">Nom complet</span>
+              <span id="info-name" style="font-weight:700;color:#1F2937">...</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:.75rem;background:#f8fafc;border-radius:.75rem">
+              <span style="font-size:.85rem;color:#6b7280;font-weight:600">Adresse email</span>
+              <span id="info-email" style="font-weight:700;color:#1F2937;font-size:.875rem">...</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:.75rem;background:#f8fafc;border-radius:.75rem">
+              <span style="font-size:.85rem;color:#6b7280;font-weight:600">Badge</span>
+              <span id="info-badge" class="badge" style="background:#dbeafe;color:#1d4ed8">🌱 Débutant</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:.75rem;background:#f8fafc;border-radius:.75rem">
+              <span style="font-size:.85rem;color:#6b7280;font-weight:600">Solde disponible</span>
+              <span id="info-solde" style="font-weight:700;color:#10b981">0 FCFA</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:.75rem;background:#fef9c3;border-radius:.75rem" id="birth-row">
+              <span style="font-size:.85rem;color:#92400e;font-weight:600">Date de naissance</span>
+              <span id="info-birth" style="font-weight:700;color:#92400e">...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Retrait intégré dans Profil ── -->
+        <h2 style="font-size:1.2rem;font-weight:800;color:#1F2937;margin-bottom:1rem">💸 Retrait</h2>
+        <div style="border-radius:1.5rem;padding:1.5rem;color:white;margin-bottom:1.75rem;background:linear-gradient(135deg,#2563EB,#1D4ED8)">
+          <div style="font-size:.95rem;font-weight:600;margin-bottom:.4rem">💳 Solde disponible</div>
+          <div id="bal-display" style="font-size:2.5rem;font-weight:900">0 FCFA</div>
+          <p style="color:#bfdbfe;font-size:.85rem;margin-top:.3rem">Traitement : maximum 30 minutes</p>
+        </div>
+        <div class="card" style="padding:1.5rem;margin-bottom:1.75rem">
+          <h2 style="font-weight:800;font-size:1.05rem;color:#1F2937;margin-bottom:1.25rem">Nouvelle demande de retrait</h2>
+          <div style="display:flex;flex-direction:column;gap:1rem;margin-bottom:1.25rem">
+            <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Montant (FCFA)</label><input type="number" id="wd-amt" class="input" placeholder="Ex: 5000" min="1000"/><p style="font-size:.75rem;color:#9ca3af;margin-top:.3rem">Minimum : 1 000 FCFA</p></div>
+            <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Méthode</label><select id="wd-mth" class="input" onchange="switchWithdrawalMethod()"><option value="mobile_money">📱 Mobile Money</option><option value="carte_bancaire">💳 Carte bancaire</option><option value="autre">🔄 Autre</option></select></div>
+            <!-- Section Mobile Money -->
+            <div id="wd-section-mm">
+              <div style="display:grid;grid-template-columns:auto 1fr;gap:.625rem;margin-bottom:1rem">
+                <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Indicatif</label><select id="wd-cc" class="input" style="min-width:110px"><option value="+229">🇧🇯 +229</option><option value="+225">🇨🇮 +225</option><option value="+226">🇧🇫 +226</option><option value="+228">🇹🇬 +228</option><option value="+227">🇳🇪 +227</option><option value="+221">🇸🇳 +221</option><option value="+223">🇲🇱 +223</option><option value="+224">🇬🇳 +224</option><option value="+33">🇫🇷 +33</option></select></div>
+                <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Numéro de téléphone</label><input type="tel" id="wd-phone" class="input" placeholder="Ex: 97000000"/></div>
+              </div>
+              <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Opérateur</label><input type="text" id="wd-op" class="input" placeholder="MTN, Moov, Orange…"/></div>
+            </div>
+            <!-- Section Carte bancaire -->
+            <div id="wd-section-card" style="display:none">
+              <div style="margin-bottom:1rem"><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Titulaire du compte</label><input type="text" id="wd-iban-name" class="input" placeholder="Prénom Nom (comme sur la carte)"/></div>
+              <div style="margin-bottom:1rem"><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">IBAN</label><input type="text" id="wd-iban" class="input" placeholder="FR76 3000 6000 0112 3456 7890 189"/></div>
+              <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">BIC / SWIFT</label><input type="text" id="wd-bic" class="input" placeholder="BNPAFRPPXXX"/></div>
+            </div>
+            <!-- Section Autre (PayPal, Western Union…) -->
+            <div id="wd-section-other" style="display:none">
+              <div style="margin-bottom:1rem"><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Moyen de paiement</label><input type="text" id="wd-other-method" class="input" placeholder="PayPal, Western Union, Wise…"/></div>
+              <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Identifiant / Email / Numéro</label><input type="text" id="wd-other-detail" class="input" placeholder="Email PayPal, numéro de compte…"/></div>
+            </div>
+          </div>
+          <button id="wd-submit-btn" onclick="doWithdrawal()" class="btn-primary">📤 Demander le retrait</button>
+        </div>
+        <div><h2 style="font-weight:800;font-size:1.05rem;color:#1F2937;margin-bottom:1rem">Historique des retraits</h2><div id="wd-hist">...</div></div>
+
+        <!-- Voir le guide -->
+        <div style="margin-top:1.5rem;text-align:center">
+          <button onclick="startTutorial()" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:2px solid #bfdbfe;color:#1d4ed8;border-radius:1rem;padding:.875rem 2rem;font-weight:700;cursor:pointer;font-size:.9rem;width:100%;transition:all .2s" onmouseover="this.style.background='linear-gradient(135deg,#dbeafe,#bfdbfe)'" onmouseout="this.style.background='linear-gradient(135deg,#eff6ff,#dbeafe)'">
+            🗺️ Voir le guide de démarrage
+          </button>
+        </div>
+      </div>
+
+      <!-- ══ Récompenses ══ -->
+      <div id="tab-recompenses" class="tab-panel fade-in">
+        <h1 style="font-size:1.5rem;font-weight:800;color:#1F2937;margin-bottom:1.25rem">🎁 Récompenses</h1>
+        <div style="display:flex;border-bottom:2px solid #f1f5f9;margin-bottom:1.25rem;overflow-x:auto">
+          <button id="rt-events" onclick="loadRecompensesTab('events')" style="flex:1;padding:.875rem .5rem;background:none;border:none;border-bottom:3px solid #f59e0b;cursor:pointer;font-weight:700;font-size:.875rem;color:#1F2937;white-space:nowrap">🎉 Événements</button>
+          <button id="rt-mine" onclick="loadRecompensesTab('mine')" style="flex:1;padding:.875rem .5rem;background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;font-weight:500;font-size:.875rem;color:#6b7280;white-space:nowrap">📋 Mes événements</button>
+          <button id="rt-points" onclick="loadRecompensesTab('points')" style="flex:1;padding:.875rem .5rem;background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;font-weight:500;font-size:.875rem;color:#6b7280;white-space:nowrap">⭐ Mes points</button>
+        </div>
+        <div id="recompenses-content">
+          <p style="text-align:center;color:#9ca3af;padding:2rem">Chargement...</p>
+        </div>
+      </div>
+
+      <!-- ══ Support ══ -->
+      <div id="tab-support" class="tab-panel fade-in">
+        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem">
+          <button onclick="switchTab('bord')" style="background:none;border:1px solid #bfdbfe;color:#2563eb;border-radius:.5rem;padding:.35rem .75rem;font-weight:700;cursor:pointer;font-size:.85rem">← Retour</button>
+          <h1 style="font-size:1.5rem;font-weight:800;color:#1F2937">📞 Support RIVO</h1>
+        </div>
+        <p style="color:#6b7280;font-size:.9rem;margin-bottom:2rem;line-height:1.6">Contactez le support pour tout problème ou feedback.<br>Disponibles tous les jours de <strong>08h à 13h</strong> et de <strong>15h à 23h</strong>.</p>
+        <div style="display:flex;flex-direction:column;gap:.875rem;max-width:400px">
+          <a href="https://wa.me/22945916177" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:.75rem;background:#25d366;color:white;border-radius:.875rem;padding:1rem;font-weight:700;text-decoration:none;font-size:.95rem">📱 Contacter via WhatsApp</a>
+          <a href="mailto:assistancerivo@gmail.com" style="display:flex;align-items:center;justify-content:center;gap:.75rem;background:#ea4335;color:white;border-radius:.875rem;padding:1rem;font-weight:700;text-decoration:none;font-size:.95rem">📧 Contacter via Gmail</a>
+          <a href="tel:+2290145916177" style="display:flex;align-items:center;justify-content:center;gap:.75rem;background:#2563eb;color:white;border-radius:.875rem;padding:1rem;font-weight:700;text-decoration:none;font-size:.95rem">📞 Contacter via appel</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav" id="bottom-nav" style="display:none">
+    <button onclick="switchTab('bord')" id="bnav-bord" class="active"><span class="nav-icon">🏠</span><span>Bord</span></button>
+    <button onclick="switchTab('formations')" id="bnav-formations"><span class="nav-icon">📚</span><span>Formations</span></button>
+    <button onclick="switchTab('attestations')" id="bnav-attestations"><span class="nav-icon">🏆</span><span>Attests.</span></button>
+    <button onclick="switchTab('recompenses')" id="bnav-recompenses"><span class="nav-icon">🎁</span><span>Récompenses</span></button>
+    <button onclick="switchTab('profil')" id="bnav-profil"><span class="nav-icon">👤</span><span>Profil</span></button>
+  </nav>
+
+  <!-- Payment modal -->
+  <div id="pay-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;align-items:center;justify-content:center;padding:1rem">
+    <div style="background:white;border-radius:1.5rem;padding:2rem;max-width:380px;width:100%;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,.3)">
+      <div style="width:4rem;height:4rem;background:#dbeafe;border-radius:9999px;display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 1.25rem">💳</div>
+      <h3 style="font-size:1.25rem;font-weight:800;color:#1F2937;margin-bottom:.5rem">Procéder au paiement</h3>
+      <p id="pm-title" style="color:#6b7280;margin-bottom:.4rem;font-size:.9rem"></p>
+      <p id="pm-price" style="font-size:1.75rem;font-weight:900;color:#2563EB;margin-bottom:1.5rem"></p>
+      <div style="display:flex;gap:.75rem">
+        <button onclick="closePayModal()" style="flex:1;padding:.75rem;border-radius:.875rem;border:2px solid #e5e7eb;background:none;color:#6b7280;font-weight:700;cursor:pointer">Annuler</button>
+        <button onclick="confirmPay()" id="pay-btn" class="btn-accent" style="flex:1;justify-content:center;padding:.75rem">⚡ Payer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE: NOTIFICATIONS ═══════════════ -->
+<div id="page-notifs" class="page">
+  <header style="position:sticky;top:0;z-index:30;background:white;border-bottom:1px solid #f1f5f9;padding:.75rem 1rem;display:flex;justify-content:space-between;align-items:center">
+    <button onclick="goTo('dashboard')" style="background:none;border:none;cursor:pointer;font-size:.95rem;color:#2563EB;font-weight:700;padding:.35rem .75rem;border-radius:.5rem;border:1px solid #bfdbfe">← Fermer</button>
+    <span style="font-size:1rem;font-weight:900;color:#1F2937">Mes notifications</span>
+    <button onclick="clearNotifications()" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:.8rem;font-weight:600">🗑️ Supprimer tout</button>
+  </header>
+  <div style="padding:1rem;max-width:600px;margin:0 auto">
+    <div id="notif-page-list"></div>
+  </div>
+</div>
+
+<!-- ══════════════ SCRIPTS ══════════════ -->
+<script>
+// ── Config ────────────────────────────────────────────
+const SB_URL  = 'https://qwdttzsbbspayojzeugy.supabase.co';
+const SB_ANON = 'sb_publishable_tG64uzNsmT0XDV7pmglqFA_lxQ4xIFm';
+const SB_SERVICE = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3ZHR0enNiYnNwYXlvanpldWd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODk3MTQzNSwiZXhwIjoyMDk0NTQ3NDM1fQ.Qh-1b3NA4wH5Km4W1v-nU0aGagkeIByet2INxccz3tw';
+// Paiement géré par rivo.php (PHP intégré en tête de fichier)
+let sb = null;
+let sbAdmin = null; // client service_role (bypass RLS) — utilisé uniquement pour créer les profils
+
+// ── Firebase ──────────────────────────────────────────
+const FB_CONFIG = {
+  apiKey: "AIzaSyA5olGOv_gvmJdogl1nQg2TzAdGJ5WbZR4",
+  authDomain: "rivoo-a0624.firebaseapp.com",
+  projectId: "rivoo-a0624",
+  storageBucket: "rivoo-a0624.firebasestorage.app",
+  messagingSenderId: "565836730871",
+  appId: "1:565836730871:web:e9891b273540fb0d4d1ef2"
+};
+let fbAuth = null;
+
+// ── Globals ───────────────────────────────────────────
+let FBU = null; // Utilisateur Firebase (auth)
+let CU  = null; // Shim de compatibilité { id, email } basé sur le profil Supabase
+let CP  = null; // Profil Supabase (données)
+let pendingCourse = null;
+const loaded = {};
+let wdInProgress = false;
+
+// ── Helpers ───────────────────────────────────────────
+function toast(msg, type='ok'){
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;el.textContent=msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>el.remove(),5000);
+}
+function fmt(n,c='XOF'){return c==='XOF'?new Intl.NumberFormat('fr-FR').format(n)+' FCFA':new Intl.NumberFormat('fr-FR',{style:'currency',currency:c}).format(n);}
+function badgeInfo(l){const m={debutant:['🌱','Débutant','#dbeafe','#1d4ed8'],bronze:['🥉','Bronze','#fef3c7','#92400e'],argent:['🥈','Argent','#f1f5f9','#475569'],or:['🥇','Or','#fef9c3','#854d0e'],diamant:['💎','Diamant','#dbeafe','#1d4ed8'],admin:['👑','Admin','#ede9fe','#6d28d9']};return m[l]||m.debutant;}
+function togglePwd(id){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';}
+function setBtn(id,html,dis=false){const b=document.getElementById(id);if(b){b.innerHTML=html;b.disabled=dis;}}
+function showErr(id,msg){const el=document.getElementById(id);if(!el)return;el.textContent=msg;el.style.display=msg?'block':'none';}
+function withTimeout(p,ms=25000){return Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('Erreur réseau. Réessayez.')),ms))]);}
+
+// ── Navigation ───────────────────────────────────────
+function goTo(p){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  window.scrollTo(0,0);
+  document.getElementById('bottom-nav').style.display=p==='dashboard'?'flex':'none';
+  if(p==='dashboard' && CU){
+    loadBord();
+    if(!loaded.notif){loaded.notif=true; loadNotifications();}
+  }
+  if(p==='notifs' && CU) loadNotifications();
+}
+
+// ── App start (called after CDN loads) ───────────────
+function updateEmailBanner(){
+  const banner=document.getElementById('email-confirm-banner');
+  if(banner) banner.style.display=(FBU&&!FBU.emailVerified)?'block':'none';
+}
+
+async function startApp(){
+  try{
+    // Firebase restaure la session depuis son localStorage
+    const fbUser=await new Promise(resolve=>{
+      const unsub=fbAuth.onAuthStateChanged(u=>{unsub();resolve(u);});
+    });
+
+    if(fbUser&&fbUser.emailVerified){
+      FBU=fbUser;
+      await loadProfileData();
+      if(CP){
+        updateEmailBanner();
+        goTo('dashboard');
+        checkShowTutorial();
+      }
+    }
+
+    // Retour paiement depuis paiement.php?action=retour (payment=ok&pid=...)
+    const ps=new URLSearchParams(location.search).get('payment');
+    const pid=new URLSearchParams(location.search).get('pid');
+    if(ps==='ok'&&pid){
+      // La notification PHP a déjà mis à jour le statut côté serveur
+      // On recharge juste le profil et on affiche le succès
+      history.replaceState({},'',location.pathname);
+      if(FBU&&CU){
+        await loadProfileData();
+        loaded.formations=false; loaded.profil=false;
+        goTo('dashboard');
+        setTimeout(()=>toast('Paiement réussi ! 🎉'),500);
+      }
+    }
+  }catch(e){console.warn('[startApp]',e?.message||e);}
+}
+
+// ── Dynamic CDN loader with fallback ─────────────────
+(function(){
+  var cdns=[
+    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js',
+    'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js'
+  ];
+  function showFatalErr(msg){
+    document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;background:#f8fafc;padding:2rem;text-align:center"><div><p style="font-size:2.5rem">⚠️</p><h2 style="color:#dc2626;margin:.5rem 0">Erreur de chargement</h2><p style="color:#6b7280;margin-bottom:1.5rem;font-size:.9rem">'+msg+'</p><button onclick="location.reload()" style="background:#2563eb;color:#fff;border:none;border-radius:8px;padding:10px 24px;cursor:pointer;font-size:.9rem;font-weight:700">🔄 Réessayer</button></div></div>';
+  }
+  function tryLoad(i){
+    if(i>=cdns.length){showFatalErr('Impossible de charger la bibliothèque Supabase.<br>Vérifiez votre connexion internet.');return;}
+    var s=document.createElement('script');
+    s.src=cdns[i];
+    s.onload=function(){
+      try{
+        sb=window.supabase.createClient(SB_URL,SB_ANON);
+        // sbAdmin isolé (persistSession:false) pour éviter le conflit de session avec sb
+        sbAdmin=window.supabase.createClient(SB_URL,SB_SERVICE,{
+          auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}
+        });
+        // ── Init Firebase Auth ────────────────────────
+        if(!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
+        fbAuth=firebase.auth();
+        startApp();
+      }catch(e){tryLoad(i+1);}
+    };
+    s.onerror=function(){tryLoad(i+1);};
+    document.head.appendChild(s);
+  }
+  tryLoad(0);
+})();
+
+// ── BUG 1 & 2 FIX: guard race-condition + auto-création profil manquant ─
+async function loadProfileData(){
+  if(!FBU?.email) return;
+  const expectedEmail=FBU.email;
+  try{
+    // Cherche le profil par email (pas besoin de Supabase Auth)
+    console.log('[loadProfileData] recherche profil pour email:', FBU.email);
+    let {data:p,error}=await withTimeout(sb.from('profiles').select('*').eq('email',FBU.email).single());
+    console.log('[loadProfileData] résultat → data:', p, '| error:', error?.code, error?.message);
+    if(error && error.code!=='PGRST116'){
+      console.error('[RIVO] Profile fetch error:', error.code, error.message);
+    }
+    // Profil introuvable → créer via sbAdmin (service_role, bypass RLS)
+    if(!p){
+      const pending=JSON.parse(localStorage.getItem('rivo_pending_profile')||'null')||{};
+      const uid=crypto.randomUUID();
+      const refCode='RIVO-'+Math.random().toString(36).substring(2,8).toUpperCase();
+      const{data:newP,error:insertFallbackErr}=await withTimeout(sbAdmin.from('profiles').insert({
+        id:uid,
+        first_name:pending.first_name||FBU.displayName?.split(' ')[0]||'',
+        last_name:pending.last_name||FBU.displayName?.split(' ').slice(1).join(' ')||'',
+        email:FBU.email,
+        referral_code:refCode,
+        badge_level:'debutant', balance:0, currency:'XOF',
+        birth_date:pending.birth_date||null,
+        referred_by:pending.referred_by||null,
+      }).select().single());
+      if(insertFallbackErr){
+        console.error('[loadProfileData] insert fallback ÉCHOUÉ:',insertFallbackErr.code,insertFallbackErr.message);
+      } else {
+        console.log('[loadProfileData] profil créé:',newP?.id);
+      }
+      if(newP) p=newP;
+      if(pending.first_name) localStorage.removeItem('rivo_pending_profile');
+    }
+    // Guard : mauvais email (race condition)
+    if(p && p.email!==expectedEmail){ console.warn('Race condition profil, ignoré'); return; }
+    // Toujours null → mode dégradé : profil en mémoire depuis Firebase (RLS ou réseau)
+    if(!p){
+      const nameParts=(FBU.displayName||'').split(' ');
+      const fn0=nameParts[0]||FBU.email.split('@')[0]||'Utilisateur';
+      const ln0=nameParts.slice(1).join(' ')||'';
+      // Profil minimal en mémoire pour ne pas bloquer la connexion
+      CP={id:null,first_name:fn0,last_name:ln0,email:FBU.email,
+          balance:0,points:0,badge_level:'debutant',referral_code:'—',currency:'XOF'};
+      CU={id:null,email:FBU.email};
+      console.warn('[loadProfileData] mode dégradé — profil non trouvé en BDD, connexion via Firebase');
+      // Remplir TOUS les champs du DOM depuis Firebase
+      const _em=FBU.email||'—';
+      const _full=`${fn0} ${ln0}`.trim()||'Utilisateur';
+      const[_ic,_lb,_bg,_co]=badgeInfo('debutant');
+      document.getElementById('welcome-h').textContent=`Bienvenue ${fn0} !!!`;
+      ['prof-name','info-name'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=_full;});
+      ['prof-email','info-email'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=_em;});
+      const elRef=document.getElementById('ref-code');if(elRef)elRef.textContent='—';
+      document.getElementById('st-b').textContent='0 FCFA';
+      document.getElementById('st-pts').textContent='0';
+      document.getElementById('st-f').textContent='0';
+      document.getElementById('st-a').textContent='0';
+      const _infoSolde=document.getElementById('info-solde');if(_infoSolde)_infoSolde.textContent='0 FCFA';
+      const _pb=document.getElementById('prof-badge');
+      if(_pb){_pb.textContent=`${_ic} ${_lb}`;_pb.style.background=_bg;_pb.style.color=_co;}
+      const _ib=document.getElementById('info-badge');
+      if(_ib){_ib.textContent=`${_ic} ${_lb}`;_ib.style.background=_bg;_ib.style.color=_co;}
+      const _ptsEl=document.getElementById('prof-points');if(_ptsEl)_ptsEl.textContent='0 pts';
+      const _bar=document.getElementById('prof-points-bar');if(_bar)_bar.style.width='0%';
+      const _lbl=document.getElementById('prof-points-label');if(_lbl)_lbl.textContent='0 / 1000 pts pour accéder aux événements';
+      const _av=document.getElementById('big-av');
+      if(_av)_av.innerHTML=((fn0[0]||'')+(ln0[0]||'')).toUpperCase()||'?';
+      return;
+    }
+    CP=p;
+    // Shim de compatibilité pour tout le code qui utilise CU.id et CU.email
+    CU={id:p.id, email:FBU.email};
+    const fn=p.first_name||'';
+    const ln=p.last_name||'';
+    const fullName=`${fn} ${ln}`.trim()||'Utilisateur';
+    const email=FBU.email||'—';
+    const solde=fmt(p.balance||0,p.currency);
+    const[ic,lb,bg,co]=badgeInfo(p.badge_level);
+    document.getElementById('welcome-h').textContent=`Bienvenue ${fn} !!!`;
+    // Champs visibles partout
+    document.getElementById('ref-code').textContent=p.referral_code||'—';
+    document.getElementById('prof-name').textContent=fullName;
+    const profEmail=document.getElementById('prof-email');
+    if(profEmail)profEmail.textContent=email;
+    document.getElementById('st-b').textContent=solde;
+    const pts=p.points||0;
+    const ptsEl=document.getElementById('st-pts');if(ptsEl)ptsEl.textContent=pts;
+    const profPts=document.getElementById('prof-points');if(profPts)profPts.textContent=pts+' pts';
+    const bar=document.getElementById('prof-points-bar');if(bar)bar.style.width=Math.min(100,pts/10)+'%';
+    const lbl=document.getElementById('prof-points-label');if(lbl)lbl.textContent=`${pts} / 1000 pts pour accéder aux événements`;
+    const pb=document.getElementById('prof-badge');
+    if(pb){pb.textContent=`${ic} ${lb}`;pb.style.background=bg;pb.style.color=co;}
+    checkDailyLogin();
+    // BUG 2 FIX: remplir TOUS les champs du profil pour ne jamais laisser "..."
+    const infoName=document.getElementById('info-name');if(infoName)infoName.textContent=fullName;
+    const infoEmail=document.getElementById('info-email');if(infoEmail)infoEmail.textContent=email;
+    const infoSolde=document.getElementById('info-solde');if(infoSolde)infoSolde.textContent=solde;
+    const ib=document.getElementById('info-badge');
+    if(ib){ib.textContent=`${ic} ${lb}`;ib.style.background=bg;ib.style.color=co;}
+    const av=document.getElementById('big-av');
+    if(av)av.innerHTML=p.avatar_url?`<img src="${p.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:9999px"/>`:((fn[0]||'')+(ln[0]||'')).toUpperCase()||'?';
+  }catch(e){
+    console.warn('loadProfileData error:',e?.message||e);
+    // BUG 2 FIX: en cas d'erreur, remplacer "..." par "—" pour éviter l'affichage vide
+    ['info-name','info-email','info-solde','ref-code','prof-name','prof-email'].forEach(id=>{
+      const el=document.getElementById(id);if(el && el.textContent==='...')el.textContent='—';
+    });
+  }
+}
+
+// ── Login ─────────────────────────────────────────────
+async function doLogin(e){
+  e.preventDefault();
+  showErr('li-err','');
+  document.getElementById('li-resend').style.display='none';
+  setBtn('li-btn','<span class="spin"></span> Connexion...',true);
+  try{
+    const email=document.getElementById('li-email').value.trim();
+    const pwd=document.getElementById('li-pwd').value;
+
+    // 1. Connexion Firebase
+    const cred=await withTimeout(fbAuth.signInWithEmailAndPassword(email,pwd),15000);
+    const fbUser=cred.user;
+    await fbUser.reload(); // force la synchro emailVerified depuis le serveur
+
+    // 2. Email pas encore confirmé
+    if(!fbUser.emailVerified){
+      FBU=fbUser;
+      showErr('li-err','Confirmez votre email avant de vous connecter. Vérifiez vos spams.');
+      document.getElementById('li-resend').style.display='block';
+      return;
+    }
+
+    FBU=fbUser;
+
+    // 3. Réinitialiser l'état
+    CP=null; CU=null;
+    document.getElementById('welcome-h').textContent='Bienvenue !!!';
+    document.getElementById('prof-name').textContent='...';
+    document.getElementById('prof-email').textContent='...';
+    document.getElementById('ref-code').textContent='...';
+    document.getElementById('big-av').innerHTML='?';
+    document.getElementById('st-f').textContent='0';
+    document.getElementById('st-a').textContent='0';
+    document.getElementById('st-b').textContent='0 FCFA';
+    document.getElementById('st-pts').textContent='0';
+    Object.keys(loaded).forEach(k=>delete loaded[k]);
+
+    // 4. Charger le profil depuis Supabase (données uniquement)
+    await loadProfileData();
+    // loadProfileData() définit toujours CP (mode dégradé Firebase si BDD indisponible)
+
+    // 5. Redirection admin
+    if(CP.badge_level==='admin'){
+      toast('Connexion admin réussie !');
+      setTimeout(()=>{window.location.href='./rivo-admin.html';},700);
+      return;
+    }
+
+    toast('Connexion réussie ! 🎉');
+    setTimeout(()=>{goTo('dashboard');},500);
+
+  }catch(err){
+    const code=err.code||'';
+    const em=err.message||'';
+    if(code.includes('wrong-password')||code.includes('user-not-found')||
+       code.includes('invalid-credential')||code.includes('INVALID_LOGIN_CREDENTIALS')){
+      showErr('li-err','Email ou mot de passe incorrect.');
+    }else if(code.includes('too-many-requests')){
+      showErr('li-err','Trop de tentatives. Réessayez dans quelques minutes.');
+    }else if(em.includes('Erreur réseau')||em.includes('timed out')){
+      showErr('li-err','Connexion trop lente. Vérifiez votre réseau et réessayez.');
+    }else{
+      showErr('li-err',em||'Erreur de connexion. Réessayez.');
+    }
+  }finally{
+    setBtn('li-btn','Se connecter',false);
+  }
+}
+
+async function forgotPassword(){
+  const email=document.getElementById('li-email').value.trim();
+  if(!email){showErr('li-err','Entrez votre email, puis cliquez "Mot de passe oublié".');return;}
+  setBtn('li-btn','<span class="spin"></span>',true);
+  try{
+    await fbAuth.sendPasswordResetEmail(email);
+    showErr('li-err','');
+    toast('Email de réinitialisation envoyé ! Vérifiez votre boîte mail. 📧');
+  }catch(e){
+    const code=e.code||'';
+    if(code.includes('user-not-found')){showErr('li-err','Aucun compte trouvé avec cet email.');}
+    else{showErr('li-err',e.message||'Erreur envoi email');}
+  }finally{
+    setBtn('li-btn','Se connecter',false);
+  }
+}
+
+async function resendConfirmation(){
+  // FBU est défini si login a échoué pour email non vérifié
+  const fbUser=FBU||fbAuth.currentUser;
+  if(!fbUser){
+    toast('Entrez votre email + mot de passe et cliquez "Se connecter" d\'abord.','err');
+    return;
+  }
+  try{
+    await fbUser.sendEmailVerification();
+    toast('Email de confirmation renvoyé ! Vérifiez votre boîte mail. 📧');
+  }catch(e){
+    toast(e.message||'Erreur envoi','err');
+  }
+}
+
+// ── Register ──────────────────────────────────────────
+async function doRegister(e){
+  e.preventDefault();
+  showErr('rg-err','');
+  const fn=document.getElementById('rg-fn').value.trim();
+  const ln=document.getElementById('rg-ln').value.trim();
+  const email=document.getElementById('rg-email').value.trim();
+  const birth=document.getElementById('rg-birth').value;
+  const pwd=document.getElementById('rg-pwd').value;
+  const cpwd=document.getElementById('rg-cpwd').value;
+  const ref=document.getElementById('rg-ref').value.trim().toUpperCase();
+  if(fn.length<2||ln.length<2){showErr('rg-err','Prénom et nom requis');return;}
+  if(pwd.length<8){showErr('rg-err','Mot de passe : minimum 8 caractères');return;}
+  if(pwd!==cpwd){showErr('rg-err','Les mots de passe ne correspondent pas');return;}
+  setBtn('rg-btn','<span class="spin"></span> Création...',true);
+  try{
+    let refId=null;
+    if(ref){
+      const{data:r}=await sb.from('profiles').select('id').eq('referral_code',ref).single();
+      console.log('[parrainage] ref=',ref,'refId=',r?.id);
+      if(!r)throw new Error('Code de parrainage invalide ou introuvable');
+      refId=r.id;
+    }
+    const cred=await fbAuth.createUserWithEmailAndPassword(email,pwd);
+    const fbNewUser=cred.user;
+    await fbNewUser.updateProfile({displayName:`${fn} ${ln}`});
+
+    // Créer le profil via sbAdmin (service_role) — bypass RLS "TO authenticated"
+    const uid=crypto.randomUUID();
+    const refCode='RIVO-'+Math.random().toString(36).substring(2,8).toUpperCase();
+    const{error:insertErr}=await withTimeout(sbAdmin.from('profiles').insert({
+      id:uid, first_name:fn, last_name:ln, email,
+      referral_code:refCode, badge_level:'debutant', balance:0, currency:'XOF',
+      birth_date:birth||null, referred_by:refId||null
+    }));
+    if(insertErr) console.warn('[doRegister] insert error:',insertErr.code, insertErr.message);
+    else console.log('[doRegister] profil créé:', uid);
+
+    localStorage.setItem('rivo_pending_profile',JSON.stringify({
+      first_name:fn, last_name:ln, birth_date:birth||null, referred_by:refId||null
+    }));
+    await fbNewUser.sendEmailVerification();
+    await fbAuth.signOut();
+    toast('Compte créé ! 📧 Vérifiez votre boîte mail pour confirmer avant de vous connecter.');
+    setTimeout(()=>{ goTo('login'); },2200);
+  }catch(err){
+    const msg=err.message||'';
+    if(msg.includes('email-already-in-use'))showErr('rg-err','Cet email est déjà utilisé.');
+    else if(msg.includes('weak-password'))showErr('rg-err','Mot de passe trop faible.');
+    else showErr('rg-err',msg||'Erreur. Réessayez.');
+  }finally{
+    setBtn('rg-btn','Créer mon compte',false);
+  }
+}
+
+// ── Logout ────────────────────────────────────────────
+async function doLogout(){
+  try{await fbAuth.signOut();}catch(_){}
+  FBU=null; CU=CP=null;
+  Object.keys(loaded).forEach(k=>delete loaded[k]);
+  document.getElementById('welcome-h').textContent='Bienvenue !!!';
+  document.getElementById('ref-code').textContent='...';
+  document.getElementById('prof-name').textContent='...';
+  document.getElementById('prof-email').textContent='...';
+  document.getElementById('big-av').innerHTML='?';
+  document.getElementById('st-f').textContent='0';
+  document.getElementById('st-a').textContent='0';
+  document.getElementById('st-b').textContent='0 FCFA';
+  document.getElementById('st-pts').textContent='0';
+  goTo('landing');
+}
+
+// ── Dashboard: Bord ───────────────────────────────────
+async function loadBord(){
+  const grid=document.getElementById('bord-grid');
+  // Charger les formations (pas besoin de CU.id — public)
+  const{data:cs,error:csErr}=await sb.from('courses').select('*').eq('is_published',true).order('created_at',{ascending:false});
+  if(csErr) console.error('[loadBord] courses error:',csErr.code,csErr.message);
+
+  // Charger les achats seulement si on a un profil Supabase (id réel)
+  let owned=new Set();
+  if(CU?.id){
+    const{data:ps}=await sb.from('purchases').select('course_id').eq('user_id',CU.id).eq('status','complete');
+    owned=new Set((ps||[]).map(p=>p.course_id));
+  }
+
+  document.getElementById('courses-badge').textContent=`${(cs||[]).length} cours au catalogue`;
+  if(!cs||cs.length===0){
+    grid.innerHTML='<p style="grid-column:1/-1;text-align:center;color:#9ca3af;padding:2rem">Aucune formation disponible.</p>';
+    return;
+  }
+  if(csErr){
+    grid.innerHTML='<p style="grid-column:1/-1;text-align:center;color:#ef4444;padding:2rem">Erreur de chargement. Vérifiez votre connexion.</p>';
+    return;
+  }
+  document.getElementById('bord-grid').innerHTML=cs.map(c=>{
+    const own=owned.has(c.id);
+    return`<div class="card fade-in">
+      <div style="height:10rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden">
+        ${c.cover_url?`<img src="${c.cover_url}" style="width:100%;height:100%;object-fit:cover"/>`:'<span style="font-size:2.5rem;opacity:.35">📚</span>'}
+        <span style="position:absolute;top:.5rem;right:.5rem;background:#F59E0B;color:white;font-weight:800;font-size:.75rem;padding:.2rem .65rem;border-radius:9999px">${fmt(c.price,c.currency)}</span>
+        ${own?'<span style="position:absolute;top:.5rem;left:.5rem;background:#10b981;color:white;font-weight:800;font-size:.7rem;padding:.2rem .6rem;border-radius:9999px">✓ Acheté</span>':''}
+      </div>
+      <div style="padding:1rem">
+        <h3 style="font-weight:800;color:#1F2937;font-size:.95rem;margin-bottom:.35rem">${c.title}</h3>
+        <p style="color:#6b7280;font-size:.82rem;margin-bottom:.75rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${c.description||''}</p>
+        <div id="exp-${c.id}" style="display:none;font-size:.82rem;color:#374151;background:#f8fafc;padding:.75rem;border-radius:.75rem;margin-bottom:.75rem;line-height:1.6">${c.full_description||c.description||''}</div>
+        <div style="display:flex;gap:.5rem">
+          <button onclick="expToggle('${c.id}')" class="btn-outline" style="flex:1;justify-content:center;font-size:.8rem;padding:.45rem .5rem">Lire plus</button>
+          ${own?`<button onclick="switchTab('formations')" style="flex:1;padding:.45rem;border-radius:.75rem;background:#10b981;color:white;border:none;cursor:pointer;font-weight:700;font-size:.8rem;display:flex;align-items:center;justify-content:center;gap:.3rem">📖 Accéder</button>`
+               :`<button onclick="buyModal('${c.id}','${c.title.replace(/'/g,"\\'")}',${c.price},'${c.currency}')" class="btn-accent" style="flex:1;justify-content:center;font-size:.8rem;padding:.45rem .5rem">🛒 Acheter</button>`}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function expToggle(id){const e=document.getElementById('exp-'+id);e.style.display=e.style.display==='none'?'block':'none';}
+function showPaySuccess(title){
+  const el=document.createElement('div');
+  el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:999;display:flex;align-items:center;justify-content:center;padding:1.5rem';
+  el.innerHTML=`<div style="background:white;border-radius:1.5rem;padding:2rem;max-width:360px;width:100%;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,.3)">
+    <div style="font-size:3rem;margin-bottom:.75rem">🎉</div>
+    <h2 style="font-size:1.3rem;font-weight:900;color:#1F2937;margin-bottom:.5rem">Félicitations !</h2>
+    <p style="color:#6b7280;font-size:.9rem;margin-bottom:.25rem">Votre achat est confirmé.</p>
+    <p style="color:#2563eb;font-weight:700;font-size:.9rem;margin-bottom:1.5rem">"${title}"</p>
+    <p style="color:#6b7280;font-size:.85rem;margin-bottom:1.25rem">Accédez à votre formation dans l'onglet <strong>Mes formations</strong></p>
+    <button onclick="this.closest('div[style*=fixed]').remove();switchTab('formations');" style="width:100%;padding:.85rem;background:#2563eb;color:white;border:none;border-radius:.875rem;font-weight:800;cursor:pointer;font-size:.95rem">📚 Voir mes formations</button>
+  </div>`;
+  document.body.appendChild(el);
+}
+function buyModal(id,title,price,currency){pendingCourse={id,title,price,currency};document.getElementById('pm-title').textContent=title;document.getElementById('pm-price').textContent=fmt(price,currency);document.getElementById('pay-modal').style.display='flex';}
+function closePayModal(){document.getElementById('pay-modal').style.display='none';pendingCourse=null;}
+
+async function confirmPay(){
+  if(!pendingCourse)return;
+  const course={...pendingCourse};
+
+  if(!CU?.id){
+    closePayModal();
+    toast('⚠️ Profil non synchronisé. Déconnectez-vous et reconnectez-vous.','err');
+    return;
+  }
+  setBtn('pay-btn','<span class="spin"></span>',true);
+
+  try{
+    // 1. Créer la commande en BDD (statut en_attente)
+    const{data:pur,error}=await withTimeout(sb.from('purchases').insert({
+      user_id:CU.id, course_id:course.id, amount:course.price,
+      currency:course.currency, status:'en_attente', payment_method:'paiementpro'
+    }).select().single());
+    if(error){
+      const msg=error.code==='42501'
+        ?'Session expirée. Reconnectez-vous.'
+        :`Erreur création de commande : ${error.message}`;
+      toast(msg,'err'); setBtn('pay-btn','⚡ Payer',false); return;
+    }
+
+    // 2. Appel PHP côté serveur → obtenir l'URL de redirection PaiementPro
+    const resp=await fetch('?action=init',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        amount:            Math.round(course.price),
+        purchase_id:       pur.id,
+        course_title:      course.title,
+        customer_email:    CU.email,
+        customer_first_name: CP?.first_name||'',
+        customer_last_name:  CP?.last_name||'',
+        customer_phone:    CP?.phone||'',
+      })
+    });
+    const result=await resp.json();
+    console.log('[PaiementPro/PHP] résultat:', result);
+
+    if(result.success && result.url){
+      closePayModal();
+      window.location=result.url; // Redirection vers la page de paiement
+    } else {
+      toast('Erreur paiement : '+(result.error||'Réessayez'),'err');
+      setBtn('pay-btn','⚡ Payer',false);
+    }
+  }catch(err){
+    toast(err.message||'Erreur paiement, réessayez','err');
+    setBtn('pay-btn','⚡ Payer',false);
+  }
+}
+
+// ── Dashboard: Mes formations ─────────────────────────
+async function loadMesFormations(){
+  const{data}=await sb.from('purchases').select('*,courses(*)').eq('user_id',CU.id).eq('status','complete').order('purchased_at',{ascending:false});
+  const ps=data||[];
+  document.getElementById('myf-count').textContent=`${ps.length} formation${ps.length!==1?'s':''} achetée${ps.length!==1?'s':''}`;
+  if(ps.length===0){document.getElementById('myf-grid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#9ca3af"><p style="font-size:1.05rem;margin-bottom:1rem">Aucune formation achetée.</p><button onclick="switchTab(\'bord\')" class="btn-primary">Voir les formations</button></div>';return;}
+  document.getElementById('myf-grid').innerHTML=ps.map(p=>{
+    const c=p.courses;if(!c)return'';
+    const d=new Date(p.purchased_at||p.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+    return`<div class="card fade-in" style="padding:1.25rem">
+      <div style="display:flex;gap:1rem;margin-bottom:1rem">
+        <div style="width:4.5rem;height:4.5rem;flex-shrink:0;background:linear-gradient(135deg,#2563EB,#1D4ED8);border-radius:.875rem;overflow:hidden;display:flex;align-items:center;justify-content:center">
+          ${c.cover_url?`<img src="${c.cover_url}" style="width:100%;height:100%;object-fit:cover"/>`:'<span style="font-size:1.5rem;opacity:.4">📚</span>'}
+        </div>
+        <div style="flex:1;min-width:0">
+          <h3 style="font-weight:800;color:#1F2937;font-size:.95rem;margin-bottom:.25rem">${c.title}</h3>
+          <p style="color:#2563EB;font-weight:700;font-size:.875rem">${fmt(p.amount,p.currency)}</p>
+          <p style="color:#9ca3af;font-size:.75rem;margin-top:.2rem">Acheté le ${d}</p>
+        </div>
+      </div>
+      <div style="display:flex;gap:.625rem">
+        ${c.file_url?`<a href="${c.file_url}" target="_blank" class="btn-primary" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">🔗 Consulter</a><a href="${c.file_url}" download target="_blank" class="btn-outline" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">⬇️ Télécharger</a>`:'<div style="flex:1;text-align:center;padding:.5rem;font-size:.82rem;color:#d97706;background:#fef3c7;border-radius:.75rem;font-weight:600">⏳ Fichier bientôt disponible</div>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Dashboard: Attestations ───────────────────────────
+async function loadAttestations(){
+  const{data}=await sb.from('certificates').select('*,courses(*)').eq('user_id',CU.id).order('issued_at',{ascending:false});
+  const cs=data||[];
+  document.getElementById('certs-count').textContent=`${cs.length} attestation${cs.length!==1?'s':''}`;
+  if(cs.length===0){document.getElementById('certs-grid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#9ca3af"><p style="font-size:2.5rem;margin-bottom:.75rem">🏆</p><p>Aucune attestation pour l\'instant.</p><p style="font-size:.85rem;margin-top:.5rem">Elles apparaîtront ici après validation par l\'admin.</p></div>';return;}
+  document.getElementById('certs-grid').innerHTML=cs.map(c=>{
+    const d=new Date(c.issued_at).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+    return`<div class="card fade-in" style="padding:1.5rem">
+      <div style="display:flex;gap:1rem;margin-bottom:1rem">
+        <div style="width:3.5rem;height:3.5rem;background:linear-gradient(135deg,#F59E0B,#D97706);border-radius:1rem;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0">🏆</div>
+        <div style="flex:1">
+          <h3 style="font-weight:800;color:#1F2937;font-size:.95rem;margin-bottom:.25rem">${c.courses?.title||'Formation'}</h3>
+          <p style="color:#9ca3af;font-size:.8rem">Délivré le ${d}</p>
+          ${c.message?`<p style="font-style:italic;color:#374151;font-size:.82rem;margin-top:.625rem;background:#fef9c3;padding:.625rem .875rem;border-radius:.75rem">"${c.message}"</p>`:''}
+        </div>
+      </div>
+      <div style="display:flex;gap:.625rem">
+        ${c.certificate_url?`<a href="${c.certificate_url}" target="_blank" class="btn-primary" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">📄 Voir</a><a href="${c.certificate_url}" download target="_blank" class="btn-outline" style="flex:1;justify-content:center;font-size:.82rem;padding:.5rem;text-decoration:none">⬇️ PDF</a>`:'<div style="flex:1;text-align:center;padding:.5rem;font-size:.82rem;color:#d97706;background:#fef3c7;border-radius:.75rem;font-weight:600">⏳ En cours de préparation</div>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Dashboard: Profil ─────────────────────────────────
+// BUG 2 FIX: toujours forcer un rechargement frais au lieu d'utiliser CP potentiellement périmé
+async function loadProfil(){
+  try{
+    await loadProfileData();
+    if(!CP)return;
+    const p=CP;
+    const[ic,lb,bg,co]=badgeInfo(p.badge_level);
+    const fn=p.first_name||'';
+    const ln=p.last_name||'';
+    const fullName=`${fn} ${ln}`.trim()||'Utilisateur';
+    document.getElementById('prof-name').textContent=fullName;
+    document.getElementById('info-name').textContent=fullName;
+    let email=FBU?.email||CU?.email||'';
+    document.getElementById('prof-email').textContent=email||'—';
+    document.getElementById('info-email').textContent=email||'—';
+    const pb=document.getElementById('prof-badge');
+    if(pb){pb.textContent=`${ic} ${lb}`;pb.style.background=bg;pb.style.color=co;}
+    const ib=document.getElementById('info-badge');
+    if(ib){ib.textContent=`${ic} ${lb}`;ib.style.background=bg;ib.style.color=co;}
+    document.getElementById('ref-code').textContent=p.referral_code||'—';
+    const solde=fmt(p.balance||0,p.currency);
+    document.getElementById('st-b').textContent=solde;
+    const infoSolde=document.getElementById('info-solde');
+    if(infoSolde)infoSolde.textContent=solde;
+    const birthEl=document.getElementById('info-birth');
+    const birthRow=document.getElementById('birth-row');
+    if(birthEl){
+      if(p.birth_date){
+        birthEl.textContent=new Date(p.birth_date).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+        if(birthRow)birthRow.style.background='#f0fdf4';
+      }else{
+        birthEl.innerHTML=`<input type="date" id="birth-input" style="border:1.5px solid #f59e0b;border-radius:.5rem;padding:.2rem .5rem;font-size:.8rem;color:#92400e" onchange="saveBirthDate(this.value)"/>`;
+        if(birthRow){birthRow.style.background='#fef3c7';birthRow.title='Obligatoire pour recevoir votre attestation';}
+      }
+    }
+    const av=document.getElementById('big-av');
+    if(av){
+      if(p.avatar_url)av.innerHTML=`<img src="${p.avatar_url}" style="width:100%;height:100%;object-fit:cover"/>`;
+      else av.textContent=((fn[0]||'')+(ln[0]||'')).toUpperCase()||'?';
+    }
+    const[{count:fc},{count:ac}]=await Promise.all([
+      sb.from('purchases').select('*',{count:'exact',head:true}).eq('user_id',CU.id).eq('status','complete'),
+      sb.from('certificates').select('*',{count:'exact',head:true}).eq('user_id',CU.id),
+    ]);
+    document.getElementById('st-f').textContent=fc||0;
+    document.getElementById('st-a').textContent=ac||0;
+    // Retrait intégré dans le profil — charger le solde et l'historique
+    loadRetrait();
+  }catch(e){
+    console.error('[loadProfil] erreur:',e?.message||e);
+  }
+}
+
+async function copyRef(){
+  const c=document.getElementById('ref-code').textContent;
+  if(!c||c==='...'||c==='—'){toast('Code non disponible','err');return;}
+  try{
+    await navigator.clipboard.writeText(c);
+    toast('Code copié !');
+  }catch(e){
+    try{
+      const ta=document.createElement('textarea');
+      ta.value=c;ta.style.cssText='position:fixed;opacity:0';
+      document.body.appendChild(ta);ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      toast('Code copié !');
+    }catch(_){toast('Impossible de copier (ouvrez depuis HTTPS)','err');}
+  }
+}
+async function saveBirthDate(val){
+  if(!val||!CU?.id)return;
+  try{
+    await withTimeout(sb.from('profiles').update({birth_date:val}).eq('id',CU.id));
+    CP={...CP,birth_date:val};
+    const birthEl=document.getElementById('info-birth');
+    const birthRow=document.getElementById('birth-row');
+    if(birthEl)birthEl.textContent=new Date(val).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+    if(birthRow)birthRow.style.background='#f0fdf4';
+    toast('Date de naissance enregistrée ✅');
+  }catch(e){toast('Erreur enregistrement','err');}
+}
+
+async function updateAvatar(input){
+  const file=input.files[0];
+  if(!file)return;
+  input.value='';
+  toast('Envoi en cours...');
+  try{
+    const fd=new FormData();
+    fd.append('file',file);
+    fd.append('upload_preset','afrotv_avatars');
+    const r=await fetch('https://api.cloudinary.com/v1_1/dx0dzt35e/image/upload',{method:'POST',body:fd});
+    const d=await r.json();
+    if(d.error)throw new Error(d.error.message);
+    await sb.from('profiles').update({avatar_url:d.secure_url}).eq('id',CU.id);
+    CP={...CP,avatar_url:d.secure_url};
+    const av=document.getElementById('big-av');
+    av.innerHTML=`<img src="${d.secure_url}" style="width:100%;height:100%;object-fit:cover"/>`;
+    toast('Photo mise à jour ! ✅');
+  }catch(e){
+    toast(e.message||'Erreur upload photo','err');
+  }
+}
+
+// ── Dashboard: Retrait ────────────────────────────────
+async function loadRetrait(){
+  if(CP)document.getElementById('bal-display').textContent=fmt(CP.balance||0,CP.currency||'XOF');
+  const{data:ws}=await sb.from('withdrawals').select('*').eq('user_id',CU.id).order('created_at',{ascending:false});
+  const mmap={mobile_money:'📱 Mobile Money',carte_bancaire:'💳 Carte bancaire',autre:'🔄 Autre'};
+  const smap={en_attente:['⏳','En attente','#fef3c7','#92400e'],en_cours:['🔄','En cours','#dbeafe','#1d4ed8'],complete:['✅','Complété','#d1fae5','#065f46'],rejete:['❌','Rejeté','#fee2e2','#991b1b']};
+  if(!ws||ws.length===0){document.getElementById('wd-hist').innerHTML='<p style="color:#9ca3af;text-align:center;padding:1.5rem">Aucun retrait effectué</p>';return;}
+  document.getElementById('wd-hist').innerHTML=ws.map(w=>{
+    const[ic,lb,bg,co]=smap[w.status]||smap.en_attente;
+    const d=new Date(w.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});
+    return`<div class="card fade-in" style="padding:1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.625rem"><div><div style="font-weight:700;color:#1F2937">${fmt(w.amount,w.currency)}</div><div style="font-size:.75rem;color:#9ca3af;margin-top:.2rem">${mmap[w.method]} • Demande du ${d}</div></div><span class="badge" style="background:${bg};color:${co}">${ic} ${lb}</span></div>`;
+  }).join('');
+}
+
+function switchWithdrawalMethod(){
+  const m=document.getElementById('wd-mth').value;
+  document.getElementById('wd-section-mm').style.display   =(m==='mobile_money')  ?'block':'none';
+  document.getElementById('wd-section-card').style.display =(m==='carte_bancaire')?'block':'none';
+  document.getElementById('wd-section-other').style.display=(m==='autre')         ?'block':'none';
+}
+
+async function doWithdrawal(){
+  if(wdInProgress)return;
+  wdInProgress=true;
+  const btn=document.getElementById('wd-submit-btn');
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span> Traitement…';}
+  try{
+  const amt=parseFloat(document.getElementById('wd-amt').value);
+  const mth=document.getElementById('wd-mth').value;
+  if(!amt||amt<1000){toast('Minimum : 1 000 FCFA','err');return;}
+  if(!CP||amt>CP.balance){toast('Solde insuffisant','err');return;}
+  let extra={};
+  if(mth==='mobile_money'){
+    const phone=document.getElementById('wd-phone').value.trim();
+    const cc=document.getElementById('wd-cc').value;
+    const op=document.getElementById('wd-op').value.trim();
+    if(!phone){toast('Numéro de téléphone requis','err');return;}
+    extra={phone_number:cc+phone,country_code:cc,operator:op||null};
+  }else if(mth==='carte_bancaire'){
+    const iban=document.getElementById('wd-iban').value.trim();
+    const bic=document.getElementById('wd-bic').value.trim();
+    const holder=document.getElementById('wd-iban-name').value.trim();
+    if(!iban){toast('IBAN requis','err');return;}
+    extra={iban:iban||null,bic:bic||null,account_holder:holder||null};
+  }else{
+    const om=document.getElementById('wd-other-method').value.trim();
+    const od=document.getElementById('wd-other-detail').value.trim();
+    if(!om||!od){toast('Moyen et identifiant requis','err');return;}
+    extra={other_method:om,other_detail:od};
+  }
+  const{error}=await sb.from('withdrawals').insert({
+    user_id:CU.id,amount:amt,currency:CP.currency||'XOF',method:mth,status:'en_attente',...extra
+  });
+  if(error){toast('Erreur lors de la demande','err');return;}
+  const newBal=(CP.balance||0)-amt;
+  await sb.from('profiles').update({balance:newBal}).eq('id',CU.id);
+  CP.balance=newBal;
+  toast('Demande envoyée ! Traitement sous 30 min.');
+  document.getElementById('wd-amt').value='';
+  loadRetrait();
+  }finally{
+    wdInProgress=false;
+    const btn=document.getElementById('wd-submit-btn');
+    if(btn){btn.disabled=false;btn.innerHTML='📤 Demander le retrait';}
+  }
+}
+
+// ── Tab switching ─────────────────────────────────────
+function switchTab(name){
+  document.querySelectorAll('.tab-panel').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.bottom-nav button').forEach(n=>n.classList.remove('active'));
+  const tabEl=document.getElementById('tab-'+name);
+  if(tabEl)tabEl.classList.add('active');
+  const bnav=document.getElementById('bnav-'+name);
+  if(bnav)bnav.classList.add('active');
+  document.getElementById('notif-panel').style.display='none';
+  if(name==='bord'){
+    loadBord();
+  } else if(name==='profil'){
+    loadProfil();
+  } else if(name==='recompenses'){
+    loadRecompensesTab('events');
+  } else if(!loaded[name]){
+    loaded[name]=true;
+    if(name==='formations')loadMesFormations();
+    if(name==='attestations')loadAttestations();
+    if(name==='retrait')loadRetrait();
+  }
+}
+
+// ── Notifications ─────────────────────────────────────
+async function loadNotifications(){
+  if(!CU)return;
+  const badge=document.getElementById('notif-badge');
+  const list=document.getElementById('notif-list');
+  const certKey=`rivo_cert_last_${CU.id}`;
+  const coursesKey=`rivo_courses_last_${CU.id}`;
+  const certLast=localStorage.getItem(certKey)||'2020-01-01T00:00:00Z';
+  const coursesLast=localStorage.getItem(coursesKey)||'2020-01-01T00:00:00Z';
+  const [{data:newCerts},{data:newCourses},{data:adminNotifs}]=await Promise.all([
+    sb.from('certificates').select('issued_at,courses(title)').eq('user_id',CU.id).gt('issued_at',certLast).order('issued_at',{ascending:false}),
+    sb.from('courses').select('title,created_at').eq('is_published',true).gt('created_at',coursesLast).order('created_at',{ascending:false}),
+    sb.from('notifications').select('id,title,message,created_at,sender').eq('user_id',CU.id).eq('is_read',false).order('created_at',{ascending:false})
+  ]);
+  let items=[];
+  // Type A: Attestations
+  (newCerts||[]).forEach(c=>{
+    const d=new Date(c.issued_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+    const title=c.courses?.title||'une formation';
+    items.push({ts:c.issued_at,summary:`🏆 Attestation disponible pour ${title}`,detail:`Attestation disponible pour <em>${title}</em> · ${d} · Consultez l'onglet Attests.`,bg:'#fef9c3',col:'#92400e'});
+  });
+  // Type B: Nouvelles formations publiées
+  (newCourses||[]).forEach(c=>{
+    const d=new Date(c.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+    items.push({ts:c.created_at,summary:`📚 Nouvelle formation : ${c.title}`,detail:`Nouvelle formation disponible : <em>${c.title}</em> · ${d} · Consultez l'onglet Formations`,bg:'#eff6ff',col:'#1d4ed8'});
+  });
+  // Type D: Notifications admin — ne PAS marquer is_read ici (persistant jusqu'à "Supprimer tout")
+  (adminNotifs||[]).forEach(n=>{
+    const d=new Date(n.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+    items.push({ts:n.created_at,summary:`📣 ${n.title}`,detail:`<strong>${n.title}</strong><br>${n.message}<div style="font-size:.7rem;color:#6b7280;margin-top:.35rem">${n.sender||'Support RIVO'} · ${d}</div>`,bg:'#f0fdf4',col:'#166634'});
+  });
+  const total=items.length;
+  if(total>0){badge.textContent=total;badge.style.display='flex';}else{badge.style.display='none';}
+  const emptyMsg='<p style="padding:1rem;text-align:center;color:#9ca3af;font-size:.875rem">Aucune nouvelle notification</p>';
+  if(total===0){list.innerHTML=emptyMsg;}
+  else{list.innerHTML=items.map(it=>`<div style="padding:.75rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.875rem;background:${it.bg};cursor:pointer" onclick="this.nextElementSibling&&(this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none')"><span style="font-weight:700;color:${it.col}">${it.summary}</span></div><div style="display:none;padding:.5rem 1rem 1rem;font-size:.85rem;color:${it.col};background:${it.bg};border-bottom:1px solid #f1f5f9">${it.detail}</div>`).join('');}
+  const pageList=document.getElementById('notif-page-list');
+  if(!pageList)return;
+  if(total===0){pageList.innerHTML='<p style="text-align:center;color:#9ca3af;padding:2rem;font-size:.95rem">Aucune nouvelle notification</p>';return;}
+  pageList.innerHTML='';
+  items.forEach(item=>{
+    const wrapper=document.createElement('div');
+    wrapper.style.cssText='margin-bottom:.75rem;border-radius:1rem;overflow:hidden;background:white;box-shadow:0 2px 8px rgba(0,0,0,.07)';
+    wrapper.innerHTML=`<div style="padding:.875rem 1rem;background:${item.bg};cursor:pointer;font-size:.875rem;font-weight:700;color:${item.col}" onclick="const d=this.nextElementSibling;d.style.display=d.style.display==='none'?'block':'none'">${item.summary}</div><div style="display:none;padding:.75rem 1rem;font-size:.875rem;color:${item.col};background:${item.bg}">${item.detail}</div>`;
+    pageList.appendChild(wrapper);
+  });
+}
+
+function toggleNotifPanel(){
+  const panel=document.getElementById('notif-panel');
+  if(panel.style.display==='none'||!panel.style.display){
+    panel.style.display='block';
+    loadNotifications();
+  }else{
+    panel.style.display='none';
+  }
+}
+
+function clearNotifications(){
+  if(CU?.id){
+    const now=new Date().toISOString();
+    localStorage.setItem(`rivo_cert_last_${CU.id}`,now);
+    localStorage.setItem(`rivo_courses_last_${CU.id}`,now);
+    sb.from('notifications').update({is_read:true}).eq('user_id',CU.id).eq('is_read',false).then(()=>{});
+  }
+  delete loaded.notif;
+  document.getElementById('notif-badge').style.display='none';
+  const msg='<p style="padding:1rem;text-align:center;color:#9ca3af;font-size:.875rem">Tout supprimé ✓</p>';
+  document.getElementById('notif-list').innerHTML=msg;
+  const pl=document.getElementById('notif-page-list');if(pl)pl.innerHTML=msg;
+}
+
+// ── Gamification ──────────────────────────────────────
+async function checkDailyLogin(){
+  if(!CU||!CP)return;
+  const today=new Date().toISOString().split('T')[0];
+  if(CP.last_login_date===today)return;
+  const newPts=(CP.points||0)+5;
+  await sb.from('profiles').update({points:newPts,last_login_date:today}).eq('id',CU.id);
+  CP.points=newPts; CP.last_login_date=today;
+  const ptsEl=document.getElementById('st-pts');if(ptsEl)ptsEl.textContent=newPts;
+  const profPts=document.getElementById('prof-points');if(profPts)profPts.textContent=newPts+' pts';
+  const bar=document.getElementById('prof-points-bar');if(bar)bar.style.width=Math.min(100,newPts/10)+'%';
+  const lbl=document.getElementById('prof-points-label');if(lbl)lbl.textContent=`${newPts} / 1000 pts pour accéder aux événements`;
+}
+
+async function addPoints(uid, amount){
+  const {data:p}=await sb.from('profiles').select('points').eq('id',uid).single();
+  await sb.from('profiles').update({points:(p?.points||0)+amount}).eq('id',uid);
+  if(uid===CU?.id && CP){CP.points=(p?.points||0)+amount;}
+}
+
+function openRecompenses(){
+  switchTab('recompenses');
+}
+
+let currentApplyEventId=null;
+
+async function loadRecompensesTab(tab){
+  // Highlight active tab
+  ['events','mine','points'].forEach(t=>{
+    const btn=document.getElementById('rt-'+t);
+    if(btn){
+      btn.style.fontWeight=tab===t?'700':'500';
+      btn.style.borderBottom=tab===t?'3px solid #f59e0b':'3px solid transparent';
+      btn.style.color=tab===t?'#1F2937':'#6b7280';
+    }
+  });
+  const cont=document.getElementById('recompenses-content');
+  cont.innerHTML='<p style="text-align:center;color:#9ca3af;padding:2rem">Chargement...</p>';
+  if(tab==='events'){
+    if(!CU){cont.innerHTML='<p style="text-align:center;color:#9ca3af;padding:2rem">Connectez-vous pour voir les événements.</p>';return;}
+    const [{data:evts},{data:myApps}]=await Promise.all([
+      sb.from('events').select('*').eq('is_active',true).order('created_at',{ascending:false}),
+      sb.from('user_events').select('event_id,status').eq('user_id',CU.id)
+    ]);
+    if(!evts||evts.length===0){cont.innerHTML='<p style="text-align:center;color:#9ca3af;padding:2rem">Aucun événement disponible pour le moment.</p>';return;}
+    const appliedMap=Object.fromEntries((myApps||[]).map(a=>[a.event_id,a.status]));
+    const myPts=CP?.points||0;
+    cont.innerHTML=(evts||[]).map(e=>{
+      const eligible=myPts>=(e.points_required||1000);
+      const pct=Math.min(100,Math.round((myPts/(e.points_required||1000))*100));
+      const d=e.event_date?new Date(e.event_date).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}):'—';
+      const appStatus=appliedMap[e.id];
+      let joinBtn='';
+      if(appStatus){
+        const label=appStatus==='approved'||appStatus==='selected'?'✅ Approuvé':appStatus==='rejected'?'❌ Rejeté':'✅ Demande envoyée';
+        joinBtn=`<button disabled style="background:#e5e7eb;color:#6b7280;border:none;border-radius:.75rem;padding:.625rem 1rem;font-weight:700;font-size:.8rem;cursor:not-allowed">${label}</button>`;
+      }else if(eligible){
+        joinBtn=`<button onclick="openEventApply('${e.id}','${e.title.replace(/'/g,'\\\'')}')" style="background:linear-gradient(135deg,#f59e0b,#ef4444);color:white;border:none;border-radius:.75rem;padding:.625rem 1rem;font-weight:700;font-size:.8rem;cursor:pointer">🎉 Rejoindre cet événement</button>`;
+      }
+      return `<div style="background:white;border-radius:1rem;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08);margin-bottom:1rem">
+        ${e.image_url?`<img src="${e.image_url}" style="width:100%;height:140px;object-fit:cover"/>`:''}
+        <div style="padding:1rem">
+          <div style="font-weight:800;font-size:1rem;margin-bottom:.35rem">${e.title}</div>
+          ${e.description?`<p style="font-size:.85rem;color:#6b7280;margin-bottom:.75rem">${e.description}</p>`:''}
+          <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem">
+            <span style="background:#fef3c7;color:#92400e;border-radius:9999px;padding:.2rem .75rem;font-size:.75rem;font-weight:700">🎁 ${e.reward||'Récompense'}</span>
+            ${e.location?`<span style="background:#eff6ff;color:#1d4ed8;border-radius:9999px;padding:.2rem .75rem;font-size:.75rem">📍 ${e.location}</span>`:''}
+            <span style="background:#f0fdf4;color:#166534;border-radius:9999px;padding:.2rem .75rem;font-size:.75rem">📅 ${d}</span>
+          </div>
+          ${e.conditions?`<div style="font-size:.8rem;color:#6b7280;margin-bottom:.75rem">📋 Conditions : ${e.conditions}</div>`:''}
+          <div style="margin-bottom:.75rem">
+            <div style="display:flex;justify-content:space-between;font-size:.8rem;color:#6b7280;margin-bottom:.3rem">
+              <span>⭐ ${myPts} / ${e.points_required||1000} pts</span>
+              <span>${pct}%</span>
+            </div>
+            <div style="background:#f1f5f9;border-radius:9999px;height:.5rem;overflow:hidden">
+              <div style="height:100%;background:linear-gradient(90deg,#f59e0b,#ef4444);border-radius:9999px;width:${pct}%;transition:width .5s"></div>
+            </div>
+            ${!eligible?`<p style="font-size:.75rem;color:#ef4444;margin-top:.3rem">Il vous manque ${(e.points_required||1000)-myPts} pts</p>`:''}
+          </div>
+          <div style="display:flex;justify-content:flex-end">${joinBtn}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }else if(tab==='mine'){
+    if(!CU){cont.innerHTML='<p style="text-align:center;color:#9ca3af;padding:2rem">Connectez-vous.</p>';return;}
+    const {data:ue}=await sb.from('user_events').select('*,events(title,reward,event_date,location,image_url,points_required)').eq('user_id',CU.id).order('selected_at',{ascending:false});
+    if(!ue||ue.length===0){cont.innerHTML='<p style="text-align:center;color:#9ca3af;padding:2rem">Vous n\'avez postulé à aucun événement pour l\'instant.</p>';return;}
+    const statusLabel={pending:'⏳ Demande envoyée',selected:'✅ Approuvé',approved:'✅ Approuvé',rejected:'❌ Rejeté'};
+    const statusColor={pending:'#f59e0b',selected:'#059669',approved:'#059669',rejected:'#ef4444'};
+    cont.innerHTML=(ue||[]).map(u=>{
+      const e=u.events||{};
+      const d=e.event_date?new Date(e.event_date).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}):'—';
+      const st=u.status||'pending';
+      const approved=st==='selected'||st==='approved';
+      return `<div style="background:white;border-radius:1rem;padding:1rem;box-shadow:0 2px 8px rgba(0,0,0,.07);margin-bottom:.75rem;border-left:4px solid ${statusColor[st]||'#9ca3af'}">
+        <div style="font-weight:800">${e.title||'—'}</div>
+        <div style="font-size:.85rem;color:#6b7280;margin-top:.25rem">🎁 ${e.reward||'—'} · 📅 ${d}${e.location?` · 📍 ${e.location}`:''}</div>
+        <div style="margin-top:.5rem;font-size:.8rem;font-weight:700;color:${statusColor[st]||'#9ca3af'}">${statusLabel[st]||st}</div>
+        ${approved?`<div style="margin-top:.4rem;font-size:.8rem;color:#059669">Nous vous contacterons via WhatsApp ou Gmail.</div>`:''}
+        ${st==='rejected'&&u.rejection_reason?`<div style="margin-top:.4rem;font-size:.8rem;color:#ef4444">Motif : ${u.rejection_reason}</div>`:''}
+      </div>`;
+    }).join('');
+  }else{
+    // Mes points
+    const pts=CP?.points||0;
+    const pct=Math.min(100,Math.round(pts/10));
+    cont.innerHTML=`
+      <div style="background:white;border-radius:1rem;padding:1.5rem;box-shadow:0 2px 12px rgba(0,0,0,.08);margin-bottom:1.25rem;text-align:center">
+        <div style="font-size:.85rem;color:#6b7280;margin-bottom:.5rem">Vos points RIVO</div>
+        <div style="font-size:3rem;font-weight:900;color:#f59e0b">${pts.toLocaleString('fr-FR')}</div>
+        <div style="font-size:.85rem;color:#9ca3af;margin-bottom:1rem">points</div>
+        <div style="background:#f1f5f9;border-radius:9999px;height:.75rem;overflow:hidden;margin-bottom:.4rem">
+          <div style="height:100%;background:linear-gradient(90deg,#f59e0b,#ef4444);border-radius:9999px;width:${pct}%;transition:width .5s"></div>
+        </div>
+        <div style="font-size:.8rem;color:#9ca3af">${pts} / 1000 pts pour accéder aux événements</div>
+      </div>
+      <div style="background:white;border-radius:1rem;padding:1.25rem;box-shadow:0 2px 8px rgba(0,0,0,.07);margin-bottom:1rem">
+        <h3 style="font-weight:800;font-size:1rem;color:#1F2937;margin-bottom:1rem">💡 Comment gagner des points ?</h3>
+        <div style="display:flex;flex-direction:column;gap:.625rem">
+          ${[['⭐ +10 pts','Achat d\'une formation'],['⭐ +10 pts','Réception d\'une attestation'],['⭐ +20 pts','Votre filleul achète une formation'],['⭐ +5 pts','Connexion quotidienne'],['⭐ +500 pts','Vidéo de recommandation approuvée']].map(([pts,desc])=>`
+          <div style="display:flex;align-items:center;gap:.875rem;padding:.75rem;background:#f8fafc;border-radius:.75rem">
+            <span style="font-weight:800;color:#f59e0b;white-space:nowrap;font-size:.9rem">${pts}</span>
+            <span style="font-size:.875rem;color:#374151">${desc}</span>
+          </div>`).join('')}
+        </div>
+      </div>
+      <div style="background:linear-gradient(135deg,#f3e8ff,#ede9fe);border:2px solid #ddd6fe;border-radius:1rem;padding:1.25rem">
+        <h3 style="font-weight:800;font-size:1rem;color:#4c1d95;margin-bottom:.5rem">🎬 Soumettre une vidéo — +500 pts</h3>
+        <p style="font-size:.85rem;color:#5b21b6;margin-bottom:1rem;line-height:1.6">
+          Faites une vidéo où vous <strong>présentez et recommandez l'application RIVO</strong>.
+          Publiez-la sur YouTube, TikTok ou Instagram, copiez le lien et collez-le ici.
+          Si notre équipe approuve votre vidéo, vous recevez <strong style="color:#f59e0b">+500 points</strong> automatiquement ! 🎉
+        </p>
+        <input type="url" id="video-url-input" placeholder="https://youtube.com/... ou https://tiktok.com/..."
+          style="width:100%;border:2px solid #ddd6fe;border-radius:.75rem;padding:.75rem;
+          font-size:.875rem;margin-bottom:.75rem;box-sizing:border-box;font-family:'Inter',sans-serif;
+          outline:none;background:white"/>
+        <div id="video-submit-msg" style="font-size:.85rem;color:#059669;display:none;margin-bottom:.75rem;font-weight:600;padding:.75rem;background:#d1fae5;border-radius:.75rem"></div>
+        <button onclick="submitVideo()" style="width:100%;background:linear-gradient(135deg,#7c3aed,#4f46e5);
+          color:white;border:none;border-radius:.75rem;padding:.875rem;font-weight:700;cursor:pointer;
+          font-size:.9rem;transition:opacity .2s">
+          📤 Envoyer ma vidéo
+        </button>
+      </div>`;
+  }
+}
+
+function openEventApply(eventId,eventTitle){
+  currentApplyEventId=eventId;
+  document.getElementById('apply-event-title').textContent='Événement : '+eventTitle;
+  document.getElementById('apply-name').value=`${CP?.first_name||''} ${CP?.last_name||''}`.trim();
+  document.getElementById('apply-whatsapp').value='';
+  document.getElementById('apply-country').value='';
+  document.getElementById('apply-msg').style.display='none';
+  document.getElementById('event-apply-popup').style.display='flex';
+}
+
+async function submitEventApplication(){
+  const whatsapp=document.getElementById('apply-whatsapp').value.trim();
+  const country=document.getElementById('apply-country').value.trim();
+  if(!whatsapp){toast('WhatsApp requis.','err');return;}
+  if(!CU){toast('Connectez-vous.','err');return;}
+  const {error}=await sb.from('user_events').insert({user_id:CU.id,event_id:currentApplyEventId,whatsapp,country,status:'pending'});
+  if(error){toast('Erreur. Réessayez.','err');return;}
+  document.getElementById('apply-msg').style.display='block';
+  document.getElementById('apply-msg').textContent='Merci pour votre participation. Vous serez notifié si vous êtes sélectionné.';
+  setTimeout(()=>{
+    document.getElementById('event-apply-popup').style.display='none';
+    loadRecompensesTab('events');
+  },2500);
+}
+
+async function submitVideo(){
+  if(!CU){toast('Connectez-vous pour soumettre une vidéo.','err');return;}
+  const urlEl=document.getElementById('video-url-input');
+  const msgEl=document.getElementById('video-submit-msg');
+  const url=urlEl?.value.trim();
+  if(!url){toast('Entrez un lien YouTube/TikTok valide.','err');return;}
+  const {error}=await sb.from('recommendation_videos').insert({user_id:CU.id,video_url:url});
+  if(error){toast('Erreur. Réessayez.','err');return;}
+  if(msgEl){msgEl.style.display='block';msgEl.textContent='✅ Vidéo soumise ! Elle sera examinée sous peu. +500 pts si approuvée.';}
+  if(urlEl) urlEl.value='';
+  toast('Vidéo soumise ! En attente de validation.');
+}
+
+// ── Tutoriel guidé ────────────────────────────────────
+const _tutSteps = [
+  {icon:'👋', title:'Bienvenue sur RIVO !', desc:'Découvrez les formations disponibles sur le Tableau de bord. Apprenez à votre rythme et obtenez une attestation officielle.', tab:'bord'},
+  {icon:'🛒', title:'Achetez une formation', desc:'Cliquez sur "Acheter" sur n\'importe quelle formation. Suivez les instructions de paiement sécurisé via PaiementPro (Mobile Money, carte…).', tab:'bord'},
+  {icon:'📖', title:'Mes formations', desc:'Retrouvez toutes vos formations achetées dans l\'onglet "Mes formations". Accédez aux contenus quand vous voulez.', tab:'formations'},
+  {icon:'🏆', title:'Attestations', desc:'Après validation par notre équipe, vous recevrez votre attestation officielle RIVO directement sur votre profil. Consultez-la à tout moment.', tab:'profil'},
+  {icon:'🎁', title:'Récompenses', desc:'Cumulez des points et participez aux événements exclusifs : Visa, Moto, Voiture, Emploi, Voyage… Vos efforts sont récompensés !', tab:'recompenses'},
+  {icon:'👤', title:'Votre Profil', desc:'Gérez votre profil, consultez votre solde FCFA, vos points et effectuez des demandes de retrait directement depuis l\'onglet Profil.', tab:'profil'},
+  {icon:'🤝', title:'Parrainage — 1 000 FCFA', desc:'Partagez votre code unique à vos amis. Pour chaque ami qui achète une formation, vous gagnez 1 000 FCFA directement sur votre solde !', tab:'profil'},
+];
+let _tutIdx = 0;
+
+function startTutorial(){
+  _tutIdx = 0;
+  _renderTutStep();
+  document.getElementById('tutorial-overlay').style.display = 'flex';
+}
+function skipTutorial(){
+  document.getElementById('tutorial-overlay').style.display = 'none';
+  localStorage.setItem('rivo_tutorial_done', '1');
+}
+function tutStep(dir){
+  _tutIdx = Math.max(0, Math.min(_tutSteps.length - 1, _tutIdx + dir));
+  _renderTutStep();
+  if(_tutIdx === _tutSteps.length - 1 && dir > 0){
+    // Last step shown — mark as done when they click finish
+    document.getElementById('tut-next').textContent = '✅ Terminer';
+    document.getElementById('tut-next').onclick = skipTutorial;
+  }
+}
+function _renderTutStep(){
+  const s = _tutSteps[_tutIdx];
+  document.getElementById('tut-icon').textContent = s.icon;
+  document.getElementById('tut-title').textContent = s.title;
+  document.getElementById('tut-desc').textContent = s.desc;
+  document.getElementById('tut-count').textContent = `${_tutIdx+1} / ${_tutSteps.length}`;
+  document.getElementById('tut-progress').style.width = `${Math.round((_tutIdx+1)/_tutSteps.length*100)}%`;
+  document.getElementById('tut-prev').style.display = _tutIdx > 0 ? 'block' : 'none';
+  const nextBtn = document.getElementById('tut-next');
+  nextBtn.textContent = _tutIdx < _tutSteps.length - 1 ? 'Suivant →' : '✅ Terminer';
+  nextBtn.onclick = _tutIdx < _tutSteps.length - 1 ? () => tutStep(1) : skipTutorial;
+  // Navigate to the relevant tab if on dashboard
+  if(document.getElementById('page-dashboard')?.classList.contains('active') ||
+     document.getElementById('tab-bord')){
+    if(s.tab) switchTab(s.tab);
+  }
+}
+function checkShowTutorial(){
+  if(!localStorage.getItem('rivo_tutorial_done') && CU){
+    setTimeout(() => startTutorial(), 1200);
+  }
+}
+
+// ── PWA ────────────────────────────────────────────────
+let _deferredPrompt;
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  });
+}
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault(); _deferredPrompt=e;
+  const b=document.getElementById('pwa-banner');
+  if(b) b.style.display='flex';
+});
+function installPWA(){
+  if(!_deferredPrompt)return;
+  _deferredPrompt.prompt();
+  _deferredPrompt.userChoice.then(()=>{
+    _deferredPrompt=null;
+    const b=document.getElementById('pwa-banner');
+    if(b) b.style.display='none';
+  });
+}
+window.addEventListener('appinstalled',()=>{
+  const b=document.getElementById('pwa-banner');
+  if(b) b.style.display='none';
+});
+
+
+</script>
+
+<!-- Event Application Popup -->
+<div id="event-apply-popup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:white;border-radius:1.25rem;padding:1.5rem;width:90%;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,.25)">
+    <h3 style="font-weight:800;font-size:1.05rem;color:#1F2937;margin-bottom:.4rem">🎉 Rejoindre l'événement</h3>
+    <p id="apply-event-title" style="font-size:.85rem;color:#6b7280;margin-bottom:1.25rem"></p>
+    <div style="display:flex;flex-direction:column;gap:.875rem;margin-bottom:1.25rem">
+      <div>
+        <label style="display:block;font-size:.8rem;font-weight:700;color:#374151;margin-bottom:.3rem">Nom complet</label>
+        <input id="apply-name" type="text" readonly style="width:100%;border:1.5px solid #e5e7eb;border-radius:.625rem;padding:.625rem;font-size:.875rem;background:#f8fafc;box-sizing:border-box;font-family:inherit"/>
+      </div>
+      <div>
+        <label style="display:block;font-size:.8rem;font-weight:700;color:#374151;margin-bottom:.3rem">Numéro WhatsApp *</label>
+        <input id="apply-whatsapp" type="tel" placeholder="+22900000000" style="width:100%;border:1.5px solid #e5e7eb;border-radius:.625rem;padding:.625rem;font-size:.875rem;box-sizing:border-box;font-family:inherit;outline:none"/>
+      </div>
+      <div>
+        <label style="display:block;font-size:.8rem;font-weight:700;color:#374151;margin-bottom:.3rem">Pays</label>
+        <input id="apply-country" type="text" placeholder="Ex: Bénin" style="width:100%;border:1.5px solid #e5e7eb;border-radius:.625rem;padding:.625rem;font-size:.875rem;box-sizing:border-box;font-family:inherit;outline:none"/>
+      </div>
+    </div>
+    <div id="apply-msg" style="display:none;font-size:.85rem;color:#059669;font-weight:600;margin-bottom:.875rem;text-align:center;line-height:1.5"></div>
+    <div style="display:flex;gap:.75rem">
+      <button onclick="submitEventApplication()" style="flex:1;background:linear-gradient(135deg,#f59e0b,#ef4444);color:white;border:none;border-radius:.75rem;padding:.75rem;font-weight:700;cursor:pointer;font-size:.875rem">Envoyer ma candidature</button>
+      <button onclick="document.getElementById('event-apply-popup').style.display='none'" style="flex:1;background:#f1f5f9;border:none;border-radius:.75rem;padding:.75rem;font-weight:600;cursor:pointer;color:#374151;font-size:.875rem">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tutorial Overlay -->
+<div id="tutorial-overlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.85);z-index:9000;align-items:flex-end;justify-content:center;padding:1rem 1rem 6rem">
+  <div style="background:white;border-radius:1.5rem;width:100%;max-width:480px;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,.4);animation:slideUp .35s ease">
+    <!-- Progress bar -->
+    <div style="height:4px;background:#e5e7eb">
+      <div id="tut-progress" style="height:100%;background:linear-gradient(90deg,#2563EB,#60a5fa);transition:width .4s ease;width:14%"></div>
+    </div>
+    <div style="padding:1.75rem">
+      <!-- Icon + step count -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+        <div id="tut-icon" style="width:3.5rem;height:3.5rem;border-radius:1rem;background:linear-gradient(135deg,#dbeafe,#bfdbfe);display:flex;align-items:center;justify-content:center;font-size:1.75rem">👋</div>
+        <span id="tut-count" style="font-size:.8rem;font-weight:700;color:#9ca3af;background:#f1f5f9;padding:.3rem .875rem;border-radius:9999px">1 / 7</span>
+      </div>
+      <h2 id="tut-title" style="font-size:1.3rem;font-weight:900;color:#1F2937;margin-bottom:.5rem">Bienvenue sur RIVO !</h2>
+      <p id="tut-desc" style="font-size:.9rem;color:#6b7280;line-height:1.7;margin-bottom:1.5rem">Découvrez les formations disponibles sur le Tableau de bord et commencez votre parcours.</p>
+      <!-- Buttons -->
+      <div style="display:flex;gap:.75rem">
+        <button onclick="skipTutorial()" style="flex:1;padding:.75rem;border-radius:.875rem;border:2px solid #e5e7eb;background:none;color:#9ca3af;font-weight:600;cursor:pointer;font-size:.875rem">Ignorer</button>
+        <button id="tut-prev" onclick="tutStep(-1)" style="padding:.75rem 1.25rem;border-radius:.875rem;border:2px solid #e5e7eb;background:none;color:#374151;font-weight:700;cursor:pointer;display:none">←</button>
+        <button id="tut-next" onclick="tutStep(1)" style="flex:2;padding:.75rem;border-radius:.875rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);color:white;border:none;font-weight:700;cursor:pointer;font-size:.875rem">Suivant →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PWA Install Banner -->
+<div id="pwa-banner" style="display:none;position:fixed;bottom:5rem;left:1rem;right:1rem;
+  background:linear-gradient(135deg,#1e3a8a,#2563EB);color:white;border-radius:1.25rem;
+  padding:1rem 1.25rem;align-items:center;gap:.875rem;z-index:200;
+  box-shadow:0 8px 32px rgba(37,99,235,.45);animation:slideUp .4s ease">
+  <div style="font-size:2rem;flex-shrink:0">📲</div>
+  <div style="flex:1">
+    <div style="font-weight:800;font-size:.95rem">Installer RIVO</div>
+    <div style="font-size:.78rem;opacity:.85;margin-top:.1rem">Accès rapide depuis votre écran d'accueil</div>
+  </div>
+  <button onclick="installPWA()" style="background:white;color:#1e3a8a;border:none;
+    border-radius:.75rem;padding:.5rem 1.1rem;font-weight:800;cursor:pointer;font-size:.85rem;
+    flex-shrink:0;transition:transform .15s" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+    Installer
+  </button>
+  <button onclick="document.getElementById('pwa-banner').style.display='none'"
+    style="background:none;border:none;color:rgba(255,255,255,.75);cursor:pointer;font-size:1.3rem;
+    padding:.2rem;flex-shrink:0;line-height:1">✕</button>
+</div>
+
+
+<!-- ── Legal Modal ── -->
+<div id="legal-modal" onclick="if(event.target===this)closeLegal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:8000;overflow-y:auto;padding:1rem 1rem 3rem">
+  <div style="max-width:800px;margin:0 auto;background:white;border-radius:1.5rem;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,.4);animation:slideUp .3s ease">
+    <div style="background:linear-gradient(135deg,#1e3a8a,#2563EB);color:white;padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:1">
+      <h2 id="legal-modal-title" style="font-size:1.1rem;font-weight:800;margin:0">RIVO</h2>
+      <button onclick="closeLegal()" style="background:rgba(255,255,255,.2);border:none;color:white;border-radius:.75rem;padding:.35rem .9rem;cursor:pointer;font-size:1.2rem;font-weight:700;line-height:1">✕</button>
+    </div>
+    <div id="legal-modal-body" style="padding:1.5rem;font-family:'Inter',sans-serif"></div>
+  </div>
+</div>
+<script>
+const _legalContent={
+  about:  {title:'📚 \u00c0 propos de RIVO',html:`<div class="section">
+    <h2>📖 Notre histoire</h2>
+    <p>RIVO est né d'une vision : celle de <strong>Martial Gbesso</strong>, un entrepreneur béninois passionné par l'éducation et la technologie.</p>
+    <p>Face au constat que l'accès à des formations de qualité reste difficile pour de nombreux Africains, Martial a décidé de créer une plateforme qui démocratise l'apprentissage en ligne. RIVO a été conçu pour être simple, accessible et adapté aux besoins réels des apprenants africains.</p>
+  </div>
+
+  <div class="section">
+    <h2>🎯 Notre mission</h2>
+    <p><strong>Rendre le savoir accessible à tous, partout.</strong></p>
+    <p>Nous croyons que l'éducation est le levier le plus puissant pour transformer des vies, créer des opportunités professionnelles et bâtir un avenir meilleur. Avec RIVO, chacun peut apprendre à son rythme, développer ses compétences et obtenir des attestations reconnues pour valoriser son parcours.</p>
+  </div>
+
+  <div class="section">
+    <h2>🌍 Notre vision</h2>
+    <p>Devenir la <strong>référence de la formation en ligne en Afrique francophone</strong>. Nous voulons créer un écosystème où :</p>
+    <div class="offers" style="margin-top:.75rem">
+      <div class="offer-item"><span class="offer-icon">📚</span><span class="offer-text">Les apprenants trouvent des formations de qualité adaptées à leurs besoins</span></div>
+      <div class="offer-item"><span class="offer-icon">🏆</span><span class="offer-text">Les efforts sont récompensés par des attestations officielles</span></div>
+      <div class="offer-item"><span class="offer-icon">⭐</span><span class="offer-text">La fidélité est valorisée par des points et des récompenses exceptionnelles</span></div>
+      <div class="offer-item"><span class="offer-icon">🤝</span><span class="offer-text">Le partage profite à toute la communauté via le parrainage</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>💡 Nos valeurs</h2>
+    <div class="values-grid">
+      <div class="value-card"><strong>📚 Accessibilité</strong><span>Des formations abordables, accessibles depuis un simple téléphone. Pas besoin d'être un expert pour apprendre.</span></div>
+      <div class="value-card"><strong>🎯 Qualité</strong><span>Des contenus soigneusement sélectionnés. Chaque formation apporte des compétences concrètes.</span></div>
+      <div class="value-card"><strong>💡 Innovation</strong><span>Une plateforme moderne avec badges progressifs, points de fidélité et récompenses uniques.</span></div>
+      <div class="value-card"><strong>🤝 Communauté</strong><span>Le parrainage permet de grandir ensemble. Chaque filleul qui apprend fait gagner son parrain.</span></div>
+      <div class="value-card"><strong>🏆 Mérite</strong><span>Les plus actifs sont récompensés : Visa, Moto, Voiture, Emploi, Voyage… vos efforts paient.</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>✅ Ce que nous offrons</h2>
+    <div class="offers">
+      <div class="offer-item"><span class="offer-icon">📚</span><span class="offer-text"><strong>200+ formations</strong> dans de nombreux domaines : développement web, marketing digital, graphisme, Excel, langues, entrepreneuriat et bien plus.</span></div>
+      <div class="offer-item"><span class="offer-icon">🏆</span><span class="offer-text"><strong>Attestations officielles</strong> : chaque formation validée donne droit à une attestation RIVO reconnue.</span></div>
+      <div class="offer-item"><span class="offer-icon">💰</span><span class="offer-text"><strong>Parrainage lucratif</strong> : gagnez 1 000 FCFA pour chaque filleul qui achète une formation.</span></div>
+      <div class="offer-item"><span class="offer-icon">⭐</span><span class="offer-text"><strong>Points de fidélité</strong> : cumulez des points et participez à des événements avec des récompenses exceptionnelles.</span></div>
+      <div class="offer-item"><span class="offer-icon">📞</span><span class="offer-text"><strong>Support réactif</strong> : une équipe à votre écoute, réponse sous 24 heures.</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🏅 Les badges RIVO</h2>
+    <p>Plus vous apprenez, plus vous évoluez !</p>
+    <div class="badge-row">
+      <div class="badge">🌱 Débutant — 0 formation</div>
+      <div class="badge">🥉 Bronze — 5+ formations</div>
+      <div class="badge">🥈 Argent — 10+ formations</div>
+      <div class="badge">🥇 Or — 20+ formations</div>
+      <div class="badge">💎 Diamant — 50+ formations</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>📬 Contact</h2>
+    <div class="contact-box">
+      <p>📧 <strong>assistancerivo@gmail.com</strong></p>
+      <p>📞 <strong>+229 01 45 91 61 77</strong></p>
+      <p style="margin-top:.75rem;font-size:.85rem;color:#3b82f6">⏱️ Réponse sous 24 heures — disponibles 7j/7</p>
+    </div>
+  </div>`},
+  privacy:{title:'\ud83d\udd12 Politique de confidentialit\u00e9',html:`<div class="toc">
+    <h3>📋 Table des matières</h3>
+    <ol>
+      <li><a href="#intro">Introduction</a></li>
+      <li><a href="#qui">Qui sommes-nous ?</a></li>
+      <li><a href="#donnees">Données collectées</a></li>
+      <li><a href="#usage">Comment nous utilisons vos données</a></li>
+      <li><a href="#droits">Vos droits</a></li>
+      <li><a href="#mineurs">Protection des mineurs</a></li>
+      <li><a href="#modifs">Modifications</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ol>
+  </div>
+
+  <div class="section" id="intro">
+    <h2>1. Introduction</h2>
+    <p>La confidentialité de nos utilisateurs est une priorité absolue pour RIVO. Cette politique explique de manière transparente comment nous collectons, utilisons et protégeons vos informations personnelles lorsque vous utilisez notre plateforme de formation.</p>
+    <div class="highlight"><p>En créant un compte sur RIVO, vous acceptez les pratiques décrites dans ce document. Nous vous invitons à le lire attentivement.</p></div>
+  </div>
+
+  <div class="section" id="qui">
+    <h2>2. Qui sommes-nous ?</h2>
+    <p>RIVO est une plateforme de formation en ligne fondée par <strong>Martial Gbesso</strong>, un entrepreneur passionné par l'éducation et la technologie.</p>
+    <p><strong>Notre mission :</strong> rendre le savoir accessible à tous, partout en Afrique et dans le monde.</p>
+    <p><strong>Contact :</strong><br>📧 assistancerivo@gmail.com<br>📞 +229 01 45 91 61 77</p>
+  </div>
+
+  <div class="section" id="donnees">
+    <h2>3. Données collectées</h2>
+    <h3>3.1 Données que vous nous fournissez directement</h3>
+    <p><strong>À l'inscription :</strong></p>
+    <ul>
+      <li>Nom et prénom</li>
+      <li>Adresse email</li>
+      <li>Date de naissance</li>
+      <li>Mot de passe (crypté — nous n'y avons jamais accès)</li>
+      <li>Code de parrainage (optionnel)</li>
+    </ul>
+    <p><strong>Lors de l'utilisation :</strong></p>
+    <ul>
+      <li>Photo de profil (optionnelle)</li>
+      <li>Numéro de téléphone (pour les retraits)</li>
+      <li>Numéro WhatsApp (pour les événements)</li>
+      <li>Messages envoyés au support</li>
+    </ul>
+    <h3>3.2 Données collectées automatiquement</h3>
+    <ul>
+      <li>Adresse IP</li>
+      <li>Type d'appareil et navigateur</li>
+      <li>Pages visitées et actions effectuées</li>
+      <li>Date et heure des connexions</li>
+      <li>Achats et formations consultées</li>
+    </ul>
+    <h3>3.3 Données de paiement</h3>
+    <div class="highlight"><p>Les transactions sont entièrement gérées par <strong>PaiementPro (Xpaye)</strong>. RIVO ne stocke ni ne voit jamais vos données bancaires, numéros de carte ou identifiants Mobile Money.</p></div>
+  </div>
+
+  <div class="section" id="usage">
+    <h2>4. Comment utilisons-nous vos données ?</h2>
+    <ul>
+      <li>✅ <strong>Gestion du compte</strong> — créer, gérer et sécuriser votre espace personnel</li>
+      <li>✅ <strong>Accès aux formations</strong> — vous donner accès aux contenus achetés</li>
+      <li>✅ <strong>Attestations</strong> — générer et vous transmettre vos attestations</li>
+      <li>✅ <strong>Retraits</strong> — traiter vos demandes de retrait</li>
+      <li>✅ <strong>Parrainage</strong> — créditer vos gains (1 000 FCFA par filleul)</li>
+      <li>✅ <strong>Points et récompenses</strong> — calculer vos points de fidélité</li>
+      <li>✅ <strong>Notifications</strong> — vous informer des attestations, événements et actualités</li>
+      <li>✅ <strong>Amélioration du service</strong> — analyser l'utilisation pour améliorer RIVO</li>
+      <li>✅ <strong>Sécurité</strong> — détecter et prévenir les fraudes</li>
+    </ul>
+  </div>
+
+  <div class="section" id="droits">
+    <h2>5. Vos droits</h2>
+    <ul>
+      <li>📌 <strong>Droit d'accès</strong> — consultez vos données depuis votre profil ou en nous contactant</li>
+      <li>📌 <strong>Droit à l'effacement</strong> — demandez la suppression totale de votre compte sous 24 heures</li>
+      <li>📌 <strong>Droit à la portabilité</strong> — recevez une copie de vos données dans un format réutilisable</li>
+      <li>📌 <strong>Droit d'opposition</strong> — opposez-vous à certains traitements (ex. notifications)</li>
+    </ul>
+    <div class="contact-box">
+      <p>Pour exercer vos droits :</p>
+      <p>📧 <strong>assistancerivo@gmail.com</strong></p>
+      <p>⏱️ Délai de réponse : <strong>24 heures maximum</strong></p>
+    </div>
+  </div>
+
+  <div class="section" id="mineurs">
+    <h2>6. Protection des mineurs</h2>
+    <p>Pour utiliser RIVO, vous devez avoir au moins <strong>14 ans</strong>. En dessous de cet âge, l'accord des parents ou tuteurs est requis.</p>
+    <p>Si nous apprenons qu'un utilisateur de moins de 14 ans a créé un compte sans autorisation parentale, nous supprimerons immédiatement son compte et ses données.</p>
+  </div>
+
+  <div class="section" id="modifs">
+    <h2>7. Modifications de cette politique</h2>
+    <p>RIVO peut modifier cette politique à tout moment. En cas de changement important, vous serez informé par email et/ou notification sur la plateforme. La date de mise à jour est toujours indiquée en haut de ce document.</p>
+  </div>
+
+  <div class="section" id="contact">
+    <h2>8. Contact</h2>
+    <div class="contact-box">
+      <p>📧 <strong>assistancerivo@gmail.com</strong></p>
+      <p>📞 <strong>+229 01 45 91 61 77</strong></p>
+      <p style="margin-top:.75rem;font-size:.8rem;color:#3b82f6">⏱️ Nous sommes à votre écoute — réponse sous 24 heures</p>
+    </div>
+  </div>`},
+  terms:  {title:'\ud83d\udccb Conditions d\'utilisation',html:`<div class="toc">
+    <h3>📋 Table des matières</h3>
+    <ol>
+      <li><a href="#accept">Acceptation des conditions</a></li>
+      <li><a href="#compte">Inscription et compte</a></li>
+      <li><a href="#formations">Formations</a></li>
+      <li><a href="#paiement">Paiement</a></li>
+      <li><a href="#attestations">Attestations</a></li>
+      <li><a href="#retraits">Retraits</a></li>
+      <li><a href="#parrainage">Parrainage</a></li>
+      <li><a href="#points">Points et récompenses</a></li>
+      <li><a href="#comportement">Comportement</a></li>
+      <li><a href="#responsabilite">Responsabilité</a></li>
+      <li><a href="#suspension">Suspension</a></li>
+      <li><a href="#propriete">Propriété intellectuelle</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ol>
+  </div>
+
+  <div class="section" id="accept">
+    <h2>1. Acceptation des conditions</h2>
+    <div class="highlight"><p>En accédant à RIVO et en créant un compte, vous acceptez sans réserve les présentes conditions d'utilisation.</p></div>
+    <p>Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser RIVO. Ces conditions peuvent être modifiées à tout moment ; les utilisateurs seront informés par email ou notification.</p>
+  </div>
+
+  <div class="section" id="compte">
+    <h2>2. Inscription et compte</h2>
+    <h3>2.1 Création de compte</h3>
+    <ul>
+      <li>Avoir au moins <strong>14 ans</strong></li>
+      <li>Fournir des informations exactes et complètes</li>
+      <li>Choisir un mot de passe sécurisé</li>
+      <li>Ne pas créer de faux compte ni usurper l'identité d'autrui</li>
+    </ul>
+    <h3>2.2 Responsabilité du compte</h3>
+    <p>Vous êtes responsable de la confidentialité de votre mot de passe et de toute activité effectuée depuis votre compte. En cas d'utilisation frauduleuse, contactez-nous immédiatement.</p>
+    <h3>2.3 Un seul compte par personne</h3>
+    <div class="important"><p>Chaque utilisateur ne peut posséder qu'un seul compte. Les comptes multiples seront suspendus.</p></div>
+  </div>
+
+  <div class="section" id="formations">
+    <h2>3. Formations</h2>
+    <p>Les formations sur RIVO sont protégées par les lois sur la propriété intellectuelle. L'achat donne un droit d'accès <strong>personnel et non transférable</strong>.</p>
+    <p><strong>Il est strictement interdit de :</strong></p>
+    <ul>
+      <li>Revendre ou redistribuer les formations</li>
+      <li>Partager votre compte ou vos identifiants</li>
+      <li>Copier ou reproduire le contenu sans autorisation</li>
+      <li>Utiliser les formations à des fins commerciales</li>
+    </ul>
+    <div class="important"><p>Toute violation entraînera la suspension immédiate de votre compte.</p></div>
+  </div>
+
+  <div class="section" id="paiement">
+    <h2>4. Paiement</h2>
+    <h3>4.1 Prix</h3>
+    <p>Tous les prix sont affichés en <strong>FCFA</strong>. RIVO se réserve le droit de modifier les prix à tout moment. Les achats déjà effectués ne sont pas affectés.</p>
+    <h3>4.2 Méthodes de paiement</h3>
+    <ul>
+      <li>Mobile Money (MTN, Moov, Orange, etc.)</li>
+      <li>PaiementPro / Xpaye (paiement en ligne sécurisé)</li>
+    </ul>
+    <h3>4.3 Politique de remboursement</h3>
+    <div class="highlight"><p>Les formations étant des contenus numériques accessibles immédiatement, aucun remboursement n'est possible après accès à la formation.</p></div>
+  </div>
+
+  <div class="section" id="attestations">
+    <h2>5. Attestations</h2>
+    <ul>
+      <li>Une attestation est délivrée après validation de chaque formation achetée</li>
+      <li>Elle est générée et envoyée par l'administration RIVO</li>
+      <li>Le délai dépend de la validation administrative</li>
+      <li>Les attestations sont disponibles dans votre espace personnel</li>
+    </ul>
+  </div>
+
+  <div class="section" id="retraits">
+    <h2>6. Retraits</h2>
+    <ul>
+      <li>Solde minimum pour un retrait : <strong>1 000 FCFA</strong></li>
+      <li>Retraits traités en <strong>30 minutes maximum</strong></li>
+      <li>Via Mobile Money, carte bancaire ou autre moyen</li>
+    </ul>
+    <p>RIVO se réserve le droit de vérifier les informations avant de traiter le retrait.</p>
+  </div>
+
+  <div class="section" id="parrainage">
+    <h2>7. Parrainage</h2>
+    <p>Chaque utilisateur reçoit un <strong>code de parrainage unique</strong>. Lorsqu'un filleul s'inscrit avec votre code et achète une formation, vous recevez <strong>1 000 FCFA</strong>.</p>
+    <div class="important"><p>L'auto-parrainage (créer un compte pour se parrainer soi-même) est interdit et entraînera la suspension des comptes concernés.</p></div>
+  </div>
+
+  <div class="section" id="points">
+    <h2>8. Points et récompenses</h2>
+    <h3>Comment gagner des points</h3>
+    <ul>
+      <li>Achat d'une formation : <strong>+10 points</strong></li>
+      <li>Attestation reçue : <strong>+10 points</strong></li>
+      <li>Parrainage (filleul achète) : <strong>+20 points</strong></li>
+      <li>Connexion quotidienne : <strong>+5 points</strong></li>
+      <li>Vidéo de recommandation validée : <strong>+500 points</strong></li>
+    </ul>
+    <div class="highlight"><p>Les points n'ont pas de valeur monétaire et ne sont pas échangeables contre de l'argent. RIVO se réserve le droit de modifier le barème.</p></div>
+    <h3>Événements et récompenses</h3>
+    <p>RIVO organise des événements avec des récompenses (Visa, Moto, Voiture, Emploi, Voyage). La participation est conditionnée par le nombre de points requis. Les décisions de RIVO sont finales.</p>
+  </div>
+
+  <div class="section" id="comportement">
+    <h2>9. Comportement des utilisateurs</h2>
+    <p>En utilisant RIVO, vous vous engagez à :</p>
+    <ul>
+      <li>Respecter les autres utilisateurs</li>
+      <li>Ne pas tenter de pirater ou endommager la plateforme</li>
+      <li>Ne pas utiliser de logiciels automatisés (bots)</li>
+      <li>Ne pas frauder le système de parrainage ou de points</li>
+    </ul>
+  </div>
+
+  <div class="section" id="responsabilite">
+    <h2>10. Responsabilité</h2>
+    <p>RIVO s'efforce de maintenir la plateforme accessible 24h/24 et d'assurer la sécurité des données. Cependant, RIVO ne peut être tenu responsable des interruptions temporaires du service, des erreurs de prix ou des conséquences de l'utilisation des formations.</p>
+    <div class="highlight"><p>Les formations sont fournies à titre éducatif. RIVO ne garantit pas l'obtention d'un emploi ou d'un résultat spécifique.</p></div>
+  </div>
+
+  <div class="section" id="suspension">
+    <h2>11. Suspension et résiliation</h2>
+    <p>RIVO se réserve le droit de suspendre ou supprimer un compte en cas de violation des présentes conditions. L'utilisateur peut supprimer son compte à tout moment en contactant assistancerivo@gmail.com.</p>
+  </div>
+
+  <div class="section" id="propriete">
+    <h2>12. Propriété intellectuelle</h2>
+    <ul>
+      <li>Le nom "RIVO" et le logo sont la propriété de <strong>Martial Gbesso</strong></li>
+      <li>Le contenu des formations est protégé par le droit d'auteur</li>
+      <li>La structure et le code du site sont la propriété de RIVO</li>
+      <li>Toute reproduction sans autorisation est interdite</li>
+    </ul>
+  </div>
+
+  <div class="section" id="contact">
+    <h2>13. Contact</h2>
+    <div class="contact-box">
+      <p>📧 <strong>assistancerivo@gmail.com</strong></p>
+      <p>📞 <strong>+229 01 45 91 61 77</strong></p>
+      <p style="margin-top:.75rem;font-size:.8rem;color:#3b82f6">⏱️ Réponse sous 24 heures</p>
+    </div>
+  </div>`}
+};
+function showLegal(page){
+  const d=_legalContent[page];if(!d)return;
+  document.getElementById('legal-modal-title').textContent=d.title;
+  document.getElementById('legal-modal-body').innerHTML=d.html;
+  document.getElementById('legal-modal').style.display='block';
+  document.body.style.overflow='hidden';
+  document.getElementById('legal-modal').scrollTop=0;
+}
+function closeLegal(){
+  document.getElementById('legal-modal').style.display='none';
+  document.body.style.overflow='';
+}
+</script>
+
+</body>
+</html>
