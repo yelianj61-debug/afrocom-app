@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>À propos — RIVO</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;min-height:100vh}
+.header{background:linear-gradient(135deg,#1e3a8a,#2563EB);color:white;padding:2rem 1.25rem 3rem;text-align:center}
+.back-btn{display:inline-flex;align-items:center;gap:.4rem;background:rgba(255,255,255,.18);border:none;color:white;padding:.5rem 1.1rem;border-radius:.75rem;cursor:pointer;font-weight:600;font-size:.875rem;text-decoration:none;margin-bottom:1.5rem;transition:background .2s}
+.back-btn:hover{background:rgba(255,255,255,.28)}
+.logo{display:flex;align-items:center;justify-content:center;gap:.625rem;margin-bottom:1rem}
+.logo-icon{width:3rem;height:3rem;background:rgba(255,255,255,.2);border-radius:1rem;display:flex;align-items:center;justify-content:center;font-size:1.4rem}
+.logo span{font-size:1.8rem;font-weight:900}
+h1{font-size:2rem;font-weight:900;margin-bottom:.5rem}
+.subtitle{color:#93c5fd;font-size:1rem}
+.content{max-width:800px;margin:0 auto;padding:2.5rem 1.25rem 4rem}
+.section{background:white;border-radius:1.25rem;padding:2rem;box-shadow:0 2px 20px rgba(0,0,0,.06);margin-bottom:1.5rem}
+.section h2{font-size:1.3rem;font-weight:800;color:#1d4ed8;margin-bottom:1.25rem;display:flex;align-items:center;gap:.5rem}
+.section p{color:#374151;font-size:.95rem;line-height:1.8;margin-bottom:.875rem}
+.section p:last-child{margin-bottom:0}
+.values-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-top:.75rem}
+.value-card{background:#f8fafc;border-radius:1rem;padding:1.25rem;border-left:4px solid #2563EB}
+.value-card strong{display:block;font-weight:800;color:#1F2937;margin-bottom:.35rem}
+.value-card span{font-size:.875rem;color:#6b7280;line-height:1.6}
+.offers{display:flex;flex-direction:column;gap:.75rem;margin-top:.75rem}
+.offer-item{display:flex;align-items:flex-start;gap:.875rem;padding:.875rem;background:#f0fdf4;border-radius:.875rem}
+.offer-icon{font-size:1.2rem;flex-shrink:0;margin-top:.1rem}
+.offer-text{font-size:.9rem;color:#374151;line-height:1.6}
+.contact-box{background:linear-gradient(135deg,#eff6ff,#dbeafe);border:2px solid #bfdbfe;border-radius:1rem;padding:1.5rem;text-align:center}
+.contact-box p{color:#1d4ed8;font-size:.95rem;margin-bottom:.4rem}
+.contact-box strong{font-size:1rem;color:#1e3a8a}
+.badge-row{display:flex;flex-wrap:wrap;justify-content:center;gap:.75rem;margin-top:1rem}
+.badge{background:linear-gradient(135deg,#2563EB,#1D4ED8);color:white;border-radius:9999px;padding:.5rem 1.25rem;font-size:.85rem;font-weight:700}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="rivo.html" class="back-btn">← Retour à RIVO</a>
+  <div class="logo">
+    <div class="logo-icon">📚</div>
+    <span>RIVO</span>
+  </div>
+  <h1>À propos de RIVO</h1>
+  <p class="subtitle">La plateforme qui transforme l'apprentissage en opportunité</p>
+</div>
+
+<div class="content">
+
+  <div class="section">
+    <h2>📖 Notre histoire</h2>
+    <p>RIVO est né d'une vision : celle de <strong>Martial Gbesso</strong>, un entrepreneur béninois passionné par l'éducation et la technologie.</p>
+    <p>Face au constat que l'accès à des formations de qualité reste difficile pour de nombreux Africains, Martial a décidé de créer une plateforme qui démocratise l'apprentissage en ligne. RIVO a été conçu pour être simple, accessible et adapté aux besoins réels des apprenants africains.</p>
+  </div>
+
+  <div class="section">
+    <h2>🎯 Notre mission</h2>
+    <p><strong>Rendre le savoir accessible à tous, partout.</strong></p>
+    <p>Nous croyons que l'éducation est le levier le plus puissant pour transformer des vies, créer des opportunités professionnelles et bâtir un avenir meilleur. Avec RIVO, chacun peut apprendre à son rythme, développer ses compétences et obtenir des attestations reconnues pour valoriser son parcours.</p>
+  </div>
+
+  <div class="section">
+    <h2>🌍 Notre vision</h2>
+    <p>Devenir la <strong>référence de la formation en ligne en Afrique francophone</strong>. Nous voulons créer un écosystème où :</p>
+    <div class="offers" style="margin-top:.75rem">
+      <div class="offer-item"><span class="offer-icon">📚</span><span class="offer-text">Les apprenants trouvent des formations de qualité adaptées à leurs besoins</span></div>
+      <div class="offer-item"><span class="offer-icon">🏆</span><span class="offer-text">Les efforts sont récompensés par des attestations officielles</span></div>
+      <div class="offer-item"><span class="offer-icon">⭐</span><span class="offer-text">La fidélité est valorisée par des points et des récompenses exceptionnelles</span></div>
+      <div class="offer-item"><span class="offer-icon">🤝</span><span class="offer-text">Le partage profite à toute la communauté via le parrainage</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>💡 Nos valeurs</h2>
+    <div class="values-grid">
+      <div class="value-card"><strong>📚 Accessibilité</strong><span>Des formations abordables, accessibles depuis un simple téléphone. Pas besoin d'être un expert pour apprendre.</span></div>
+      <div class="value-card"><strong>🎯 Qualité</strong><span>Des contenus soigneusement sélectionnés. Chaque formation apporte des compétences concrètes.</span></div>
+      <div class="value-card"><strong>💡 Innovation</strong><span>Une plateforme moderne avec badges progressifs, points de fidélité et récompenses uniques.</span></div>
+      <div class="value-card"><strong>🤝 Communauté</strong><span>Le parrainage permet de grandir ensemble. Chaque filleul qui apprend fait gagner son parrain.</span></div>
+      <div class="value-card"><strong>🏆 Mérite</strong><span>Les plus actifs sont récompensés : Visa, Moto, Voiture, Emploi, Voyage… vos efforts paient.</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>✅ Ce que nous offrons</h2>
+    <div class="offers">
+      <div class="offer-item"><span class="offer-icon">📚</span><span class="offer-text"><strong>200+ formations</strong> dans de nombreux domaines : développement web, marketing digital, graphisme, Excel, langues, entrepreneuriat et bien plus.</span></div>
+      <div class="offer-item"><span class="offer-icon">🏆</span><span class="offer-text"><strong>Attestations officielles</strong> : chaque formation validée donne droit à une attestation RIVO reconnue.</span></div>
+      <div class="offer-item"><span class="offer-icon">💰</span><span class="offer-text"><strong>Parrainage lucratif</strong> : gagnez 1 000 FCFA pour chaque filleul qui achète une formation.</span></div>
+      <div class="offer-item"><span class="offer-icon">⭐</span><span class="offer-text"><strong>Points de fidélité</strong> : cumulez des points et participez à des événements avec des récompenses exceptionnelles.</span></div>
+      <div class="offer-item"><span class="offer-icon">📞</span><span class="offer-text"><strong>Support réactif</strong> : une équipe à votre écoute, réponse sous 24 heures.</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🏅 Les badges RIVO</h2>
+    <p>Plus vous apprenez, plus vous évoluez !</p>
+    <div class="badge-row">
+      <div class="badge">🌱 Débutant — 0 formation</div>
+      <div class="badge">🥉 Bronze — 5+ formations</div>
+      <div class="badge">🥈 Argent — 10+ formations</div>
+      <div class="badge">🥇 Or — 20+ formations</div>
+      <div class="badge">💎 Diamant — 50+ formations</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>📬 Contact</h2>
+    <div class="contact-box">
+      <p>📧 <strong>assistancerivo@gmail.com</strong></p>
+      <p>📞 <strong>+229 01 45 91 61 77</strong></p>
+      <p style="margin-top:.75rem;font-size:.85rem;color:#3b82f6">⏱️ Réponse sous 24 heures — disponibles 7j/7</p>
+    </div>
+  </div>
+
+  <p style="text-align:center;color:#9ca3af;font-size:.8rem;margin-top:2rem">© 2026 RIVO — Créé par Martial Gbesso. Tous droits réservés.</p>
+</div>
+
+</body>
+</html>

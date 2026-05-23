@@ -164,16 +164,44 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
   </section>
 
   <!-- Footer -->
-  <footer style="background:#1F2937;color:#9ca3af;padding:2.5rem 1.25rem">
-    <div style="max-width:1100px;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:1rem">
-      <div style="display:flex;align-items:center;gap:.6rem">
-        <div style="width:2.25rem;height:2.25rem;border-radius:.75rem;background:#2563EB;display:flex;align-items:center;justify-content:center;font-size:1rem">📚</div>
-        <span style="color:white;font-weight:900;font-size:1.15rem">RIVO</span>
+  <footer style="background:#111827;color:#9ca3af;padding:3rem 1.25rem 2rem">
+    <div style="max-width:1100px;margin:0 auto">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:2rem;margin-bottom:2rem">
+        <!-- Brand -->
+        <div>
+          <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:1rem">
+            <div style="width:2.25rem;height:2.25rem;border-radius:.75rem;background:#2563EB;display:flex;align-items:center;justify-content:center;font-size:1rem">📚</div>
+            <span style="color:white;font-weight:900;font-size:1.2rem">RIVO</span>
+          </div>
+          <p style="font-size:.875rem;line-height:1.7;margin-bottom:1rem">La plateforme qui transforme l'apprentissage en opportunité. Fondée par <strong style="color:white">Martial Gbesso</strong>.</p>
+          <p style="font-size:.8rem">📧 assistancerivo@gmail.com<br>📞 +229 01 45 91 61 77</p>
+        </div>
+        <!-- Liens -->
+        <div>
+          <h4 style="color:white;font-weight:700;margin-bottom:1rem;font-size:.95rem">Plateforme</h4>
+          <div style="display:flex;flex-direction:column;gap:.6rem">
+            <button onclick="goTo('register')" style="background:none;border:none;color:#9ca3af;cursor:pointer;text-align:left;font-size:.875rem;padding:0;transition:color .2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='#9ca3af'">📚 Nos formations</button>
+            <button onclick="goTo('login')" style="background:none;border:none;color:#9ca3af;cursor:pointer;text-align:left;font-size:.875rem;padding:0;transition:color .2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='#9ca3af'">🔑 Se connecter</button>
+            <button onclick="goTo('register')" style="background:none;border:none;color:#9ca3af;cursor:pointer;text-align:left;font-size:.875rem;padding:0;transition:color .2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='#9ca3af'">✨ S'inscrire gratuitement</button>
+          </div>
+        </div>
+        <!-- Légal -->
+        <div>
+          <h4 style="color:white;font-weight:700;margin-bottom:1rem;font-size:.95rem">Informations</h4>
+          <div style="display:flex;flex-direction:column;gap:.6rem">
+            <a href="rivo-about.html" style="color:#9ca3af;text-decoration:none;font-size:.875rem;transition:color .2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='#9ca3af'">ℹ️ À propos de RIVO</a>
+            <a href="rivo-privacy.html" style="color:#9ca3af;text-decoration:none;font-size:.875rem;transition:color .2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='#9ca3af'">🔒 Politique de confidentialité</a>
+            <a href="rivo-terms.html" style="color:#9ca3af;text-decoration:none;font-size:.875rem;transition:color .2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='#9ca3af'">📋 Conditions d'utilisation</a>
+          </div>
+        </div>
       </div>
-      <p style="font-size:.85rem">© 2025 RIVO par Martial Gbesso. Tous droits réservés.</p>
-      <div style="display:flex;gap:1.25rem;font-size:.875rem">
-        <button onclick="goTo('login')" style="background:none;border:none;color:#9ca3af;cursor:pointer;transition:color .2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='#9ca3af'">Connexion</button>
-        <button onclick="goTo('register')" style="background:none;border:none;color:#9ca3af;cursor:pointer;transition:color .2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='#9ca3af'">Inscription</button>
+      <div style="border-top:1px solid #374151;padding-top:1.5rem;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:1rem">
+        <p style="font-size:.8rem">© 2026 RIVO — Créé par <strong style="color:white">Martial Gbesso</strong>. Tous droits réservés.</p>
+        <div style="display:flex;gap:1.5rem;font-size:.8rem">
+          <a href="rivo-privacy.html" style="color:#6b7280;text-decoration:none" onmouseover="this.style.color='white'" onmouseout="this.style.color='#6b7280'">Confidentialité</a>
+          <a href="rivo-terms.html" style="color:#6b7280;text-decoration:none" onmouseover="this.style.color='white'" onmouseout="this.style.color='#6b7280'">Conditions</a>
+          <a href="rivo-about.html" style="color:#6b7280;text-decoration:none" onmouseover="this.style.color='white'" onmouseout="this.style.color='#6b7280'">À propos</a>
+        </div>
       </div>
     </div>
   </footer>
@@ -450,6 +478,13 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
           <button id="wd-submit-btn" onclick="doWithdrawal()" class="btn-primary">📤 Demander le retrait</button>
         </div>
         <div><h2 style="font-weight:800;font-size:1.05rem;color:#1F2937;margin-bottom:1rem">Historique des retraits</h2><div id="wd-hist">...</div></div>
+
+        <!-- Voir le guide -->
+        <div style="margin-top:1.5rem;text-align:center">
+          <button onclick="startTutorial()" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:2px solid #bfdbfe;color:#1d4ed8;border-radius:1rem;padding:.875rem 2rem;font-weight:700;cursor:pointer;font-size:.9rem;width:100%;transition:all .2s" onmouseover="this.style.background='linear-gradient(135deg,#dbeafe,#bfdbfe)'" onmouseout="this.style.background='linear-gradient(135deg,#eff6ff,#dbeafe)'">
+            🗺️ Voir le guide de démarrage
+          </button>
+        </div>
       </div>
 
       <!-- ══ Récompenses ══ -->
@@ -581,6 +616,7 @@ async function startApp(){
       await loadProfileData();
       updateEmailBanner();
       goTo('dashboard');
+      checkShowTutorial();
     }
     const ps=new URLSearchParams(location.search).get('payment');
     const pid=new URLSearchParams(location.search).get('pid');
@@ -905,6 +941,8 @@ function closePayModal(){document.getElementById('pay-modal').style.display='non
 
 async function confirmPay(){
   if(!pendingCourse)return;
+  // Relire TEST_MODE depuis localStorage à chaque paiement (l'admin peut le changer à tout moment)
+  const TEST_MODE = localStorage.getItem('rivo_test_mode') === '1';
   const course={...pendingCourse};
   // Garantir que le profil existe avant l'achat (FK purchases_user_id_fkey → profiles.id)
   if(!CP){
@@ -1526,6 +1564,59 @@ async function submitVideo(){
   toast('Vidéo soumise ! En attente de validation.');
 }
 
+// ── Tutoriel guidé ────────────────────────────────────
+const _tutSteps = [
+  {icon:'👋', title:'Bienvenue sur RIVO !', desc:'Découvrez les formations disponibles sur le Tableau de bord. Apprenez à votre rythme et obtenez une attestation officielle.', tab:'bord'},
+  {icon:'🛒', title:'Achetez une formation', desc:'Cliquez sur "Acheter" sur n\'importe quelle formation. Suivez les instructions de paiement sécurisé via FedaPay (Mobile Money, carte…).', tab:'bord'},
+  {icon:'📖', title:'Mes formations', desc:'Retrouvez toutes vos formations achetées dans l\'onglet "Mes formations". Accédez aux contenus quand vous voulez.', tab:'formations'},
+  {icon:'🏆', title:'Attestations', desc:'Après validation par notre équipe, vous recevrez votre attestation officielle RIVO directement sur votre profil. Consultez-la à tout moment.', tab:'profil'},
+  {icon:'🎁', title:'Récompenses', desc:'Cumulez des points et participez aux événements exclusifs : Visa, Moto, Voiture, Emploi, Voyage… Vos efforts sont récompensés !', tab:'recompenses'},
+  {icon:'👤', title:'Votre Profil', desc:'Gérez votre profil, consultez votre solde FCFA, vos points et effectuez des demandes de retrait directement depuis l\'onglet Profil.', tab:'profil'},
+  {icon:'🤝', title:'Parrainage — 1 000 FCFA', desc:'Partagez votre code unique à vos amis. Pour chaque ami qui achète une formation, vous gagnez 1 000 FCFA directement sur votre solde !', tab:'profil'},
+];
+let _tutIdx = 0;
+
+function startTutorial(){
+  _tutIdx = 0;
+  _renderTutStep();
+  document.getElementById('tutorial-overlay').style.display = 'flex';
+}
+function skipTutorial(){
+  document.getElementById('tutorial-overlay').style.display = 'none';
+  localStorage.setItem('rivo_tutorial_done', '1');
+}
+function tutStep(dir){
+  _tutIdx = Math.max(0, Math.min(_tutSteps.length - 1, _tutIdx + dir));
+  _renderTutStep();
+  if(_tutIdx === _tutSteps.length - 1 && dir > 0){
+    // Last step shown — mark as done when they click finish
+    document.getElementById('tut-next').textContent = '✅ Terminer';
+    document.getElementById('tut-next').onclick = skipTutorial;
+  }
+}
+function _renderTutStep(){
+  const s = _tutSteps[_tutIdx];
+  document.getElementById('tut-icon').textContent = s.icon;
+  document.getElementById('tut-title').textContent = s.title;
+  document.getElementById('tut-desc').textContent = s.desc;
+  document.getElementById('tut-count').textContent = `${_tutIdx+1} / ${_tutSteps.length}`;
+  document.getElementById('tut-progress').style.width = `${Math.round((_tutIdx+1)/_tutSteps.length*100)}%`;
+  document.getElementById('tut-prev').style.display = _tutIdx > 0 ? 'block' : 'none';
+  const nextBtn = document.getElementById('tut-next');
+  nextBtn.textContent = _tutIdx < _tutSteps.length - 1 ? 'Suivant →' : '✅ Terminer';
+  nextBtn.onclick = _tutIdx < _tutSteps.length - 1 ? () => tutStep(1) : skipTutorial;
+  // Navigate to the relevant tab if on dashboard
+  if(document.getElementById('page-dashboard')?.classList.contains('active') ||
+     document.getElementById('tab-bord')){
+    if(s.tab) switchTab(s.tab);
+  }
+}
+function checkShowTutorial(){
+  if(!localStorage.getItem('rivo_tutorial_done') && CU){
+    setTimeout(() => startTutorial(), 1200);
+  }
+}
+
 // ── PWA ────────────────────────────────────────────────
 let _deferredPrompt;
 if('serviceWorker' in navigator){
@@ -1578,6 +1669,31 @@ window.addEventListener('appinstalled',()=>{
     <div style="display:flex;gap:.75rem">
       <button onclick="submitEventApplication()" style="flex:1;background:linear-gradient(135deg,#f59e0b,#ef4444);color:white;border:none;border-radius:.75rem;padding:.75rem;font-weight:700;cursor:pointer;font-size:.875rem">Envoyer ma candidature</button>
       <button onclick="document.getElementById('event-apply-popup').style.display='none'" style="flex:1;background:#f1f5f9;border:none;border-radius:.75rem;padding:.75rem;font-weight:600;cursor:pointer;color:#374151;font-size:.875rem">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tutorial Overlay -->
+<div id="tutorial-overlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.85);z-index:9000;align-items:flex-end;justify-content:center;padding:1rem 1rem 6rem">
+  <div style="background:white;border-radius:1.5rem;width:100%;max-width:480px;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,.4);animation:slideUp .35s ease">
+    <!-- Progress bar -->
+    <div style="height:4px;background:#e5e7eb">
+      <div id="tut-progress" style="height:100%;background:linear-gradient(90deg,#2563EB,#60a5fa);transition:width .4s ease;width:14%"></div>
+    </div>
+    <div style="padding:1.75rem">
+      <!-- Icon + step count -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+        <div id="tut-icon" style="width:3.5rem;height:3.5rem;border-radius:1rem;background:linear-gradient(135deg,#dbeafe,#bfdbfe);display:flex;align-items:center;justify-content:center;font-size:1.75rem">👋</div>
+        <span id="tut-count" style="font-size:.8rem;font-weight:700;color:#9ca3af;background:#f1f5f9;padding:.3rem .875rem;border-radius:9999px">1 / 7</span>
+      </div>
+      <h2 id="tut-title" style="font-size:1.3rem;font-weight:900;color:#1F2937;margin-bottom:.5rem">Bienvenue sur RIVO !</h2>
+      <p id="tut-desc" style="font-size:.9rem;color:#6b7280;line-height:1.7;margin-bottom:1.5rem">Découvrez les formations disponibles sur le Tableau de bord et commencez votre parcours.</p>
+      <!-- Buttons -->
+      <div style="display:flex;gap:.75rem">
+        <button onclick="skipTutorial()" style="flex:1;padding:.75rem;border-radius:.875rem;border:2px solid #e5e7eb;background:none;color:#9ca3af;font-weight:600;cursor:pointer;font-size:.875rem">Ignorer</button>
+        <button id="tut-prev" onclick="tutStep(-1)" style="padding:.75rem 1.25rem;border-radius:.875rem;border:2px solid #e5e7eb;background:none;color:#374151;font-weight:700;cursor:pointer;display:none">←</button>
+        <button id="tut-next" onclick="tutStep(1)" style="flex:2;padding:.75rem;border-radius:.875rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);color:white;border:none;font-weight:700;cursor:pointer;font-size:.875rem">Suivant →</button>
+      </div>
     </div>
   </div>
 </div>
