@@ -714,7 +714,6 @@ function loadFedaPayScript(){
 
 // ── BUG 1 & 2 FIX: guard race-condition + auto-création profil manquant ─
 async function loadProfileData(){
-  if(!CU?.id)return;
   if(!FBU?.email) return;
   const expectedEmail=FBU.email;
   try{
