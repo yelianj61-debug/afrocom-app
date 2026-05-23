@@ -676,10 +676,10 @@ async function startApp(){
     if(fbUser&&fbUser.emailVerified){
       FBU=fbUser;
       // 2. Connexion Supabase avec mot de passe dérivé du Firebase UID (immuable)
-      const{data,error}=await sb.auth.signInWithPassword({
+      const{data,error}=await withTimeout(sb.auth.signInWithPassword({
         email:fbUser.email,
         password:_sbPwd(fbUser.uid)
-      });
+      }),10000);
       if(!error&&data?.session){
         CU=data.session.user;
         await _ensureProfile();
@@ -824,33 +824,38 @@ async function doLogin(e){
     const email=document.getElementById('li-email').value.trim();
     const pwd=document.getElementById('li-pwd').value;
 
-    // 1. Connexion Firebase (ne bloque pas si email non vérifié)
-    const cred=await fbAuth.signInWithEmailAndPassword(email,pwd);
+    // 1. Connexion Firebase
+    // — reload() force la synchro serveur pour avoir le vrai emailVerified
+    const cred=await Promise.race([
+      fbAuth.signInWithEmailAndPassword(email,pwd),
+      new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout-firebase')),15000))
+    ]);
     const fbUser=cred.user;
+    await fbUser.reload(); // ← synchronise emailVerified depuis le serveur Firebase
 
     // 2. Vérification email obligatoire
     if(!fbUser.emailVerified){
       FBU=fbUser; // garder pour resendConfirmation()
-      showErr('li-err','Confirmez votre email avant de vous connecter.');
+      showErr('li-err','Confirmez votre email avant de vous connecter. Vérifiez vos spams.');
       document.getElementById('li-resend').style.display='block';
       return;
     }
 
     FBU=fbUser;
 
-    // 3. Connexion Supabase avec mot de passe dérivé (pas besoin de config OIDC)
+    // 3. Connexion Supabase avec mot de passe dérivé — withTimeout anti-spinner infini
     const sbPwd=_sbPwd(fbUser.uid);
-    let{data,error}=await sb.auth.signInWithPassword({email,password:sbPwd});
+    let{data,error}=await withTimeout(sb.auth.signInWithPassword({email,password:sbPwd}),10000);
 
     // 4. Fallback : premier login → compte Supabase inexistant → le créer à la volée
     if(error&&(error.status===400||error.message?.includes('Invalid login credentials'))){
-      const{data:su,error:suErr}=await sb.auth.signUp({
+      const{data:su,error:suErr}=await withTimeout(sb.auth.signUp({
         email,password:sbPwd,
         options:{data:{first_name:FBU.displayName?.split(' ')[0]||'',last_name:''}}
-      });
+      }),10000);
       if(suErr)throw suErr;
       // Réessayer la connexion après création
-      const retry=await sb.auth.signInWithPassword({email,password:sbPwd});
+      const retry=await withTimeout(sb.auth.signInWithPassword({email,password:sbPwd}),10000);
       if(retry.error)throw retry.error;
       data=retry.data; error=null;
     }else if(error)throw error;
@@ -868,11 +873,12 @@ async function doLogin(e){
     document.getElementById('st-pts').textContent='0';
     Object.keys(loaded).forEach(k=>delete loaded[k]);
 
+    if(!data?.session?.user) throw new Error('Session Supabase invalide. Réessayez.');
     CU=data.session.user;
     await _ensureProfile();
 
     // 5. Redirection admin si badge admin
-    const{data:p}=await sb.from('profiles').select('badge_level').eq('id',CU.id).single();
+    const{data:p}=await withTimeout(sb.from('profiles').select('badge_level').eq('id',CU.id).single(),7000);
     if(p?.badge_level==='admin'){toast('Connexion admin réussie !');setTimeout(()=>{window.location.href='./rivo-admin.html';},700);return;}
 
     await loadProfileData();
@@ -882,9 +888,13 @@ async function doLogin(e){
     const code=err.code||'';
     const em=err.message||'';
     if(code.includes('wrong-password')||code.includes('user-not-found')||code.includes('invalid-credential')||code.includes('INVALID_LOGIN_CREDENTIALS')){
-      showErr('li-err','Email ou mot de passe incorrect');
+      showErr('li-err','Email ou mot de passe incorrect.');
     }else if(code.includes('too-many-requests')){
       showErr('li-err','Trop de tentatives. Réessayez plus tard.');
+    }else if(em.includes('timeout-firebase')||em.includes('timed out')||em.includes('Request timed out')){
+      showErr('li-err','Connexion trop lente. Vérifiez votre réseau et réessayez.');
+    }else if(em.toLowerCase().includes('email not confirmed')){
+      showErr('li-err','Compte en attente de validation. Contactez le support.');
     }else{
       showErr('li-err',em||'Erreur de connexion. Réessayez.');
     }
@@ -955,13 +965,15 @@ async function doRegister(e){
     // 3. Stocker le nom dans Firebase displayName
     await fbNewUser.updateProfile({displayName:`${fn} ${ln}`});
 
-    // 4. Créer le compte Supabase avec mot de passe dérivé (silencieux si email confirm désactivé)
+    // 4. Créer le compte Supabase avec mot de passe dérivé
     const sbPwd=_sbPwd(fbNewUser.uid);
-    const{data:sbAuth}=await sb.auth.signUp({
+    const{data:sbAuth,error:sbSignUpErr}=await withTimeout(sb.auth.signUp({
       email,password:sbPwd,
       options:{data:{first_name:fn,last_name:ln}}
-    });
-    // Si Supabase a renvoyé une session immédiate → upsert profil directement en DB
+    }),10000);
+    if(sbSignUpErr) console.warn('[doRegister] Supabase signUp err:',sbSignUpErr.message);
+
+    // Si Supabase a renvoyé une session immédiate (email confirm désactivé) → upsert profil
     if(sbAuth?.session?.user){
       await sb.from('profiles').upsert({
         id:sbAuth.session.user.id,
@@ -970,7 +982,7 @@ async function doRegister(e){
       },{onConflict:'id'});
     }
 
-    // 5. Stocker données profil en localStorage (backup si Supabase email confirmation activée)
+    // 5. Sauvegarder en localStorage (backup si session non disponible)
     localStorage.setItem('rivo_pending_profile',JSON.stringify({
       first_name:fn,last_name:ln,
       birth_date:birth||null,
@@ -980,7 +992,8 @@ async function doRegister(e){
     // 6. Envoyer email de vérification Firebase
     await fbNewUser.sendEmailVerification();
 
-    // 7. Déconnecter Firebase — l'utilisateur doit confirmer son email d'abord
+    // 7. Déconnecter les deux (Supabase ET Firebase) — propre pour le prochain login
+    try{await sb.auth.signOut();}catch(_){}
     await fbAuth.signOut();
 
     toast('Compte créé ! 📧 Vérifiez votre boîte mail pour confirmer avant de vous connecter.');
