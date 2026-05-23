@@ -644,6 +644,9 @@ function updateEmailBanner(){
   if(banner) banner.style.display=(FBU&&!FBU.emailVerified)?'block':'none';
 }
 
+// ── Mot de passe Supabase dérivé du Firebase UID (immuable, résiste aux resets) ──
+function _sbPwd(uid){ return 'rivo!2026!' + uid; }
+
 // ── Créer profil Supabase si premier login (données viennent de Firebase + localStorage)
 async function _ensureProfile(){
   if(!CU?.id)return;
@@ -672,9 +675,11 @@ async function startApp(){
 
     if(fbUser&&fbUser.emailVerified){
       FBU=fbUser;
-      // 2. Échanger le token Firebase contre une session Supabase
-      const token=await fbUser.getIdToken();
-      const{data,error}=await sb.auth.signInWithIdToken({provider:'firebase',token});
+      // 2. Connexion Supabase avec mot de passe dérivé du Firebase UID (immuable)
+      const{data,error}=await sb.auth.signInWithPassword({
+        email:fbUser.email,
+        password:_sbPwd(fbUser.uid)
+      });
       if(!error&&data?.session){
         CU=data.session.user;
         await _ensureProfile();
@@ -725,15 +730,6 @@ function loadFedaPayScript(){
         // ── Init Firebase Auth ────────────────────────
         if(!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
         fbAuth=firebase.auth();
-        // Sync token Firebase→Supabase à chaque refresh automatique (~1h)
-        fbAuth.onIdTokenChanged(async(user)=>{
-          if(user&&user.emailVerified&&CU){
-            try{
-              const tok=await user.getIdToken(true);
-              await sb.auth.signInWithIdToken({provider:'firebase',token:tok});
-            }catch(_){}
-          }
-        });
         startApp();
       }catch(e){tryLoad(i+1);}
     };
@@ -842,12 +838,24 @@ async function doLogin(e){
 
     FBU=fbUser;
 
-    // 3. Échanger token Firebase → session Supabase
-    const token=await fbUser.getIdToken();
-    const{data,error}=await sb.auth.signInWithIdToken({provider:'firebase',token});
-    if(error)throw error;
+    // 3. Connexion Supabase avec mot de passe dérivé (pas besoin de config OIDC)
+    const sbPwd=_sbPwd(fbUser.uid);
+    let{data,error}=await sb.auth.signInWithPassword({email,password:sbPwd});
 
-    // 4. Réinitialiser tout l'état
+    // 4. Fallback : premier login → compte Supabase inexistant → le créer à la volée
+    if(error&&(error.status===400||error.message?.includes('Invalid login credentials'))){
+      const{data:su,error:suErr}=await sb.auth.signUp({
+        email,password:sbPwd,
+        options:{data:{first_name:FBU.displayName?.split(' ')[0]||'',last_name:''}}
+      });
+      if(suErr)throw suErr;
+      // Réessayer la connexion après création
+      const retry=await sb.auth.signInWithPassword({email,password:sbPwd});
+      if(retry.error)throw retry.error;
+      data=retry.data; error=null;
+    }else if(error)throw error;
+
+    // 5. Réinitialiser tout l'état
     CP=null; CU=null;
     document.getElementById('welcome-h').textContent='Bienvenue !!!';
     document.getElementById('prof-name').textContent='...';
@@ -947,17 +955,32 @@ async function doRegister(e){
     // 3. Stocker le nom dans Firebase displayName
     await fbNewUser.updateProfile({displayName:`${fn} ${ln}`});
 
-    // 4. Stocker données profil en localStorage (créées dans Supabase DB au 1er login)
+    // 4. Créer le compte Supabase avec mot de passe dérivé (silencieux si email confirm désactivé)
+    const sbPwd=_sbPwd(fbNewUser.uid);
+    const{data:sbAuth}=await sb.auth.signUp({
+      email,password:sbPwd,
+      options:{data:{first_name:fn,last_name:ln}}
+    });
+    // Si Supabase a renvoyé une session immédiate → upsert profil directement en DB
+    if(sbAuth?.session?.user){
+      await sb.from('profiles').upsert({
+        id:sbAuth.session.user.id,
+        first_name:fn,last_name:ln,email,
+        birth_date:birth||null,referred_by:refId||null
+      },{onConflict:'id'});
+    }
+
+    // 5. Stocker données profil en localStorage (backup si Supabase email confirmation activée)
     localStorage.setItem('rivo_pending_profile',JSON.stringify({
       first_name:fn,last_name:ln,
       birth_date:birth||null,
       referred_by:refId||null
     }));
 
-    // 5. Envoyer email de vérification Firebase
+    // 6. Envoyer email de vérification Firebase
     await fbNewUser.sendEmailVerification();
 
-    // 6. Déconnecter Firebase — l'utilisateur doit confirmer son email d'abord
+    // 7. Déconnecter Firebase — l'utilisateur doit confirmer son email d'abord
     await fbAuth.signOut();
 
     toast('Compte créé ! 📧 Vérifiez votre boîte mail pour confirmer avant de vous connecter.');
