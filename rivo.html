@@ -702,7 +702,10 @@ function loadFedaPayScript(){
     s.onload=function(){
       try{
         sb=window.supabase.createClient(SB_URL,SB_ANON);
-        sbAdmin=window.supabase.createClient(SB_URL,SB_SERVICE);
+        // sbAdmin isolé (persistSession:false) pour éviter le conflit de session avec sb
+        sbAdmin=window.supabase.createClient(SB_URL,SB_SERVICE,{
+          auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}
+        });
         // ── Init Firebase Auth ────────────────────────
         if(!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
         fbAuth=firebase.auth();
