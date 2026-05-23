@@ -591,7 +591,7 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
 const SB_URL  = 'https://qwdttzsbbspayojzeugy.supabase.co';
 const SB_ANON = 'sb_publishable_tG64uzNsmT0XDV7pmglqFA_lxQ4xIFm';
 const SB_SERVICE = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3ZHR0enNiYnNwYXlvanpldWd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODk3MTQzNSwiZXhwIjoyMDk0NTQ3NDM1fQ.Qh-1b3NA4wH5Km4W1v-nU0aGagkeIByet2INxccz3tw';
-const PP_ID   = 'PP-F92222';
+// Paiement géré par paiement.php (PHP côté serveur)
 let sb = null;
 let sbAdmin = null; // client service_role (bypass RLS) — utilisé uniquement pour créer les profils
 
@@ -664,27 +664,21 @@ async function startApp(){
       }
     }
 
-    // Retour paiement PaiementPro (returnContext=purchase_id=<uuid>)
-    const returnCtx=new URLSearchParams(location.search).get('returnContext');
-    if(returnCtx){
-      const purchaseId=new URLSearchParams(returnCtx).get('purchase_id');
-      if(purchaseId){
-        await sb.from('purchases').update({status:'complete'}).eq('id',purchaseId);
-        history.replaceState({},'',location.pathname);
-        if(FBU&&CU){goTo('dashboard');setTimeout(()=>toast('Paiement réussi ! 🎉'),500);}
+    // Retour paiement depuis paiement.php?action=retour (payment=ok&pid=...)
+    const ps=new URLSearchParams(location.search).get('payment');
+    const pid=new URLSearchParams(location.search).get('pid');
+    if(ps==='ok'&&pid){
+      // La notification PHP a déjà mis à jour le statut côté serveur
+      // On recharge juste le profil et on affiche le succès
+      history.replaceState({},'',location.pathname);
+      if(FBU&&CU){
+        await loadProfileData();
+        loaded.formations=false; loaded.profil=false;
+        goTo('dashboard');
+        setTimeout(()=>toast('Paiement réussi ! 🎉'),500);
       }
     }
   }catch(e){console.warn('[startApp]',e?.message||e);}
-  loadPaiementProScript();
-}
-
-function loadPaiementProScript(){
-  if(typeof PaiementPro!=='undefined'){window.paiementProReady=true;return;}
-  const s=document.createElement('script');
-  s.src='https://www.paiementpro.net/webservice/onlinepayment/js/paiementpro.v1.0.1.js';
-  s.onload=()=>{window.paiementProReady=true;};
-  s.onerror=()=>{console.warn('PaiementPro CDN inaccessible');};
-  document.head.appendChild(s);
 }
 
 // ── Dynamic CDN loader with fallback ─────────────────
@@ -1078,18 +1072,6 @@ async function confirmPay(){
   }
   setBtn('pay-btn','<span class="spin"></span>',true);
 
-  // Attendre que le script PaiementPro soit chargé (max 6s)
-  let wait=0;
-  while(!window.paiementProReady && wait<12){
-    await new Promise(r=>setTimeout(r,500));
-    wait++;
-  }
-  if(!window.paiementProReady||typeof PaiementPro==='undefined'){
-    toast('Service de paiement non disponible. Vérifiez votre connexion.','err');
-    setBtn('pay-btn','⚡ Payer',false);
-    return;
-  }
-
   try{
     // 1. Créer la commande en BDD (statut en_attente)
     const{data:pur,error}=await withTimeout(sb.from('purchases').insert({
@@ -1103,37 +1085,28 @@ async function confirmPay(){
       toast(msg,'err'); setBtn('pay-btn','⚡ Payer',false); return;
     }
 
-    // 2. Initialiser PaiementPro et obtenir l'URL
-    const pp=new PaiementPro(PP_ID);
-    pp.amount              = Math.round(course.price); // entier strict
-    pp.description         = 'RIVO - '+course.title;
-    // pp.channel ne pas forcer — laisser PaiementPro proposer tous les modes
-    pp.referenceNumber     = 'RIVO-'+Date.now();
-    pp.customerEmail       = CU.email;
-    pp.customerFirstName   = CP?.first_name||'';
-    pp.customerLastName    = CP?.last_name||'';
-    pp.customerPhoneNumber = CP?.phone||'';
-    pp.returnURL           = window.location.origin+window.location.pathname;
-    pp.returnContext       = 'purchase_id='+pur.id;
-
-    console.log('[PaiementPro] params:', {
-      amount:pp.amount, ref:pp.referenceNumber,
-      returnURL:pp.returnURL, returnContext:pp.returnContext
+    // 2. Appel PHP côté serveur → obtenir l'URL de redirection PaiementPro
+    const resp=await fetch('./paiement.php?action=init',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        amount:            Math.round(course.price),
+        purchase_id:       pur.id,
+        course_title:      course.title,
+        customer_email:    CU.email,
+        customer_first_name: CP?.first_name||'',
+        customer_last_name:  CP?.last_name||'',
+        customer_phone:    CP?.phone||'',
+      })
     });
+    const result=await resp.json();
+    console.log('[PaiementPro/PHP] résultat:', result);
 
-    await pp.getUrlPayment();
-
-    console.log('[PaiementPro] résultat → success:', pp.success,
-      '| url:', pp.url, '| error:', pp.error, '| response:', JSON.stringify(pp.response));
-
-    if(pp.success){
+    if(result.success && result.url){
       closePayModal();
-      window.location=pp.url;
+      window.location=result.url; // Redirection vers la page de paiement
     } else {
-      // Afficher le vrai message d'erreur de l'API
-      const apiErr = pp.error || (pp.response && (pp.response.message||pp.response.error||JSON.stringify(pp.response))) || 'Aucun détail';
-      console.error('[PaiementPro] échec complet:', apiErr);
-      toast('Erreur paiement : '+apiErr,'err');
+      toast('Erreur paiement : '+(result.error||'Réessayez'),'err');
       setBtn('pay-btn','⚡ Payer',false);
     }
   }catch(err){
