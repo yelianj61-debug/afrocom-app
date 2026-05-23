@@ -1069,16 +1069,14 @@ async function confirmPay(){
   // Relire TEST_MODE depuis localStorage à chaque paiement (l'admin peut le changer à tout moment)
   const TEST_MODE = localStorage.getItem('rivo_test_mode') === '1';
   const course={...pendingCourse};
-  // Garantir que le profil existe avant l'achat (FK purchases_user_id_fkey → profiles.id)
-  if(!CP){
-    await loadProfileData();
-    if(!CP){
-      // CP toujours null (RLS ou réseau) : profil minimal depuis auth pour ne pas bloquer
-      const meta=CU?.user_metadata||{};
-      CP={id:CU.id,first_name:meta.first_name||'',last_name:meta.last_name||'',
-          currency:'XOF',balance:0,points:0,referred_by:null};
-      console.warn('[RIVO] CP null — using minimal profile from auth metadata');
-    }
+
+  // Vérifier que le profil Supabase existe (CU.id non null)
+  // Sans profil Supabase, on ne peut pas enregistrer l'achat (clé étrangère purchases → profiles)
+  if(!CU?.id){
+    closePayModal();
+    toast('⚠️ Votre profil n\'est pas encore synchronisé. Déconnectez-vous et reconnectez-vous, puis réessayez.','err');
+    console.error('[confirmPay] CU.id null — profil non créé en BDD (RLS insert bloqué)');
+    return;
   }
   if(TEST_MODE){
     setBtn('pay-btn','<span class="spin"></span>',true);
