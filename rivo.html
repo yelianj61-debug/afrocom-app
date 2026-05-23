@@ -605,8 +605,10 @@ const FB_CONFIG = {
 let fbAuth = null;
 
 // ── Globals ───────────────────────────────────────────
-let FBU = null; // Firebase user (état auth Firebase)
-let CU = null, CP = null, pendingCourse = null; // CU = Supabase user (UUID pour DB)
+let FBU = null; // Utilisateur Firebase (auth)
+let CU  = null; // Shim de compatibilité { id, email } basé sur le profil Supabase
+let CP  = null; // Profil Supabase (données)
+let pendingCourse = null;
 const loaded = {};
 let TEST_MODE = localStorage.getItem('rivo_test_mode') === '1';
 let wdInProgress = false;
@@ -644,53 +646,24 @@ function updateEmailBanner(){
   if(banner) banner.style.display=(FBU&&!FBU.emailVerified)?'block':'none';
 }
 
-// ── Mot de passe Supabase dérivé du Firebase UID (immuable, résiste aux resets) ──
-function _sbPwd(uid){ return 'rivo!2026!' + uid; }
-
-// ── Créer profil Supabase si premier login (données viennent de Firebase + localStorage)
-async function _ensureProfile(){
-  if(!CU?.id)return;
-  const{data:existingP}=await sb.from('profiles').select('id').eq('id',CU.id).single();
-  if(!existingP){
-    const pending=JSON.parse(localStorage.getItem('rivo_pending_profile')||'null')||{};
-    const nameParts=(FBU?.displayName||'').split(' ');
-    await sb.from('profiles').upsert({
-      id:CU.id,
-      first_name:pending.first_name||nameParts[0]||'',
-      last_name:pending.last_name||nameParts.slice(1).join(' ')||'',
-      email:FBU?.email||CU.email||'',
-      birth_date:pending.birth_date||null,
-      referred_by:pending.referred_by||null,
-    },{onConflict:'id'});
-    if(pending.first_name) localStorage.removeItem('rivo_pending_profile');
-  }
-}
-
 async function startApp(){
   try{
-    // 1. Attendre que Firebase restaure l'état auth depuis son localStorage
+    // Firebase restaure la session depuis son localStorage
     const fbUser=await new Promise(resolve=>{
       const unsub=fbAuth.onAuthStateChanged(u=>{unsub();resolve(u);});
     });
 
     if(fbUser&&fbUser.emailVerified){
       FBU=fbUser;
-      // 2. Connexion Supabase avec mot de passe dérivé du Firebase UID (immuable)
-      const{data,error}=await withTimeout(sb.auth.signInWithPassword({
-        email:fbUser.email,
-        password:_sbPwd(fbUser.uid)
-      }),10000);
-      if(!error&&data?.session){
-        CU=data.session.user;
-        await _ensureProfile();
-        await loadProfileData();
+      await loadProfileData();
+      if(CP){
         updateEmailBanner();
         goTo('dashboard');
         checkShowTutorial();
       }
     }
 
-    // Gestion retour paiement (inchangé)
+    // Retour paiement
     const ps=new URLSearchParams(location.search).get('payment');
     const pid=new URLSearchParams(location.search).get('pid');
     if(ps==='ok'&&pid){
@@ -742,31 +715,36 @@ function loadFedaPayScript(){
 // ── BUG 1 & 2 FIX: guard race-condition + auto-création profil manquant ─
 async function loadProfileData(){
   if(!CU?.id)return;
-  const expectedUserId=CU.id;
+  if(!FBU?.email) return;
+  const expectedEmail=FBU.email;
   try{
-    let {data:p,error}=await withTimeout(sb.from('profiles').select('*').eq('id',CU.id).single());
+    // Cherche le profil par email (pas besoin de Supabase Auth)
+    let {data:p,error}=await withTimeout(sb.from('profiles').select('*').eq('email',FBU.email).single());
     if(error && error.code!=='PGRST116'){
       console.error('[RIVO] Profile fetch error:', error.code, error.message);
-      if(error.code==='42501') toast('Permissions manquantes sur votre profil. Contactez le support.','err');
     }
-    // Guard race condition : ignorer UNIQUEMENT si des données d'un AUTRE utilisateur arrivent
-    if(p && (p.id!==expectedUserId || p.id!==CU?.id)){
-      console.warn('loadProfileData: race condition détectée, données ignorées');
-      return;
-    }
-    // Profil introuvable → auto-création via _ensureProfile si possible
+    // Profil introuvable → créer depuis localStorage (données saisies à l'inscription)
     if(!p){
-      await _ensureProfile();
-      const {data:p2}=await sb.from('profiles').select('*').eq('id',CU.id).single();
-      if(p2 && p2.id===CU.id) p=p2;
+      const pending=JSON.parse(localStorage.getItem('rivo_pending_profile')||'null')||{};
+      const nameParts=(FBU.displayName||'').split(' ');
+      const{data:newP}=await withTimeout(sb.from('profiles').insert({
+        first_name:pending.first_name||nameParts[0]||'',
+        last_name:pending.last_name||nameParts.slice(1).join(' ')||'',
+        email:FBU.email,
+        birth_date:pending.birth_date||null,
+        referred_by:pending.referred_by||null,
+      }).select().single());
+      if(newP) p=newP;
+      if(pending.first_name) localStorage.removeItem('rivo_pending_profile');
     }
-    // Si toujours null (problème réseau/RLS), afficher les infos d'auth minimales
+    // Guard : mauvais email (race condition)
+    if(p && p.email!==expectedEmail){ console.warn('Race condition profil, ignoré'); return; }
+    // Toujours null → afficher infos minimales depuis Firebase
     if(!p){
-      const email=FBU?.email||CU.email||'—';
-      const nameParts=(FBU?.displayName||'').split(' ');
+      const email=FBU.email||'—';
+      const nameParts=(FBU.displayName||'').split(' ');
       const fn0=nameParts[0]||'';
-      const ln0=nameParts.slice(1).join(' ')||'';
-      const name0=`${fn0} ${ln0}`.trim()||email.split('@')[0]||'Utilisateur';
+      const name0=fn0||email.split('@')[0]||'Utilisateur';
       document.getElementById('welcome-h').textContent=fn0?`Bienvenue ${fn0} !!!`:'Bienvenue !!!';
       ['prof-name','info-name'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=name0;});
       ['prof-email','info-email'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=email;});
@@ -776,10 +754,12 @@ async function loadProfileData(){
       return;
     }
     CP=p;
+    // Shim de compatibilité pour tout le code qui utilise CU.id et CU.email
+    CU={id:p.id, email:FBU.email};
     const fn=p.first_name||'';
     const ln=p.last_name||'';
     const fullName=`${fn} ${ln}`.trim()||'Utilisateur';
-    const email=CU?.email||'—';
+    const email=FBU.email||'—';
     const solde=fmt(p.balance||0,p.currency);
     const[ic,lb,bg,co]=badgeInfo(p.badge_level);
     document.getElementById('welcome-h').textContent=`Bienvenue ${fn} !!!`;
@@ -825,17 +805,13 @@ async function doLogin(e){
     const pwd=document.getElementById('li-pwd').value;
 
     // 1. Connexion Firebase
-    // — reload() force la synchro serveur pour avoir le vrai emailVerified
-    const cred=await Promise.race([
-      fbAuth.signInWithEmailAndPassword(email,pwd),
-      new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout-firebase')),15000))
-    ]);
+    const cred=await withTimeout(fbAuth.signInWithEmailAndPassword(email,pwd),15000);
     const fbUser=cred.user;
-    await fbUser.reload(); // ← synchronise emailVerified depuis le serveur Firebase
+    await fbUser.reload(); // force la synchro emailVerified depuis le serveur
 
-    // 2. Vérification email obligatoire
+    // 2. Email pas encore confirmé
     if(!fbUser.emailVerified){
-      FBU=fbUser; // garder pour resendConfirmation()
+      FBU=fbUser;
       showErr('li-err','Confirmez votre email avant de vous connecter. Vérifiez vos spams.');
       document.getElementById('li-resend').style.display='block';
       return;
@@ -843,24 +819,7 @@ async function doLogin(e){
 
     FBU=fbUser;
 
-    // 3. Connexion Supabase avec mot de passe dérivé — withTimeout anti-spinner infini
-    const sbPwd=_sbPwd(fbUser.uid);
-    let{data,error}=await withTimeout(sb.auth.signInWithPassword({email,password:sbPwd}),10000);
-
-    // 4. Fallback : premier login → compte Supabase inexistant → le créer à la volée
-    if(error&&(error.status===400||error.message?.includes('Invalid login credentials'))){
-      const{data:su,error:suErr}=await withTimeout(sb.auth.signUp({
-        email,password:sbPwd,
-        options:{data:{first_name:FBU.displayName?.split(' ')[0]||'',last_name:''}}
-      }),10000);
-      if(suErr)throw suErr;
-      // Réessayer la connexion après création
-      const retry=await withTimeout(sb.auth.signInWithPassword({email,password:sbPwd}),10000);
-      if(retry.error)throw retry.error;
-      data=retry.data; error=null;
-    }else if(error)throw error;
-
-    // 5. Réinitialiser tout l'état
+    // 3. Réinitialiser l'état
     CP=null; CU=null;
     document.getElementById('welcome-h').textContent='Bienvenue !!!';
     document.getElementById('prof-name').textContent='...';
@@ -873,28 +832,30 @@ async function doLogin(e){
     document.getElementById('st-pts').textContent='0';
     Object.keys(loaded).forEach(k=>delete loaded[k]);
 
-    if(!data?.session?.user) throw new Error('Session Supabase invalide. Réessayez.');
-    CU=data.session.user;
-    await _ensureProfile();
-
-    // 5. Redirection admin si badge admin
-    const{data:p}=await withTimeout(sb.from('profiles').select('badge_level').eq('id',CU.id).single(),7000);
-    if(p?.badge_level==='admin'){toast('Connexion admin réussie !');setTimeout(()=>{window.location.href='./rivo-admin.html';},700);return;}
-
+    // 4. Charger le profil depuis Supabase (données uniquement)
     await loadProfileData();
+    if(!CP) throw new Error('Profil introuvable. Contactez le support.');
+
+    // 5. Redirection admin
+    if(CP.badge_level==='admin'){
+      toast('Connexion admin réussie !');
+      setTimeout(()=>{window.location.href='./rivo-admin.html';},700);
+      return;
+    }
+
     toast('Connexion réussie ! 🎉');
     setTimeout(()=>{goTo('dashboard');},500);
+
   }catch(err){
     const code=err.code||'';
     const em=err.message||'';
-    if(code.includes('wrong-password')||code.includes('user-not-found')||code.includes('invalid-credential')||code.includes('INVALID_LOGIN_CREDENTIALS')){
+    if(code.includes('wrong-password')||code.includes('user-not-found')||
+       code.includes('invalid-credential')||code.includes('INVALID_LOGIN_CREDENTIALS')){
       showErr('li-err','Email ou mot de passe incorrect.');
     }else if(code.includes('too-many-requests')){
-      showErr('li-err','Trop de tentatives. Réessayez plus tard.');
-    }else if(em.includes('timeout-firebase')||em.includes('timed out')||em.includes('Request timed out')){
+      showErr('li-err','Trop de tentatives. Réessayez dans quelques minutes.');
+    }else if(em.includes('Erreur réseau')||em.includes('timed out')){
       showErr('li-err','Connexion trop lente. Vérifiez votre réseau et réessayez.');
-    }else if(em.toLowerCase().includes('email not confirmed')){
-      showErr('li-err','Compte en attente de validation. Contactez le support.');
     }else{
       showErr('li-err',em||'Erreur de connexion. Réessayez.');
     }
@@ -958,42 +919,28 @@ async function doRegister(e){
       if(!r)throw new Error('Code de parrainage invalide ou introuvable');
       refId=r.id;
     }
-    // 2. Créer compte Firebase
+    // 2. Créer le compte Firebase
     const cred=await fbAuth.createUserWithEmailAndPassword(email,pwd);
     const fbNewUser=cred.user;
-
-    // 3. Stocker le nom dans Firebase displayName
     await fbNewUser.updateProfile({displayName:`${fn} ${ln}`});
 
-    // 4. Créer le compte Supabase avec mot de passe dérivé
-    const sbPwd=_sbPwd(fbNewUser.uid);
-    const{data:sbAuth,error:sbSignUpErr}=await withTimeout(sb.auth.signUp({
-      email,password:sbPwd,
-      options:{data:{first_name:fn,last_name:ln}}
-    }),10000);
-    if(sbSignUpErr) console.warn('[doRegister] Supabase signUp err:',sbSignUpErr.message);
+    // 3. Créer le profil dans Supabase (données uniquement, pas d'auth Supabase)
+    const{error:insertErr}=await withTimeout(sb.from('profiles').insert({
+      first_name:fn, last_name:ln, email,
+      birth_date:birth||null, referred_by:refId||null
+    }));
+    if(insertErr) console.warn('[doRegister] profile insert:', insertErr.message);
 
-    // Si Supabase a renvoyé une session immédiate (email confirm désactivé) → upsert profil
-    if(sbAuth?.session?.user){
-      await sb.from('profiles').upsert({
-        id:sbAuth.session.user.id,
-        first_name:fn,last_name:ln,email,
-        birth_date:birth||null,referred_by:refId||null
-      },{onConflict:'id'});
-    }
-
-    // 5. Sauvegarder en localStorage (backup si session non disponible)
+    // 4. Sauvegarder en localStorage (backup si insert a échoué)
     localStorage.setItem('rivo_pending_profile',JSON.stringify({
-      first_name:fn,last_name:ln,
-      birth_date:birth||null,
-      referred_by:refId||null
+      first_name:fn, last_name:ln,
+      birth_date:birth||null, referred_by:refId||null
     }));
 
-    // 6. Envoyer email de vérification Firebase
+    // 5. Email de vérification Firebase
     await fbNewUser.sendEmailVerification();
 
-    // 7. Déconnecter les deux (Supabase ET Firebase) — propre pour le prochain login
-    try{await sb.auth.signOut();}catch(_){}
+    // 6. Déconnexion Firebase (l'utilisateur doit confirmer son email avant)
     await fbAuth.signOut();
 
     toast('Compte créé ! 📧 Vérifiez votre boîte mail pour confirmer avant de vous connecter.');
@@ -1013,7 +960,6 @@ async function doRegister(e){
 // ── Logout ────────────────────────────────────────────
 async function doLogout(){
   try{await fbAuth.signOut();}catch(_){}
-  await sb.auth.signOut();
   FBU=null; CU=CP=null;
   Object.keys(loaded).forEach(k=>delete loaded[k]);
   document.getElementById('welcome-h').textContent='Bienvenue !!!';
