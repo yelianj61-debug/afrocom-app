@@ -1116,13 +1116,22 @@ async function confirmPay(){
     pp.returnURL           = window.location.origin+window.location.pathname;
     pp.returnContext       = 'purchase_id='+pur.id;
 
+    console.log('[PaiementPro] params:', {
+      amount:pp.amount, channel:pp.channel, ref:pp.referenceNumber,
+      returnURL:pp.returnURL, returnContext:pp.returnContext
+    });
+
     await pp.getUrlPayment();
+
+    console.log('[PaiementPro] résultat → success:', pp.success,
+      '| url:', pp.url, '| error:', pp.error, '| response:', pp.response);
 
     if(pp.success){
       closePayModal();
-      window.location=pp.url; // Redirection vers la page de paiement
+      window.location=pp.url;
     } else {
       toast('Erreur de paiement. Réessayez.','err');
+      console.error('[PaiementPro] échec:', pp.error||pp.response||'(pas de détail)');
       setBtn('pay-btn','⚡ Payer',false);
     }
   }catch(err){
