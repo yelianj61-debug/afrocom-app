@@ -612,7 +612,6 @@ let CU  = null; // Shim de compatibilité { id, email } basé sur le profil Supa
 let CP  = null; // Profil Supabase (données)
 let pendingCourse = null;
 const loaded = {};
-let TEST_MODE = localStorage.getItem('rivo_test_mode') === '1';
 let wdInProgress = false;
 
 // ── Helpers ───────────────────────────────────────────
@@ -735,7 +734,9 @@ async function loadProfileData(){
       const pending=JSON.parse(localStorage.getItem('rivo_pending_profile')||'null')||{};
       const nameParts=(FBU.displayName||'').split(' ');
       // Utiliser sbAdmin (service_role) pour contourner la politique RLS "TO authenticated"
+      const _uid=crypto.randomUUID();
       const{data:newP,error:insertFallbackErr}=await withTimeout(sbAdmin.from('profiles').insert({
+        id:_uid,
         first_name:pending.first_name||nameParts[0]||'',
         last_name:pending.last_name||nameParts.slice(1).join(' ')||'',
         email:FBU.email,
@@ -960,6 +961,7 @@ async function doRegister(e){
 
     // 3. Créer le profil dans Supabase via sbAdmin (service_role, bypass RLS)
     const{data:newProf,error:insertErr}=await withTimeout(sbAdmin.from('profiles').insert({
+      id:crypto.randomUUID(),
       first_name:fn, last_name:ln, email,
       birth_date:birth||null, referred_by:refId||null
     }).select().single());
@@ -1076,47 +1078,12 @@ function closePayModal(){document.getElementById('pay-modal').style.display='non
 
 async function confirmPay(){
   if(!pendingCourse)return;
-  // Relire TEST_MODE depuis localStorage à chaque paiement (l'admin peut le changer à tout moment)
-  const TEST_MODE = localStorage.getItem('rivo_test_mode') === '1';
   const course={...pendingCourse};
 
   // Vérifier que le profil Supabase existe (CU.id non null)
-  // Sans profil Supabase, on ne peut pas enregistrer l'achat (clé étrangère purchases → profiles)
   if(!CU?.id){
     closePayModal();
     toast('⚠️ Votre profil n\'est pas encore synchronisé. Déconnectez-vous et reconnectez-vous, puis réessayez.','err');
-    console.error('[confirmPay] CU.id null — profil non créé en BDD (RLS insert bloqué)');
-    return;
-  }
-  if(TEST_MODE){
-    setBtn('pay-btn','<span class="spin"></span>',true);
-    try{
-      const{data:pur,error}=await withTimeout(sb.from('purchases').insert({
-        user_id:CU.id,course_id:course.id,amount:course.price,
-        currency:course.currency,status:'complete',payment_method:'test'
-      }).select().single());
-      if(error)throw new Error('Erreur création commande test');
-      closePayModal();
-      try{await addPoints(CU.id,10);}catch(_){}
-      if(CP?.referred_by){
-        try{ await sb.rpc('credit_parrain',{p_parrain_id:CP.referred_by,p_fcfa:1000,p_points:20}); }catch(_){}
-      }
-      await loadProfileData();
-      loaded.formations=false;
-      loaded.profil=false;
-      loadBord();
-      if(document.getElementById('tab-formations').classList.contains('active')){
-        loaded.formations=true;loadMesFormations();
-      }
-      if(document.getElementById('tab-profil').classList.contains('active')){
-        loaded.profil=true;loadProfil();
-      }
-      showPaySuccess(course.title);
-    }catch(err){
-      toast(err.message||'Erreur paiement test','err');
-    }finally{
-      setBtn('pay-btn','⚡ Payer',false);
-    }
     return;
   }
   setBtn('pay-btn','<span class="spin"></span>',true);
