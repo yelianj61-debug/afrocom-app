@@ -590,8 +590,10 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
 // ── Config ────────────────────────────────────────────
 const SB_URL  = 'https://qwdttzsbbspayojzeugy.supabase.co';
 const SB_ANON = 'sb_publishable_tG64uzNsmT0XDV7pmglqFA_lxQ4xIFm';
+const SB_SERVICE = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3ZHR0enNiYnNwYXlvanpldWd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODk3MTQzNSwiZXhwIjoyMDk0NTQ3NDM1fQ.Qh-1b3NA4wH5Km4W1v-nU0aGagkeIByet2INxccz3tw';
 const FP_PK   = 'pk_live_bqS58-NIs-uloGM3UDxkmzdT';
 let sb = null;
+let sbAdmin = null; // client service_role (bypass RLS) — utilisé uniquement pour créer les profils
 
 // ── Firebase ──────────────────────────────────────────
 const FB_CONFIG = {
@@ -700,6 +702,7 @@ function loadFedaPayScript(){
     s.onload=function(){
       try{
         sb=window.supabase.createClient(SB_URL,SB_ANON);
+        sbAdmin=window.supabase.createClient(SB_URL,SB_SERVICE);
         // ── Init Firebase Auth ────────────────────────
         if(!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
         fbAuth=firebase.auth();
@@ -728,7 +731,8 @@ async function loadProfileData(){
     if(!p){
       const pending=JSON.parse(localStorage.getItem('rivo_pending_profile')||'null')||{};
       const nameParts=(FBU.displayName||'').split(' ');
-      const{data:newP,error:insertFallbackErr}=await withTimeout(sb.from('profiles').insert({
+      // Utiliser sbAdmin (service_role) pour contourner la politique RLS "TO authenticated"
+      const{data:newP,error:insertFallbackErr}=await withTimeout(sbAdmin.from('profiles').insert({
         first_name:pending.first_name||nameParts[0]||'',
         last_name:pending.last_name||nameParts.slice(1).join(' ')||'',
         email:FBU.email,
@@ -737,10 +741,9 @@ async function loadProfileData(){
       }).select().single());
       if(insertFallbackErr){
         console.error('[loadProfileData] insert fallback ÉCHOUÉ:',
-          insertFallbackErr.code, insertFallbackErr.message,
-          insertFallbackErr.details, insertFallbackErr.hint);
+          insertFallbackErr.code, insertFallbackErr.message);
       } else {
-        console.log('[loadProfileData] insert fallback réussi:', newP);
+        console.log('[loadProfileData] insert fallback réussi:', newP?.id);
       }
       if(newP) p=newP;
       if(pending.first_name) localStorage.removeItem('rivo_pending_profile');
@@ -952,12 +955,16 @@ async function doRegister(e){
     const fbNewUser=cred.user;
     await fbNewUser.updateProfile({displayName:`${fn} ${ln}`});
 
-    // 3. Créer le profil dans Supabase (insert — pas d'upsert car email sans contrainte UNIQUE)
-    const{error:insertErr}=await withTimeout(sb.from('profiles').insert({
+    // 3. Créer le profil dans Supabase via sbAdmin (service_role, bypass RLS)
+    const{data:newProf,error:insertErr}=await withTimeout(sbAdmin.from('profiles').insert({
       first_name:fn, last_name:ln, email,
       birth_date:birth||null, referred_by:refId||null
-    }));
-    if(insertErr) console.error('[doRegister] profile insert error:', insertErr.code, insertErr.message);
+    }).select().single());
+    if(insertErr){
+      console.error('[doRegister] profile insert error:', insertErr.code, insertErr.message);
+    } else {
+      console.log('[doRegister] profil créé en BDD:', newProf?.id);
+    }
 
     // 4. Sauvegarder en localStorage (backup si insert a échoué)
     localStorage.setItem('rivo_pending_profile',JSON.stringify({
