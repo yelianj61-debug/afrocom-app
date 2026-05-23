@@ -11,6 +11,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="RIVO">
 <link rel="apple-touch-icon" href="icon-192.png">
+<!-- Firebase Auth (compat SDK — accès via firebase.auth() global) -->
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <style>
@@ -60,6 +63,36 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
 .bottom-nav button .nav-icon{font-size:1.25rem}
 /* nav landing */
 .top-nav{position:fixed;top:0;width:100%;z-index:60;background:rgba(255,255,255,.93);backdrop-filter:blur(14px);box-shadow:0 1px 18px rgba(0,0,0,.07)}
+
+/* ── Legal Modal Styles ──────────────────────────────── */
+#legal-modal-body .section{background:#f8fafc;border-radius:1.25rem;padding:1.75rem;box-shadow:0 2px 16px rgba(0,0,0,.06);margin-bottom:1.25rem}
+#legal-modal-body .section h2{font-size:1.15rem;font-weight:800;color:#1d4ed8;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:2px solid #eff6ff;display:flex;align-items:center;gap:.4rem}
+#legal-modal-body .section h3{font-size:.95rem;font-weight:700;color:#374151;margin:1rem 0 .5rem}
+#legal-modal-body .section p{color:#374151;font-size:.9rem;line-height:1.8;margin-bottom:.75rem}
+#legal-modal-body .section p:last-child{margin-bottom:0}
+#legal-modal-body .section ul{padding-left:1.25rem;display:flex;flex-direction:column;gap:.4rem;margin-bottom:.75rem}
+#legal-modal-body .section ul li{color:#4b5563;font-size:.9rem;line-height:1.7}
+#legal-modal-body .toc{background:#f8fafc;border-radius:1.25rem;padding:1.5rem;box-shadow:0 2px 16px rgba(0,0,0,.06);margin-bottom:1.25rem}
+#legal-modal-body .toc h3{font-size:1rem;font-weight:800;color:#1F2937;margin-bottom:.875rem}
+#legal-modal-body .toc ol{padding-left:1.25rem;display:flex;flex-direction:column;gap:.4rem}
+#legal-modal-body .toc li a{color:#2563EB;font-size:.875rem;text-decoration:none;font-weight:600}
+#legal-modal-body .toc li a:hover{text-decoration:underline}
+#legal-modal-body .highlight{background:#eff6ff;border-left:4px solid #2563EB;border-radius:0 .75rem .75rem 0;padding:1rem 1.25rem;margin:.75rem 0}
+#legal-modal-body .highlight p{color:#1e3a8a;font-weight:600;margin:0}
+#legal-modal-body .important{background:#fee2e2;border-left:4px solid #ef4444;border-radius:0 .75rem .75rem 0;padding:1rem 1.25rem;margin:.75rem 0}
+#legal-modal-body .important p{color:#991b1b;font-weight:600;margin:0}
+#legal-modal-body .contact-box{background:linear-gradient(135deg,#eff6ff,#dbeafe);border:2px solid #bfdbfe;border-radius:1rem;padding:1.5rem;text-align:center;margin-top:1rem}
+#legal-modal-body .contact-box p{color:#1d4ed8;font-size:.9rem;margin-bottom:.35rem}
+#legal-modal-body .values-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-top:.75rem}
+#legal-modal-body .value-card{background:white;border-radius:1rem;padding:1.25rem;border-left:4px solid #2563EB}
+#legal-modal-body .value-card strong{display:block;font-weight:800;color:#1F2937;margin-bottom:.35rem}
+#legal-modal-body .value-card span{font-size:.875rem;color:#6b7280;line-height:1.6}
+#legal-modal-body .offers{display:flex;flex-direction:column;gap:.75rem;margin-top:.75rem}
+#legal-modal-body .offer-item{display:flex;align-items:flex-start;gap:.875rem;padding:.875rem;background:#f0fdf4;border-radius:.875rem}
+#legal-modal-body .offer-icon{font-size:1.2rem;flex-shrink:0;margin-top:.1rem}
+#legal-modal-body .offer-text{font-size:.9rem;color:#374151;line-height:1.6}
+#legal-modal-body .badge-row{display:flex;flex-wrap:wrap;justify-content:center;gap:.75rem;margin-top:1rem}
+#legal-modal-body .badge{background:linear-gradient(135deg,#2563EB,#1D4ED8);color:white;border-radius:9999px;padding:.5rem 1.25rem;font-size:.85rem;font-weight:700}
 </style>
 </head>
 <body>
@@ -189,18 +222,18 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
         <div>
           <h4 style="color:white;font-weight:700;margin-bottom:1rem;font-size:.95rem">Informations</h4>
           <div style="display:flex;flex-direction:column;gap:.6rem">
-            <a href="rivo-about.html" style="color:#9ca3af;text-decoration:none;font-size:.875rem;transition:color .2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='#9ca3af'">ℹ️ À propos de RIVO</a>
-            <a href="rivo-privacy.html" style="color:#9ca3af;text-decoration:none;font-size:.875rem;transition:color .2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='#9ca3af'">🔒 Politique de confidentialité</a>
-            <a href="rivo-terms.html" style="color:#9ca3af;text-decoration:none;font-size:.875rem;transition:color .2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='#9ca3af'">📋 Conditions d'utilisation</a>
+            <button onclick="showLegal('about')" style="background:none;border:none;color:#9ca3af;font-size:.875rem;cursor:pointer;padding:0;text-align:left;transition:color .2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='#9ca3af'">ℹ️ À propos de RIVO</button>
+            <button onclick="showLegal('privacy')" style="background:none;border:none;color:#9ca3af;font-size:.875rem;cursor:pointer;padding:0;text-align:left;transition:color .2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='#9ca3af'">🔒 Politique de confidentialité</button>
+            <button onclick="showLegal('terms')" style="background:none;border:none;color:#9ca3af;font-size:.875rem;cursor:pointer;padding:0;text-align:left;transition:color .2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='#9ca3af'">📋 Conditions d'utilisation</button>
           </div>
         </div>
       </div>
       <div style="border-top:1px solid #374151;padding-top:1.5rem;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:1rem">
         <p style="font-size:.8rem">© 2026 RIVO — Créé par <strong style="color:white">Martial Gbesso</strong>. Tous droits réservés.</p>
         <div style="display:flex;gap:1.5rem;font-size:.8rem">
-          <a href="rivo-privacy.html" style="color:#6b7280;text-decoration:none" onmouseover="this.style.color='white'" onmouseout="this.style.color='#6b7280'">Confidentialité</a>
-          <a href="rivo-terms.html" style="color:#6b7280;text-decoration:none" onmouseover="this.style.color='white'" onmouseout="this.style.color='#6b7280'">Conditions</a>
-          <a href="rivo-about.html" style="color:#6b7280;text-decoration:none" onmouseover="this.style.color='white'" onmouseout="this.style.color='#6b7280'">À propos</a>
+          <button onclick="showLegal('privacy')" style="background:none;border:none;color:#6b7280;cursor:pointer;padding:0;font-size:inherit;transition:color .2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='#6b7280'">Confidentialité</button>
+          <button onclick="showLegal('terms')" style="background:none;border:none;color:#6b7280;cursor:pointer;padding:0;font-size:inherit;transition:color .2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='#6b7280'">Conditions</button>
+          <button onclick="showLegal('about')" style="background:none;border:none;color:#6b7280;cursor:pointer;padding:0;font-size:inherit;transition:color .2s" onmouseover="this.style.color='white'" onmouseout="this.style.color='#6b7280'">À propos</button>
         </div>
       </div>
     </div>
@@ -560,8 +593,20 @@ const SB_ANON = 'sb_publishable_tG64uzNsmT0XDV7pmglqFA_lxQ4xIFm';
 const FP_PK   = 'pk_live_bqS58-NIs-uloGM3UDxkmzdT';
 let sb = null;
 
+// ── Firebase ──────────────────────────────────────────
+const FB_CONFIG = {
+  apiKey: "AIzaSyA5olGOv_gvmJdogl1nQg2TzAdGJ5WbZR4",
+  authDomain: "rivoo-a0624.firebaseapp.com",
+  projectId: "rivoo-a0624",
+  storageBucket: "rivoo-a0624.firebasestorage.app",
+  messagingSenderId: "565836730871",
+  appId: "1:565836730871:web:e9891b273540fb0d4d1ef2"
+};
+let fbAuth = null;
+
 // ── Globals ───────────────────────────────────────────
-let CU = null, CP = null, pendingCourse = null;
+let FBU = null; // Firebase user (état auth Firebase)
+let CU = null, CP = null, pendingCourse = null; // CU = Supabase user (UUID pour DB)
 const loaded = {};
 let TEST_MODE = localStorage.getItem('rivo_test_mode') === '1';
 let wdInProgress = false;
@@ -596,36 +641,59 @@ function goTo(p){
 // ── App start (called after CDN loads) ───────────────
 function updateEmailBanner(){
   const banner=document.getElementById('email-confirm-banner');
-  if(banner) banner.style.display=(CU&&!CU.email_confirmed_at)?'block':'none';
+  if(banner) banner.style.display=(FBU&&!FBU.emailVerified)?'block':'none';
+}
+
+// ── Créer profil Supabase si premier login (données viennent de Firebase + localStorage)
+async function _ensureProfile(){
+  if(!CU?.id)return;
+  const{data:existingP}=await sb.from('profiles').select('id').eq('id',CU.id).single();
+  if(!existingP){
+    const pending=JSON.parse(localStorage.getItem('rivo_pending_profile')||'null')||{};
+    const nameParts=(FBU?.displayName||'').split(' ');
+    await sb.from('profiles').upsert({
+      id:CU.id,
+      first_name:pending.first_name||nameParts[0]||'',
+      last_name:pending.last_name||nameParts.slice(1).join(' ')||'',
+      email:FBU?.email||CU.email||'',
+      birth_date:pending.birth_date||null,
+      referred_by:pending.referred_by||null,
+    },{onConflict:'id'});
+    if(pending.first_name) localStorage.removeItem('rivo_pending_profile');
+  }
 }
 
 async function startApp(){
   try{
-    const {data}=await sb.auth.getSession();
-    if(data?.session){
-      CU=data.session.user;
-      // Garantir que le profil existe (au cas où l'upsert d'inscription n'a pas abouti)
-      const{data:existingP}=await sb.from('profiles').select('id').eq('id',CU.id).single();
-      if(!existingP){
-        const meta=CU.user_metadata||{};
-        await sb.from('profiles').upsert(
-          {id:CU.id,first_name:meta.first_name||'',last_name:meta.last_name||'',email:CU.email||''},
-          {onConflict:'id'}
-        );
+    // 1. Attendre que Firebase restaure l'état auth depuis son localStorage
+    const fbUser=await new Promise(resolve=>{
+      const unsub=fbAuth.onAuthStateChanged(u=>{unsub();resolve(u);});
+    });
+
+    if(fbUser&&fbUser.emailVerified){
+      FBU=fbUser;
+      // 2. Échanger le token Firebase contre une session Supabase
+      const token=await fbUser.getIdToken();
+      const{data,error}=await sb.auth.signInWithIdToken({provider:'firebase',token});
+      if(!error&&data?.session){
+        CU=data.session.user;
+        await _ensureProfile();
+        await loadProfileData();
+        updateEmailBanner();
+        goTo('dashboard');
+        checkShowTutorial();
       }
-      await loadProfileData();
-      updateEmailBanner();
-      goTo('dashboard');
-      checkShowTutorial();
     }
+
+    // Gestion retour paiement (inchangé)
     const ps=new URLSearchParams(location.search).get('payment');
     const pid=new URLSearchParams(location.search).get('pid');
     if(ps==='ok'&&pid){
       await sb.from('purchases').update({status:'complete'}).eq('id',pid);
       history.replaceState({},'',location.pathname);
-      if(data?.session){goTo('dashboard');setTimeout(()=>toast('Paiement réussi ! 🎉'),500);}
+      if(FBU&&CU){goTo('dashboard');setTimeout(()=>toast('Paiement réussi ! 🎉'),500);}
     }
-  }catch(e){}
+  }catch(e){console.warn('[startApp]',e?.message||e);}
   loadFedaPayScript();
 }
 
@@ -654,6 +722,18 @@ function loadFedaPayScript(){
     s.onload=function(){
       try{
         sb=window.supabase.createClient(SB_URL,SB_ANON);
+        // ── Init Firebase Auth ────────────────────────
+        if(!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
+        fbAuth=firebase.auth();
+        // Sync token Firebase→Supabase à chaque refresh automatique (~1h)
+        fbAuth.onIdTokenChanged(async(user)=>{
+          if(user&&user.emailVerified&&CU){
+            try{
+              const tok=await user.getIdToken(true);
+              await sb.auth.signInWithIdToken({provider:'firebase',token:tok});
+            }catch(_){}
+          }
+        });
         startApp();
       }catch(e){tryLoad(i+1);}
     };
@@ -678,23 +758,18 @@ async function loadProfileData(){
       console.warn('loadProfileData: race condition détectée, données ignorées');
       return;
     }
-    // Profil introuvable → auto-création (résout aussi la FK purchases_user_id_fkey)
+    // Profil introuvable → auto-création via _ensureProfile si possible
     if(!p){
-      const meta=CU.user_metadata||{};
-      const{error:createErr}=await sb.from('profiles').upsert(
-        {id:CU.id,first_name:meta.first_name||'',last_name:meta.last_name||'',email:CU.email||''},
-        {onConflict:'id'}
-      );
-      if(createErr) console.error('[RIVO] Profile auto-create error:', createErr.message);
+      await _ensureProfile();
       const {data:p2}=await sb.from('profiles').select('*').eq('id',CU.id).single();
       if(p2 && p2.id===CU.id) p=p2;
     }
     // Si toujours null (problème réseau/RLS), afficher les infos d'auth minimales
     if(!p){
-      const email=CU.email||'—';
-      const meta=CU.user_metadata||{};
-      const fn0=meta.first_name||'';
-      const ln0=meta.last_name||'';
+      const email=FBU?.email||CU.email||'—';
+      const nameParts=(FBU?.displayName||'').split(' ');
+      const fn0=nameParts[0]||'';
+      const ln0=nameParts.slice(1).join(' ')||'';
       const name0=`${fn0} ${ln0}`.trim()||email.split('@')[0]||'Utilisateur';
       document.getElementById('welcome-h').textContent=fn0?`Bienvenue ${fn0} !!!`:'Bienvenue !!!';
       ['prof-name','info-name'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=name0;});
@@ -752,11 +827,28 @@ async function doLogin(e){
   try{
     const email=document.getElementById('li-email').value.trim();
     const pwd=document.getElementById('li-pwd').value;
-    const{data,error}=await sb.auth.signInWithPassword({email,password:pwd});
+
+    // 1. Connexion Firebase (ne bloque pas si email non vérifié)
+    const cred=await fbAuth.signInWithEmailAndPassword(email,pwd);
+    const fbUser=cred.user;
+
+    // 2. Vérification email obligatoire
+    if(!fbUser.emailVerified){
+      FBU=fbUser; // garder pour resendConfirmation()
+      showErr('li-err','Confirmez votre email avant de vous connecter.');
+      document.getElementById('li-resend').style.display='block';
+      return;
+    }
+
+    FBU=fbUser;
+
+    // 3. Échanger token Firebase → session Supabase
+    const token=await fbUser.getIdToken();
+    const{data,error}=await sb.auth.signInWithIdToken({provider:'firebase',token});
     if(error)throw error;
-    // Réinitialiser tout l'état avant de charger le nouveau profil
-    CP=null;
-    CU=null;
+
+    // 4. Réinitialiser tout l'état
+    CP=null; CU=null;
     document.getElementById('welcome-h').textContent='Bienvenue !!!';
     document.getElementById('prof-name').textContent='...';
     document.getElementById('prof-email').textContent='...';
@@ -767,19 +859,26 @@ async function doLogin(e){
     document.getElementById('st-b').textContent='0 FCFA';
     document.getElementById('st-pts').textContent='0';
     Object.keys(loaded).forEach(k=>delete loaded[k]);
-    CU=data.user;
+
+    CU=data.session.user;
+    await _ensureProfile();
+
+    // 5. Redirection admin si badge admin
     const{data:p}=await sb.from('profiles').select('badge_level').eq('id',CU.id).single();
     if(p?.badge_level==='admin'){toast('Connexion admin réussie !');setTimeout(()=>{window.location.href='./rivo-admin.html';},700);return;}
+
     await loadProfileData();
     toast('Connexion réussie ! 🎉');
     setTimeout(()=>{goTo('dashboard');},500);
   }catch(err){
+    const code=err.code||'';
     const em=err.message||'';
-    if(em.toLowerCase().includes('email not confirmed')||em.toLowerCase().includes('email_not_confirmed')){
-      showErr('li-err','Confirmez votre email avant de vous connecter.');
-      document.getElementById('li-resend').style.display='block';
+    if(code.includes('wrong-password')||code.includes('user-not-found')||code.includes('invalid-credential')||code.includes('INVALID_LOGIN_CREDENTIALS')){
+      showErr('li-err','Email ou mot de passe incorrect');
+    }else if(code.includes('too-many-requests')){
+      showErr('li-err','Trop de tentatives. Réessayez plus tard.');
     }else{
-      showErr('li-err',em||'Email ou mot de passe incorrect');
+      showErr('li-err',em||'Erreur de connexion. Réessayez.');
     }
   }finally{
     setBtn('li-btn','Se connecter',false);
@@ -791,24 +890,31 @@ async function forgotPassword(){
   if(!email){showErr('li-err','Entrez votre email, puis cliquez "Mot de passe oublié".');return;}
   setBtn('li-btn','<span class="spin"></span>',true);
   try{
-    const{error}=await withTimeout(sb.auth.resetPasswordForEmail(email,
-      {redirectTo:window.location.origin+window.location.pathname}));
-    if(error)throw error;
+    await fbAuth.sendPasswordResetEmail(email);
     showErr('li-err','');
-    toast('Email de réinitialisation envoyé ! Vérifiez votre boîte mail.');
+    toast('Email de réinitialisation envoyé ! Vérifiez votre boîte mail. 📧');
   }catch(e){
-    showErr('li-err',e.message||'Erreur envoi email');
+    const code=e.code||'';
+    if(code.includes('user-not-found')){showErr('li-err','Aucun compte trouvé avec cet email.');}
+    else{showErr('li-err',e.message||'Erreur envoi email');}
   }finally{
     setBtn('li-btn','Se connecter',false);
   }
 }
 
 async function resendConfirmation(){
-  const email=document.getElementById('li-email').value.trim();
-  if(!email){showErr('li-err','Entrez votre email ci-dessus.');return;}
-  const{error}=await sb.auth.resend({type:'signup',email});
-  if(error){toast(error.message,'err');return;}
-  toast('Email de confirmation renvoyé ! Vérifiez votre boîte mail.');
+  // FBU est défini si login a échoué pour email non vérifié
+  const fbUser=FBU||fbAuth.currentUser;
+  if(!fbUser){
+    toast('Entrez votre email + mot de passe et cliquez "Se connecter" d\'abord.','err');
+    return;
+  }
+  try{
+    await fbUser.sendEmailVerification();
+    toast('Email de confirmation renvoyé ! Vérifiez votre boîte mail. 📧');
+  }catch(e){
+    toast(e.message||'Erreur envoi','err');
+  }
 }
 
 // ── Register ──────────────────────────────────────────
@@ -834,40 +940,35 @@ async function doRegister(e){
       if(!r)throw new Error('Code de parrainage invalide ou introuvable');
       refId=r.id;
     }
-    const{data:auth,error}=await sb.auth.signUp({email,password:pwd,options:{data:{first_name:fn,last_name:ln}}});
-    if(error)throw error;
-    if(!auth.user){
-      showErr('rg-err','Erreur lors de la création du compte. Réessayez.');
-      return;
-    }
-    // BUG 3a FIX: sauvegarder le profil avec referred_by dans TOUS les cas
-    // (que la session soit active ou non), pour que le parrainage fonctionne
-    // même quand Supabase exige la confirmation d'email
-    const{error:upsertErr}=await sb.from('profiles').upsert({
-      id:auth.user.id,
-      first_name:fn,
-      last_name:ln,
+    // 2. Créer compte Firebase
+    const cred=await fbAuth.createUserWithEmailAndPassword(email,pwd);
+    const fbNewUser=cred.user;
+
+    // 3. Stocker le nom dans Firebase displayName
+    await fbNewUser.updateProfile({displayName:`${fn} ${ln}`});
+
+    // 4. Stocker données profil en localStorage (créées dans Supabase DB au 1er login)
+    localStorage.setItem('rivo_pending_profile',JSON.stringify({
+      first_name:fn,last_name:ln,
       birth_date:birth||null,
-      referred_by:refId||null,
-      email:email
-    },{onConflict:'id'});
-    if(upsertErr)console.warn('[doRegister] upsert error:',upsertErr.message);
-    if(!auth.session){
-      // Confirmation email requise : aller à la page login
-      toast('Compte créé ! Vérifiez votre boîte mail pour confirmer avant de vous connecter.');
-      setTimeout(()=>{ goTo('login'); },2200);
-      return;
-    }
-    // Accès direct (confirmation désactivée dans Supabase)
-    CP=null;
-    CU=auth.user;
-    Object.keys(loaded).forEach(k=>delete loaded[k]);
-    try{ await loadProfileData(); }catch(_){}
-    toast('Bienvenue sur RIVO ! 🎉');
-    setTimeout(()=>{goTo('dashboard');},600);
+      referred_by:refId||null
+    }));
+
+    // 5. Envoyer email de vérification Firebase
+    await fbNewUser.sendEmailVerification();
+
+    // 6. Déconnecter Firebase — l'utilisateur doit confirmer son email d'abord
+    await fbAuth.signOut();
+
+    toast('Compte créé ! 📧 Vérifiez votre boîte mail pour confirmer avant de vous connecter.');
+    setTimeout(()=>{ goTo('login'); },2200);
   }catch(err){
+    const code=err.code||'';
     const msg=err.message||'';
-    showErr('rg-err',msg||'Erreur. Réessayez.');
+    if(code.includes('email-already-in-use')) showErr('rg-err','Cet email est déjà utilisé. Connectez-vous ou réinitialisez votre mot de passe.');
+    else if(code.includes('weak-password')) showErr('rg-err','Mot de passe trop faible (minimum 6 caractères).');
+    else if(code.includes('invalid-email')) showErr('rg-err','Adresse email invalide.');
+    else showErr('rg-err',msg||'Erreur. Réessayez.');
   }finally{
     setBtn('rg-btn','Créer mon compte',false);
   }
@@ -875,8 +976,9 @@ async function doRegister(e){
 
 // ── Logout ────────────────────────────────────────────
 async function doLogout(){
+  try{await fbAuth.signOut();}catch(_){}
   await sb.auth.signOut();
-  CU=CP=null;
+  FBU=null; CU=CP=null;
   Object.keys(loaded).forEach(k=>delete loaded[k]);
   document.getElementById('welcome-h').textContent='Bienvenue !!!';
   document.getElementById('ref-code').textContent='...';
@@ -1122,8 +1224,7 @@ async function loadProfil(){
     const fullName=`${fn} ${ln}`.trim()||'Utilisateur';
     document.getElementById('prof-name').textContent=fullName;
     document.getElementById('info-name').textContent=fullName;
-    let email=CU?.email||'';
-    try{const res=await sb.auth.getUser();email=res?.data?.user?.email||email;}catch(_){}
+    let email=FBU?.email||CU?.email||'';
     document.getElementById('prof-email').textContent=email||'—';
     document.getElementById('info-email').textContent=email||'—';
     const pb=document.getElementById('prof-badge');
@@ -1717,6 +1818,352 @@ window.addEventListener('appinstalled',()=>{
     style="background:none;border:none;color:rgba(255,255,255,.75);cursor:pointer;font-size:1.3rem;
     padding:.2rem;flex-shrink:0;line-height:1">✕</button>
 </div>
+
+
+<!-- ── Legal Modal ── -->
+<div id="legal-modal" onclick="if(event.target===this)closeLegal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:8000;overflow-y:auto;padding:1rem 1rem 3rem">
+  <div style="max-width:800px;margin:0 auto;background:white;border-radius:1.5rem;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,.4);animation:slideUp .3s ease">
+    <div style="background:linear-gradient(135deg,#1e3a8a,#2563EB);color:white;padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:1">
+      <h2 id="legal-modal-title" style="font-size:1.1rem;font-weight:800;margin:0">RIVO</h2>
+      <button onclick="closeLegal()" style="background:rgba(255,255,255,.2);border:none;color:white;border-radius:.75rem;padding:.35rem .9rem;cursor:pointer;font-size:1.2rem;font-weight:700;line-height:1">✕</button>
+    </div>
+    <div id="legal-modal-body" style="padding:1.5rem;font-family:'Inter',sans-serif"></div>
+  </div>
+</div>
+<script>
+const _legalContent={
+  about:  {title:'📚 \u00c0 propos de RIVO',html:`<div class="section">
+    <h2>📖 Notre histoire</h2>
+    <p>RIVO est né d'une vision : celle de <strong>Martial Gbesso</strong>, un entrepreneur béninois passionné par l'éducation et la technologie.</p>
+    <p>Face au constat que l'accès à des formations de qualité reste difficile pour de nombreux Africains, Martial a décidé de créer une plateforme qui démocratise l'apprentissage en ligne. RIVO a été conçu pour être simple, accessible et adapté aux besoins réels des apprenants africains.</p>
+  </div>
+
+  <div class="section">
+    <h2>🎯 Notre mission</h2>
+    <p><strong>Rendre le savoir accessible à tous, partout.</strong></p>
+    <p>Nous croyons que l'éducation est le levier le plus puissant pour transformer des vies, créer des opportunités professionnelles et bâtir un avenir meilleur. Avec RIVO, chacun peut apprendre à son rythme, développer ses compétences et obtenir des attestations reconnues pour valoriser son parcours.</p>
+  </div>
+
+  <div class="section">
+    <h2>🌍 Notre vision</h2>
+    <p>Devenir la <strong>référence de la formation en ligne en Afrique francophone</strong>. Nous voulons créer un écosystème où :</p>
+    <div class="offers" style="margin-top:.75rem">
+      <div class="offer-item"><span class="offer-icon">📚</span><span class="offer-text">Les apprenants trouvent des formations de qualité adaptées à leurs besoins</span></div>
+      <div class="offer-item"><span class="offer-icon">🏆</span><span class="offer-text">Les efforts sont récompensés par des attestations officielles</span></div>
+      <div class="offer-item"><span class="offer-icon">⭐</span><span class="offer-text">La fidélité est valorisée par des points et des récompenses exceptionnelles</span></div>
+      <div class="offer-item"><span class="offer-icon">🤝</span><span class="offer-text">Le partage profite à toute la communauté via le parrainage</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>💡 Nos valeurs</h2>
+    <div class="values-grid">
+      <div class="value-card"><strong>📚 Accessibilité</strong><span>Des formations abordables, accessibles depuis un simple téléphone. Pas besoin d'être un expert pour apprendre.</span></div>
+      <div class="value-card"><strong>🎯 Qualité</strong><span>Des contenus soigneusement sélectionnés. Chaque formation apporte des compétences concrètes.</span></div>
+      <div class="value-card"><strong>💡 Innovation</strong><span>Une plateforme moderne avec badges progressifs, points de fidélité et récompenses uniques.</span></div>
+      <div class="value-card"><strong>🤝 Communauté</strong><span>Le parrainage permet de grandir ensemble. Chaque filleul qui apprend fait gagner son parrain.</span></div>
+      <div class="value-card"><strong>🏆 Mérite</strong><span>Les plus actifs sont récompensés : Visa, Moto, Voiture, Emploi, Voyage… vos efforts paient.</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>✅ Ce que nous offrons</h2>
+    <div class="offers">
+      <div class="offer-item"><span class="offer-icon">📚</span><span class="offer-text"><strong>200+ formations</strong> dans de nombreux domaines : développement web, marketing digital, graphisme, Excel, langues, entrepreneuriat et bien plus.</span></div>
+      <div class="offer-item"><span class="offer-icon">🏆</span><span class="offer-text"><strong>Attestations officielles</strong> : chaque formation validée donne droit à une attestation RIVO reconnue.</span></div>
+      <div class="offer-item"><span class="offer-icon">💰</span><span class="offer-text"><strong>Parrainage lucratif</strong> : gagnez 1 000 FCFA pour chaque filleul qui achète une formation.</span></div>
+      <div class="offer-item"><span class="offer-icon">⭐</span><span class="offer-text"><strong>Points de fidélité</strong> : cumulez des points et participez à des événements avec des récompenses exceptionnelles.</span></div>
+      <div class="offer-item"><span class="offer-icon">📞</span><span class="offer-text"><strong>Support réactif</strong> : une équipe à votre écoute, réponse sous 24 heures.</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🏅 Les badges RIVO</h2>
+    <p>Plus vous apprenez, plus vous évoluez !</p>
+    <div class="badge-row">
+      <div class="badge">🌱 Débutant — 0 formation</div>
+      <div class="badge">🥉 Bronze — 5+ formations</div>
+      <div class="badge">🥈 Argent — 10+ formations</div>
+      <div class="badge">🥇 Or — 20+ formations</div>
+      <div class="badge">💎 Diamant — 50+ formations</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>📬 Contact</h2>
+    <div class="contact-box">
+      <p>📧 <strong>assistancerivo@gmail.com</strong></p>
+      <p>📞 <strong>+229 01 45 91 61 77</strong></p>
+      <p style="margin-top:.75rem;font-size:.85rem;color:#3b82f6">⏱️ Réponse sous 24 heures — disponibles 7j/7</p>
+    </div>
+  </div>`},
+  privacy:{title:'\ud83d\udd12 Politique de confidentialit\u00e9',html:`<div class="toc">
+    <h3>📋 Table des matières</h3>
+    <ol>
+      <li><a href="#intro">Introduction</a></li>
+      <li><a href="#qui">Qui sommes-nous ?</a></li>
+      <li><a href="#donnees">Données collectées</a></li>
+      <li><a href="#usage">Comment nous utilisons vos données</a></li>
+      <li><a href="#droits">Vos droits</a></li>
+      <li><a href="#mineurs">Protection des mineurs</a></li>
+      <li><a href="#modifs">Modifications</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ol>
+  </div>
+
+  <div class="section" id="intro">
+    <h2>1. Introduction</h2>
+    <p>La confidentialité de nos utilisateurs est une priorité absolue pour RIVO. Cette politique explique de manière transparente comment nous collectons, utilisons et protégeons vos informations personnelles lorsque vous utilisez notre plateforme de formation.</p>
+    <div class="highlight"><p>En créant un compte sur RIVO, vous acceptez les pratiques décrites dans ce document. Nous vous invitons à le lire attentivement.</p></div>
+  </div>
+
+  <div class="section" id="qui">
+    <h2>2. Qui sommes-nous ?</h2>
+    <p>RIVO est une plateforme de formation en ligne fondée par <strong>Martial Gbesso</strong>, un entrepreneur passionné par l'éducation et la technologie.</p>
+    <p><strong>Notre mission :</strong> rendre le savoir accessible à tous, partout en Afrique et dans le monde.</p>
+    <p><strong>Contact :</strong><br>📧 assistancerivo@gmail.com<br>📞 +229 01 45 91 61 77</p>
+  </div>
+
+  <div class="section" id="donnees">
+    <h2>3. Données collectées</h2>
+    <h3>3.1 Données que vous nous fournissez directement</h3>
+    <p><strong>À l'inscription :</strong></p>
+    <ul>
+      <li>Nom et prénom</li>
+      <li>Adresse email</li>
+      <li>Date de naissance</li>
+      <li>Mot de passe (crypté — nous n'y avons jamais accès)</li>
+      <li>Code de parrainage (optionnel)</li>
+    </ul>
+    <p><strong>Lors de l'utilisation :</strong></p>
+    <ul>
+      <li>Photo de profil (optionnelle)</li>
+      <li>Numéro de téléphone (pour les retraits)</li>
+      <li>Numéro WhatsApp (pour les événements)</li>
+      <li>Messages envoyés au support</li>
+    </ul>
+    <h3>3.2 Données collectées automatiquement</h3>
+    <ul>
+      <li>Adresse IP</li>
+      <li>Type d'appareil et navigateur</li>
+      <li>Pages visitées et actions effectuées</li>
+      <li>Date et heure des connexions</li>
+      <li>Achats et formations consultées</li>
+    </ul>
+    <h3>3.3 Données de paiement</h3>
+    <div class="highlight"><p>Les transactions sont entièrement gérées par <strong>FedaPay</strong>. RIVO ne stocke ni ne voit jamais vos données bancaires, numéros de carte ou identifiants Mobile Money.</p></div>
+  </div>
+
+  <div class="section" id="usage">
+    <h2>4. Comment utilisons-nous vos données ?</h2>
+    <ul>
+      <li>✅ <strong>Gestion du compte</strong> — créer, gérer et sécuriser votre espace personnel</li>
+      <li>✅ <strong>Accès aux formations</strong> — vous donner accès aux contenus achetés</li>
+      <li>✅ <strong>Attestations</strong> — générer et vous transmettre vos attestations</li>
+      <li>✅ <strong>Retraits</strong> — traiter vos demandes de retrait</li>
+      <li>✅ <strong>Parrainage</strong> — créditer vos gains (1 000 FCFA par filleul)</li>
+      <li>✅ <strong>Points et récompenses</strong> — calculer vos points de fidélité</li>
+      <li>✅ <strong>Notifications</strong> — vous informer des attestations, événements et actualités</li>
+      <li>✅ <strong>Amélioration du service</strong> — analyser l'utilisation pour améliorer RIVO</li>
+      <li>✅ <strong>Sécurité</strong> — détecter et prévenir les fraudes</li>
+    </ul>
+  </div>
+
+  <div class="section" id="droits">
+    <h2>5. Vos droits</h2>
+    <ul>
+      <li>📌 <strong>Droit d'accès</strong> — consultez vos données depuis votre profil ou en nous contactant</li>
+      <li>📌 <strong>Droit à l'effacement</strong> — demandez la suppression totale de votre compte sous 24 heures</li>
+      <li>📌 <strong>Droit à la portabilité</strong> — recevez une copie de vos données dans un format réutilisable</li>
+      <li>📌 <strong>Droit d'opposition</strong> — opposez-vous à certains traitements (ex. notifications)</li>
+    </ul>
+    <div class="contact-box">
+      <p>Pour exercer vos droits :</p>
+      <p>📧 <strong>assistancerivo@gmail.com</strong></p>
+      <p>⏱️ Délai de réponse : <strong>24 heures maximum</strong></p>
+    </div>
+  </div>
+
+  <div class="section" id="mineurs">
+    <h2>6. Protection des mineurs</h2>
+    <p>Pour utiliser RIVO, vous devez avoir au moins <strong>14 ans</strong>. En dessous de cet âge, l'accord des parents ou tuteurs est requis.</p>
+    <p>Si nous apprenons qu'un utilisateur de moins de 14 ans a créé un compte sans autorisation parentale, nous supprimerons immédiatement son compte et ses données.</p>
+  </div>
+
+  <div class="section" id="modifs">
+    <h2>7. Modifications de cette politique</h2>
+    <p>RIVO peut modifier cette politique à tout moment. En cas de changement important, vous serez informé par email et/ou notification sur la plateforme. La date de mise à jour est toujours indiquée en haut de ce document.</p>
+  </div>
+
+  <div class="section" id="contact">
+    <h2>8. Contact</h2>
+    <div class="contact-box">
+      <p>📧 <strong>assistancerivo@gmail.com</strong></p>
+      <p>📞 <strong>+229 01 45 91 61 77</strong></p>
+      <p style="margin-top:.75rem;font-size:.8rem;color:#3b82f6">⏱️ Nous sommes à votre écoute — réponse sous 24 heures</p>
+    </div>
+  </div>`},
+  terms:  {title:'\ud83d\udccb Conditions d\'utilisation',html:`<div class="toc">
+    <h3>📋 Table des matières</h3>
+    <ol>
+      <li><a href="#accept">Acceptation des conditions</a></li>
+      <li><a href="#compte">Inscription et compte</a></li>
+      <li><a href="#formations">Formations</a></li>
+      <li><a href="#paiement">Paiement</a></li>
+      <li><a href="#attestations">Attestations</a></li>
+      <li><a href="#retraits">Retraits</a></li>
+      <li><a href="#parrainage">Parrainage</a></li>
+      <li><a href="#points">Points et récompenses</a></li>
+      <li><a href="#comportement">Comportement</a></li>
+      <li><a href="#responsabilite">Responsabilité</a></li>
+      <li><a href="#suspension">Suspension</a></li>
+      <li><a href="#propriete">Propriété intellectuelle</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ol>
+  </div>
+
+  <div class="section" id="accept">
+    <h2>1. Acceptation des conditions</h2>
+    <div class="highlight"><p>En accédant à RIVO et en créant un compte, vous acceptez sans réserve les présentes conditions d'utilisation.</p></div>
+    <p>Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser RIVO. Ces conditions peuvent être modifiées à tout moment ; les utilisateurs seront informés par email ou notification.</p>
+  </div>
+
+  <div class="section" id="compte">
+    <h2>2. Inscription et compte</h2>
+    <h3>2.1 Création de compte</h3>
+    <ul>
+      <li>Avoir au moins <strong>14 ans</strong></li>
+      <li>Fournir des informations exactes et complètes</li>
+      <li>Choisir un mot de passe sécurisé</li>
+      <li>Ne pas créer de faux compte ni usurper l'identité d'autrui</li>
+    </ul>
+    <h3>2.2 Responsabilité du compte</h3>
+    <p>Vous êtes responsable de la confidentialité de votre mot de passe et de toute activité effectuée depuis votre compte. En cas d'utilisation frauduleuse, contactez-nous immédiatement.</p>
+    <h3>2.3 Un seul compte par personne</h3>
+    <div class="important"><p>Chaque utilisateur ne peut posséder qu'un seul compte. Les comptes multiples seront suspendus.</p></div>
+  </div>
+
+  <div class="section" id="formations">
+    <h2>3. Formations</h2>
+    <p>Les formations sur RIVO sont protégées par les lois sur la propriété intellectuelle. L'achat donne un droit d'accès <strong>personnel et non transférable</strong>.</p>
+    <p><strong>Il est strictement interdit de :</strong></p>
+    <ul>
+      <li>Revendre ou redistribuer les formations</li>
+      <li>Partager votre compte ou vos identifiants</li>
+      <li>Copier ou reproduire le contenu sans autorisation</li>
+      <li>Utiliser les formations à des fins commerciales</li>
+    </ul>
+    <div class="important"><p>Toute violation entraînera la suspension immédiate de votre compte.</p></div>
+  </div>
+
+  <div class="section" id="paiement">
+    <h2>4. Paiement</h2>
+    <h3>4.1 Prix</h3>
+    <p>Tous les prix sont affichés en <strong>FCFA</strong>. RIVO se réserve le droit de modifier les prix à tout moment. Les achats déjà effectués ne sont pas affectés.</p>
+    <h3>4.2 Méthodes de paiement</h3>
+    <ul>
+      <li>Mobile Money (MTN, Moov, Orange, etc.)</li>
+      <li>FedaPay (paiement en ligne sécurisé)</li>
+    </ul>
+    <h3>4.3 Politique de remboursement</h3>
+    <div class="highlight"><p>Les formations étant des contenus numériques accessibles immédiatement, aucun remboursement n'est possible après accès à la formation.</p></div>
+  </div>
+
+  <div class="section" id="attestations">
+    <h2>5. Attestations</h2>
+    <ul>
+      <li>Une attestation est délivrée après validation de chaque formation achetée</li>
+      <li>Elle est générée et envoyée par l'administration RIVO</li>
+      <li>Le délai dépend de la validation administrative</li>
+      <li>Les attestations sont disponibles dans votre espace personnel</li>
+    </ul>
+  </div>
+
+  <div class="section" id="retraits">
+    <h2>6. Retraits</h2>
+    <ul>
+      <li>Solde minimum pour un retrait : <strong>1 000 FCFA</strong></li>
+      <li>Retraits traités en <strong>30 minutes maximum</strong></li>
+      <li>Via Mobile Money, carte bancaire ou autre moyen</li>
+    </ul>
+    <p>RIVO se réserve le droit de vérifier les informations avant de traiter le retrait.</p>
+  </div>
+
+  <div class="section" id="parrainage">
+    <h2>7. Parrainage</h2>
+    <p>Chaque utilisateur reçoit un <strong>code de parrainage unique</strong>. Lorsqu'un filleul s'inscrit avec votre code et achète une formation, vous recevez <strong>1 000 FCFA</strong>.</p>
+    <div class="important"><p>L'auto-parrainage (créer un compte pour se parrainer soi-même) est interdit et entraînera la suspension des comptes concernés.</p></div>
+  </div>
+
+  <div class="section" id="points">
+    <h2>8. Points et récompenses</h2>
+    <h3>Comment gagner des points</h3>
+    <ul>
+      <li>Achat d'une formation : <strong>+10 points</strong></li>
+      <li>Attestation reçue : <strong>+10 points</strong></li>
+      <li>Parrainage (filleul achète) : <strong>+20 points</strong></li>
+      <li>Connexion quotidienne : <strong>+5 points</strong></li>
+      <li>Vidéo de recommandation validée : <strong>+500 points</strong></li>
+    </ul>
+    <div class="highlight"><p>Les points n'ont pas de valeur monétaire et ne sont pas échangeables contre de l'argent. RIVO se réserve le droit de modifier le barème.</p></div>
+    <h3>Événements et récompenses</h3>
+    <p>RIVO organise des événements avec des récompenses (Visa, Moto, Voiture, Emploi, Voyage). La participation est conditionnée par le nombre de points requis. Les décisions de RIVO sont finales.</p>
+  </div>
+
+  <div class="section" id="comportement">
+    <h2>9. Comportement des utilisateurs</h2>
+    <p>En utilisant RIVO, vous vous engagez à :</p>
+    <ul>
+      <li>Respecter les autres utilisateurs</li>
+      <li>Ne pas tenter de pirater ou endommager la plateforme</li>
+      <li>Ne pas utiliser de logiciels automatisés (bots)</li>
+      <li>Ne pas frauder le système de parrainage ou de points</li>
+    </ul>
+  </div>
+
+  <div class="section" id="responsabilite">
+    <h2>10. Responsabilité</h2>
+    <p>RIVO s'efforce de maintenir la plateforme accessible 24h/24 et d'assurer la sécurité des données. Cependant, RIVO ne peut être tenu responsable des interruptions temporaires du service, des erreurs de prix ou des conséquences de l'utilisation des formations.</p>
+    <div class="highlight"><p>Les formations sont fournies à titre éducatif. RIVO ne garantit pas l'obtention d'un emploi ou d'un résultat spécifique.</p></div>
+  </div>
+
+  <div class="section" id="suspension">
+    <h2>11. Suspension et résiliation</h2>
+    <p>RIVO se réserve le droit de suspendre ou supprimer un compte en cas de violation des présentes conditions. L'utilisateur peut supprimer son compte à tout moment en contactant assistancerivo@gmail.com.</p>
+  </div>
+
+  <div class="section" id="propriete">
+    <h2>12. Propriété intellectuelle</h2>
+    <ul>
+      <li>Le nom "RIVO" et le logo sont la propriété de <strong>Martial Gbesso</strong></li>
+      <li>Le contenu des formations est protégé par le droit d'auteur</li>
+      <li>La structure et le code du site sont la propriété de RIVO</li>
+      <li>Toute reproduction sans autorisation est interdite</li>
+    </ul>
+  </div>
+
+  <div class="section" id="contact">
+    <h2>13. Contact</h2>
+    <div class="contact-box">
+      <p>📧 <strong>assistancerivo@gmail.com</strong></p>
+      <p>📞 <strong>+229 01 45 91 61 77</strong></p>
+      <p style="margin-top:.75rem;font-size:.8rem;color:#3b82f6">⏱️ Réponse sous 24 heures</p>
+    </div>
+  </div>`}
+};
+function showLegal(page){
+  const d=_legalContent[page];if(!d)return;
+  document.getElementById('legal-modal-title').textContent=d.title;
+  document.getElementById('legal-modal-body').innerHTML=d.html;
+  document.getElementById('legal-modal').style.display='block';
+  document.body.style.overflow='hidden';
+  document.getElementById('legal-modal').scrollTop=0;
+}
+function closeLegal(){
+  document.getElementById('legal-modal').style.display='none';
+  document.body.style.overflow='';
+}
+</script>
 
 </body>
 </html>
