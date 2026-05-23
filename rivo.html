@@ -1105,9 +1105,9 @@ async function confirmPay(){
 
     // 2. Initialiser PaiementPro et obtenir l'URL
     const pp=new PaiementPro(PP_ID);
-    pp.amount              = course.price;
+    pp.amount              = Math.round(course.price); // entier strict
     pp.description         = 'RIVO - '+course.title;
-    pp.channel             = 'CARD';
+    // pp.channel ne pas forcer — laisser PaiementPro proposer tous les modes
     pp.referenceNumber     = 'RIVO-'+Date.now();
     pp.customerEmail       = CU.email;
     pp.customerFirstName   = CP?.first_name||'';
@@ -1117,21 +1117,23 @@ async function confirmPay(){
     pp.returnContext       = 'purchase_id='+pur.id;
 
     console.log('[PaiementPro] params:', {
-      amount:pp.amount, channel:pp.channel, ref:pp.referenceNumber,
+      amount:pp.amount, ref:pp.referenceNumber,
       returnURL:pp.returnURL, returnContext:pp.returnContext
     });
 
     await pp.getUrlPayment();
 
     console.log('[PaiementPro] résultat → success:', pp.success,
-      '| url:', pp.url, '| error:', pp.error, '| response:', pp.response);
+      '| url:', pp.url, '| error:', pp.error, '| response:', JSON.stringify(pp.response));
 
     if(pp.success){
       closePayModal();
       window.location=pp.url;
     } else {
-      toast('Erreur de paiement. Réessayez.','err');
-      console.error('[PaiementPro] échec:', pp.error||pp.response||'(pas de détail)');
+      // Afficher le vrai message d'erreur de l'API
+      const apiErr = pp.error || (pp.response && (pp.response.message||pp.response.error||JSON.stringify(pp.response))) || 'Aucun détail';
+      console.error('[PaiementPro] échec complet:', apiErr);
+      toast('Erreur paiement : '+apiErr,'err');
       setBtn('pay-btn','⚡ Payer',false);
     }
   }catch(err){
