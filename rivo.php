@@ -1186,7 +1186,7 @@ async function confirmPay(){
     // 1. Créer la commande en BDD (statut en_attente)
     const{data:pur,error}=await withTimeout(sb.from('purchases').insert({
       user_id:CU.id, course_id:course.id, amount:course.price,
-      currency:course.currency, status:'en_attente', payment_method:'paiementpro'
+      currency:course.currency, status:'en_attente', payment_method:'xpaye'
     }).select().single());
     if(error){
       const msg=error.code==='42501'
@@ -1195,30 +1195,22 @@ async function confirmPay(){
       toast(msg,'err'); setBtn('pay-btn','⚡ Payer',false); return;
     }
 
-    // 2. Appel PHP côté serveur → obtenir l'URL de redirection PaiementPro
-    const resp=await fetch('?action=init',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        amount:            Math.round(course.price),
-        purchase_id:       pur.id,
-        course_title:      course.title,
-        customer_email:    CU.email,
-        customer_first_name: CP?.first_name||'',
-        customer_last_name:  CP?.last_name||'',
-        customer_phone:    CP?.phone||'',
-      })
+    // 2. Redirection vers Xpaye — lien direct qr.xpaye.africa
+    const returnURL=window.location.origin+window.location.pathname+'?action=retour&returnContext='+encodeURIComponent('purchase_id='+pur.id);
+    const params=new URLSearchParams({
+      amount:            Math.round(course.price),
+      description:       'RIVO - '+course.title,
+      reference:         'RIVO-'+Date.now(),
+      customerEmail:     CU.email,
+      customerFirstName: CP?.first_name||'',
+      customerLastName:  CP?.last_name||'',
+      returnURL:         returnURL,
+      returnContext:     'purchase_id='+pur.id,
     });
-    const result=await resp.json();
-    console.log('[PaiementPro/PHP] résultat:', result);
+    closePayModal();
+    console.log('[Xpaye] redirection →', 'https://qr.xpaye.africa/PP-F92222?'+params.toString());
+    window.location='https://qr.xpaye.africa/PP-F92222?'+params.toString();
 
-    if(result.success && result.url){
-      closePayModal();
-      window.location=result.url; // Redirection vers la page de paiement
-    } else {
-      toast('Erreur paiement : '+(result.error||'Réessayez'),'err');
-      setBtn('pay-btn','⚡ Payer',false);
-    }
   }catch(err){
     toast(err.message||'Erreur paiement, réessayez','err');
     setBtn('pay-btn','⚡ Payer',false);
