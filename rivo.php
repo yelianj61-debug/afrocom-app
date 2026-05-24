@@ -4,6 +4,11 @@
  * Paiement via Xpaye (xpaye.africa) — SOAP initTransact
  * Doc: OnlinePayment_v1.3 — merchantId PP-F92222
  */
+
+// ob_start() capture tout output parasite (warnings PHP, notices)
+// pour que les réponses JSON ne soient pas corrompues
+ob_start();
+
 define('MERCHANT_ID',   'PP-F92222');
 define('CURRENCY_CODE', '952'); // XOF / FCFA
 
@@ -41,6 +46,7 @@ function rivoUpdatePurchase(string $id, string $status): void {
     curl_close($ch);
 }
 function rivoJson(array $d, int $code = 200): void {
+    ob_clean(); // vider tout output parasite avant d'envoyer le JSON
     http_response_code($code);
     header('Content-Type: application/json; charset=utf-8');
     header('Access-Control-Allow-Origin: *');
@@ -60,6 +66,12 @@ $action = $_GET['action'] ?? '';
 // ACTION init : appel SOAP Xpaye/PaiementPro, retourne l'URL de redirection
 // Conforme à la doc OnlinePayment_v1.3 (initTransact)
 if ($action === 'init') {
+    // Vérifier que l'extension SOAP est disponible sur ce serveur
+    if (!extension_loaded('soap') || !class_exists('SoapClient')) {
+        rivoJson(['success' => false,
+            'error' => 'Extension PHP SOAP non activée sur ce serveur. Activez php_soap dans php.ini'], 500);
+    }
+
     $input      = json_decode(file_get_contents('php://input'), true) ?: [];
     $amount     = intval($input['amount']             ?? 0);
     $purchaseId = trim($input['purchase_id']          ?? '');
@@ -1244,7 +1256,15 @@ async function confirmPay(){
         customer_phone:      CP?.phone||'',
       })
     });
-    const result=await resp.json();
+    // Vérifier que la réponse est bien du JSON (pas du HTML = PHP non exécuté)
+    const rawText=await resp.text();
+    let result;
+    try{ result=JSON.parse(rawText); }
+    catch(_){
+      console.error('[Xpaye/PHP] réponse non-JSON reçue:', rawText.substring(0,200));
+      toast('Erreur serveur : PHP non configuré ou fichier mal uploadé. Vérifiez votre hébergement.','err');
+      setBtn('pay-btn','⚡ Payer',false); return;
+    }
     console.log('[Xpaye/PHP] résultat:', result);
 
     if(result.success && result.url){
