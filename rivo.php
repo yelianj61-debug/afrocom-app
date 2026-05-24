@@ -1,12 +1,19 @@
 <?php
 /**
  * RIVO — Application complète (PHP + HTML dans un seul fichier)
- * Le bloc PHP gère PaiementPro, le HTML suit dessous
+ * Paiement via Xpaye (xpaye.africa) — SOAP initTransact
+ * Doc: OnlinePayment_v1.3 — merchantId PP-F92222
  */
 define('MERCHANT_ID',   'PP-F92222');
-define('CURRENCY_CODE', '952');
-define('WSDL_URL',      'https://www.paiementpro.net/webservice/OnlineServicePayment_v2.php?wsdl');
-define('PP_PROCESSING', 'https://www.paiementpro.net/webservice/onlinepayment/processing_v2.php');
+define('CURRENCY_CODE', '952'); // XOF / FCFA
+
+// Xpaye Africa — endpoints prioritaires (même API que PaiementPro, domaine xpaye.africa)
+define('WSDL_URL',      'https://www.xpaye.africa/webservice/OnlineServicePayment_v2.php?wsdl');
+define('PP_PROCESSING', 'https://www.xpaye.africa/webservice/onlinepayment/processing_v2.php');
+
+// Fallback PaiementPro si Xpaye indisponible
+define('WSDL_URL_FB',      'https://www.paiementpro.net/webservice/OnlineServicePayment_v2.php?wsdl');
+define('PP_PROCESSING_FB', 'https://www.paiementpro.net/webservice/onlinepayment/processing_v2.php');
 define('SUPABASE_URL',  'https://qwdttzsbbspayojzeugy.supabase.co');
 define('SUPABASE_KEY',  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3ZHR0enNiYnNwYXlvanpldWd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODk3MTQzNSwiZXhwIjoyMDk0NTQ3NDM1fQ.Qh-1b3NA4wH5Km4W1v-nU0aGagkeIByet2INxccz3tw');
 
@@ -50,7 +57,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 $action = $_GET['action'] ?? '';
 
-// ACTION init : appel SOAP PaiementPro, retourne l'URL de redirection
+// ACTION init : appel SOAP Xpaye/PaiementPro, retourne l'URL de redirection
+// Conforme à la doc OnlinePayment_v1.3 (initTransact)
 if ($action === 'init') {
     $input      = json_decode(file_get_contents('php://input'), true) ?: [];
     $amount     = intval($input['amount']             ?? 0);
@@ -61,33 +69,60 @@ if ($action === 'init') {
     $lastName   = trim($input['customer_last_name']   ?? '');
     $phone      = preg_replace('/\D/', '', $input['customer_phone'] ?? '');
     if (!$phone) $phone = '00000000';
+
     if ($amount <= 0 || !$purchaseId || !$email)
-        rivoJson(['success' => false, 'error' => 'Parametres manquants'], 400);
+        rivoJson(['success' => false, 'error' => 'Parametres manquants (amount/purchase_id/email)'], 400);
+
     $base   = rivoBaseUrl() . rivoScriptBase();
+
+    // Paramètres SOAP — doc section 2a
+    $params = [
+        'merchantId'          => MERCHANT_ID,
+        'countryCurrencyCode' => CURRENCY_CODE,
+        'amount'              => $amount,
+        'referenceNumber'     => 'RIVO-' . time(),
+        'customerEmail'       => $email,
+        'customerFirstName'   => $firstName ?: 'Client',
+        'customerLastname'    => $lastName  ?: 'RIVO',  // "Lastname" sans majuscule (doc v1.3)
+        'customerPhoneNumber' => $phone,
+        'description'         => 'RIVO - ' . $title,
+        'notificationURL'     => $base . '?action=notification',
+        'returnURL'           => $base . '?action=retour',
+        'returnContext'       => 'purchase_id=' . $purchaseId,
+    ];
+
     ini_set('soap.wsdl_cache_enabled', 0);
-    try {
-        $client = new SoapClient(WSDL_URL, ['cache_wsdl' => WSDL_CACHE_NONE, 'connection_timeout' => 30]);
-        $r = $client->initTransact([
-            'merchantId'          => MERCHANT_ID,
-            'countryCurrencyCode' => CURRENCY_CODE,
-            'amount'              => $amount,
-            'referenceNumber'     => 'RIVO-' . time(),
-            'customerEmail'       => $email,
-            'customerFirstName'   => $firstName ?: 'Client',
-            'customerLastname'    => $lastName  ?: 'RIVO',
-            'customerPhoneNumber' => $phone,
-            'description'         => 'RIVO - ' . $title,
-            'notificationURL'     => $base . '?action=notification',
-            'returnURL'           => $base . '?action=retour',
-            'returnContext'       => 'purchase_id=' . $purchaseId,
-        ]);
-        if ($r->Code == 0)
-            rivoJson(['success' => true, 'url' => PP_PROCESSING . '?sessionid=' . $r->Sessionid]);
-        else
-            rivoJson(['success' => false, 'error' => ($r->Description ?? 'Erreur PP'), 'code' => $r->Code]);
-    } catch (Exception $e) {
-        rivoJson(['success' => false, 'error' => $e->getMessage()], 500);
+
+    // Essai 1 : Xpaye Africa (compte du marchand)
+    $wsdlList = [
+        ['wsdl' => WSDL_URL,    'proc' => PP_PROCESSING],
+        ['wsdl' => WSDL_URL_FB, 'proc' => PP_PROCESSING_FB],
+    ];
+    $lastError = 'Aucun endpoint disponible';
+    foreach ($wsdlList as $ep) {
+        try {
+            $client = new SoapClient($ep['wsdl'], [
+                'cache_wsdl'         => WSDL_CACHE_NONE,
+                'connection_timeout' => 20,
+                'exceptions'         => true,
+            ]);
+            $r = $client->initTransact($params);
+            if ($r->Code == 0) {
+                $url = $ep['proc'] . '?sessionid=' . $r->Sessionid;
+                rivoJson(['success' => true, 'url' => $url]);
+            }
+            // Code != 0 : erreur métier (ex: ID inconnu) — pas la peine d'essayer le fallback
+            rivoJson([
+                'success' => false,
+                'error'   => $r->Description ?? 'Erreur inconnue',
+                'code'    => $r->Code,
+            ]);
+        } catch (Exception $e) {
+            $lastError = $e->getMessage();
+            // Continuer avec le prochain endpoint (erreur réseau/SOAP)
+        }
     }
+    rivoJson(['success' => false, 'error' => 'SOAP: ' . $lastError], 500);
 }
 
 // ACTION notification : webhook PaiementPro (serveur vers serveur)
@@ -1195,21 +1230,30 @@ async function confirmPay(){
       toast(msg,'err'); setBtn('pay-btn','⚡ Payer',false); return;
     }
 
-    // 2. Redirection vers Xpaye — lien direct qr.xpaye.africa
-    const returnURL=window.location.origin+window.location.pathname+'?action=retour&returnContext='+encodeURIComponent('purchase_id='+pur.id);
-    const params=new URLSearchParams({
-      amount:            Math.round(course.price),
-      description:       'RIVO - '+course.title,
-      reference:         'RIVO-'+Date.now(),
-      customerEmail:     CU.email,
-      customerFirstName: CP?.first_name||'',
-      customerLastName:  CP?.last_name||'',
-      returnURL:         returnURL,
-      returnContext:     'purchase_id='+pur.id,
+    // 2. Initialisation SOAP via PHP (évite CORS + gère le session ID)
+    const resp=await fetch('?action=init',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        amount:              Math.round(course.price),
+        purchase_id:         pur.id,
+        course_title:        course.title,
+        customer_email:      CU.email,
+        customer_first_name: CP?.first_name||'',
+        customer_last_name:  CP?.last_name||'',
+        customer_phone:      CP?.phone||'',
+      })
     });
-    closePayModal();
-    console.log('[Xpaye] redirection →', 'https://qr.xpaye.africa/PP-F92222?'+params.toString());
-    window.location='https://qr.xpaye.africa/PP-F92222?'+params.toString();
+    const result=await resp.json();
+    console.log('[Xpaye/PHP] résultat:', result);
+
+    if(result.success && result.url){
+      closePayModal();
+      window.location=result.url; // Redirection vers page de paiement Xpaye
+    } else {
+      toast('Erreur paiement : '+(result.error||'Réessayez'),'err');
+      setBtn('pay-btn','⚡ Payer',false);
+    }
 
   }catch(err){
     toast(err.message||'Erreur paiement, réessayez','err');
