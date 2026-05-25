@@ -1,33 +1,40 @@
 <?php
 /**
  * RIVO — Application complète (PHP + HTML dans un seul fichier)
- * Paiement via Xpaye (xpaye.africa) — SOAP initTransact
- * Doc: OnlinePayment_v1.3 — merchantId PP-F92222
+ * Paiement via PayDunya (API REST) — plus de SOAP
  */
 
-// ob_start() capture tout output parasite (warnings PHP, notices)
-// pour que les réponses JSON ne soient pas corrompues
+// ob_start() capture tout output parasite pour que les JSON soient propres
 ob_start();
 
-define('MERCHANT_ID',   'PP-F92222');
-define('CURRENCY_CODE', '952'); // XOF / FCFA
+// ── Clés PayDunya ─────────────────────────────────────────────────────────────
+define('PD_MASTER_KEY',  'Io11LMpAF46SovODgiZy');
+define('PD_PUBLIC_KEY',  'live_public_aTk6faXel2g6sQNdYp0cIWtmwPH');
+define('PD_PRIVATE_KEY', 'live_private_qE3AAfBnariz6iPIgPmP0IsE3xi');
+define('PD_MODE',        'live');
+define('PD_API',         'https://app.paydunya.com/api/v1');
+define('PD_CHECKOUT',    'https://app.paydunya.com/checkout/pay/');
 
-// Xpaye Africa — endpoints prioritaires (même API que PaiementPro, domaine xpaye.africa)
-define('WSDL_URL',      'https://www.xpaye.africa/webservice/OnlineServicePayment_v2.php?wsdl');
-define('PP_PROCESSING', 'https://www.xpaye.africa/webservice/onlinepayment/processing_v2.php');
+// ── Supabase (service_role) — pour mettre à jour le statut des achats ─────────
+define('SUPABASE_URL', 'https://qwdttzsbbspayojzeugy.supabase.co');
+define('SUPABASE_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3ZHR0enNiYnNwYXlvanpldWd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODk3MTQzNSwiZXhwIjoyMDk0NTQ3NDM1fQ.Qh-1b3NA4wH5Km4W1v-nU0aGagkeIByet2INxccz3tw');
 
-// Fallback PaiementPro si Xpaye indisponible
-define('WSDL_URL_FB',      'https://www.paiementpro.net/webservice/OnlineServicePayment_v2.php?wsdl');
-define('PP_PROCESSING_FB', 'https://www.paiementpro.net/webservice/onlinepayment/processing_v2.php');
-define('SUPABASE_URL',  'https://qwdttzsbbspayojzeugy.supabase.co');
-define('SUPABASE_KEY',  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3ZHR0enNiYnNwYXlvanpldWd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODk3MTQzNSwiZXhwIjoyMDk0NTQ3NDM1fQ.Qh-1b3NA4wH5Km4W1v-nU0aGagkeIByet2INxccz3tw');
-
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function rivoBaseUrl(): string {
     $s = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
     return $s . '://' . $_SERVER['HTTP_HOST'];
 }
 function rivoScriptBase(): string {
     return strtok($_SERVER['REQUEST_URI'], '?');
+}
+function pdHeaders(): array {
+    return [
+        'Content-Type: application/json',
+        'PAYDUNYA-MASTER-KEY: '  . PD_MASTER_KEY,
+        'PAYDUNYA-PUBLIC-KEY: '  . PD_PUBLIC_KEY,
+        'PAYDUNYA-PRIVATE-KEY: ' . PD_PRIVATE_KEY,
+        'PAYDUNYA-MODE: '        . PD_MODE,
+    ];
 }
 function rivoUpdatePurchase(string $id, string $status): void {
     $ch = curl_init(SUPABASE_URL . '/rest/v1/purchases?id=eq.' . urlencode($id));
@@ -37,7 +44,7 @@ function rivoUpdatePurchase(string $id, string $status): void {
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_HTTPHEADER     => [
             'Content-Type: application/json',
-            'apikey: '           . SUPABASE_KEY,
+            'apikey: '               . SUPABASE_KEY,
             'Authorization: Bearer ' . SUPABASE_KEY,
             'Prefer: return=minimal',
         ],
@@ -46,7 +53,7 @@ function rivoUpdatePurchase(string $id, string $status): void {
     curl_close($ch);
 }
 function rivoJson(array $d, int $code = 200): void {
-    ob_clean(); // vider tout output parasite avant d'envoyer le JSON
+    ob_clean();
     http_response_code($code);
     header('Content-Type: application/json; charset=utf-8');
     header('Access-Control-Allow-Origin: *');
@@ -54,6 +61,7 @@ function rivoJson(array $d, int $code = 200): void {
     exit;
 }
 
+// ── CORS preflight ────────────────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Methods: POST,GET,OPTIONS');
@@ -63,14 +71,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 $action = $_GET['action'] ?? '';
 
-// ACTION init : appel SOAP Xpaye/PaiementPro, retourne l'URL de redirection
-// Conforme à la doc OnlinePayment_v1.3 (initTransact)
+// =========================================================================
+// ACTION init — créer l'invoice PayDunya et retourner l'URL de checkout
+// =========================================================================
 if ($action === 'init') {
-    // Vérifier que l'extension SOAP est disponible sur ce serveur
-    if (!extension_loaded('soap') || !class_exists('SoapClient')) {
-        rivoJson(['success' => false,
-            'error' => 'Extension PHP SOAP non activée sur ce serveur. Activez php_soap dans php.ini'], 500);
-    }
 
     $input      = json_decode(file_get_contents('php://input'), true) ?: [];
     $amount     = intval($input['amount']             ?? 0);
@@ -80,79 +84,102 @@ if ($action === 'init') {
     $firstName  = trim($input['customer_first_name']  ?? '');
     $lastName   = trim($input['customer_last_name']   ?? '');
     $phone      = preg_replace('/\D/', '', $input['customer_phone'] ?? '');
-    if (!$phone) $phone = '00000000';
 
     if ($amount <= 0 || !$purchaseId || !$email)
-        rivoJson(['success' => false, 'error' => 'Parametres manquants (amount/purchase_id/email)'], 400);
+        rivoJson(['success' => false, 'error' => 'Paramètres manquants (amount, purchase_id, email)'], 400);
 
-    $base   = rivoBaseUrl() . rivoScriptBase();
+    $base = rivoBaseUrl() . rivoScriptBase();
 
-    // Paramètres SOAP — doc section 2a
-    $params = [
-        'merchantId'          => MERCHANT_ID,
-        'countryCurrencyCode' => CURRENCY_CODE,
-        'amount'              => $amount,
-        'referenceNumber'     => 'RIVO-' . time(),
-        'customerEmail'       => $email,
-        'customerFirstName'   => $firstName ?: 'Client',
-        'customerLastname'    => $lastName  ?: 'RIVO',  // "Lastname" sans majuscule (doc v1.3)
-        'customerPhoneNumber' => $phone,
-        'description'         => 'RIVO - ' . $title,
-        'notificationURL'     => $base . '?action=notification',
-        'returnURL'           => $base . '?action=retour',
-        'returnContext'       => 'purchase_id=' . $purchaseId,
+    $payload = [
+        'invoice' => [
+            'items' => ['item_1' => [
+                'name'        => $title,
+                'quantity'    => 1,
+                'unit_price'  => (string) $amount,
+                'total_price' => (string) $amount,
+                'description' => 'Formation RIVO',
+            ]],
+            'total_amount' => $amount,
+            'description'  => 'RIVO - ' . $title,
+        ],
+        'store' => [
+            'name'        => 'RIVO',
+            'tagline'     => "La plateforme qui transforme l'apprentissage en opportunité",
+            'website_url' => rivoBaseUrl(),
+        ],
+        'actions' => [
+            'cancel_url'   => $base . '?payment=annule&pid=' . urlencode($purchaseId),
+            'return_url'   => $base . '?payment=ok&pid='     . urlencode($purchaseId),
+            'callback_url' => $base . '?action=notification',
+        ],
+        'custom_data' => ['purchase_id' => $purchaseId],
+        'customer' => [
+            'name'  => trim($firstName . ' ' . $lastName) ?: 'Client RIVO',
+            'email' => $email,
+            'phone' => $phone ?: '',
+        ],
     ];
 
-    ini_set('soap.wsdl_cache_enabled', 0);
+    $ch = curl_init(PD_API . '/checkout-invoice/create');
+    curl_setopt_array($ch, [
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => json_encode($payload),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 30,
+        CURLOPT_HTTPHEADER     => pdHeaders(),
+    ]);
+    $raw = curl_exec($ch);
+    $err = curl_error($ch);
+    curl_close($ch);
 
-    // Essai 1 : Xpaye Africa (compte du marchand)
-    $wsdlList = [
-        ['wsdl' => WSDL_URL,    'proc' => PP_PROCESSING],
-        ['wsdl' => WSDL_URL_FB, 'proc' => PP_PROCESSING_FB],
-    ];
-    $lastError = 'Aucun endpoint disponible';
-    foreach ($wsdlList as $ep) {
-        try {
-            $client = new SoapClient($ep['wsdl'], [
-                'cache_wsdl'         => WSDL_CACHE_NONE,
-                'connection_timeout' => 20,
-                'exceptions'         => true,
-            ]);
-            $r = $client->initTransact($params);
-            if ($r->Code == 0) {
-                $url = $ep['proc'] . '?sessionid=' . $r->Sessionid;
-                rivoJson(['success' => true, 'url' => $url]);
-            }
-            // Code != 0 : erreur métier (ex: ID inconnu) — pas la peine d'essayer le fallback
-            rivoJson([
-                'success' => false,
-                'error'   => $r->Description ?? 'Erreur inconnue',
-                'code'    => $r->Code,
-            ]);
-        } catch (Exception $e) {
-            $lastError = $e->getMessage();
-            // Continuer avec le prochain endpoint (erreur réseau/SOAP)
-        }
+    if ($err) rivoJson(['success' => false, 'error' => 'Réseau : ' . $err], 500);
+
+    $resp = json_decode($raw, true);
+    if ($resp && ($resp['response_code'] ?? '') === '00' && !empty($resp['token'])) {
+        rivoJson(['success' => true, 'url' => PD_CHECKOUT . $resp['token']]);
     }
-    rivoJson(['success' => false, 'error' => 'SOAP: ' . $lastError], 500);
+    rivoJson(['success' => false, 'error' => $resp['response_text'] ?? 'Erreur PayDunya'], 502);
 }
 
-// ACTION notification : webhook PaiementPro (serveur vers serveur)
+// =========================================================================
+// ACTION notification — IPN PayDunya (serveur → serveur)
+// =========================================================================
 elseif ($action === 'notification') {
-    parse_str($_POST['returnContext'] ?? '', $ctx);
-    $pid = $ctx['purchase_id'] ?? '';
-    if ($pid) rivoUpdatePurchase($pid, ($_POST['responsecode'] ?? '') === '0' ? 'complete' : 'rejete');
+    $data = json_decode(file_get_contents('php://input'), true);
+    $hash = $data['data']['hash'] ?? '';
+    if ($hash) {
+        $ch = curl_init(PD_API . '/checkout-invoice/confirm/' . $hash);
+        curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HTTPHEADER => pdHeaders()]);
+        $confirm = json_decode(curl_exec($ch), true);
+        curl_close($ch);
+        if (($confirm['status'] ?? '') === 'completed') {
+            $pid = $confirm['custom_data']['purchase_id'] ?? '';
+            if ($pid) rivoUpdatePurchase($pid, 'complete');
+        }
+    }
     http_response_code(200); echo 'OK'; exit;
 }
 
-// ACTION retour : redirection client apres paiement
+// =========================================================================
+// ACTION retour — redirection client après paiement réussi
+// =========================================================================
 elseif ($action === 'retour') {
-    parse_str($_GET['returnContext'] ?? '', $ctx);
-    $pid  = $ctx['purchase_id'] ?? '';
+    $pid  = $_GET['pid'] ?? '';
     $base = rivoScriptBase();
     header('Location: ' . $base . ($pid ? '?payment=ok&pid=' . urlencode($pid) : '?payment=erreur'));
     exit;
 }
+
+// =========================================================================
+// ACTION cancel — client a annulé sur la page PayDunya
+// =========================================================================
+elseif ($action === 'cancel') {
+    $pid  = $_GET['pid'] ?? '';
+    if ($pid) rivoUpdatePurchase($pid, 'rejete');
+    header('Location: ' . rivoScriptBase() . '?payment=annule' . ($pid ? '&pid=' . urlencode($pid) : ''));
+    exit;
+}
+
 // Sinon : afficher l'app HTML (suit ci-dessous)
 ?>
 <!DOCTYPE html>
@@ -821,19 +848,22 @@ async function startApp(){
       }
     }
 
-    // Retour paiement depuis paiement.php?action=retour (payment=ok&pid=...)
+    // Retour PayDunya (?payment=ok|annule&pid=...)
     const ps=new URLSearchParams(location.search).get('payment');
     const pid=new URLSearchParams(location.search).get('pid');
     if(ps==='ok'&&pid){
-      // La notification PHP a déjà mis à jour le statut côté serveur
-      // On recharge juste le profil et on affiche le succès
       history.replaceState({},'',location.pathname);
+      // L'IPN PHP a normalement déjà mis à jour le statut — on recharge le profil
       if(FBU&&CU){
         await loadProfileData();
         loaded.formations=false; loaded.profil=false;
         goTo('dashboard');
         setTimeout(()=>toast('Paiement réussi ! 🎉'),500);
       }
+    }
+    if(ps==='annule'){
+      history.replaceState({},'',location.pathname);
+      toast('Paiement annulé.','err');
     }
   }catch(e){console.warn('[startApp]',e?.message||e);}
 }
@@ -1233,7 +1263,7 @@ async function confirmPay(){
     // 1. Créer la commande en BDD (statut en_attente)
     const{data:pur,error}=await withTimeout(sb.from('purchases').insert({
       user_id:CU.id, course_id:course.id, amount:course.price,
-      currency:course.currency, status:'en_attente', payment_method:'xpaye'
+      currency:course.currency, status:'en_attente', payment_method:'paydunya'
     }).select().single());
     if(error){
       const msg=error.code==='42501'
@@ -1242,7 +1272,7 @@ async function confirmPay(){
       toast(msg,'err'); setBtn('pay-btn','⚡ Payer',false); return;
     }
 
-    // 2. Initialisation SOAP via PHP (évite CORS + gère le session ID)
+    // 2. PHP crée l'invoice PayDunya côté serveur (évite CORS)
     const resp=await fetch('?action=init',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -1256,20 +1286,19 @@ async function confirmPay(){
         customer_phone:      CP?.phone||'',
       })
     });
-    // Vérifier que la réponse est bien du JSON (pas du HTML = PHP non exécuté)
     const rawText=await resp.text();
     let result;
     try{ result=JSON.parse(rawText); }
     catch(_){
-      console.error('[Xpaye/PHP] réponse non-JSON reçue:', rawText.substring(0,200));
-      toast('Erreur serveur : PHP non configuré ou fichier mal uploadé. Vérifiez votre hébergement.','err');
+      console.error('[PayDunya] réponse non-JSON:', rawText.substring(0,200));
+      toast('Erreur serveur : PHP non configuré ou fichier mal uploadé.','err');
       setBtn('pay-btn','⚡ Payer',false); return;
     }
-    console.log('[Xpaye/PHP] résultat:', result);
+    console.log('[PayDunya] résultat:', result);
 
     if(result.success && result.url){
       closePayModal();
-      window.location=result.url; // Redirection vers page de paiement Xpaye
+      window.location=result.url; // Redirection vers la page PayDunya
     } else {
       toast('Erreur paiement : '+(result.error||'Réessayez'),'err');
       setBtn('pay-btn','⚡ Payer',false);
