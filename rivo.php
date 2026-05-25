@@ -138,7 +138,14 @@ if ($action === 'init') {
     if ($resp && ($resp['response_code'] ?? '') === '00' && !empty($resp['token'])) {
         rivoJson(['success' => true, 'url' => PD_CHECKOUT . $resp['token']]);
     }
-    rivoJson(['success' => false, 'error' => $resp['response_text'] ?? 'Erreur PayDunya'], 502);
+    // Retourner la réponse complète pour diagnostic
+    $errMsg = $resp['response_text'] ?? ($raw ?: 'Pas de réponse de PayDunya');
+    rivoJson([
+        'success'       => false,
+        'error'         => $errMsg,
+        'response_code' => $resp['response_code'] ?? null,
+        'raw'           => substr($raw ?? '', 0, 500), // limité à 500 chars
+    ], 502);
 }
 
 // =========================================================================
@@ -1294,7 +1301,7 @@ async function confirmPay(){
       toast('Erreur serveur : PHP non configuré ou fichier mal uploadé.','err');
       setBtn('pay-btn','⚡ Payer',false); return;
     }
-    console.log('[PayDunya] résultat:', result);
+    console.log('[PayDunya] résultat complet:', JSON.stringify(result));
 
     if(result.success && result.url){
       closePayModal();
