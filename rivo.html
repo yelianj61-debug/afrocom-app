@@ -1090,50 +1090,24 @@ async function confirmPay(){
       toast(msg,'err'); setBtn('pay-btn','⚡ Payer',false); return;
     }
 
-    // 2. Appel API PayDunya directement (REST)
-    const base=window.location.origin+window.location.pathname;
-    const payload={
-      invoice:{
-        items:{'item_1':{
-          name:        course.title||'Formation RIVO',
-          quantity:    1,
-          unit_price:  String(Math.round(course.price)),
-          total_price: String(Math.round(course.price)),
-          description: 'Formation RIVO',
-        }},
-        total_amount: Math.round(course.price),
-        description:  'RIVO - '+(course.title||'Formation'),
-      },
-      store:{
-        name:        'RIVO',
-        tagline:     "La plateforme qui transforme l'apprentissage en opportunité",
-        website_url: window.location.origin,
-      },
-      actions:{
-        cancel_url:   base+'?payment=annule&pid='+encodeURIComponent(pur.id),
-        return_url:   base+'?payment=ok&pid='+encodeURIComponent(pur.id),
-        callback_url: base,
-      },
-      custom_data:{purchase_id:pur.id},
-      customer:{
-        name:  ((CP?.first_name||'')+' '+(CP?.last_name||'')).trim()||'Client RIVO',
-        email: CU.email||'',
-        phone: CP?.phone||'',
-      },
-    };
-
-    const resp=await fetch('https://app.paydunya.com/api/v1/checkout-invoice/create',{
+    // 2. Proxy PHP → PayDunya (appel direct bloqué par CORS)
+    const resp=await fetch('./paydunya.php',{
       method:'POST',
-      headers:{
-        'Content-Type':         'application/json',
-        'PAYDUNYA-MASTER-KEY':  'Io11LMpAF46SovODgiZy',
-        'PAYDUNYA-PUBLIC-KEY':  'live_public_aTk6faXel2g6sQNdYp0cIWtmwPH',
-        'PAYDUNYA-PRIVATE-KEY': 'live_private_qE3AAfBnariz6iPIgPmP0IsE3xi',
-        'PAYDUNYA-MODE':        'live',
-      },
-      body:JSON.stringify(payload),
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        amount:               Math.round(course.price),
+        purchase_id:          pur.id,
+        course_title:         course.title,
+        customer_email:       CU.email,
+        customer_first_name:  CP?.first_name||'',
+        customer_last_name:   CP?.last_name||'',
+        customer_phone:       CP?.phone||'',
+      }),
     });
-    const result=await resp.json();
+    const rawText=await resp.text();
+    let result;
+    try{ result=JSON.parse(rawText); }
+    catch(_){ toast('Erreur serveur (réponse non-JSON)','err'); setBtn('pay-btn','⚡ Payer',false); return; }
     console.log('[PayDunya] résultat:', result);
 
     if(result.response_code==='00'&&result.token){
