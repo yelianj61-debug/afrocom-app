@@ -591,7 +591,7 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
 const SB_URL  = 'https://qwdttzsbbspayojzeugy.supabase.co';
 const SB_ANON = 'sb_publishable_tG64uzNsmT0XDV7pmglqFA_lxQ4xIFm';
 const SB_SERVICE = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3ZHR0enNiYnNwYXlvanpldWd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODk3MTQzNSwiZXhwIjoyMDk0NTQ3NDM1fQ.Qh-1b3NA4wH5Km4W1v-nU0aGagkeIByet2INxccz3tw';
-// Paiement géré par paiement.php (PHP côté serveur)
+// Paiement géré par PayDunya (API REST)
 let sb = null;
 let sbAdmin = null; // client service_role (bypass RLS) — utilisé uniquement pour créer les profils
 
@@ -664,19 +664,24 @@ async function startApp(){
       }
     }
 
-    // Retour paiement depuis paiement.php?action=retour (payment=ok&pid=...)
+    // Retour paiement PayDunya (?payment=ok|annule&pid=...)
     const ps=new URLSearchParams(location.search).get('payment');
     const pid=new URLSearchParams(location.search).get('pid');
     if(ps==='ok'&&pid){
-      // La notification PHP a déjà mis à jour le statut côté serveur
-      // On recharge juste le profil et on affiche le succès
       history.replaceState({},'',location.pathname);
+      // Marquer l'achat comme complet dans Supabase
+      if(pid) await sb.from('purchases').update({status:'complete'}).eq('id',pid);
       if(FBU&&CU){
         await loadProfileData();
         loaded.formations=false; loaded.profil=false;
         goTo('dashboard');
         setTimeout(()=>toast('Paiement réussi ! 🎉'),500);
       }
+    }
+    if(ps==='annule'){
+      history.replaceState({},'',location.pathname);
+      if(pid) await sb.from('purchases').update({status:'rejete'}).eq('id',pid);
+      toast('Paiement annulé.','err');
     }
   }catch(e){console.warn('[startApp]',e?.message||e);}
 }
@@ -1076,7 +1081,7 @@ async function confirmPay(){
     // 1. Créer la commande en BDD (statut en_attente)
     const{data:pur,error}=await withTimeout(sb.from('purchases').insert({
       user_id:CU.id, course_id:course.id, amount:course.price,
-      currency:course.currency, status:'en_attente', payment_method:'paiementpro'
+      currency:course.currency, status:'en_attente', payment_method:'paydunya'
     }).select().single());
     if(error){
       const msg=error.code==='42501'
@@ -1085,28 +1090,57 @@ async function confirmPay(){
       toast(msg,'err'); setBtn('pay-btn','⚡ Payer',false); return;
     }
 
-    // 2. Appel PHP côté serveur → obtenir l'URL de redirection PaiementPro
-    const resp=await fetch('./paiement.php?action=init',{
+    // 2. Appel API PayDunya directement (REST)
+    const base=window.location.origin+window.location.pathname;
+    const payload={
+      invoice:{
+        items:{'item_1':{
+          name:        course.title||'Formation RIVO',
+          quantity:    1,
+          unit_price:  String(Math.round(course.price)),
+          total_price: String(Math.round(course.price)),
+          description: 'Formation RIVO',
+        }},
+        total_amount: Math.round(course.price),
+        description:  'RIVO - '+(course.title||'Formation'),
+      },
+      store:{
+        name:        'RIVO',
+        tagline:     "La plateforme qui transforme l'apprentissage en opportunité",
+        website_url: window.location.origin,
+      },
+      actions:{
+        cancel_url:   base+'?payment=annule&pid='+encodeURIComponent(pur.id),
+        return_url:   base+'?payment=ok&pid='+encodeURIComponent(pur.id),
+        callback_url: base,
+      },
+      custom_data:{purchase_id:pur.id},
+      customer:{
+        name:  ((CP?.first_name||'')+' '+(CP?.last_name||'')).trim()||'Client RIVO',
+        email: CU.email||'',
+        phone: CP?.phone||'',
+      },
+    };
+
+    const resp=await fetch('https://app.paydunya.com/api/v1/checkout-invoice/create',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        amount:            Math.round(course.price),
-        purchase_id:       pur.id,
-        course_title:      course.title,
-        customer_email:    CU.email,
-        customer_first_name: CP?.first_name||'',
-        customer_last_name:  CP?.last_name||'',
-        customer_phone:    CP?.phone||'',
-      })
+      headers:{
+        'Content-Type':         'application/json',
+        'PAYDUNYA-MASTER-KEY':  'Io11LMpAF46SovODgiZy',
+        'PAYDUNYA-PUBLIC-KEY':  'live_public_aTk6faXel2g6sQNdYp0cIWtmwPH',
+        'PAYDUNYA-PRIVATE-KEY': 'live_private_qE3AAfBnariz6iPIgPmP0IsE3xi',
+        'PAYDUNYA-MODE':        'live',
+      },
+      body:JSON.stringify(payload),
     });
     const result=await resp.json();
-    console.log('[PaiementPro/PHP] résultat:', result);
+    console.log('[PayDunya] résultat:', result);
 
-    if(result.success && result.url){
+    if(result.response_code==='00'&&result.token){
       closePayModal();
-      window.location=result.url; // Redirection vers la page de paiement
+      window.location='https://app.paydunya.com/checkout/pay/'+result.token;
     } else {
-      toast('Erreur paiement : '+(result.error||'Réessayez'),'err');
+      toast('Erreur paiement : '+(result.response_text||'Réessayez'),'err');
       setBtn('pay-btn','⚡ Payer',false);
     }
   }catch(err){
@@ -1623,7 +1657,7 @@ async function submitVideo(){
 // ── Tutoriel guidé ────────────────────────────────────
 const _tutSteps = [
   {icon:'👋', title:'Bienvenue sur RIVO !', desc:'Découvrez les formations disponibles sur le Tableau de bord. Apprenez à votre rythme et obtenez une attestation officielle.', tab:'bord'},
-  {icon:'🛒', title:'Achetez une formation', desc:'Cliquez sur "Acheter" sur n\'importe quelle formation. Suivez les instructions de paiement sécurisé via PaiementPro (Mobile Money, carte…).', tab:'bord'},
+  {icon:'🛒', title:'Achetez une formation', desc:'Cliquez sur "Acheter" sur n\'importe quelle formation. Suivez les instructions de paiement sécurisé via PayDunya (Mobile Money, carte…).', tab:'bord'},
   {icon:'📖', title:'Mes formations', desc:'Retrouvez toutes vos formations achetées dans l\'onglet "Mes formations". Accédez aux contenus quand vous voulez.', tab:'formations'},
   {icon:'🏆', title:'Attestations', desc:'Après validation par notre équipe, vous recevrez votre attestation officielle RIVO directement sur votre profil. Consultez-la à tout moment.', tab:'profil'},
   {icon:'🎁', title:'Récompenses', desc:'Cumulez des points et participez aux événements exclusifs : Visa, Moto, Voiture, Emploi, Voyage… Vos efforts sont récompensés !', tab:'recompenses'},
@@ -2018,7 +2052,7 @@ const _legalContent={
     <h3>4.2 Méthodes de paiement</h3>
     <ul>
       <li>Mobile Money (MTN, Moov, Orange, etc.)</li>
-      <li>PaiementPro / Xpaye (paiement en ligne sécurisé)</li>
+      <li>PayDunya (paiement en ligne sécurisé — Mobile Money, carte bancaire)</li>
     </ul>
     <h3>4.3 Politique de remboursement</h3>
     <div class="highlight"><p>Les formations étant des contenus numériques accessibles immédiatement, aucun remboursement n'est possible après accès à la formation.</p></div>
