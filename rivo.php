@@ -126,10 +126,15 @@ if ($action === 'init') {
         CURLOPT_POSTFIELDS     => json_encode($payload),
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT        => 30,
+        CURLOPT_FOLLOWLOCATION => true,       // suivre les redirects 301/302
+        CURLOPT_SSL_VERIFYPEER => false,      // hébergements mutualisés sans CA bundle
+        CURLOPT_SSL_VERIFYHOST => false,
+        CURLOPT_USERAGENT      => 'RIVO/1.0',
         CURLOPT_HTTPHEADER     => pdHeaders(),
     ]);
-    $raw = curl_exec($ch);
-    $err = curl_error($ch);
+    $raw      = curl_exec($ch);
+    $err      = curl_error($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
 
     if ($err) rivoJson(['success' => false, 'error' => 'Réseau : ' . $err], 500);
@@ -138,13 +143,13 @@ if ($action === 'init') {
     if ($resp && ($resp['response_code'] ?? '') === '00' && !empty($resp['token'])) {
         rivoJson(['success' => true, 'url' => PD_CHECKOUT . $resp['token']]);
     }
-    // Retourner la réponse complète pour diagnostic
     $errMsg = $resp['response_text'] ?? ($raw ?: 'Pas de réponse de PayDunya');
     rivoJson([
         'success'       => false,
         'error'         => $errMsg,
         'response_code' => $resp['response_code'] ?? null,
-        'raw'           => substr($raw ?? '', 0, 500), // limité à 500 chars
+        'http_code'     => $httpCode,
+        'raw'           => substr($raw ?? '', 0, 300),
     ], 502);
 }
 
