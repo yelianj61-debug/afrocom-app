@@ -1075,10 +1075,12 @@ async function confirmPay(){
     setBtn('pay-btn','⚡ Payer',false);
 
     // 2. Ouvrir le widget KKiaPay (popup JS natif, zéro CORS)
+    // sandbox:true sur localhost, false en production
+    const isLocal=['localhost','127.0.0.1'].includes(location.hostname);
     openKkiapayWidget({
       amount:  Math.round(course.price),
       key:     'ed70f0c0a6a211f0a67803089be21e8d',
-      sandbox: false,
+      sandbox: isLocal,
       name:    ((CP?.first_name||'')+' '+(CP?.last_name||'')).trim()||'Client RIVO',
       email:   CU.email||'',
       phone:   CP?.phone||'',
