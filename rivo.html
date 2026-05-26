@@ -664,25 +664,6 @@ async function startApp(){
       }
     }
 
-    // Retour paiement PayDunya (?payment=ok|annule&pid=...)
-    const ps=new URLSearchParams(location.search).get('payment');
-    const pid=new URLSearchParams(location.search).get('pid');
-    if(ps==='ok'&&pid){
-      history.replaceState({},'',location.pathname);
-      // Marquer l'achat comme complet dans Supabase
-      if(pid) await sb.from('purchases').update({status:'complete'}).eq('id',pid);
-      if(FBU&&CU){
-        await loadProfileData();
-        loaded.formations=false; loaded.profil=false;
-        goTo('dashboard');
-        setTimeout(()=>toast('Paiement réussi ! 🎉'),500);
-      }
-    }
-    if(ps==='annule'){
-      history.replaceState({},'',location.pathname);
-      if(pid) await sb.from('purchases').update({status:'rejete'}).eq('id',pid);
-      toast('Paiement annulé.','err');
-    }
   }catch(e){console.warn('[startApp]',e?.message||e);}
 }
 
@@ -1081,7 +1062,7 @@ async function confirmPay(){
     // 1. Créer la commande en BDD (statut en_attente)
     const{data:pur,error}=await withTimeout(sb.from('purchases').insert({
       user_id:CU.id, course_id:course.id, amount:course.price,
-      currency:course.currency, status:'en_attente', payment_method:'paydunya'
+      currency:course.currency, status:'en_attente', payment_method:'kkiapay'
     }).select().single());
     if(error){
       const msg=error.code==='42501'
@@ -1090,33 +1071,37 @@ async function confirmPay(){
       toast(msg,'err'); setBtn('pay-btn','⚡ Payer',false); return;
     }
 
-    // 2. Proxy PHP → PayDunya (appel direct bloqué par CORS)
-    const resp=await fetch('./paydunya.php',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        amount:               Math.round(course.price),
-        purchase_id:          pur.id,
-        course_title:         course.title,
-        customer_email:       CU.email,
-        customer_first_name:  CP?.first_name||'',
-        customer_last_name:   CP?.last_name||'',
-        customer_phone:       CP?.phone||'',
-      }),
-    });
-    const rawText=await resp.text();
-    let result;
-    try{ result=JSON.parse(rawText); }
-    catch(_){ toast('Erreur serveur (réponse non-JSON)','err'); setBtn('pay-btn','⚡ Payer',false); return; }
-    console.log('[PayDunya] résultat:', result);
+    closePayModal();
+    setBtn('pay-btn','⚡ Payer',false);
 
-    if(result.response_code==='00'&&result.token){
-      closePayModal();
-      window.location='https://app.paydunya.com/checkout/pay/'+result.token;
-    } else {
-      toast('Erreur paiement : '+(result.response_text||'Réessayez'),'err');
-      setBtn('pay-btn','⚡ Payer',false);
-    }
+    // 2. Ouvrir le widget KKiaPay (popup JS natif, zéro CORS)
+    openKkiapayWidget({
+      amount:  Math.round(course.price),
+      key:     'ed70f0c0a6a211f0a67803089be21e8d',
+      sandbox: false,
+      name:    ((CP?.first_name||'')+' '+(CP?.last_name||'')).trim()||'Client RIVO',
+      email:   CU.email||'',
+      phone:   CP?.phone||'',
+      data:    JSON.stringify({purchase_id: pur.id}),
+    });
+
+    // 3. Paiement réussi
+    addSuccessListener(async function(response){
+      console.log('[KKiaPay] succès:', response);
+      await sbAdmin.from('purchases').update({status:'complete'}).eq('id', pur.id);
+      await loadProfileData();
+      loaded.formations=false; loaded.profil=false;
+      goTo('dashboard');
+      setTimeout(()=>toast('Paiement réussi ! 🎉'),300);
+    });
+
+    // 4. Paiement échoué / annulé
+    addFailedListener(function(response){
+      console.log('[KKiaPay] échec:', response);
+      sbAdmin.from('purchases').update({status:'rejete'}).eq('id', pur.id);
+      toast('Paiement échoué ou annulé.','err');
+    });
+
   }catch(err){
     toast(err.message||'Erreur paiement, réessayez','err');
     setBtn('pay-btn','⚡ Payer',false);
@@ -2127,6 +2112,7 @@ function closeLegal(){
   document.body.style.overflow='';
 }
 </script>
-
+<!-- KKiaPay — widget de paiement JS (MTN, Moov, Carte…) -->
+<script src="https://cdn.kkiapay.me/k.js"></script>
 </body>
 </html>
