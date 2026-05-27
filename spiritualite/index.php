@@ -1,0 +1,1554 @@
+<?php
+// ── CONFIG SERVEUR ────────────────────────────────────────
+define('SUPABASE_URL', 'https://fpwfdqvrfivmuirgolhz.supabase.co');
+define('SUPABASE_KEY', 'sb_publishable_MWM0Idwc3NEqpQxPDZioeQ_vdZ2hlew');
+define('WHATSAPP_NUM', '22962206570');
+define('CLOUDINARY_CLOUD', 'dx0dzt35e');
+define('CLOUDINARY_PRESET', 'afrotv_images');
+define('TIKTOK_URL', 'https://www.tiktok.com/@dah.gbesso.adihodg?_r=1&_t=ZG-96ibjJrW11k');
+
+header('Content-Type: text/html; charset=UTF-8');
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: SAMEORIGIN');
+?>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spiritualité Autrement – Dah Gbesso</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    /* ── RESET & BASE ───────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --violet: #2D1B69;
+      --violet-light: #3d278a;
+      --gold: #D4A017;
+      --gold-light: #f0c030;
+      --cream: #F5F0E8;
+      --brown: #3D1C02;
+      --white: #fff;
+      --gray: #6b7280;
+      --shadow: 0 4px 20px rgba(45,27,105,0.15);
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--cream);
+      color: var(--brown);
+      min-height: 100vh;
+    }
+
+    /* ── NAV HAUT (titre + chip profil) ────────────────────── */
+    .top-nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: var(--violet);
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 0.85rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    }
+    .top-nav-title {
+      flex: 1;
+      min-width: 0;
+      color: var(--gold);
+      font-weight: 800;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ── NAV BAS (onglets mobiles) ──────────────────────────── */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+      background: var(--violet);
+      height: 62px;
+      display: flex;
+      border-top: 2px solid rgba(212,160,23,0.25);
+      box-shadow: 0 -2px 12px rgba(0,0,0,0.2);
+    }
+    .bottom-nav a {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255,255,255,0.55);
+      text-decoration: none;
+      font-size: 1.35rem;
+      gap: 2px;
+      cursor: pointer;
+      transition: color 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .bottom-nav a span {
+      font-size: 0.58rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .bottom-nav a.active { color: var(--gold); }
+
+    /* ── SECTIONS ───────────────────────────────────────────── */
+    section {
+      display: none;
+      min-height: 100vh;
+      padding-top: 52px;
+      padding-bottom: 62px;
+    }
+    section.active { display: block; }
+
+    /* ── PAGE ACCUEIL ───────────────────────────────────────── */
+    .hero {
+      min-height: calc(100vh - 52px - 62px);
+      background: linear-gradient(135deg, var(--violet) 0%, #4a2080 40%, #8B4513 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 3rem 1.5rem 1.5rem;
+      position: relative;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23D4A017' fill-opacity='0.07'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .hero-badge {
+      background: var(--gold);
+      color: var(--violet);
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 0.4rem 1.2rem;
+      border-radius: 100px;
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+    .hero h1 {
+      color: var(--white);
+      font-size: clamp(1.6rem, 5vw, 3rem);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      line-height: 1.2;
+      position: relative;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .hero h1 span { color: var(--gold); }
+    .hero-sub {
+      color: rgba(255,255,255,0.75);
+      font-size: 1rem;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-top: 0.75rem;
+      position: relative;
+    }
+    .hero-divider {
+      width: 80px; height: 3px;
+      background: var(--gold);
+      margin: 1.5rem auto;
+      border-radius: 2px;
+      position: relative;
+    }
+    .hero-intro {
+      color: rgba(255,255,255,0.85);
+      font-size: 1rem;
+      max-width: 560px;
+      line-height: 1.8;
+      position: relative;
+    }
+    .hero-cta {
+      margin-top: 2.5rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      position: relative;
+    }
+    .btn {
+      display: inline-block;
+      background: var(--gold);
+      color: var(--violet);
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 0.75rem 2rem;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn:hover { background: var(--gold-light); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(212,160,23,0.4); }
+    .btn-outline {
+      background: transparent;
+      border: 2px solid rgba(255,255,255,0.5);
+      color: var(--white);
+    }
+    .btn-outline:hover { border-color: var(--gold); background: rgba(212,160,23,0.1); }
+
+    /* ── PAGE BOUTIQUE ──────────────────────────────────────── */
+    .page-header {
+      background: var(--violet);
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+    }
+    .page-header h2 {
+      color: var(--gold);
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .page-header p { color: rgba(255,255,255,0.75); margin-top: 0.5rem; font-size: 0.9rem; }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+      padding: 2rem 1.5rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .product-card {
+      background: var(--white);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(212,160,23,0.2);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .product-card:hover { transform: translateY(-4px); box-shadow: 0 8px 32px rgba(45,27,105,0.2); }
+    .product-card img { width: 100%; height: 200px; object-fit: cover; }
+    .product-card .placeholder-img {
+      width: 100%; height: 200px;
+      background: linear-gradient(135deg, var(--violet) 0%, var(--gold) 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3rem;
+    }
+    .product-info { padding: 1.25rem; }
+    .product-name { font-weight: 700; font-size: 1rem; color: var(--violet); }
+    .product-desc { font-size: 0.82rem; color: var(--gray); margin: 0.5rem 0; line-height: 1.5; }
+    .product-price { font-weight: 800; font-size: 1.1rem; color: var(--gold); margin-bottom: 1rem; }
+    .product-card .btn { width: 100%; text-align: center; }
+
+    /* ── PAGE ÉVÉNEMENTS ───────────────────────────────────── */
+    .events-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+      padding: 2rem 1.5rem;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .event-card {
+      background: var(--white);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(212,160,23,0.2);
+      transition: transform 0.2s;
+    }
+    .event-card:hover { transform: translateY(-4px); }
+    .event-card img { width: 100%; height: 180px; object-fit: cover; }
+    .event-card .placeholder-img {
+      width: 100%; height: 180px;
+      background: linear-gradient(135deg, #2D1B69 0%, #8B4513 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3rem;
+    }
+    .event-info { padding: 1.25rem; }
+    .event-title { font-weight: 700; font-size: 1.05rem; color: var(--violet); }
+    .event-date {
+      display: inline-block;
+      background: rgba(212,160,23,0.15);
+      color: var(--brown);
+      font-size: 0.75rem; font-weight: 600;
+      padding: 0.2rem 0.75rem;
+      border-radius: 100px;
+      margin: 0.5rem 0;
+    }
+    .event-conditions { font-size: 0.82rem; color: var(--gray); margin-bottom: 1rem; line-height: 1.5; }
+    .btn-participate { background: var(--violet); color: var(--white); }
+    .btn-participate:hover { background: var(--violet-light); }
+
+    /* ── PAGE FAN CLUB ──────────────────────────────────────── */
+    .fc-tabs {
+      display: flex;
+      background: var(--white);
+      border-bottom: 2px solid rgba(212,160,23,0.2);
+      position: sticky; top: 52px; z-index: 10;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .fc-tabs::-webkit-scrollbar { display: none; }
+    .fc-tab {
+      flex: 1; min-width: 78px;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 2px; padding: 0.65rem 0.3rem;
+      background: none; border: none;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.54rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;
+      color: var(--gray); cursor: pointer;
+      border-bottom: 3px solid transparent;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .fc-tab .t-icon { font-size: 1.15rem; line-height: 1; }
+    .fc-tab.active { color: var(--violet); border-bottom-color: var(--gold); }
+    .fc-tab:hover  { color: var(--violet); }
+    .fc-count { font-size: 0.8rem; color: rgba(255,255,255,0.75); margin-top: 0.3rem; }
+    .fc-panel { display: none; }
+    .fc-panel.active { display: block; }
+    .fc-inner { max-width: 580px; margin: 0 auto; padding: 1.5rem 1rem 2rem; }
+    .fc-section-title {
+      font-size: 1rem; font-weight: 800; color: var(--violet);
+      text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem;
+    }
+    .fc-section-desc { font-size: 0.82rem; color: var(--gray); margin-bottom: 1.5rem; line-height: 1.6; }
+    .fc-advantages { list-style: none; display: flex; flex-direction: column; gap: 0.85rem; }
+    .fc-advantage-item {
+      display: flex; align-items: flex-start; gap: 0.75rem;
+      background: var(--white); border-radius: 12px;
+      padding: 1rem; box-shadow: var(--shadow);
+      border-left: 4px solid var(--gold);
+    }
+    .fc-advantage-item .adv-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .fc-advantage-item .adv-text { font-size: 0.85rem; font-weight: 600; color: var(--brown); line-height: 1.4; }
+    .fc-post-item {
+      background: var(--white); border-radius: 10px;
+      padding: 0.9rem 1rem; margin-bottom: 0.75rem;
+      box-shadow: 0 2px 8px rgba(45,27,105,0.08);
+      border: 1px solid rgba(212,160,23,0.15);
+    }
+    .fc-post-meta { font-size: 0.7rem; color: var(--gray); margin-bottom: 0.35rem; }
+    .fc-post-text { font-size: 0.83rem; color: var(--brown); line-height: 1.5; }
+    .fc-appreciation-yes { border-left: 4px solid #22c55e; }
+    .fc-appreciation-no  { border-left: 4px solid #ef4444; }
+    .fc-app-badge {
+      display: inline-block; font-size: 0.67rem; font-weight: 700;
+      padding: 0.15rem 0.5rem; border-radius: 100px; margin-bottom: 0.3rem;
+    }
+    .fc-app-badge.yes { background: #dcfce7; color: #16a34a; }
+    .fc-app-badge.no  { background: #fee2e2; color: #dc2626; }
+    .fc-radio-group { display: flex; gap: 1rem; margin-bottom: 1.25rem; }
+    .fc-radio-btn {
+      flex: 1; padding: 0.75rem;
+      border: 2px solid #e5e7eb; border-radius: 10px;
+      background: none; font-family: 'Poppins', sans-serif;
+      font-size: 0.85rem; font-weight: 600; cursor: pointer;
+      transition: all 0.2s; text-align: center;
+    }
+    .fc-radio-btn.selected-yes { border-color: #22c55e; background: #f0fdf4; color: #16a34a; }
+    .fc-radio-btn.selected-no  { border-color: #ef4444; background: #fef2f2; color: #dc2626; }
+    .fc-already {
+      text-align: center; background: #f0fdf4; border: 2px solid #22c55e;
+      border-radius: 12px; padding: 1.5rem; color: #16a34a;
+      font-size: 0.88rem; font-weight: 600;
+    }
+
+    /* ── ÉTATS CHARGEMENT / VIDE ────────────────────────────── */
+    .loading-wrap, .empty-wrap { text-align: center; padding: 4rem 1rem; color: var(--gray); }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid rgba(212,160,23,0.3);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── MODALES ────────────────────────────────────────────── */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 2rem;
+      width: 100%; max-width: 420px;
+      animation: slideUp 0.25s ease;
+      position: relative;
+    }
+    @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .modal-title { font-weight: 700; font-size: 1.1rem; color: var(--violet); margin-bottom: 1.25rem; text-align: center; }
+    .modal-close {
+      position: absolute; top: 1rem; right: 1rem;
+      background: none; border: none; cursor: pointer;
+      font-size: 1.25rem; color: var(--gray);
+    }
+    .modal-close:hover { color: var(--violet); }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--violet); margin-bottom: 0.4rem; }
+    .form-group input, .form-group select {
+      width: 100%; padding: 0.65rem 0.9rem;
+      border: 1.5px solid #ddd; border-radius: 8px;
+      font-family: 'Poppins', sans-serif; font-size: 0.9rem;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--violet); }
+    .form-group select { background: white; }
+    .modal-product-name {
+      background: rgba(212,160,23,0.1); border-radius: 8px;
+      padding: 0.75rem 1rem; font-size: 0.9rem; color: var(--brown);
+      margin-bottom: 1rem; text-align: center;
+    }
+    .modal-total { font-weight: 700; color: var(--violet); font-size: 1.1rem; text-align: center; margin: 1rem 0; }
+    .btn-full { width: 100%; text-align: center; padding: 0.85rem; font-size: 0.9rem; }
+    .confirm-icon { font-size: 4rem; text-align: center; margin-bottom: 1rem; }
+    .confirm-text {
+      text-align: center; font-weight: 700; font-size: 1.1rem;
+      color: var(--violet); text-transform: uppercase; letter-spacing: 1px; line-height: 1.5;
+    }
+    .confirm-sub { text-align: center; color: var(--gray); font-size: 0.85rem; margin-top: 0.5rem; }
+
+    /* ── FOOTER TIKTOK ──────────────────────────────────────── */
+    .tiktok-footer { background: #010101; padding: 1rem; text-align: center; }
+    .tiktok-btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      color: #ffffff; text-decoration: none;
+      font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+      padding: 0.55rem 1.2rem; border-radius: 100px;
+      border: 1.5px solid rgba(255,255,255,0.25); transition: border-color 0.2s;
+    }
+    .tiktok-btn:hover { border-color: #fff; }
+    .tiktok-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+    /* ── RESPONSIVE ─────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .products-grid, .events-list { grid-template-columns: 1fr; padding: 1rem; }
+    }
+
+    /* ── AUTH ───────────────────────────────────────────────── */
+    .top-nav-actions { position: static; flex-shrink: 0; display: flex; align-items: center; gap: 0.5rem; }
+    .member-chip {
+      display: none; align-items: center; gap: 0.35rem;
+      background: rgba(212,160,23,0.18); border: 1.5px solid var(--gold);
+      border-radius: 100px; padding: 0.2rem 0.55rem 0.2rem 0.25rem;
+      cursor: pointer; max-width: 120px;
+    }
+    .member-chip img {
+      width: 28px; height: 28px; border-radius: 50%; object-fit: cover;
+      border: 1.5px solid var(--gold); flex-shrink: 0;
+    }
+    .member-chip span {
+      color: var(--gold); font-size: 0.68rem; font-weight: 700;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .bottom-nav a.nav-protected { display: none; }
+    .logged-in .bottom-nav a.nav-protected { display: flex; }
+    body.logged-in .bottom-nav a[data-section="accueil"] { display: none !important; }
+
+    /* Bouton connexion fixé au-dessus de la bottom nav */
+    #hero-connexion {
+      position: fixed; bottom: 62px; left: 0; right: 0; z-index: 50;
+      background: rgba(30,15,70,0.97);
+      border-top: 1.5px solid rgba(212,160,23,0.35);
+      padding: 0.6rem 1rem; text-align: center;
+      display: flex; align-items: center; justify-content: center; gap: 0.75rem;
+      backdrop-filter: blur(6px);
+    }
+    #hero-connexion p { color: rgba(255,255,255,0.7); font-size: 0.78rem; margin: 0; }
+    body.logged-in #hero-connexion { display: none; }
+
+    /* Bandeau bienvenue boutique */
+    #welcome-banner {
+      display: none; align-items: center; justify-content: space-between; gap: 0.75rem;
+      background: linear-gradient(90deg, var(--violet) 0%, #4a2080 100%);
+      border-bottom: 2px solid var(--gold);
+      padding: 0.75rem 1.25rem;
+      animation: fadeInDown 0.5s ease;
+    }
+    @keyframes fadeInDown {
+      from { opacity:0; transform:translateY(-8px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    #welcome-banner #welcome-text { color: var(--gold); font-size: 0.82rem; font-weight: 600; flex: 1; }
+    #welcome-banner button {
+      background: none; border: none; color: rgba(255,255,255,0.6);
+      font-size: 1rem; cursor: pointer; flex-shrink: 0; padding: 0 0.25rem;
+    }
+    #welcome-banner button:hover { color: var(--gold); }
+
+    /* ── GUIDE DE DÉMARRAGE ─────────────────────────────────── */
+    #guide-overlay { position: fixed; inset: 0; z-index: 9998; background: transparent; display: none; }
+    #guide-spotlight {
+      position: fixed; border-radius: 12px;
+      box-shadow: 0 0 0 9999px rgba(0,0,0,0.82);
+      z-index: 9999; pointer-events: none;
+      transition: left 0.3s ease, top 0.3s ease, width 0.3s ease, height 0.3s ease;
+      display: none;
+    }
+    #guide-tooltip {
+      position: fixed; z-index: 10000;
+      background: white; border-radius: 18px; padding: 1.4rem 1.25rem 1.1rem;
+      width: min(300px, 88vw); box-shadow: 0 8px 48px rgba(0,0,0,0.38);
+      pointer-events: all; transition: bottom 0.3s ease, left 0.3s ease, top 0.3s ease;
+    }
+    #guide-step-icon { font-size: 2rem; text-align: center; margin-bottom: 0.5rem; line-height: 1; }
+    #guide-title { font-size: 1rem; font-weight: 800; color: var(--violet); text-align: center; margin-bottom: 0.6rem; }
+    #guide-text { font-size: 0.83rem; color: #4b5563; text-align: center; line-height: 1.6; margin-bottom: 1rem; }
+    .guide-footer { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+    #guide-progress { font-size: 0.72rem; font-weight: 700; color: var(--gray); flex-shrink: 0; }
+    .guide-btns { display: flex; gap: 0.5rem; }
+    .guide-btns button {
+      font-family: 'Poppins', sans-serif; font-size: 0.75rem; font-weight: 700;
+      border-radius: 8px; padding: 0.45rem 0.9rem; border: none; cursor: pointer; transition: all 0.2s;
+    }
+    #guide-prev { background: #f3f4f6; color: #374151; }
+    #guide-prev:hover { background: #e5e7eb; }
+    #guide-next { background: var(--violet); color: white; }
+    #guide-next:hover { background: var(--violet-light); }
+    #guide-tooltip.arrow-down::after {
+      content: ''; position: absolute; bottom: -13px; left: 50%;
+      transform: translateX(-50%); border: 13px solid transparent;
+      border-top-color: white; border-bottom: none;
+    }
+    .btn-guide-replay {
+      background: linear-gradient(135deg, var(--violet), #4a2080);
+      color: var(--gold); border: 1.5px solid var(--gold);
+      font-family: 'Poppins', sans-serif; font-size: 0.82rem; font-weight: 600;
+      padding: 0.65rem 1.5rem; border-radius: 8px; cursor: pointer;
+      width: 100%; margin-bottom: 0.75rem; transition: all 0.2s;
+    }
+    .btn-guide-replay:hover { background: var(--violet-light); }
+
+    /* ── INSCRIPTION / CONNEXION ─────────────────────────────── */
+    .modal-box .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .auth-switch { text-align: center; font-size: 0.8rem; color: var(--gray); margin-top: 1rem; }
+    .auth-switch a { color: var(--violet); font-weight: 600; cursor: pointer; text-decoration: none; }
+
+    /* ── SECTION PROFIL ─────────────────────────────────────── */
+    .profile-wrap { max-width: 500px; margin: 1.5rem auto; padding: 0 1rem 2rem; }
+    .profile-photo-block { text-align: center; margin-bottom: 1.5rem; }
+    .profile-avatar {
+      width: 90px; height: 90px; border-radius: 50%; object-fit: cover;
+      border: 3px solid var(--gold); margin-bottom: 0.75rem; cursor: pointer; transition: opacity 0.2s;
+    }
+    .profile-avatar:hover { opacity: 0.85; }
+    .profile-avatar-placeholder {
+      width: 90px; height: 90px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--violet), var(--gold));
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 2.5rem; margin-bottom: 0.75rem; cursor: pointer; border: 3px solid var(--gold);
+    }
+    .profile-card {
+      background: var(--white); border-radius: 12px;
+      padding: 1.25rem; margin-bottom: 1rem; box-shadow: var(--shadow);
+    }
+    .profile-card h3 {
+      font-size: 0.9rem; font-weight: 700; color: var(--violet);
+      margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid rgba(212,160,23,0.2);
+    }
+    .profile-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.5rem 0; border-bottom: 1px solid #f3f4f6; font-size: 0.85rem;
+    }
+    .profile-row:last-child { border-bottom: none; }
+    .profile-row .label { color: var(--gray); font-weight: 600; }
+    .profile-row .value { color: var(--brown); font-weight: 500; text-align: right; }
+    .btn-logout {
+      background: #fee2e2; color: #dc2626; border: none;
+      font-family: 'Poppins', sans-serif; font-size: 0.82rem; font-weight: 600;
+      padding: 0.6rem 1.5rem; border-radius: 8px; cursor: pointer;
+      width: 100%; margin-top: 0.5rem;
+    }
+    .btn-logout:hover { background: #fecaca; }
+    @media (max-width: 480px) { .form-row-2 { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<!-- ── BARRE DE TITRE (haut) ──────────────────────────────── -->
+<div class="top-nav">
+  <div class="top-nav-title">✦ Dah Gbesso Adihodegemabou ✦</div>
+  <div class="top-nav-actions">
+    <div class="member-chip" id="member-chip" onclick="navigate('profil')">
+      <img id="chip-avatar" src="" alt="avatar" />
+      <span id="chip-name">–</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── NAVIGATION BAS ─────────────────────────────────────── -->
+<nav class="bottom-nav">
+  <a onclick="navigate('accueil')"    data-section="accueil"    class="active">
+    🏠<span>Accueil</span>
+  </a>
+  <a onclick="navigate('boutique')"   data-section="boutique"   class="nav-protected">
+    🛍<span>Boutique</span>
+  </a>
+  <a onclick="navigate('evenements')" data-section="evenements" class="nav-protected">
+    📅<span>Événements</span>
+  </a>
+  <a onclick="navigate('fanclub')"    data-section="fanclub"    class="nav-protected">
+    ⭐<span>Fan Club</span>
+  </a>
+  <a onclick="navigate('profil')"     data-section="profil"     class="nav-protected">
+    👤<span>Profil</span>
+  </a>
+</nav>
+
+<!-- ── SECTION ACCUEIL ───────────────────────────────────── -->
+<section id="accueil" class="active">
+  <div class="hero">
+    <div class="hero-badge">✦ Bienvenue ✦</div>
+    <h1>Spiritualité<br><span>Autrement</span><br>de Dah Gbesso</h1>
+    <p class="hero-sub">Adihodegemabou</p>
+    <div class="hero-divider"></div>
+    <p class="hero-intro">
+      Découvrez l'univers spirituel de Dah Gbesso Adihodegemabou.
+      Des produits naturels purifiants, des rencontres transformatrices,
+      et une communauté ancrée dans la tradition et la sagesse africaine.
+    </p>
+    <div class="hero-cta">
+      <a href="#boutique" class="btn" onclick="handleBoutiqueClick()">🛍 Voir la boutique</a>
+    </div>
+  </div>
+  <div id="hero-connexion">
+    <p>Déjà membre ?</p>
+    <button class="btn btn-outline" style="padding:0.45rem 1.25rem;font-size:0.78rem"
+            onclick="openModal('modal-connexion')">🔑 Se connecter</button>
+  </div>
+  <div class="tiktok-footer">
+    <a class="tiktok-btn" href="<?= htmlspecialchars(TIKTOK_URL) ?>" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 0 0-.79-.05 6.33 6.33 0 0 0-6.33 6.33 6.33 6.33 0 0 0 6.33 6.33 6.33 6.33 0 0 0 6.32-6.33V8.73a8.26 8.26 0 0 0 4.83 1.54V6.8a4.85 4.85 0 0 1-1.05-.11z"/></svg>
+      Suivez Dah Gbesso sur TikTok
+    </a>
+  </div>
+</section>
+
+<!-- ── SECTION BOUTIQUE ──────────────────────────────────── -->
+<section id="boutique">
+  <div class="page-header">
+    <h2>🛍 Notre Boutique</h2>
+    <p>Savons, parfums et produits spirituels de Dah Gbesso</p>
+  </div>
+  <div id="welcome-banner">
+    <span id="welcome-text"></span>
+    <button onclick="document.getElementById('welcome-banner').style.display='none'" title="Fermer">✕</button>
+  </div>
+  <div id="products-container" class="products-grid">
+    <div class="loading-wrap" style="grid-column:1/-1">
+      <div class="spinner"></div>
+      <p>Chargement des produits…</p>
+    </div>
+  </div>
+  <div class="tiktok-footer">
+    <a class="tiktok-btn" href="<?= htmlspecialchars(TIKTOK_URL) ?>" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 0 0-.79-.05 6.33 6.33 0 0 0-6.33 6.33 6.33 6.33 0 0 0 6.33 6.33 6.33 6.33 0 0 0 6.32-6.33V8.73a8.26 8.26 0 0 0 4.83 1.54V6.8a4.85 4.85 0 0 1-1.05-.11z"/></svg>
+      Suivez Dah Gbesso sur TikTok
+    </a>
+  </div>
+</section>
+
+<!-- ── SECTION ÉVÉNEMENTS ────────────────────────────────── -->
+<section id="evenements">
+  <div class="page-header">
+    <h2>📅 Événements</h2>
+    <p>Rencontres et cérémonies avec Dah Gbesso Adihodegemabou</p>
+  </div>
+  <div id="events-container" class="events-list">
+    <div class="loading-wrap" style="grid-column:1/-1">
+      <div class="spinner"></div>
+      <p>Chargement des événements…</p>
+    </div>
+  </div>
+  <div class="tiktok-footer">
+    <a class="tiktok-btn" href="<?= htmlspecialchars(TIKTOK_URL) ?>" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 0 0-.79-.05 6.33 6.33 0 0 0-6.33 6.33 6.33 6.33 0 0 0 6.33 6.33 6.33 6.33 0 0 0 6.32-6.33V8.73a8.26 8.26 0 0 0 4.83 1.54V6.8a4.85 4.85 0 0 1-1.05-.11z"/></svg>
+      Suivez Dah Gbesso sur TikTok
+    </a>
+  </div>
+</section>
+
+<!-- ── SECTION FAN CLUB ──────────────────────────────────── -->
+<section id="fanclub">
+  <div class="page-header">
+    <h2>⭐ Fan Club Dah Gbesso</h2>
+    <p class="fc-count" id="fc-member-count">Chargement…</p>
+  </div>
+
+  <div class="fc-tabs">
+    <button class="fc-tab active" onclick="switchFcTab(this,'fc-rejoindre')">
+      <span class="t-icon">👋</span><span>Rejoindre</span>
+    </button>
+    <button class="fc-tab" onclick="switchFcTab(this,'fc-avantages')">
+      <span class="t-icon">🎁</span><span>Avantages</span>
+    </button>
+    <button class="fc-tab" onclick="switchFcTab(this,'fc-suggestions')">
+      <span class="t-icon">💬</span><span>Suggestions</span>
+    </button>
+    <button class="fc-tab" onclick="switchFcTab(this,'fc-appreciations')">
+      <span class="t-icon">⭐</span><span>Appréciations</span>
+    </button>
+  </div>
+
+  <!-- ONGLET 1 : REJOINDRE -->
+  <div id="fc-rejoindre" class="fc-panel active">
+    <div class="fc-inner">
+      <div class="fc-section-title">👋 Rejoindre le Fan Club</div>
+      <p class="fc-section-desc">Remplissez ce formulaire pour soumettre votre demande de participation à la confrérie de Dah Gbesso Adihodegemabou.</p>
+      <div id="fc-join-already" class="fc-already" style="display:none">
+        ✅ Vous avez déjà envoyé une demande. Dah Gbesso vous contactera bientôt.
+      </div>
+      <form id="fc-join-form" onsubmit="submitFcRequest(event)">
+        <div class="form-group">
+          <label>Civilité *</label>
+          <select id="fc-civilite" required>
+            <option value="">-- Choisir --</option>
+            <option>Monsieur</option><option>Madame</option><option>Autre</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Nom et prénoms complets *</label>
+          <input type="text" id="fc-nom" placeholder="Ex: Kofi Mensah" required />
+        </div>
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" id="fc-email" placeholder="vous@exemple.com" required />
+        </div>
+        <div class="form-group">
+          <label>Numéro WhatsApp *</label>
+          <input type="tel" id="fc-whatsapp" placeholder="+229 97 00 00 00" required />
+        </div>
+        <div class="form-group">
+          <label>Numéro de téléphone *</label>
+          <input type="tel" id="fc-telephone" placeholder="+229 97 00 00 00" required />
+        </div>
+        <div class="form-group">
+          <label>Pays *</label>
+          <input type="text" id="fc-pays" placeholder="Ex: Bénin" required />
+        </div>
+        <div class="form-group">
+          <label>Ville *</label>
+          <input type="text" id="fc-ville" placeholder="Ex: Cotonou" required />
+        </div>
+        <div class="form-group">
+          <label>Âge *</label>
+          <input type="number" id="fc-age" min="1" max="120" placeholder="Ex: 35" required />
+        </div>
+        <div class="form-group">
+          <label>Profession *</label>
+          <input type="text" id="fc-profession" placeholder="Ex: Commerçant" required />
+        </div>
+        <div class="form-group">
+          <label>Pourquoi voulez-vous rejoindre le Fan Club ? *</label>
+          <textarea id="fc-motivation" rows="4" placeholder="Expliquez vos motivations…" required
+            style="width:100%;padding:0.65rem 0.9rem;border:1.5px solid #ddd;border-radius:8px;font-family:'Poppins',sans-serif;font-size:0.9rem;resize:vertical"></textarea>
+        </div>
+        <button type="submit" class="btn btn-full">✉️ ENVOYER MA DEMANDE DE PARTICIPATION</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ONGLET 2 : AVANTAGES -->
+  <div id="fc-avantages" class="fc-panel">
+    <div class="fc-inner">
+      <div class="fc-section-title">🎁 Avantages exclusifs</div>
+      <p class="fc-section-desc">En tant que membre du Fan Club, vous bénéficiez de :</p>
+      <ul class="fc-advantages">
+        <li class="fc-advantage-item"><span class="adv-icon">💰</span><span class="adv-text">Offres spéciales &amp; réductions sur les produits de Dah Gbesso</span></li>
+        <li class="fc-advantage-item"><span class="adv-icon">🔐</span><span class="adv-text">Recettes secrètes et puissantes transmises par Dah Gbesso</span></li>
+        <li class="fc-advantage-item"><span class="adv-icon">🙏</span><span class="adv-text">Cérémonies faites en votre nom auprès des divinités</span></li>
+        <li class="fc-advantage-item"><span class="adv-icon">📣</span><span class="adv-text">Avant-première des événements avant tout le monde</span></li>
+        <li class="fc-advantage-item"><span class="adv-icon">🎪</span><span class="adv-text">Participation à l'organisation des événements de Dah Gbesso</span></li>
+        <li class="fc-advantage-item"><span class="adv-icon">✨</span><span class="adv-text">Accès à des bénéfices spirituels exclusifs réservés aux membres</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ONGLET 3 : SUGGESTIONS -->
+  <div id="fc-suggestions" class="fc-panel">
+    <div class="fc-inner">
+      <div class="fc-section-title">💬 Suggestions</div>
+      <p class="fc-section-desc">Partagez vos suggestions avec la communauté. Elles sont visibles par tous.</p>
+      <form onsubmit="submitSuggestion(event)" style="margin-bottom:1.5rem">
+        <div class="form-group">
+          <label>Votre prénom *</label>
+          <input type="text" id="sug-prenom" placeholder="Ex: Ama" required />
+        </div>
+        <div class="form-group">
+          <label>Votre pays *</label>
+          <input type="text" id="sug-pays" placeholder="Ex: Bénin" required />
+        </div>
+        <div class="form-group">
+          <label>Votre suggestion *</label>
+          <textarea id="sug-message" rows="3" placeholder="Votre message…" required
+            style="width:100%;padding:0.65rem 0.9rem;border:1.5px solid #ddd;border-radius:8px;font-family:'Poppins',sans-serif;font-size:0.9rem;resize:vertical"></textarea>
+        </div>
+        <button type="submit" class="btn btn-full">💬 ENVOYER MA SUGGESTION</button>
+      </form>
+      <div id="suggestions-list">
+        <div class="loading-wrap"><div class="spinner"></div><p>Chargement…</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ONGLET 4 : APPRÉCIATIONS -->
+  <div id="fc-appreciations" class="fc-panel">
+    <div class="fc-inner">
+      <div class="fc-section-title">⭐ Appréciations</div>
+      <p class="fc-section-desc">Appréciez-vous le travail de Dah Gbesso Adihodegemabou ?</p>
+      <form onsubmit="submitFeedback(event)" style="margin-bottom:1.5rem">
+        <div class="fc-radio-group">
+          <button type="button" id="fb-oui-btn" class="fc-radio-btn" onclick="selectFeedback(true)">👍 OUI</button>
+          <button type="button" id="fb-non-btn" class="fc-radio-btn" onclick="selectFeedback(false)">👎 NON</button>
+        </div>
+        <input type="hidden" id="fb-appreciation" value="" />
+        <div id="fb-text-wrap" style="display:none">
+          <div class="form-group">
+            <label id="fb-text-label">Qu'est-ce que vous appréciez ?</label>
+            <textarea id="fb-message" rows="3" placeholder="Exprimez-vous librement…" required
+              style="width:100%;padding:0.65rem 0.9rem;border:1.5px solid #ddd;border-radius:8px;font-family:'Poppins',sans-serif;font-size:0.9rem;resize:vertical"></textarea>
+          </div>
+          <button type="submit" class="btn btn-full">⭐ ENVOYER</button>
+        </div>
+      </form>
+      <div id="feedbacks-list">
+        <div class="loading-wrap"><div class="spinner"></div><p>Chargement…</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tiktok-footer">
+    <a class="tiktok-btn" href="<?= htmlspecialchars(TIKTOK_URL) ?>" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 0 0-.79-.05 6.33 6.33 0 0 0-6.33 6.33 6.33 6.33 0 0 0 6.33 6.33 6.33 6.33 0 0 0 6.32-6.33V8.73a8.26 8.26 0 0 0 4.83 1.54V6.8a4.85 4.85 0 0 1-1.05-.11z"/></svg>
+      Suivez Dah Gbesso sur TikTok
+    </a>
+  </div>
+</section>
+
+<!-- ── SECTION PROFIL ─────────────────────────────────────── -->
+<section id="profil">
+  <div class="page-header">
+    <h2>👤 Mon Profil</h2>
+    <p>Vos informations personnelles</p>
+  </div>
+  <div class="profile-wrap">
+    <div class="profile-photo-block">
+      <div id="profile-avatar-wrap" onclick="document.getElementById('profile-photo-input').click()">
+        <div class="profile-avatar-placeholder" id="profile-avatar-placeholder">👤</div>
+        <img id="profile-avatar-img" class="profile-avatar" src="" alt="Photo" style="display:none" />
+      </div>
+      <div style="font-size:0.75rem;color:var(--gray);margin-top:0.4rem">Cliquer pour changer la photo</div>
+      <input type="file" id="profile-photo-input" accept="image/*" style="display:none"
+             onchange="uploadProfilePhoto(event)" />
+    </div>
+    <div class="profile-card">
+      <h3>📋 Informations personnelles</h3>
+      <div class="profile-row"><span class="label">Civilité</span>     <span class="value" id="pi-civilite">–</span></div>
+      <div class="profile-row"><span class="label">Nom</span>          <span class="value" id="pi-nom">–</span></div>
+      <div class="profile-row"><span class="label">Prénom</span>       <span class="value" id="pi-prenom">–</span></div>
+      <div class="profile-row"><span class="label">Email</span>        <span class="value" id="pi-email">–</span></div>
+      <div class="profile-row"><span class="label">Pays</span>         <span class="value" id="pi-pays">–</span></div>
+      <div class="profile-row"><span class="label">Téléphone</span>    <span class="value" id="pi-tel">–</span></div>
+      <div class="profile-row"><span class="label">Membre depuis</span><span class="value" id="pi-date">–</span></div>
+    </div>
+    <button class="btn-guide-replay" onclick="startGuide(true)">🗺️ Revoir le guide de démarrage</button>
+    <button class="btn-logout" onclick="logout()">🚪 Se déconnecter</button>
+  </div>
+</section>
+
+<!-- ── MODAL : INSCRIPTION ───────────────────────────────── -->
+<div id="modal-inscription" class="modal-overlay">
+  <div class="modal-box" style="max-width:460px">
+    <div class="modal-title">✨ Rejoindre la Confrérie</div>
+    <p style="text-align:center;color:var(--gray);font-size:0.83rem;margin-bottom:1.25rem">
+      Veuillez vous inscrire pour accéder à la boutique de la confrérie
+    </p>
+    <div class="form-group">
+      <label>Civilité *</label>
+      <select id="ins-civilite">
+        <option value="">— Choisir —</option>
+        <option value="M.">M.</option>
+        <option value="Mme">Mme</option>
+        <option value="Dr">Dr</option>
+        <option value="Révd">Révd</option>
+      </select>
+    </div>
+    <div class="form-row-2">
+      <div class="form-group">
+        <label>Nom *</label>
+        <input type="text" id="ins-nom" placeholder="Votre nom" />
+      </div>
+      <div class="form-group">
+        <label>Prénom *</label>
+        <input type="text" id="ins-prenom" placeholder="Votre prénom" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Adresse email *</label>
+      <input type="email" id="ins-email" placeholder="vous@exemple.com" />
+    </div>
+    <div class="form-group">
+      <label>Pays *</label>
+      <input type="text" id="ins-pays" placeholder="Ex: Bénin, France, Côte d'Ivoire…" />
+    </div>
+    <div class="form-group">
+      <label>Numéro de téléphone *</label>
+      <input type="tel" id="ins-tel" placeholder="Ex: +229 97 00 00 00" />
+    </div>
+    <button class="btn btn-full" onclick="submitInscription()">✅ S'inscrire et accéder à la boutique</button>
+    <div class="auth-switch">
+      Déjà inscrit ? <a onclick="switchToConnexion()">Se connecter</a>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL : CONNEXION ──────────────────────────────────── -->
+<div id="modal-connexion" class="modal-overlay">
+  <div class="modal-box" style="max-width:400px">
+    <button class="modal-close" onclick="closeModal('modal-connexion')">✕</button>
+    <div class="modal-title">🔑 Connexion</div>
+    <p style="text-align:center;color:var(--gray);font-size:0.83rem;margin-bottom:1.25rem">
+      Entrez votre email et téléphone pour accéder à votre compte
+    </p>
+    <div class="form-group">
+      <label>Adresse email</label>
+      <input type="email" id="con-email" placeholder="vous@exemple.com" />
+    </div>
+    <div class="form-group">
+      <label>Numéro de téléphone</label>
+      <input type="tel" id="con-tel" placeholder="Ex: +229 97 00 00 00" />
+    </div>
+    <button class="btn btn-full" onclick="submitConnexion()">🔓 Se connecter</button>
+    <div class="auth-switch">
+      Pas encore inscrit ? <a onclick="switchToInscription()">S'inscrire</a>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL : QUANTITÉ ──────────────────────────────────── -->
+<div id="modal-quantite" class="modal-overlay">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('modal-quantite')">✕</button>
+    <div class="modal-title">Choisir la quantité</div>
+    <div id="qty-product-name" class="modal-product-name"></div>
+    <div class="form-group">
+      <label>Quantité souhaitée</label>
+      <input type="number" id="input-qty" min="1" max="999" value="1" />
+    </div>
+    <div id="qty-total" class="modal-total"></div>
+    <button class="btn btn-full" onclick="confirmQuantity()">📲 Commander sur WhatsApp</button>
+  </div>
+</div>
+
+<!-- ── GUIDE DE DÉMARRAGE ─────────────────────────────────── -->
+<div id="guide-overlay">
+  <div id="guide-spotlight"></div>
+  <div id="guide-tooltip">
+    <div id="guide-step-icon"></div>
+    <h3 id="guide-title"></h3>
+    <p id="guide-text"></p>
+    <div class="guide-footer">
+      <span id="guide-progress">1 / 5</span>
+      <div class="guide-btns">
+        <button id="guide-prev" onclick="guidePrev(event)">← Retour</button>
+        <button id="guide-next" onclick="guideNext(event)">Suivant →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SCRIPTS ───────────────────────────────────────────── -->
+<script>
+  // ── CONFIG (injectée depuis PHP) ──────────────────────────
+  const SUPABASE_URL    = '<?= SUPABASE_URL ?>';
+  const SUPABASE_KEY    = '<?= SUPABASE_KEY ?>';
+  const WHATSAPP_NUMBER = '<?= WHATSAPP_NUM ?>';
+  const CLOUDINARY_CLOUD  = '<?= CLOUDINARY_CLOUD ?>';
+  const CLOUDINARY_PRESET = '<?= CLOUDINARY_PRESET ?>';
+
+  // ── SUPABASE ──────────────────────────────────────────────
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ── ÉTAT ──────────────────────────────────────────────────
+  let currentProduct  = null;
+  let currentQuantity = 1;
+  let currentMember   = null;
+
+  // ── AUTHENTIFICATION ──────────────────────────────────────
+  function saveSession(member) {
+    currentMember = member;
+    localStorage.setItem('member_session', JSON.stringify(member));
+    updateAuthUI();
+  }
+
+  function loadSession() {
+    var stored = localStorage.getItem('member_session');
+    if (stored) { currentMember = JSON.parse(stored); updateAuthUI(); }
+  }
+
+  function logout() {
+    currentMember = null;
+    localStorage.removeItem('member_session');
+    updateAuthUI();
+    navigate('accueil');
+  }
+
+  function updateAuthUI() {
+    var loggedIn = currentMember !== null;
+    document.body.classList.toggle('logged-in', loggedIn);
+    var chip = document.getElementById('member-chip');
+    if (loggedIn) {
+      chip.style.display = 'flex';
+      document.getElementById('chip-name').textContent = currentMember.prenom;
+      var avatar = currentMember.photo_url;
+      document.getElementById('chip-avatar').src =
+        avatar || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22%3E%3Ccircle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23D4A017%22/%3E%3Ctext x=%2220%22 y=%2226%22 text-anchor=%22middle%22 font-size=%2218%22 fill=%22%232D1B69%22%3E%F0%9F%91%A4%3C/text%3E%3C/svg%3E';
+    } else {
+      chip.style.display = 'none';
+    }
+  }
+
+  async function submitInscription() {
+    var civ  = document.getElementById('ins-civilite').value.trim();
+    var nom  = document.getElementById('ins-nom').value.trim();
+    var prn  = document.getElementById('ins-prenom').value.trim();
+    var em   = document.getElementById('ins-email').value.trim();
+    var pays = document.getElementById('ins-pays').value.trim();
+    var tel  = document.getElementById('ins-tel').value.trim();
+
+    if (!civ || !nom || !prn || !em || !pays || !tel) {
+      alert('Veuillez remplir tous les champs obligatoires.'); return;
+    }
+
+    var { data, error } = await sb.rpc('member_register', {
+      p_civilite: civ, p_nom: nom, p_prenom: prn,
+      p_email: em, p_pays: pays, p_telephone: tel
+    });
+
+    if (error) {
+      if (error.code === '23505' || (error.message && error.message.includes('unique'))) {
+        alert('Cet email est déjà inscrit. Veuillez vous connecter.');
+        switchToConnexion();
+      } else {
+        alert('Erreur inscription : ' + error.message);
+      }
+      return;
+    }
+    if (!data || (typeof data === 'object' && !data.id)) {
+      alert('Erreur lors de la création du compte. Veuillez réessayer.'); return;
+    }
+    closeModal('modal-inscription');
+    saveSession(data);
+    navigate('boutique');
+    setTimeout(function() { startGuide(); }, 900);
+  }
+
+  async function submitConnexion() {
+    var em  = document.getElementById('con-email').value.trim();
+    var tel = document.getElementById('con-tel').value.trim();
+    if (!em || !tel) { alert('Veuillez remplir email et téléphone.'); return; }
+
+    var { data, error } = await sb.rpc('member_login', {
+      p_email: em, p_telephone: tel
+    });
+
+    if (error) { alert('Erreur de connexion : ' + error.message); return; }
+    if (!data || !data.id) {
+      alert('Compte introuvable. Vérifiez votre email et téléphone, ou inscrivez-vous.'); return;
+    }
+    closeModal('modal-connexion');
+    saveSession(data);
+    navigate('boutique');
+    setTimeout(function() { startGuide(); }, 900);
+  }
+
+  function handleBoutiqueClick() {
+    if (currentMember) { navigate('boutique'); }
+    else               { openModal('modal-inscription'); }
+  }
+
+  function switchToConnexion()  { closeModal('modal-inscription'); openModal('modal-connexion'); }
+  function switchToInscription(){ closeModal('modal-connexion'); openModal('modal-inscription'); }
+
+  // ── PROFIL ────────────────────────────────────────────────
+  function fillProfileUI() {
+    if (!currentMember) return;
+    var m = currentMember;
+    document.getElementById('pi-civilite').textContent = m.civilite  || '–';
+    document.getElementById('pi-nom').textContent      = m.nom       || '–';
+    document.getElementById('pi-prenom').textContent   = m.prenom    || '–';
+    document.getElementById('pi-email').textContent    = m.email     || '–';
+    document.getElementById('pi-pays').textContent     = m.pays      || '–';
+    document.getElementById('pi-tel').textContent      = m.telephone || '–';
+    document.getElementById('pi-date').textContent     =
+      m.created_at ? new Date(m.created_at).toLocaleDateString('fr-FR', {
+        day:'numeric', month:'long', year:'numeric' }) : '–';
+    var imgEl = document.getElementById('profile-avatar-img');
+    var phEl  = document.getElementById('profile-avatar-placeholder');
+    if (m.photo_url) {
+      imgEl.src = m.photo_url; imgEl.style.display = 'block'; phEl.style.display = 'none';
+    } else {
+      imgEl.style.display = 'none'; phEl.style.display = 'inline-flex';
+    }
+  }
+
+  async function uploadProfilePhoto(event) {
+    var file = event.target.files[0];
+    if (!file || !currentMember) return;
+    var fd = new FormData();
+    fd.append('file', file);
+    fd.append('upload_preset', CLOUDINARY_PRESET);
+    try {
+      var res  = await fetch('https://api.cloudinary.com/v1_1/' + CLOUDINARY_CLOUD + '/image/upload',
+        { method: 'POST', body: fd });
+      var data = await res.json();
+      if (data.secure_url) {
+        await sb.rpc('member_update_photo', { p_id: currentMember.id, p_photo_url: data.secure_url });
+        currentMember.photo_url = data.secure_url;
+        saveSession(currentMember);
+        fillProfileUI();
+      }
+    } catch(e) { alert('Erreur upload photo : ' + e.message); }
+  }
+
+  // ── ROUTEUR ───────────────────────────────────────────────
+  function navigate(id) {
+    var protected_sections = ['boutique', 'evenements', 'fanclub', 'profil'];
+    if (protected_sections.indexOf(id) !== -1 && !currentMember) {
+      openModal('modal-inscription'); return;
+    }
+    document.querySelectorAll('section').forEach(function(s) { s.classList.remove('active'); });
+    var sec = document.getElementById(id);
+    if (sec) { sec.classList.add('active'); window.scrollTo(0, 0); }
+    document.querySelectorAll('.bottom-nav a').forEach(function(a) {
+      a.classList.toggle('active', a.dataset.section === id);
+    });
+    if (id === 'boutique')   loadProducts();
+    if (id === 'evenements') loadEvents();
+    if (id === 'fanclub')    initFanClub();
+    if (id === 'profil')     fillProfileUI();
+  }
+
+  window.addEventListener('hashchange', function() {
+    navigate(location.hash.slice(1) || 'accueil');
+  });
+
+  (function init() {
+    loadSession();
+    navigate('accueil');
+    if (localStorage.getItem('fc_request_sent')) {
+      var form    = document.getElementById('fc-join-form');
+      var already = document.getElementById('fc-join-already');
+      if (form)    form.style.display    = 'none';
+      if (already) already.style.display = 'block';
+    }
+  })();
+
+  // ── PRODUITS ──────────────────────────────────────────────
+  let productsLoaded = false;
+  async function loadProducts() {
+    if (productsLoaded) return;
+    var banner = document.getElementById('welcome-banner');
+    if (banner && currentMember) {
+      document.getElementById('welcome-text').textContent =
+        '🌟 Bienvenue ' + currentMember.civilite + ' ' + currentMember.prenom
+        + ' dans la confrérie de Dah Gbesso !';
+      banner.style.display = 'flex';
+    }
+    const container = document.getElementById('products-container');
+    container.innerHTML = '<div class="loading-wrap" style="grid-column:1/-1"><div class="spinner"></div><p>Chargement des produits…</p></div>';
+
+    const { data, error } = await sb.from('products').select('*')
+      .eq('is_published', true).order('created_at', { ascending: false });
+
+    if (error) {
+      container.innerHTML = '<div class="empty-wrap" style="grid-column:1/-1">⚠️ Impossible de charger les produits.</div>';
+      return;
+    }
+    if (!data || data.length === 0) {
+      container.innerHTML = '<div class="empty-wrap" style="grid-column:1/-1">Aucun produit disponible pour le moment.</div>';
+      return;
+    }
+    container.innerHTML = data.map(p => `
+      <div class="product-card">
+        ${p.image_url
+          ? `<img src="${p.image_url}" alt="${escHtml(p.name)}" loading="lazy" />`
+          : `<div class="placeholder-img">🧴</div>`}
+        <div class="product-info">
+          <div class="product-name">${escHtml(p.name)}</div>
+          ${p.description ? `<div class="product-desc">${escHtml(p.description)}</div>` : ''}
+          <div class="product-price">${formatPrice(p.price)}</div>
+          <button class="btn" onclick='openPayModal(${JSON.stringify(p)})'>💳 PAYER</button>
+        </div>
+      </div>
+    `).join('');
+    productsLoaded = true;
+  }
+
+  // ── ÉVÉNEMENTS ────────────────────────────────────────────
+  let eventsLoaded = false;
+  async function loadEvents() {
+    if (eventsLoaded) return;
+    const container = document.getElementById('events-container');
+    container.innerHTML = '<div class="loading-wrap" style="grid-column:1/-1"><div class="spinner"></div><p>Chargement des événements…</p></div>';
+
+    const { data, error } = await sb.from('events').select('*')
+      .eq('is_published', true).order('event_date', { ascending: true });
+
+    if (error) {
+      container.innerHTML = '<div class="empty-wrap" style="grid-column:1/-1">⚠️ Impossible de charger les événements.</div>';
+      return;
+    }
+    if (!data || data.length === 0) {
+      container.innerHTML = '<div class="empty-wrap" style="grid-column:1/-1">Aucun événement disponible pour le moment.</div>';
+      return;
+    }
+    container.innerHTML = data.map(e => `
+      <div class="event-card">
+        ${e.image_url
+          ? `<img src="${e.image_url}" alt="${escHtml(e.title)}" loading="lazy" />`
+          : `<div class="placeholder-img">🌟</div>`}
+        <div class="event-info">
+          <div class="event-title">${escHtml(e.title)}</div>
+          <div class="event-date">📅 ${formatDate(e.event_date)}</div>
+          ${e.conditions ? `<div class="event-conditions">${escHtml(e.conditions)}</div>` : ''}
+          <button class="btn btn-participate"
+            onclick="participateEvent('${escHtml(e.redirect_link || '')}')">
+            🎯 PARTICIPER
+          </button>
+        </div>
+      </div>
+    `).join('');
+    eventsLoaded = true;
+  }
+
+  // ── PAIEMENT WHATSAPP ─────────────────────────────────────
+  function openPayModal(product) {
+    currentProduct  = product;
+    currentQuantity = 1;
+    document.getElementById('qty-product-name').textContent = product.name;
+    document.getElementById('input-qty').value = 1;
+    updateTotal();
+    openModal('modal-quantite');
+  }
+
+  document.getElementById('input-qty').addEventListener('input', updateTotal);
+
+  function updateTotal() {
+    const qty = parseInt(document.getElementById('input-qty').value) || 1;
+    currentQuantity = Math.max(1, qty);
+    if (currentProduct) {
+      document.getElementById('qty-total').textContent =
+        'Total : ' + formatPrice(currentProduct.price * currentQuantity);
+    }
+  }
+
+  function confirmQuantity() {
+    var qty = parseInt(document.getElementById('input-qty').value);
+    if (!qty || qty < 1) { alert('Veuillez entrer une quantité valide.'); return; }
+    currentQuantity = qty;
+    closeModal('modal-quantite');
+    var total          = currentProduct.price * qty;
+    var totalFormatted = new Intl.NumberFormat('fr-FR').format(total);
+    var msg =
+      'Bonjour Dah Gbesso ! 👋\n\n' +
+      'Je souhaite commander :\n\n' +
+      '🛍 *Produit* : ' + currentProduct.name + '\n' +
+      '🔢 *Quantité* : ' + qty + '\n' +
+      '💰 *Prix total* : ' + totalFormatted + ' XOF\n\n' +
+      'Merci de confirmer ma commande. 🙏';
+    var url = 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(msg);
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
+  function participateEvent(link) {
+    if (!link) { alert("Le lien de participation n'est pas encore disponible."); return; }
+    window.open(link, '_blank', 'noopener,noreferrer');
+  }
+
+  // ── HELPERS ───────────────────────────────────────────────
+  function openModal(id)  { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) overlay.classList.remove('open');
+    });
+  });
+
+  function formatPrice(price) {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency', currency: 'XOF', minimumFractionDigits: 0
+    }).format(price);
+  }
+
+  function formatDate(dateStr) {
+    return new Date(dateStr).toLocaleDateString('fr-FR', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    });
+  }
+
+  function escHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── FAN CLUB ──────────────────────────────────────────────
+  var fcInited      = false;
+  var fcCurrentAppr = null;
+
+  function initFanClub() {
+    if (!fcInited) {
+      loadFcMemberCount();
+      loadSuggestions();
+      loadFeedbacks();
+      fcInited = true;
+    }
+  }
+
+  async function loadFcMemberCount() {
+    var { data, error } = await sb.rpc('fc_count_requests');
+    if (!error && data !== null) {
+      var n = parseInt(data) || 0;
+      document.getElementById('fc-member-count').textContent =
+        n + ' personne' + (n > 1 ? 's ont' : ' a') + ' déjà rejoint';
+    }
+  }
+
+  function switchFcTab(btn, panelId) {
+    document.querySelectorAll('.fc-tab').forEach(function(t){ t.classList.remove('active'); });
+    document.querySelectorAll('.fc-panel').forEach(function(p){ p.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById(panelId).classList.add('active');
+  }
+
+  async function submitFcRequest(e) {
+    e.preventDefault();
+    var btn  = e.target.querySelector('[type=submit]');
+    var civ  = document.getElementById('fc-civilite').value;
+    var nom  = document.getElementById('fc-nom').value.trim();
+    var em   = document.getElementById('fc-email').value.trim();
+    var wha  = document.getElementById('fc-whatsapp').value.trim();
+    var tel  = document.getElementById('fc-telephone').value.trim();
+    var pays = document.getElementById('fc-pays').value.trim();
+    var vil  = document.getElementById('fc-ville').value.trim();
+    var age  = parseInt(document.getElementById('fc-age').value);
+    var pro  = document.getElementById('fc-profession').value.trim();
+    var mot  = document.getElementById('fc-motivation').value.trim();
+
+    if (!civ || !nom || !em || !wha || !tel || !pays || !vil || !age || !pro || !mot) {
+      alert('Veuillez remplir tous les champs obligatoires.'); return;
+    }
+    btn.disabled = true; btn.textContent = '⏳ Envoi en cours…';
+
+    var { data: dup } = await sb.rpc('fc_check_duplicate', { p_email: em, p_telephone: tel });
+    if (dup) {
+      document.getElementById('fc-join-form').style.display = 'none';
+      document.getElementById('fc-join-already').style.display = 'block';
+      return;
+    }
+    var { error } = await sb.from('fanclub_requests').insert({
+      civilite: civ, nom_complet: nom, email: em,
+      whatsapp: wha, telephone: tel, pays, ville: vil,
+      age, profession: pro, motivation: mot
+    });
+    if (error) {
+      btn.disabled = false; btn.textContent = '✉️ ENVOYER MA DEMANDE DE PARTICIPATION';
+      alert('Erreur : ' + error.message); return;
+    }
+    document.getElementById('fc-join-form').style.display = 'none';
+    document.getElementById('fc-join-already').style.display = 'block';
+    localStorage.setItem('fc_request_sent', '1');
+    loadFcMemberCount();
+  }
+
+  async function submitSuggestion(e) {
+    e.preventDefault();
+    var btn = e.target.querySelector('[type=submit]');
+    var prn = document.getElementById('sug-prenom').value.trim();
+    var pay = document.getElementById('sug-pays').value.trim();
+    var msg = document.getElementById('sug-message').value.trim();
+    if (!prn || !pay || !msg) { alert('Remplissez tous les champs.'); return; }
+    btn.disabled = true; btn.textContent = '⏳ Envoi…';
+    var { error } = await sb.from('suggestions').insert({ prenom: prn, pays: pay, message: msg });
+    if (error) {
+      btn.disabled = false; btn.textContent = '💬 ENVOYER MA SUGGESTION';
+      alert('Erreur : ' + error.message); return;
+    }
+    e.target.reset();
+    btn.disabled = false; btn.textContent = '💬 ENVOYER MA SUGGESTION';
+    loadSuggestions();
+  }
+
+  async function loadSuggestions() {
+    var list = document.getElementById('suggestions-list');
+    if (!list) return;
+    var { data, error } = await sb.from('suggestions').select('*')
+      .order('created_at', { ascending: false }).limit(50);
+    if (error) { list.innerHTML = '<p style="text-align:center;color:var(--gray)">Impossible de charger les suggestions.</p>'; return; }
+    if (!data || data.length === 0) {
+      list.innerHTML = '<p style="text-align:center;color:var(--gray);padding:1.5rem 0">Aucune suggestion pour le moment. Soyez le premier !</p>';
+      return;
+    }
+    list.innerHTML = data.map(function(s) {
+      return '<div class="fc-post-item">'
+        + '<div class="fc-post-meta">💬 <strong>' + escHtml(s.prenom) + '</strong> · ' + escHtml(s.pays)
+        + ' · ' + new Date(s.created_at).toLocaleDateString('fr-FR') + '</div>'
+        + '<div class="fc-post-text">' + escHtml(s.message) + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  function selectFeedback(val) {
+    fcCurrentAppr = val;
+    document.getElementById('fb-appreciation').value = val ? 'true' : 'false';
+    document.getElementById('fb-oui-btn').className = 'fc-radio-btn' + (val  ? ' selected-yes' : '');
+    document.getElementById('fb-non-btn').className = 'fc-radio-btn' + (!val ? ' selected-no'  : '');
+    document.getElementById('fb-text-label').textContent = val
+      ? "Qu'est-ce que vous appréciez ?"
+      : "Qu'est-ce que vous n'appréciez pas ?";
+    document.getElementById('fb-text-wrap').style.display = 'block';
+  }
+
+  async function submitFeedback(e) {
+    e.preventDefault();
+    if (fcCurrentAppr === null) { alert('Veuillez choisir OUI ou NON.'); return; }
+    var msg = document.getElementById('fb-message').value.trim();
+    if (!msg) { alert('Veuillez saisir un message.'); return; }
+    var btn = e.target.querySelector('[type=submit]');
+    btn.disabled = true; btn.textContent = '⏳ Envoi…';
+    var { error } = await sb.from('feedbacks').insert({ appreciation: fcCurrentAppr, message: msg });
+    if (error) {
+      btn.disabled = false; btn.textContent = '⭐ ENVOYER';
+      alert('Erreur : ' + error.message); return;
+    }
+    e.target.reset();
+    btn.disabled = false; btn.textContent = '⭐ ENVOYER';
+    document.getElementById('fb-text-wrap').style.display = 'none';
+    document.getElementById('fb-oui-btn').className = 'fc-radio-btn';
+    document.getElementById('fb-non-btn').className = 'fc-radio-btn';
+    fcCurrentAppr = null;
+    loadFeedbacks();
+  }
+
+  async function loadFeedbacks() {
+    var list = document.getElementById('feedbacks-list');
+    if (!list) return;
+    var { data, error } = await sb.from('feedbacks').select('*')
+      .order('created_at', { ascending: false }).limit(50);
+    if (error) { list.innerHTML = '<p style="text-align:center;color:var(--gray)">Impossible de charger les appréciations.</p>'; return; }
+    if (!data || data.length === 0) {
+      list.innerHTML = '<p style="text-align:center;color:var(--gray);padding:1.5rem 0">Aucune appréciation pour le moment.</p>';
+      return;
+    }
+    list.innerHTML = data.map(function(f) {
+      var yes = f.appreciation;
+      return '<div class="fc-post-item ' + (yes ? 'fc-appreciation-yes' : 'fc-appreciation-no') + '">'
+        + '<div><span class="fc-app-badge ' + (yes ? 'yes' : 'no') + '">' + (yes ? '👍 OUI' : '👎 NON') + '</span></div>'
+        + '<div class="fc-post-meta">' + new Date(f.created_at).toLocaleDateString('fr-FR') + '</div>'
+        + '<div class="fc-post-text">' + escHtml(f.message) + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  // ── GUIDE DE DÉMARRAGE ────────────────────────────────────
+  var GUIDE_STEPS = [
+    { target: null,                        icon: '🌟', title: 'Bienvenue dans la Confrérie !',
+      text: "Dah Gbesso Adihodegemabou vous accueille. Laissez-nous vous faire découvrir l'application en quelques étapes." },
+    { target: '[data-section="boutique"]', icon: '🛍', title: 'La Boutique',
+      text: 'Découvrez et commandez nos savons, parfums et produits spirituels purifiants de Dah Gbesso.' },
+    { target: '[data-section="evenements"]', icon: '📅', title: 'Les Événements',
+      text: 'Participez aux cérémonies, rencontres et rituels organisés par Dah Gbesso Adihodegemabou.' },
+    { target: '[data-section="fanclub"]', icon: '⭐', title: 'Le Fan Club',
+      text: 'Rejoignez la communauté des initiés. De nouvelles fonctionnalités arrivent bientôt pour les membres.' },
+    { target: '[data-section="profil"]',  icon: '👤', title: 'Votre Profil',
+      text: 'Gérez votre photo et vos informations. Vous pourrez aussi revoir ce guide depuis ici.' }
+  ];
+  var currentGuideStep = 0;
+
+  function startGuide(force) {
+    if (!force && localStorage.getItem('guide_seen')) return;
+    currentGuideStep = 0;
+    document.getElementById('guide-overlay').style.display = 'block';
+    renderGuideStep();
+  }
+
+  function renderGuideStep() {
+    var step      = GUIDE_STEPS[currentGuideStep];
+    var total     = GUIDE_STEPS.length;
+    var spotlight = document.getElementById('guide-spotlight');
+    var tooltip   = document.getElementById('guide-tooltip');
+
+    document.getElementById('guide-step-icon').textContent = step.icon;
+    document.getElementById('guide-title').textContent     = step.title;
+    document.getElementById('guide-text').textContent      = step.text;
+    document.getElementById('guide-progress').textContent  = (currentGuideStep + 1) + ' / ' + total;
+    document.getElementById('guide-prev').style.display   = currentGuideStep > 0 ? 'inline-block' : 'none';
+    document.getElementById('guide-next').textContent     = currentGuideStep === total - 1 ? '✅ Terminer' : 'Suivant →';
+
+    if (step.target) {
+      var el = document.querySelector(step.target);
+      if (el) {
+        var r = el.getBoundingClientRect();
+        var pad = 6;
+        spotlight.style.cssText = 'display:block;left:' + (r.left-pad) + 'px;top:' + (r.top-pad) + 'px;'
+          + 'width:' + (r.width+pad*2) + 'px;height:' + (r.height+pad*2) + 'px;';
+        var tipW   = Math.min(300, window.innerWidth * 0.88);
+        var tipLeft = Math.max(8, Math.min(r.left + r.width/2 - tipW/2, window.innerWidth - tipW - 8));
+        tooltip.style.bottom    = (window.innerHeight - r.top + 16) + 'px';
+        tooltip.style.left      = tipLeft + 'px';
+        tooltip.style.top       = 'auto';
+        tooltip.style.transform = 'none';
+        tooltip.className       = 'arrow-down';
+      }
+    } else {
+      spotlight.style.display = 'none';
+      tooltip.style.top       = '50%';
+      tooltip.style.left      = '50%';
+      tooltip.style.bottom    = 'auto';
+      tooltip.style.transform = 'translate(-50%, -50%)';
+      tooltip.className       = '';
+    }
+  }
+
+  function guideNext(e) {
+    if (e) e.stopPropagation();
+    if (currentGuideStep < GUIDE_STEPS.length - 1) { currentGuideStep++; renderGuideStep(); }
+    else closeGuide();
+  }
+
+  function guidePrev(e) {
+    if (e) e.stopPropagation();
+    if (currentGuideStep > 0) { currentGuideStep--; renderGuideStep(); }
+  }
+
+  function closeGuide() {
+    document.getElementById('guide-overlay').style.display = 'none';
+    localStorage.setItem('guide_seen', 'true');
+  }
+
+  document.getElementById('guide-overlay').addEventListener('click', function(e) {
+    if (e.target === this) closeGuide();
+  });
+</script>
+</body>
+</html>
