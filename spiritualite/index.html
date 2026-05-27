@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spiritualité Autrement – Dah Gbesso</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    /* ── RESET & BASE ───────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --violet: #2D1B69;
+      --violet-light: #3d278a;
+      --gold: #D4A017;
+      --gold-light: #f0c030;
+      --cream: #F5F0E8;
+      --brown: #3D1C02;
+      --white: #fff;
+      --gray: #6b7280;
+      --shadow: 0 4px 20px rgba(45,27,105,0.15);
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--cream);
+      color: var(--brown);
+      min-height: 100vh;
+    }
+
+    /* ── NAV ────────────────────────────────────────────────── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: var(--violet);
+      padding: 0 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    }
+    .nav-logo {
+      color: var(--gold);
+      font-weight: 800;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      line-height: 1.2;
+      max-width: 200px;
+    }
+    .nav-links {
+      display: flex;
+      gap: 0.25rem;
+      list-style: none;
+    }
+    .nav-links a {
+      display: block;
+      color: rgba(255,255,255,0.8);
+      text-decoration: none;
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 0.5rem 0.65rem;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .nav-links a:hover,
+    .nav-links a.active {
+      background: var(--gold);
+      color: var(--violet);
+    }
+
+    /* ── SECTIONS ───────────────────────────────────────────── */
+    section {
+      display: none;
+      min-height: 100vh;
+      padding-top: 64px;
+    }
+    section.active { display: block; }
+
+    /* ── PAGE ACCUEIL ───────────────────────────────────────── */
+    .hero {
+      min-height: calc(100vh - 64px);
+      background: linear-gradient(135deg, var(--violet) 0%, #4a2080 40%, #8B4513 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 3rem 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23D4A017' fill-opacity='0.07'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .hero-badge {
+      background: var(--gold);
+      color: var(--violet);
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 0.4rem 1.2rem;
+      border-radius: 100px;
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+    .hero h1 {
+      color: var(--white);
+      font-size: clamp(1.6rem, 5vw, 3rem);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      line-height: 1.2;
+      position: relative;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .hero h1 span { color: var(--gold); }
+    .hero-sub {
+      color: rgba(255,255,255,0.75);
+      font-size: 1rem;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-top: 0.75rem;
+      position: relative;
+    }
+    .hero-divider {
+      width: 80px; height: 3px;
+      background: var(--gold);
+      margin: 1.5rem auto;
+      border-radius: 2px;
+      position: relative;
+    }
+    .hero-intro {
+      color: rgba(255,255,255,0.85);
+      font-size: 1rem;
+      max-width: 560px;
+      line-height: 1.8;
+      position: relative;
+    }
+    .hero-cta {
+      margin-top: 2.5rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      position: relative;
+    }
+    .btn { /* bouton principal */
+      display: inline-block;
+      background: var(--gold);
+      color: var(--violet);
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 0.75rem 2rem;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn:hover { background: var(--gold-light); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(212,160,23,0.4); }
+    .btn-outline {
+      background: transparent;
+      border: 2px solid rgba(255,255,255,0.5);
+      color: var(--white);
+    }
+    .btn-outline:hover { border-color: var(--gold); background: rgba(212,160,23,0.1); }
+
+    /* ── PAGE BOUTIQUE ──────────────────────────────────────── */
+    .page-header {
+      background: var(--violet);
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+    }
+    .page-header h2 {
+      color: var(--gold);
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .page-header p { color: rgba(255,255,255,0.75); margin-top: 0.5rem; font-size: 0.9rem; }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+      padding: 2rem 1.5rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .product-card {
+      background: var(--white);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(212,160,23,0.2);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .product-card:hover { transform: translateY(-4px); box-shadow: 0 8px 32px rgba(45,27,105,0.2); }
+    .product-card img {
+      width: 100%; height: 200px;
+      object-fit: cover;
+    }
+    .product-card .placeholder-img {
+      width: 100%; height: 200px;
+      background: linear-gradient(135deg, var(--violet) 0%, var(--gold) 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3rem;
+    }
+    .product-info { padding: 1.25rem; }
+    .product-name { font-weight: 700; font-size: 1rem; color: var(--violet); }
+    .product-desc { font-size: 0.82rem; color: var(--gray); margin: 0.5rem 0; line-height: 1.5; }
+    .product-price { font-weight: 800; font-size: 1.1rem; color: var(--gold); margin-bottom: 1rem; }
+    .product-card .btn { width: 100%; text-align: center; }
+
+    /* ── PAGE ÉVÉNEMENTS ───────────────────────────────────── */
+    .events-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+      padding: 2rem 1.5rem;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .event-card {
+      background: var(--white);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(212,160,23,0.2);
+      transition: transform 0.2s;
+    }
+    .event-card:hover { transform: translateY(-4px); }
+    .event-card img {
+      width: 100%; height: 180px;
+      object-fit: cover;
+    }
+    .event-card .placeholder-img {
+      width: 100%; height: 180px;
+      background: linear-gradient(135deg, #2D1B69 0%, #8B4513 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3rem;
+    }
+    .event-info { padding: 1.25rem; }
+    .event-title { font-weight: 700; font-size: 1.05rem; color: var(--violet); }
+    .event-date {
+      display: inline-block;
+      background: rgba(212,160,23,0.15);
+      color: var(--brown);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.2rem 0.75rem;
+      border-radius: 100px;
+      margin: 0.5rem 0;
+    }
+    .event-conditions { font-size: 0.82rem; color: var(--gray); margin-bottom: 1rem; line-height: 1.5; }
+    .btn-participate {
+      background: var(--violet);
+      color: var(--white);
+    }
+    .btn-participate:hover { background: var(--violet-light); }
+
+    /* ── PAGE FAN CLUB ──────────────────────────────────────── */
+    .fanclub-wrap {
+      min-height: calc(100vh - 64px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1.5rem;
+      text-align: center;
+    }
+    .fanclub-icon { font-size: 5rem; margin-bottom: 1.5rem; }
+    .fanclub-wrap h2 {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--violet);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .fanclub-sub { color: var(--gray); margin-top: 0.75rem; font-size: 1rem; }
+    .fanclub-badge {
+      margin-top: 2rem;
+      display: inline-block;
+      background: var(--gold);
+      color: var(--violet);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 0.5rem 1.5rem;
+      border-radius: 100px;
+    }
+
+    /* ── ÉTATS CHARGEMENT / VIDE ────────────────────────────── */
+    .loading-wrap, .empty-wrap {
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--gray);
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid rgba(212,160,23,0.3);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── MODALES ────────────────────────────────────────────── */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 420px;
+      animation: slideUp 0.25s ease;
+      position: relative;
+    }
+    @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .modal-title {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--violet);
+      margin-bottom: 1.25rem;
+      text-align: center;
+    }
+    .modal-close {
+      position: absolute; top: 1rem; right: 1rem;
+      background: none; border: none; cursor: pointer;
+      font-size: 1.25rem; color: var(--gray);
+    }
+    .modal-close:hover { color: var(--violet); }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label {
+      display: block; font-size: 0.82rem; font-weight: 600;
+      color: var(--violet); margin-bottom: 0.4rem;
+    }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 0.65rem 0.9rem;
+      border: 1.5px solid #ddd;
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.9rem;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus { outline: none; border-color: var(--violet); }
+    .modal-product-name {
+      background: rgba(212,160,23,0.1);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.9rem;
+      color: var(--brown);
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .modal-total {
+      font-weight: 700;
+      color: var(--violet);
+      font-size: 1.1rem;
+      text-align: center;
+      margin: 1rem 0;
+    }
+    .btn-full { width: 100%; text-align: center; padding: 0.85rem; font-size: 0.9rem; }
+
+    /* Modal confirmation */
+    .confirm-icon { font-size: 4rem; text-align: center; margin-bottom: 1rem; }
+    .confirm-text {
+      text-align: center;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--violet);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      line-height: 1.5;
+    }
+    .confirm-sub { text-align: center; color: var(--gray); font-size: 0.85rem; margin-top: 0.5rem; }
+
+    /* ── RESPONSIVE ─────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .nav-logo { font-size: 0.75rem; max-width: 140px; }
+      .nav-links a { font-size: 0.68rem; padding: 0.4rem 0.4rem; }
+      .products-grid, .events-list { grid-template-columns: 1fr; padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAVIGATION ─────────────────────────────────────────── -->
+<nav>
+  <div class="nav-logo">Dah Gbesso<br>Adihodegemabou</div>
+  <ul class="nav-links">
+    <li><a href="#accueil"    class="nav-link active" data-section="accueil">🏠 Accueil</a></li>
+    <li><a href="#boutique"   class="nav-link"        data-section="boutique">🛍 Boutique</a></li>
+    <li><a href="#evenements" class="nav-link"        data-section="evenements">📅 Événements</a></li>
+    <li><a href="#fanclub"    class="nav-link"        data-section="fanclub">⭐ Fan Club</a></li>
+  </ul>
+</nav>
+
+<!-- ── SECTION ACCUEIL ───────────────────────────────────── -->
+<section id="accueil" class="active">
+  <div class="hero">
+    <div class="hero-badge">✦ Bienvenue ✦</div>
+    <h1>Spiritualité<br><span>Autrement</span><br>de Dah Gbesso</h1>
+    <p class="hero-sub">Adihodegemabou</p>
+    <div class="hero-divider"></div>
+    <p class="hero-intro">
+      Découvrez l'univers spirituel de Dah Gbesso Adihodegemabou.
+      Des produits naturels purifiants, des rencontres transformatrices,
+      et une communauté ancrée dans la tradition et la sagesse africaine.
+    </p>
+    <div class="hero-cta">
+      <a href="#boutique" class="btn" onclick="navigate('boutique')">Voir la boutique</a>
+      <a href="#evenements" class="btn btn-outline" onclick="navigate('evenements')">Nos événements</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── SECTION BOUTIQUE ──────────────────────────────────── -->
+<section id="boutique">
+  <div class="page-header">
+    <h2>🛍 Notre Boutique</h2>
+    <p>Savons, parfums et produits spirituels de Dah Gbesso</p>
+  </div>
+  <div id="products-container" class="products-grid">
+    <div class="loading-wrap" style="grid-column:1/-1">
+      <div class="spinner"></div>
+      <p>Chargement des produits…</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── SECTION ÉVÉNEMENTS ────────────────────────────────── -->
+<section id="evenements">
+  <div class="page-header">
+    <h2>📅 Événements</h2>
+    <p>Rencontres et cérémonies avec Dah Gbesso Adihodegemabou</p>
+  </div>
+  <div id="events-container" class="events-list">
+    <div class="loading-wrap" style="grid-column:1/-1">
+      <div class="spinner"></div>
+      <p>Chargement des événements…</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── SECTION FAN CLUB ──────────────────────────────────── -->
+<section id="fanclub">
+  <div class="fanclub-wrap">
+    <div class="fanclub-icon">⭐</div>
+    <h2>Fan Club</h2>
+    <p class="fanclub-sub">Rejoignez la communauté de Dah Gbesso Adihodegemabou</p>
+    <div class="fanclub-badge">⚙ Fonctionnalités en cours</div>
+  </div>
+</section>
+
+<!-- ── MODAL : QUANTITÉ ──────────────────────────────────── -->
+<div id="modal-quantite" class="modal-overlay">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('modal-quantite')">✕</button>
+    <div class="modal-title">Choisir la quantité</div>
+    <div id="qty-product-name" class="modal-product-name"></div>
+    <div class="form-group">
+      <label>Quantité souhaitée</label>
+      <input type="number" id="input-qty" min="1" max="999" value="1" />
+    </div>
+    <div id="qty-total" class="modal-total"></div>
+    <button class="btn btn-full" onclick="confirmQuantity()">Confirmer & Payer</button>
+  </div>
+</div>
+
+<!-- ── MODAL : CONTACT (après paiement) ─────────────────── -->
+<div id="modal-contact" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-title">📦 Informations de livraison</div>
+    <p style="text-align:center;color:#6b7280;font-size:0.85rem;margin-bottom:1.25rem">
+      Paiement confirmé ! Veuillez renseigner vos coordonnées pour la livraison.
+    </p>
+    <div class="form-group">
+      <label>Numéro de téléphone</label>
+      <input type="tel" id="input-phone" placeholder="Ex: +229 97 00 00 00" />
+    </div>
+    <div class="form-group">
+      <label>Votre ville</label>
+      <input type="text" id="input-city" placeholder="Ex: Cotonou, Lomé, Abidjan…" />
+    </div>
+    <button class="btn btn-full" onclick="submitOrder()">Valider ma commande</button>
+  </div>
+</div>
+
+<!-- ── MODAL : CONFIRMATION ──────────────────────────────── -->
+<div id="modal-confirmation" class="modal-overlay">
+  <div class="modal-box">
+    <div class="confirm-icon">✅</div>
+    <div class="confirm-text">Commande enregistrée,<br>vous serez contacté</div>
+    <p class="confirm-sub">Merci pour votre confiance ! Notre équipe vous contactera très prochainement.</p>
+    <button class="btn btn-full" style="margin-top:1.5rem" onclick="closeModal('modal-confirmation')">Fermer</button>
+  </div>
+</div>
+
+<!-- ── SCRIPTS ───────────────────────────────────────────── -->
+<script src="https://cdn.fedapay.com/checkout.min.js"></script>
+<script>
+  // ── SUPABASE ──────────────────────────────────────────────
+  const SUPABASE_URL = 'https://fpwfdqvrfivmuirgolhz.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_MWM0Idwc3NEqpQxPDZioeQ_vdZ2hlew';
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ── FEDAPAY ───────────────────────────────────────────────
+  const FEDAPAY_KEY = 'pk_live_Qpb6YLLId44fyPDwP_uvoG2p';
+
+  // ── ÉTAT DE LA COMMANDE ───────────────────────────────────
+  let currentProduct  = null;
+  let currentQuantity = 1;
+  let currentTrxId    = null;
+
+  // ── ROUTEUR HASH ──────────────────────────────────────────
+  function navigate(id) {
+    document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+    const sec = document.getElementById(id);
+    if (sec) { sec.classList.add('active'); window.scrollTo(0,0); }
+    document.querySelectorAll('.nav-link').forEach(a => {
+      a.classList.toggle('active', a.dataset.section === id);
+    });
+    if (id === 'boutique')   loadProducts();
+    if (id === 'evenements') loadEvents();
+  }
+
+  window.addEventListener('hashchange', () => {
+    const id = location.hash.slice(1) || 'accueil';
+    navigate(id);
+  });
+
+  // Charge la section au démarrage
+  (function init() {
+    const id = location.hash.slice(1) || 'accueil';
+    navigate(id);
+  })();
+
+  // ── CHARGEMENT PRODUITS ───────────────────────────────────
+  let productsLoaded = false;
+  async function loadProducts() {
+    if (productsLoaded) return;
+    const container = document.getElementById('products-container');
+    container.innerHTML = '<div class="loading-wrap" style="grid-column:1/-1"><div class="spinner"></div><p>Chargement des produits…</p></div>';
+
+    const { data, error } = await sb
+      .from('products')
+      .select('*')
+      .eq('is_published', true)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      container.innerHTML = '<div class="empty-wrap" style="grid-column:1/-1">⚠️ Impossible de charger les produits.</div>';
+      return;
+    }
+    if (!data || data.length === 0) {
+      container.innerHTML = '<div class="empty-wrap" style="grid-column:1/-1">Aucun produit disponible pour le moment.</div>';
+      return;
+    }
+
+    container.innerHTML = data.map(p => `
+      <div class="product-card">
+        ${p.image_url
+          ? `<img src="${p.image_url}" alt="${escHtml(p.name)}" loading="lazy" />`
+          : `<div class="placeholder-img">🧴</div>`}
+        <div class="product-info">
+          <div class="product-name">${escHtml(p.name)}</div>
+          ${p.description ? `<div class="product-desc">${escHtml(p.description)}</div>` : ''}
+          <div class="product-price">${formatPrice(p.price)}</div>
+          <button class="btn" onclick='openPayModal(${JSON.stringify(p)})'>💳 PAYER</button>
+        </div>
+      </div>
+    `).join('');
+
+    productsLoaded = true;
+  }
+
+  // ── CHARGEMENT ÉVÉNEMENTS ─────────────────────────────────
+  let eventsLoaded = false;
+  async function loadEvents() {
+    if (eventsLoaded) return;
+    const container = document.getElementById('events-container');
+    container.innerHTML = '<div class="loading-wrap" style="grid-column:1/-1"><div class="spinner"></div><p>Chargement des événements…</p></div>';
+
+    const { data, error } = await sb
+      .from('events')
+      .select('*')
+      .eq('is_published', true)
+      .order('event_date', { ascending: true });
+
+    if (error) {
+      container.innerHTML = '<div class="empty-wrap" style="grid-column:1/-1">⚠️ Impossible de charger les événements.</div>';
+      return;
+    }
+    if (!data || data.length === 0) {
+      container.innerHTML = '<div class="empty-wrap" style="grid-column:1/-1">Aucun événement disponible pour le moment.</div>';
+      return;
+    }
+
+    container.innerHTML = data.map(e => `
+      <div class="event-card">
+        ${e.image_url
+          ? `<img src="${e.image_url}" alt="${escHtml(e.title)}" loading="lazy" />`
+          : `<div class="placeholder-img">🌟</div>`}
+        <div class="event-info">
+          <div class="event-title">${escHtml(e.title)}</div>
+          <div class="event-date">📅 ${formatDate(e.event_date)}</div>
+          ${e.conditions ? `<div class="event-conditions">${escHtml(e.conditions)}</div>` : ''}
+          <button class="btn btn-participate"
+            onclick="participateEvent('${escHtml(e.redirect_link || '')}')">
+            🎯 PARTICIPER
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+    eventsLoaded = true;
+  }
+
+  // ── FLUX PAIEMENT ─────────────────────────────────────────
+
+  function openPayModal(product) {
+    currentProduct  = product;
+    currentQuantity = 1;
+    currentTrxId    = null;
+    document.getElementById('qty-product-name').textContent = product.name;
+    document.getElementById('input-qty').value = 1;
+    updateTotal();
+    openModal('modal-quantite');
+  }
+
+  document.getElementById('input-qty').addEventListener('input', updateTotal);
+
+  function updateTotal() {
+    const qty = parseInt(document.getElementById('input-qty').value) || 1;
+    currentQuantity = Math.max(1, qty);
+    if (currentProduct) {
+      document.getElementById('qty-total').textContent =
+        'Total : ' + formatPrice(currentProduct.price * currentQuantity);
+    }
+  }
+
+  function confirmQuantity() {
+    const qty = parseInt(document.getElementById('input-qty').value);
+    if (!qty || qty < 1) { alert('Veuillez entrer une quantité valide.'); return; }
+    currentQuantity = qty;
+    closeModal('modal-quantite');
+    launchFedaPay();
+  }
+
+  function launchFedaPay() {
+    const total = Math.round(currentProduct.price * currentQuantity);
+    FedaPay.init({
+      public_key: FEDAPAY_KEY,
+      transaction: {
+        amount: total,
+        description: `Achat: ${currentProduct.name} x${currentQuantity}`,
+        currency: { iso: 'XOF' }
+      },
+      customer: {
+        email: 'client@spiritualite-autrement.com'
+      },
+      onComplete: function(transaction) {
+        if (transaction.reason === FedaPay.DIALOG_DISMISSED) return;
+        if (transaction.reason === FedaPay.APPROVED) {
+          currentTrxId = transaction.id || null;
+          // Petit délai pour laisser FedaPay fermer son modal
+          setTimeout(() => openModal('modal-contact'), 300);
+        }
+      }
+    }).open();
+  }
+
+  async function submitOrder() {
+    const phone = document.getElementById('input-phone').value.trim();
+    const city  = document.getElementById('input-city').value.trim();
+    if (!phone) { alert('Veuillez entrer votre numéro de téléphone.'); return; }
+    if (!city)  { alert('Veuillez entrer votre ville.'); return; }
+
+    const { error } = await sb.from('orders').insert({
+      product_id:     currentProduct.id,
+      product_name:   currentProduct.name,
+      unit_price:     currentProduct.price,
+      quantity:       currentQuantity,
+      total_amount:   currentProduct.price * currentQuantity,
+      phone,
+      city,
+      fedapay_trx_id: currentTrxId,
+      status:         'pending'
+    });
+
+    if (error) {
+      alert('Une erreur est survenue lors de l\'enregistrement. Veuillez réessayer.');
+      console.error(error);
+      return;
+    }
+
+    closeModal('modal-contact');
+    document.getElementById('input-phone').value = '';
+    document.getElementById('input-city').value  = '';
+    openModal('modal-confirmation');
+  }
+
+  // ── ÉVÉNEMENTS : PARTICIPER ───────────────────────────────
+  function participateEvent(link) {
+    if (!link) { alert('Le lien de participation n\'est pas encore disponible.'); return; }
+    window.open(link, '_blank', 'noopener,noreferrer');
+  }
+
+  // ── HELPERS ───────────────────────────────────────────────
+  function openModal(id)  { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+  // Fermer modal en cliquant sur l'overlay
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) overlay.classList.remove('open');
+    });
+  });
+
+  function formatPrice(price) {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency', currency: 'XOF', minimumFractionDigits: 0
+    }).format(price);
+  }
+
+  function formatDate(dateStr) {
+    return new Date(dateStr).toLocaleDateString('fr-FR', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    });
+  }
+
+  function escHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
+  }
+</script>
+</body>
+</html>

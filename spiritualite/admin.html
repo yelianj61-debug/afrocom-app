@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin – Spiritualité Autrement</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --violet: #2D1B69;
+      --violet-light: #3d278a;
+      --gold: #D4A017;
+      --gold-light: #f0c030;
+      --cream: #F5F0E8;
+      --brown: #3D1C02;
+      --white: #fff;
+      --gray: #6b7280;
+      --gray-light: #f3f4f6;
+      --red: #dc2626;
+      --green: #16a34a;
+      --shadow: 0 2px 12px rgba(45,27,105,0.1);
+    }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--gray-light);
+      color: var(--brown);
+      min-height: 100vh;
+    }
+
+    /* ── LOGIN GATE ─────────────────────────────────────────── */
+    #login-gate {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--violet) 0%, #4a2080 100%);
+      padding: 1rem;
+    }
+    .login-card {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .login-logo { font-size: 2.5rem; margin-bottom: 0.5rem; }
+    .login-card h2 {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--violet);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 0.25rem;
+    }
+    .login-card p { color: var(--gray); font-size: 0.82rem; margin-bottom: 1.75rem; }
+    .login-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1.5px solid #ddd;
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.95rem;
+      margin-bottom: 0.75rem;
+      transition: border-color 0.2s;
+    }
+    .login-input:focus { outline: none; border-color: var(--violet); }
+    .login-btn {
+      width: 100%;
+      padding: 0.8rem;
+      background: var(--gold);
+      color: var(--violet);
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .login-btn:hover { background: var(--gold-light); }
+    .login-error {
+      color: var(--red);
+      font-size: 0.82rem;
+      margin-top: 0.75rem;
+      display: none;
+    }
+
+    /* ── ADMIN PANEL ────────────────────────────────────────── */
+    #admin-panel { display: none; }
+
+    /* Header */
+    .admin-header {
+      background: var(--violet);
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      position: sticky; top: 0; z-index: 50;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .admin-header h1 {
+      color: var(--gold);
+      font-size: 0.9rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .logout-btn {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: var(--white);
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.78rem;
+      padding: 0.35rem 0.9rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .logout-btn:hover { background: rgba(255,255,255,0.25); }
+
+    /* Tabs */
+    .admin-tabs {
+      background: var(--white);
+      display: flex;
+      border-bottom: 2px solid #e5e7eb;
+      padding: 0 1.5rem;
+      gap: 0.25rem;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--gray);
+      padding: 0.9rem 1.25rem;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .tab-btn.active { color: var(--violet); border-bottom-color: var(--gold); }
+    .tab-btn:hover { color: var(--violet); }
+
+    /* Sections */
+    .admin-section {
+      display: none;
+      padding: 1.5rem;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .admin-section.active { display: block; }
+
+    /* Cards */
+    .card {
+      background: var(--white);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--violet);
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid rgba(212,160,23,0.2);
+    }
+
+    /* Formulaire */
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--violet);
+      margin-bottom: 0.35rem;
+    }
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 0.6rem 0.9rem;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
+      transition: border-color 0.2s;
+      background: var(--white);
+    }
+    .form-group input:focus,
+    .form-group textarea:focus { outline: none; border-color: var(--violet); }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+    .form-full { grid-column: 1 / -1; }
+
+    /* Upload */
+    .upload-area {
+      border: 2px dashed #d1d5db;
+      border-radius: 8px;
+      padding: 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .upload-area:hover { border-color: var(--violet); }
+    .upload-preview {
+      width: 100%; max-height: 160px;
+      object-fit: cover;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      display: none;
+    }
+    .upload-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .upload-text { font-size: 0.82rem; color: var(--gray); }
+
+    /* Boutons */
+    .btn { /* réutilisé */
+      display: inline-block;
+      background: var(--gold);
+      color: var(--violet);
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 0.6rem 1.25rem;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover { background: var(--gold-light); }
+    .btn-violet {
+      background: var(--violet);
+      color: var(--white);
+    }
+    .btn-violet:hover { background: var(--violet-light); }
+    .btn-red { background: #fee2e2; color: var(--red); }
+    .btn-red:hover { background: #fecaca; }
+    .btn-green { background: #dcfce7; color: var(--green); }
+    .btn-green:hover { background: #bbf7d0; }
+    .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.72rem; }
+    .btn-full { width: 100%; text-align: center; padding: 0.75rem; }
+
+    /* Tableau */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    thead th {
+      background: rgba(45,27,105,0.05);
+      color: var(--violet);
+      font-weight: 600;
+      text-align: left;
+      padding: 0.75rem 1rem;
+      white-space: nowrap;
+    }
+    tbody td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #e5e7eb;
+      vertical-align: middle;
+    }
+    tbody tr:hover { background: rgba(212,160,23,0.05); }
+    .thumb {
+      width: 44px; height: 44px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+    }
+    .thumb-placeholder {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, var(--violet), var(--gold));
+      border-radius: 6px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 1.25rem;
+    }
+
+    /* Badge statut */
+    .badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.25rem 0.6rem;
+      border-radius: 100px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-published { background: #dcfce7; color: var(--green); }
+    .badge-draft     { background: #f3f4f6; color: var(--gray); }
+    .badge-pending   { background: #fef9c3; color: #854d0e; }
+    .badge-delivered { background: #dcfce7; color: var(--green); }
+
+    /* Toggle switch */
+    .toggle {
+      position: relative; display: inline-block;
+      width: 44px; height: 24px;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0;
+      background: #d1d5db;
+      border-radius: 24px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 18px; height: 18px;
+      left: 3px; bottom: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+    .toggle input:checked + .toggle-slider { background: var(--green); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+    /* Filtre commandes */
+    .filter-bar {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      background: var(--white);
+      border: 1.5px solid #e5e7eb;
+      color: var(--gray);
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.4rem 0.9rem;
+      border-radius: 100px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-btn.active,
+    .filter-btn:hover {
+      background: var(--violet);
+      border-color: var(--violet);
+      color: var(--white);
+    }
+
+    /* Chargement / vide */
+    .loading-wrap, .empty-wrap {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      color: var(--gray);
+    }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid rgba(212,160,23,0.3);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 0.75rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 1.5rem; right: 1.5rem;
+      background: var(--violet);
+      color: var(--white);
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      z-index: 999;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: all 0.3s;
+      max-width: 320px;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { background: var(--green); }
+    .toast.error   { background: var(--red); }
+
+    @media (max-width: 640px) {
+      .form-row { grid-template-columns: 1fr; }
+      .admin-section { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── PAGE DE CONNEXION ────────────────────────────────────── -->
+<div id="login-gate">
+  <div class="login-card">
+    <div class="login-logo">🔐</div>
+    <h2>Espace Administrateur</h2>
+    <p>Spiritualité Autrement – Dah Gbesso</p>
+    <input type="password" class="login-input" id="pwd-input"
+           placeholder="Mot de passe administrateur"
+           onkeydown="if(event.key==='Enter') checkPassword()" />
+    <button class="login-btn" onclick="checkPassword()">Accéder au panneau</button>
+    <div class="login-error" id="login-error">❌ Mot de passe incorrect.</div>
+  </div>
+</div>
+
+<!-- ── PANNEAU ADMIN ────────────────────────────────────────── -->
+<div id="admin-panel">
+
+  <!-- Header -->
+  <div class="admin-header">
+    <h1>✦ Admin – Dah Gbesso</h1>
+    <button class="logout-btn" onclick="logout()">Déconnexion</button>
+  </div>
+
+  <!-- Onglets -->
+  <div class="admin-tabs">
+    <button class="tab-btn active" onclick="showTab('products')">📦 Produits</button>
+    <button class="tab-btn"        onclick="showTab('events')">📅 Événements</button>
+    <button class="tab-btn"        onclick="showTab('orders')">🛒 Commandes</button>
+  </div>
+
+  <!-- ── TAB : PRODUITS ─────────────────────────────────── -->
+  <div id="tab-products" class="admin-section active">
+
+    <!-- Formulaire ajout/modif produit -->
+    <div class="card">
+      <div class="card-title" id="product-form-title">➕ Ajouter un produit</div>
+      <input type="hidden" id="product-id" />
+      <div style="margin-bottom:1rem">
+        <label style="font-size:0.8rem;font-weight:600;color:var(--violet);display:block;margin-bottom:0.35rem">
+          Photo du produit
+        </label>
+        <div class="upload-area" id="upload-product-area" onclick="openProductWidget()">
+          <img id="product-img-preview" class="upload-preview" src="" alt="Aperçu" />
+          <div class="upload-icon">🖼</div>
+          <div class="upload-text">Cliquer pour choisir une photo</div>
+        </div>
+        <input type="hidden" id="product-image-url" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nom du produit *</label>
+          <input type="text" id="product-name" placeholder="Ex: Savon purifiant Dah Gbesso" />
+        </div>
+        <div class="form-group">
+          <label>Prix (XOF) *</label>
+          <input type="number" id="product-price" min="0" placeholder="Ex: 5000" />
+        </div>
+        <div class="form-group form-full">
+          <label>Description</label>
+          <textarea id="product-desc" placeholder="Description du produit…"></textarea>
+        </div>
+      </div>
+      <div style="display:flex;gap:0.75rem;align-items:center">
+        <button class="btn" onclick="saveProduct()">💾 Enregistrer</button>
+        <button class="btn btn-violet" onclick="resetProductForm()" id="product-cancel-btn" style="display:none">
+          Annuler
+        </button>
+        <label style="font-size:0.8rem;color:var(--gray);margin-left:0.5rem">
+          <input type="checkbox" id="product-published" /> Publier immédiatement
+        </label>
+      </div>
+    </div>
+
+    <!-- Liste des produits -->
+    <div class="card">
+      <div class="card-title">📋 Produits enregistrés</div>
+      <div id="products-list" class="table-wrap">
+        <div class="loading-wrap"><div class="spinner"></div><p>Chargement…</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB : ÉVÉNEMENTS ──────────────────────────────── -->
+  <div id="tab-events" class="admin-section">
+
+    <!-- Formulaire événement -->
+    <div class="card">
+      <div class="card-title" id="event-form-title">➕ Ajouter un événement</div>
+      <input type="hidden" id="event-id" />
+      <div style="margin-bottom:1rem">
+        <label style="font-size:0.8rem;font-weight:600;color:var(--violet);display:block;margin-bottom:0.35rem">
+          Photo de l'événement
+        </label>
+        <div class="upload-area" id="upload-event-area" onclick="openEventWidget()">
+          <img id="event-img-preview" class="upload-preview" src="" alt="Aperçu" />
+          <div class="upload-icon">🖼</div>
+          <div class="upload-text">Cliquer pour choisir une photo</div>
+        </div>
+        <input type="hidden" id="event-image-url" />
+      </div>
+      <div class="form-row">
+        <div class="form-group form-full">
+          <label>Titre de l'événement *</label>
+          <input type="text" id="event-title" placeholder="Ex: Grande rencontre spirituelle 2025" />
+        </div>
+        <div class="form-group">
+          <label>Date *</label>
+          <input type="date" id="event-date" />
+        </div>
+        <div class="form-group">
+          <label>Lien de redirection (PARTICIPER)</label>
+          <input type="url" id="event-link" placeholder="https://wa.me/... ou https://..." />
+        </div>
+        <div class="form-group form-full">
+          <label>Conditions de participation</label>
+          <textarea id="event-conditions" placeholder="Conditions, prix d'entrée, lieu…"></textarea>
+        </div>
+      </div>
+      <div style="display:flex;gap:0.75rem;align-items:center">
+        <button class="btn" onclick="saveEvent()">💾 Enregistrer</button>
+        <button class="btn btn-violet" onclick="resetEventForm()" id="event-cancel-btn" style="display:none">
+          Annuler
+        </button>
+        <label style="font-size:0.8rem;color:var(--gray);margin-left:0.5rem">
+          <input type="checkbox" id="event-published" /> Publier immédiatement
+        </label>
+      </div>
+    </div>
+
+    <!-- Liste des événements -->
+    <div class="card">
+      <div class="card-title">📋 Événements enregistrés</div>
+      <div id="events-list" class="table-wrap">
+        <div class="loading-wrap"><div class="spinner"></div><p>Chargement…</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB : COMMANDES ───────────────────────────────── -->
+  <div id="tab-orders" class="admin-section">
+    <div class="card">
+      <div class="card-title">🛒 Commandes clients</div>
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="filterOrders('all',this)">Toutes</button>
+        <button class="filter-btn" onclick="filterOrders('pending',this)">En attente</button>
+        <button class="filter-btn" onclick="filterOrders('delivered',this)">Livrées</button>
+      </div>
+      <div id="orders-list" class="table-wrap">
+        <div class="loading-wrap"><div class="spinner"></div><p>Chargement…</p></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /#admin-panel -->
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<!-- ── SCRIPTS ───────────────────────────────────────────── -->
+<script>
+  // ── SUPABASE ──────────────────────────────────────────────
+  const SUPABASE_URL = 'https://fpwfdqvrfivmuirgolhz.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_MWM0Idwc3NEqpQxPDZioeQ_vdZ2hlew';
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ── MOT DE PASSE (SHA-256) ────────────────────────────────
+  const ADMIN_HASH = '41e78293a26321eeb1728f2aa01179a8fa7a240e4bb9d5c247eacf0bdb432b3f';
+
+  async function checkPassword() {
+    const pwd = document.getElementById('pwd-input').value;
+    if (!pwd) return;
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pwd));
+    const hex = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+    if (hex === ADMIN_HASH) {
+      localStorage.setItem('admin_session', 'true');
+      showAdmin();
+    } else {
+      document.getElementById('login-error').style.display = 'block';
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem('admin_session');
+    location.reload();
+  }
+
+  function showAdmin() {
+    document.getElementById('login-gate').style.display  = 'none';
+    document.getElementById('admin-panel').style.display = 'block';
+    loadProducts();
+  }
+
+  // Vérification session au chargement
+  window.addEventListener('DOMContentLoaded', () => {
+    if (localStorage.getItem('admin_session') === 'true') showAdmin();
+  });
+
+  // ── ONGLETS ───────────────────────────────────────────────
+  function showTab(name) {
+    document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    event.currentTarget.classList.add('active');
+    if (name === 'products') loadProducts();
+    if (name === 'events')   loadEvents();
+    if (name === 'orders')   loadOrders();
+  }
+
+  // ── CLOUDINARY WIDGETS ────────────────────────────────────
+  let currentProductImageUrl = '';
+  let currentEventImageUrl   = '';
+
+  const productWidget = cloudinary.createUploadWidget({
+    cloudName: 'dx0dzt35e',
+    uploadPreset: 'afrotv_images',
+    sources: ['local', 'url', 'camera'],
+    multiple: false,
+    maxFileSize: 5000000,
+    clientAllowedFormats: ['jpg','jpeg','png','webp','gif']
+  }, (error, result) => {
+    if (!error && result && result.event === 'success') {
+      currentProductImageUrl = result.info.secure_url;
+      const preview = document.getElementById('product-img-preview');
+      preview.src = currentProductImageUrl;
+      preview.style.display = 'block';
+      document.getElementById('product-image-url').value = currentProductImageUrl;
+      document.querySelector('#upload-product-area .upload-icon').style.display = 'none';
+      document.querySelector('#upload-product-area .upload-text').textContent = '✅ Photo sélectionnée';
+    }
+  });
+
+  const eventWidget = cloudinary.createUploadWidget({
+    cloudName: 'dx0dzt35e',
+    uploadPreset: 'afrotv_images',
+    sources: ['local', 'url', 'camera'],
+    multiple: false,
+    maxFileSize: 5000000,
+    clientAllowedFormats: ['jpg','jpeg','png','webp','gif']
+  }, (error, result) => {
+    if (!error && result && result.event === 'success') {
+      currentEventImageUrl = result.info.secure_url;
+      const preview = document.getElementById('event-img-preview');
+      preview.src = currentEventImageUrl;
+      preview.style.display = 'block';
+      document.getElementById('event-image-url').value = currentEventImageUrl;
+      document.querySelector('#upload-event-area .upload-icon').style.display = 'none';
+      document.querySelector('#upload-event-area .upload-text').textContent = '✅ Photo sélectionnée';
+    }
+  });
+
+  function openProductWidget() { productWidget.open(); }
+  function openEventWidget()   { eventWidget.open(); }
+
+  // ── PRODUITS ──────────────────────────────────────────────
+  let allProducts = [];
+
+  async function loadProducts() {
+    const container = document.getElementById('products-list');
+    container.innerHTML = '<div class="loading-wrap"><div class="spinner"></div><p>Chargement…</p></div>';
+    const { data, error } = await sb.rpc('admin_get_all_products');
+    if (error) { container.innerHTML = `<div class="empty-wrap">⚠️ Erreur : ${error.message}</div>`; return; }
+    allProducts = data || [];
+    renderProductsTable(allProducts);
+  }
+
+  function renderProductsTable(products) {
+    const container = document.getElementById('products-list');
+    if (!products.length) {
+      container.innerHTML = '<div class="empty-wrap">Aucun produit pour l\'instant.</div>';
+      return;
+    }
+    container.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Photo</th><th>Nom</th><th>Prix</th><th>Statut</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${products.map(p => `
+            <tr id="prod-row-${p.id}">
+              <td>${p.image_url
+                ? `<img class="thumb" src="${escHtml(p.image_url)}" alt="${escHtml(p.name)}" />`
+                : `<div class="thumb-placeholder">🧴</div>`}</td>
+              <td><strong>${escHtml(p.name)}</strong></td>
+              <td>${formatPrice(p.price)}</td>
+              <td>
+                <label class="toggle" title="${p.is_published ? 'Dépublier' : 'Publier'}">
+                  <input type="checkbox" ${p.is_published ? 'checked' : ''}
+                    onchange="toggleProduct('${p.id}', this.checked)" />
+                  <span class="toggle-slider"></span>
+                </label>
+                <span class="badge ${p.is_published ? 'badge-published' : 'badge-draft'}" style="margin-left:0.5rem">
+                  ${p.is_published ? 'Publié' : 'Brouillon'}
+                </span>
+              </td>
+              <td style="display:flex;gap:0.5rem;align-items:center">
+                <button class="btn btn-violet btn-sm" onclick="editProduct(${JSON.stringify(p).replace(/"/g,'&quot;')})">✏️ Modif.</button>
+                <button class="btn btn-red btn-sm" onclick="deleteProduct('${p.id}')">🗑 Suppr.</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  async function saveProduct() {
+    const id    = document.getElementById('product-id').value || null;
+    const name  = document.getElementById('product-name').value.trim();
+    const price = parseFloat(document.getElementById('product-price').value);
+    const desc  = document.getElementById('product-desc').value.trim();
+    const img   = document.getElementById('product-image-url').value || null;
+    const pub   = document.getElementById('product-published').checked;
+
+    if (!name)      { showToast('Le nom est obligatoire.', 'error'); return; }
+    if (isNaN(price)|| price < 0) { showToast('Le prix est invalide.', 'error'); return; }
+
+    const { error } = await sb.rpc('admin_upsert_product', {
+      p_id: id, p_name: name, p_description: desc,
+      p_price: price, p_image_url: img, p_published: pub
+    });
+
+    if (error) { showToast('Erreur : ' + error.message, 'error'); return; }
+    showToast(id ? 'Produit modifié !' : 'Produit ajouté !', 'success');
+    resetProductForm();
+    await loadProducts();
+  }
+
+  function editProduct(p) {
+    document.getElementById('product-id').value       = p.id;
+    document.getElementById('product-name').value     = p.name;
+    document.getElementById('product-price').value    = p.price;
+    document.getElementById('product-desc').value     = p.description || '';
+    document.getElementById('product-published').checked = p.is_published;
+    document.getElementById('product-image-url').value   = p.image_url || '';
+    document.getElementById('product-form-title').textContent = '✏️ Modifier le produit';
+    document.getElementById('product-cancel-btn').style.display = 'inline-block';
+    if (p.image_url) {
+      const preview = document.getElementById('product-img-preview');
+      preview.src = p.image_url;
+      preview.style.display = 'block';
+    }
+    document.getElementById('tab-products').scrollTo(0, 0);
+    window.scrollTo(0, 0);
+  }
+
+  async function toggleProduct(id, published) {
+    const { error } = await sb.rpc('admin_toggle_product', { p_id: id, p_published: published });
+    if (error) { showToast('Erreur : ' + error.message, 'error'); return; }
+    showToast(published ? 'Produit publié !' : 'Produit dépublié.', 'success');
+    await loadProducts();
+  }
+
+  async function deleteProduct(id) {
+    if (!confirm('Supprimer ce produit ? Cette action est irréversible.')) return;
+    const { error } = await sb.rpc('admin_delete_product', { p_id: id });
+    if (error) { showToast('Erreur : ' + error.message, 'error'); return; }
+    showToast('Produit supprimé.', 'success');
+    await loadProducts();
+  }
+
+  function resetProductForm() {
+    document.getElementById('product-id').value       = '';
+    document.getElementById('product-name').value     = '';
+    document.getElementById('product-price').value    = '';
+    document.getElementById('product-desc').value     = '';
+    document.getElementById('product-published').checked = false;
+    document.getElementById('product-image-url').value   = '';
+    document.getElementById('product-img-preview').style.display = 'none';
+    document.getElementById('product-form-title').textContent = '➕ Ajouter un produit';
+    document.getElementById('product-cancel-btn').style.display = 'none';
+    document.querySelector('#upload-product-area .upload-icon').style.display = '';
+    document.querySelector('#upload-product-area .upload-text').textContent = 'Cliquer pour choisir une photo';
+    currentProductImageUrl = '';
+  }
+
+  // ── ÉVÉNEMENTS ────────────────────────────────────────────
+  let allEvents = [];
+
+  async function loadEvents() {
+    const container = document.getElementById('events-list');
+    container.innerHTML = '<div class="loading-wrap"><div class="spinner"></div><p>Chargement…</p></div>';
+    const { data, error } = await sb.rpc('admin_get_all_events');
+    if (error) { container.innerHTML = `<div class="empty-wrap">⚠️ Erreur : ${error.message}</div>`; return; }
+    allEvents = data || [];
+    renderEventsTable(allEvents);
+  }
+
+  function renderEventsTable(events) {
+    const container = document.getElementById('events-list');
+    if (!events.length) {
+      container.innerHTML = '<div class="empty-wrap">Aucun événement pour l\'instant.</div>';
+      return;
+    }
+    container.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Photo</th><th>Titre</th><th>Date</th><th>Statut</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${events.map(e => `
+            <tr id="evt-row-${e.id}">
+              <td>${e.image_url
+                ? `<img class="thumb" src="${escHtml(e.image_url)}" alt="${escHtml(e.title)}" />`
+                : `<div class="thumb-placeholder">🌟</div>`}</td>
+              <td><strong>${escHtml(e.title)}</strong></td>
+              <td>${formatDate(e.event_date)}</td>
+              <td>
+                <label class="toggle" title="${e.is_published ? 'Dépublier' : 'Publier'}">
+                  <input type="checkbox" ${e.is_published ? 'checked' : ''}
+                    onchange="toggleEvent('${e.id}', this.checked)" />
+                  <span class="toggle-slider"></span>
+                </label>
+                <span class="badge ${e.is_published ? 'badge-published' : 'badge-draft'}" style="margin-left:0.5rem">
+                  ${e.is_published ? 'Publié' : 'Brouillon'}
+                </span>
+              </td>
+              <td style="display:flex;gap:0.5rem;align-items:center">
+                <button class="btn btn-violet btn-sm" onclick="editEvent(${JSON.stringify(e).replace(/"/g,'&quot;')})">✏️ Modif.</button>
+                <button class="btn btn-red btn-sm" onclick="deleteEvent('${e.id}')">🗑 Suppr.</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  async function saveEvent() {
+    const id    = document.getElementById('event-id').value || null;
+    const title = document.getElementById('event-title').value.trim();
+    const date  = document.getElementById('event-date').value;
+    const cond  = document.getElementById('event-conditions').value.trim();
+    const link  = document.getElementById('event-link').value.trim();
+    const img   = document.getElementById('event-image-url').value || null;
+    const pub   = document.getElementById('event-published').checked;
+
+    if (!title) { showToast('Le titre est obligatoire.', 'error'); return; }
+    if (!date)  { showToast('La date est obligatoire.', 'error'); return; }
+
+    const { error } = await sb.rpc('admin_upsert_event', {
+      p_id: id, p_title: title, p_conditions: cond,
+      p_event_date: date, p_image_url: img, p_redirect: link, p_published: pub
+    });
+
+    if (error) { showToast('Erreur : ' + error.message, 'error'); return; }
+    showToast(id ? 'Événement modifié !' : 'Événement ajouté !', 'success');
+    resetEventForm();
+    await loadEvents();
+  }
+
+  function editEvent(e) {
+    document.getElementById('event-id').value         = e.id;
+    document.getElementById('event-title').value      = e.title;
+    document.getElementById('event-date').value       = e.event_date;
+    document.getElementById('event-conditions').value = e.conditions || '';
+    document.getElementById('event-link').value       = e.redirect_link || '';
+    document.getElementById('event-published').checked = e.is_published;
+    document.getElementById('event-image-url').value  = e.image_url || '';
+    document.getElementById('event-form-title').textContent = '✏️ Modifier l\'événement';
+    document.getElementById('event-cancel-btn').style.display = 'inline-block';
+    if (e.image_url) {
+      const preview = document.getElementById('event-img-preview');
+      preview.src = e.image_url;
+      preview.style.display = 'block';
+    }
+    window.scrollTo(0, 0);
+  }
+
+  async function toggleEvent(id, published) {
+    const { error } = await sb.rpc('admin_toggle_event', { p_id: id, p_published: published });
+    if (error) { showToast('Erreur : ' + error.message, 'error'); return; }
+    showToast(published ? 'Événement publié !' : 'Événement dépublié.', 'success');
+    await loadEvents();
+  }
+
+  async function deleteEvent(id) {
+    if (!confirm('Supprimer cet événement ? Cette action est irréversible.')) return;
+    const { error } = await sb.rpc('admin_delete_event', { p_id: id });
+    if (error) { showToast('Erreur : ' + error.message, 'error'); return; }
+    showToast('Événement supprimé.', 'success');
+    await loadEvents();
+  }
+
+  function resetEventForm() {
+    document.getElementById('event-id').value         = '';
+    document.getElementById('event-title').value      = '';
+    document.getElementById('event-date').value       = '';
+    document.getElementById('event-conditions').value = '';
+    document.getElementById('event-link').value       = '';
+    document.getElementById('event-published').checked = false;
+    document.getElementById('event-image-url').value  = '';
+    document.getElementById('event-img-preview').style.display = 'none';
+    document.getElementById('event-form-title').textContent = '➕ Ajouter un événement';
+    document.getElementById('event-cancel-btn').style.display = 'none';
+    document.querySelector('#upload-event-area .upload-icon').style.display = '';
+    document.querySelector('#upload-event-area .upload-text').textContent = 'Cliquer pour choisir une photo';
+    currentEventImageUrl = '';
+  }
+
+  // ── COMMANDES ─────────────────────────────────────────────
+  let allOrders = [];
+  let currentFilter = 'all';
+
+  async function loadOrders() {
+    const container = document.getElementById('orders-list');
+    container.innerHTML = '<div class="loading-wrap"><div class="spinner"></div><p>Chargement…</p></div>';
+    const { data, error } = await sb.rpc('admin_get_orders');
+    if (error) { container.innerHTML = `<div class="empty-wrap">⚠️ Erreur : ${error.message}</div>`; return; }
+    allOrders = data || [];
+    renderOrdersTable(allOrders, currentFilter);
+  }
+
+  function filterOrders(filter, btn) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderOrdersTable(allOrders, filter);
+  }
+
+  function renderOrdersTable(orders, filter) {
+    const container = document.getElementById('orders-list');
+    const filtered = filter === 'all' ? orders : orders.filter(o => o.status === filter);
+
+    if (!filtered.length) {
+      container.innerHTML = '<div class="empty-wrap">Aucune commande dans cette catégorie.</div>';
+      return;
+    }
+
+    container.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Produit</th><th>Qté</th><th>Total</th>
+            <th>Téléphone</th><th>Ville</th><th>Date</th>
+            <th>Statut</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filtered.map(o => `
+            <tr id="order-row-${o.id}">
+              <td><strong>${escHtml(o.product_name)}</strong></td>
+              <td>${o.quantity}</td>
+              <td>${formatPrice(o.total_amount)}</td>
+              <td>${escHtml(o.phone)}</td>
+              <td>${escHtml(o.city)}</td>
+              <td>${formatDateTime(o.created_at)}</td>
+              <td>
+                <span class="badge badge-${o.status === 'pending' ? 'pending' : 'delivered'}">
+                  ${o.status === 'pending' ? '⏳ En attente' : '✅ Livrée'}
+                </span>
+              </td>
+              <td>
+                ${o.status === 'pending'
+                  ? `<button class="btn btn-green btn-sm" onclick="markDelivered('${o.id}')">✅ Livré</button>`
+                  : '—'}
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  async function markDelivered(id) {
+    if (!confirm('Marquer cette commande comme livrée ?')) return;
+    const { error } = await sb.rpc('admin_mark_delivered', { p_order_id: id });
+    if (error) { showToast('Erreur : ' + error.message, 'error'); return; }
+    showToast('Commande marquée livrée !', 'success');
+    await loadOrders();
+  }
+
+  // ── HELPERS ───────────────────────────────────────────────
+  function escHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
+  }
+
+  function formatPrice(price) {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency', currency: 'XOF', minimumFractionDigits: 0
+    }).format(price);
+  }
+
+  function formatDate(dateStr) {
+    return new Date(dateStr).toLocaleDateString('fr-FR', {
+      day: 'numeric', month: 'short', year: 'numeric'
+    });
+  }
+
+  function formatDateTime(dtStr) {
+    return new Date(dtStr).toLocaleString('fr-FR', {
+      day: 'numeric', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+  }
+
+  let toastTimer = null;
+  function showToast(msg, type = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + type;
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+  }
+</script>
+</body>
+</html>
