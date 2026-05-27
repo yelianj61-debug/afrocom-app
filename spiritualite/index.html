@@ -526,7 +526,7 @@
   <div class="modal-box">
     <div class="modal-title">📦 Informations de livraison</div>
     <p style="text-align:center;color:#6b7280;font-size:0.85rem;margin-bottom:1.25rem">
-      Paiement confirmé ! Veuillez renseigner vos coordonnées pour la livraison.
+      ✅ Paiement reçu ! Veuillez renseigner vos coordonnées pour la livraison.
     </p>
     <div class="form-group">
       <label>Numéro de téléphone</label>
@@ -698,13 +698,11 @@
     currentQuantity = qty;
     closeModal('modal-quantite');
 
-    // FedaPay disponible → paiement en ligne
     if (typeof FedaPay !== 'undefined' && !window._fedapayFailed) {
       launchFedaPay();
     } else {
-      // FedaPay non chargé (fichier local ou hors ligne) → commande directe
-      currentTrxId = null;
-      openModal('modal-contact');
+      // FedaPay non chargé → BLOQUER, pas de commande sans paiement
+      alert('❌ Paiement non disponible. Vérifiez votre connexion internet et réessayez.');
     }
   }
 
