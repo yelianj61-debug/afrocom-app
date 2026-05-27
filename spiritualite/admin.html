@@ -8,7 +8,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -438,11 +437,14 @@
         <label style="font-size:0.8rem;font-weight:600;color:var(--violet);display:block;margin-bottom:0.35rem">
           Photo du produit
         </label>
-        <div class="upload-area" id="upload-product-area" onclick="openProductWidget()">
+        <div class="upload-area" id="upload-product-area"
+             onclick="document.getElementById('product-file-input').click()">
           <img id="product-img-preview" class="upload-preview" src="" alt="Aperçu" />
-          <div class="upload-icon">🖼</div>
-          <div class="upload-text">Cliquer pour choisir une photo</div>
+          <div id="product-upload-icon" class="upload-icon">🖼</div>
+          <div id="product-upload-text" class="upload-text">Cliquer pour choisir une photo</div>
         </div>
+        <input type="file" id="product-file-input" accept="image/*" style="display:none"
+               onchange="uploadProductImage(event)" />
         <input type="hidden" id="product-image-url" />
       </div>
       <div class="form-row">
@@ -490,11 +492,14 @@
         <label style="font-size:0.8rem;font-weight:600;color:var(--violet);display:block;margin-bottom:0.35rem">
           Photo de l'événement
         </label>
-        <div class="upload-area" id="upload-event-area" onclick="openEventWidget()">
+        <div class="upload-area" id="upload-event-area"
+             onclick="document.getElementById('event-file-input').click()">
           <img id="event-img-preview" class="upload-preview" src="" alt="Aperçu" />
-          <div class="upload-icon">🖼</div>
-          <div class="upload-text">Cliquer pour choisir une photo</div>
+          <div id="event-upload-icon" class="upload-icon">🖼</div>
+          <div id="event-upload-text" class="upload-text">Cliquer pour choisir une photo</div>
         </div>
+        <input type="file" id="event-file-input" accept="image/*" style="display:none"
+               onchange="uploadEventImage(event)" />
         <input type="hidden" id="event-image-url" />
       </div>
       <div class="form-row">
@@ -605,52 +610,66 @@
     if (name === 'orders')   loadOrders();
   }
 
-  // ── CLOUDINARY WIDGETS ────────────────────────────────────
+  // ── UPLOAD CLOUDINARY (REST API directe, sans widget) ────
   let currentProductImageUrl = '';
   let currentEventImageUrl   = '';
 
-  const productWidget = cloudinary.createUploadWidget({
-    cloudName: 'dx0dzt35e',
-    uploadPreset: 'afrotv_images',
-    sources: ['local'],
-    showUploadMoreButton: false,
-    multiple: false,
-    maxFileSize: 5000000,
-    clientAllowedFormats: ['jpg','jpeg','png','webp','gif']
-  }, (error, result) => {
-    if (!error && result && result.event === 'success') {
-      currentProductImageUrl = result.info.secure_url;
-      const preview = document.getElementById('product-img-preview');
-      preview.src = currentProductImageUrl;
-      preview.style.display = 'block';
-      document.getElementById('product-image-url').value = currentProductImageUrl;
-      document.querySelector('#upload-product-area .upload-icon').style.display = 'none';
-      document.querySelector('#upload-product-area .upload-text').textContent = '✅ Photo sélectionnée';
-    }
-  });
+  const CLD_CLOUD  = 'dx0dzt35e';
+  const CLD_PRESET = 'afrotv_images';
 
-  const eventWidget = cloudinary.createUploadWidget({
-    cloudName: 'dx0dzt35e',
-    uploadPreset: 'afrotv_images',
-    sources: ['local'],
-    showUploadMoreButton: false,
-    multiple: false,
-    maxFileSize: 5000000,
-    clientAllowedFormats: ['jpg','jpeg','png','webp','gif']
-  }, (error, result) => {
-    if (!error && result && result.event === 'success') {
-      currentEventImageUrl = result.info.secure_url;
-      const preview = document.getElementById('event-img-preview');
-      preview.src = currentEventImageUrl;
-      preview.style.display = 'block';
-      document.getElementById('event-image-url').value = currentEventImageUrl;
-      document.querySelector('#upload-event-area .upload-icon').style.display = 'none';
-      document.querySelector('#upload-event-area .upload-text').textContent = '✅ Photo sélectionnée';
-    }
-  });
+  async function uploadToCloudinary(file, type) {
+    const textEl  = document.getElementById(type + '-upload-text');
+    const iconEl  = document.getElementById(type + '-upload-icon');
+    const preview = document.getElementById(type + '-img-preview');
 
-  function openProductWidget() { productWidget.open(); }
-  function openEventWidget()   { eventWidget.open(); }
+    // 1. Prévisualisation immédiate (FileReader)
+    const reader = new FileReader();
+    reader.onload = e => {
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+
+    // 2. Indicateur de chargement
+    textEl.textContent = '⏳ Envoi en cours…';
+    if (iconEl) iconEl.style.display = 'none';
+
+    // 3. Upload vers Cloudinary
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('upload_preset', CLD_PRESET);
+
+      const res  = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLD_CLOUD}/image/upload`,
+        { method: 'POST', body: fd }
+      );
+      const data = await res.json();
+
+      if (data.secure_url) {
+        document.getElementById(type + '-image-url').value = data.secure_url;
+        textEl.textContent = '✅ Photo envoyée !';
+        if (type === 'product') currentProductImageUrl = data.secure_url;
+        else                    currentEventImageUrl   = data.secure_url;
+      } else {
+        throw new Error(data.error?.message || 'Réponse invalide');
+      }
+    } catch (err) {
+      textEl.textContent = '❌ Erreur — réessayez';
+      if (iconEl) iconEl.style.display = '';
+      showToast('Erreur upload : ' + err.message, 'error');
+    }
+  }
+
+  function uploadProductImage(e) {
+    const file = e.target.files[0];
+    if (file) uploadToCloudinary(file, 'product');
+  }
+
+  function uploadEventImage(e) {
+    const file = e.target.files[0];
+    if (file) uploadToCloudinary(file, 'event');
+  }
 
   // ── PRODUITS ──────────────────────────────────────────────
   let allProducts = [];
@@ -770,8 +789,9 @@
     document.getElementById('product-img-preview').style.display = 'none';
     document.getElementById('product-form-title').textContent = '➕ Ajouter un produit';
     document.getElementById('product-cancel-btn').style.display = 'none';
-    document.querySelector('#upload-product-area .upload-icon').style.display = '';
-    document.querySelector('#upload-product-area .upload-text').textContent = 'Cliquer pour choisir une photo';
+    document.getElementById('product-upload-icon').style.display = '';
+    document.getElementById('product-upload-text').textContent = 'Cliquer pour choisir une photo';
+    document.getElementById('product-file-input').value = '';
     currentProductImageUrl = '';
   }
 
@@ -895,8 +915,9 @@
     document.getElementById('event-img-preview').style.display = 'none';
     document.getElementById('event-form-title').textContent = '➕ Ajouter un événement';
     document.getElementById('event-cancel-btn').style.display = 'none';
-    document.querySelector('#upload-event-area .upload-icon').style.display = '';
-    document.querySelector('#upload-event-area .upload-text').textContent = 'Cliquer pour choisir une photo';
+    document.getElementById('event-upload-icon').style.display = '';
+    document.getElementById('event-upload-text').textContent = 'Cliquer pour choisir une photo';
+    document.getElementById('event-file-input').value = '';
     currentEventImageUrl = '';
   }
 

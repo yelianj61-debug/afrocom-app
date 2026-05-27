@@ -692,25 +692,28 @@
 
   function launchFedaPay() {
     const total = Math.round(currentProduct.price * currentQuantity);
-    const widget = FedaPay.init({
-      public_key: FEDAPAY_KEY,
-      transaction: {
-        amount: total,
-        description: `Achat: ${currentProduct.name} x${currentQuantity}`,
-        currency: { iso: 'XOF' }
-      },
-      customer: {
-        email: 'client@spiritualite-autrement.com'
-      },
-      onComplete: function(transaction) {
-        if (transaction.reason === FedaPay.DIALOG_DISMISSED) return;
-        if (transaction.reason === FedaPay.APPROVED) {
-          currentTrxId = transaction.id || null;
-          setTimeout(() => openModal('modal-contact'), 300);
+    try {
+      FedaPay.init({
+        public_key: FEDAPAY_KEY,
+        transaction: {
+          amount: total,
+          description: 'Achat: ' + currentProduct.name + ' x' + currentQuantity,
+          currency: { iso: 'XOF' }
+        },
+        customer: {
+          email: 'client@boutique.com'
+        },
+        onComplete: function(transaction) {
+          if (transaction.reason === FedaPay.DIALOG_DISMISSED) return;
+          if (transaction.reason === FedaPay.APPROVED) {
+            currentTrxId = transaction.id || null;
+            setTimeout(function() { openModal('modal-contact'); }, 400);
+          }
         }
-      }
-    });
-    widget.open();
+      });
+    } catch(err) {
+      alert('Erreur paiement : ' + err.message);
+    }
   }
 
   async function submitOrder() {
