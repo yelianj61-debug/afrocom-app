@@ -8,6 +8,17 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script>
+    /* Charge FedaPay dès le départ et détecte si ça échoue */
+    (function() {
+      var s = document.createElement('script');
+      s.src = 'https://cdn.fedapay.com/checkout.min.js';
+      s.onerror = function() {
+        window._fedapayFailed = true;
+      };
+      document.head.appendChild(s);
+    })();
+  </script>
   <style>
     /* ── RESET & BASE ───────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -540,7 +551,6 @@
 </div>
 
 <!-- ── SCRIPTS ───────────────────────────────────────────── -->
-<script src="https://cdn.fedapay.com/checkout.min.js"></script>
 <script>
   // ── SUPABASE ──────────────────────────────────────────────
   const SUPABASE_URL = 'https://fpwfdqvrfivmuirgolhz.supabase.co';
@@ -687,13 +697,21 @@
     if (!qty || qty < 1) { alert('Veuillez entrer une quantité valide.'); return; }
     currentQuantity = qty;
     closeModal('modal-quantite');
-    launchFedaPay();
+
+    // FedaPay disponible → paiement en ligne
+    if (typeof FedaPay !== 'undefined' && !window._fedapayFailed) {
+      launchFedaPay();
+    } else {
+      // FedaPay non chargé (fichier local ou hors ligne) → commande directe
+      currentTrxId = null;
+      openModal('modal-contact');
+    }
   }
 
   function launchFedaPay() {
-    const total = Math.round(currentProduct.price * currentQuantity);
+    var total = Math.round(currentProduct.price * currentQuantity);
     try {
-      FedaPay.init({
+      var widget = FedaPay.init({
         public_key: FEDAPAY_KEY,
         transaction: {
           amount: total,
@@ -705,14 +723,19 @@
         },
         onComplete: function(transaction) {
           if (transaction.reason === FedaPay.DIALOG_DISMISSED) return;
-          if (transaction.reason === FedaPay.APPROVED) {
-            currentTrxId = transaction.id || null;
-            setTimeout(function() { openModal('modal-contact'); }, 400);
-          }
+          // Paiement réussi → informations de livraison
+          currentTrxId = (transaction && transaction.id) ? transaction.id : null;
+          setTimeout(function() { openModal('modal-contact'); }, 400);
         }
       });
+      // Ouvrir le widget FedaPay
+      if (widget && typeof widget.open === 'function') {
+        widget.open();
+      }
     } catch(err) {
-      alert('Erreur paiement : ' + err.message);
+      // Si erreur inattendue → commande directe
+      currentTrxId = null;
+      openModal('modal-contact');
     }
   }
 
