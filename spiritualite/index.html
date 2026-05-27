@@ -41,23 +41,28 @@
       min-height: 100vh;
     }
 
-    /* ── NAV HAUT (titre uniquement) ───────────────────────── */
+    /* ── NAV HAUT (titre + chip profil) ────────────────────── */
     .top-nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
       background: var(--violet);
       height: 52px;
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: space-between;
+      padding: 0 0.85rem;
       box-shadow: 0 2px 12px rgba(0,0,0,0.3);
     }
     .top-nav-title {
+      flex: 1;
+      min-width: 0;
       color: var(--gold);
       font-weight: 800;
-      font-size: 0.85rem;
+      font-size: 0.78rem;
       text-transform: uppercase;
-      letter-spacing: 2px;
-      text-align: center;
+      letter-spacing: 1.5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     /* ── NAV BAS (onglets mobiles) ──────────────────────────── */
@@ -427,45 +432,182 @@
 
     /* ── AUTH ───────────────────────────────────────────────── */
     .top-nav-actions {
-      position: absolute; right: 1rem;
+      position: static;
+      flex-shrink: 0;
       display: flex; align-items: center; gap: 0.5rem;
     }
-    .btn-connexion {
-      background: rgba(212,160,23,0.15);
-      border: 1.5px solid var(--gold);
-      color: var(--gold);
-      font-family: 'Poppins', sans-serif;
-      font-size: 0.72rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      padding: 0.35rem 0.85rem;
-      border-radius: 100px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-connexion:hover { background: var(--gold); color: var(--violet); }
     .member-chip {
       display: none;
       align-items: center;
-      gap: 0.4rem;
-      background: rgba(212,160,23,0.15);
+      gap: 0.35rem;
+      background: rgba(212,160,23,0.18);
       border: 1.5px solid var(--gold);
       border-radius: 100px;
-      padding: 0.25rem 0.75rem 0.25rem 0.35rem;
+      padding: 0.2rem 0.55rem 0.2rem 0.25rem;
       cursor: pointer;
+      max-width: 120px;
     }
     .member-chip img {
-      width: 26px; height: 26px;
+      width: 28px; height: 28px;
       border-radius: 50%;
       object-fit: cover;
       border: 1.5px solid var(--gold);
+      flex-shrink: 0;
     }
-    .member-chip span { color: var(--gold); font-size: 0.72rem; font-weight: 700; }
+    .member-chip span {
+      color: var(--gold); font-size: 0.68rem; font-weight: 700;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
 
     /* Onglets cachés jusqu'à connexion */
     .bottom-nav a.nav-protected { display: none; }
     .logged-in .bottom-nav a.nav-protected { display: flex; }
+    /* Masquer ACCUEIL après connexion */
+    body.logged-in .bottom-nav a[data-section="accueil"] { display: none !important; }
+
+    /* Bouton connexion dans la section accueil */
+    #hero-connexion {
+      margin-top: 1.25rem;
+      text-align: center;
+    }
+    #hero-connexion p {
+      color: rgba(255,255,255,0.65);
+      font-size: 0.8rem;
+      margin-bottom: 0.5rem;
+    }
+    body.logged-in #hero-connexion { display: none; }
+
+    /* Bandeau bienvenue boutique */
+    #welcome-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      background: linear-gradient(90deg, var(--violet) 0%, #4a2080 100%);
+      border-bottom: 2px solid var(--gold);
+      padding: 0.75rem 1.25rem;
+      animation: fadeInDown 0.5s ease;
+    }
+    @keyframes fadeInDown {
+      from { opacity:0; transform:translateY(-8px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    #welcome-banner #welcome-text {
+      color: var(--gold);
+      font-size: 0.82rem;
+      font-weight: 600;
+      flex: 1;
+    }
+    #welcome-banner button {
+      background: none; border: none; color: rgba(255,255,255,0.6);
+      font-size: 1rem; cursor: pointer; flex-shrink: 0; padding: 0 0.25rem;
+    }
+    #welcome-banner button:hover { color: var(--gold); }
+
+    /* ── GUIDE DE DÉMARRAGE ─────────────────────────────────── */
+    #guide-overlay {
+      position: fixed; inset: 0; z-index: 9998;
+      background: transparent;
+      display: none;
+    }
+    #guide-spotlight {
+      position: fixed;
+      border-radius: 12px;
+      box-shadow: 0 0 0 9999px rgba(0,0,0,0.82);
+      z-index: 9999;
+      pointer-events: none;
+      transition: left 0.3s ease, top 0.3s ease, width 0.3s ease, height 0.3s ease;
+      display: none;
+    }
+    #guide-tooltip {
+      position: fixed;
+      z-index: 10000;
+      background: white;
+      border-radius: 18px;
+      padding: 1.4rem 1.25rem 1.1rem;
+      width: min(300px, 88vw);
+      box-shadow: 0 8px 48px rgba(0,0,0,0.38);
+      pointer-events: all;
+      transition: bottom 0.3s ease, left 0.3s ease, top 0.3s ease;
+    }
+    #guide-step-icon {
+      font-size: 2rem;
+      text-align: center;
+      margin-bottom: 0.5rem;
+      line-height: 1;
+    }
+    #guide-title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--violet);
+      text-align: center;
+      margin-bottom: 0.6rem;
+    }
+    #guide-text {
+      font-size: 0.83rem;
+      color: #4b5563;
+      text-align: center;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+    .guide-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    #guide-progress {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--gray);
+      flex-shrink: 0;
+    }
+    .guide-btns { display: flex; gap: 0.5rem; }
+    .guide-btns button {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border-radius: 8px;
+      padding: 0.45rem 0.9rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    #guide-prev {
+      background: #f3f4f6; color: #374151;
+    }
+    #guide-prev:hover { background: #e5e7eb; }
+    #guide-next {
+      background: var(--violet); color: white;
+    }
+    #guide-next:hover { background: var(--violet-light); }
+    /* Flèche vers le bas (pointe vers la bottom nav) */
+    #guide-tooltip.arrow-down::after {
+      content: '';
+      position: absolute;
+      bottom: -13px; left: 50%;
+      transform: translateX(-50%);
+      border: 13px solid transparent;
+      border-top-color: white;
+      border-bottom: none;
+    }
+
+    /* Bouton replay guide dans profil */
+    .btn-guide-replay {
+      background: linear-gradient(135deg, var(--violet), #4a2080);
+      color: var(--gold);
+      border: 1.5px solid var(--gold);
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 0.65rem 1.5rem;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      margin-bottom: 0.75rem;
+      transition: all 0.2s;
+    }
+    .btn-guide-replay:hover { background: var(--violet-light); }
 
     /* ── INSCRIPTION / CONNEXION MODALS ─────────────────────── */
     .modal-box .form-row-2 {
@@ -582,10 +724,6 @@
 <div class="top-nav">
   <div class="top-nav-title">✦ Dah Gbesso Adihodegemabou ✦</div>
   <div class="top-nav-actions">
-    <!-- Bouton connexion (visible si non connecté) -->
-    <button class="btn-connexion" id="btn-show-connexion" onclick="openModal('modal-connexion')">
-      🔑 Connexion
-    </button>
     <!-- Chip membre (visible si connecté) -->
     <div class="member-chip" id="member-chip" onclick="navigate('profil')">
       <img id="chip-avatar" src="" alt="avatar" />
@@ -628,6 +766,10 @@
     <div class="hero-cta">
       <a href="#boutique" class="btn" onclick="handleBoutiqueClick()">🛍 Voir la boutique</a>
     </div>
+    <div id="hero-connexion">
+      <p>Déjà membre ?</p>
+      <button class="btn btn-outline" onclick="openModal('modal-connexion')">🔑 Se connecter</button>
+    </div>
   </div>
 </section>
 
@@ -636,6 +778,11 @@
   <div class="page-header">
     <h2>🛍 Notre Boutique</h2>
     <p>Savons, parfums et produits spirituels de Dah Gbesso</p>
+  </div>
+  <!-- Bandeau bienvenue (affiché après connexion) -->
+  <div id="welcome-banner">
+    <span id="welcome-text"></span>
+    <button onclick="document.getElementById('welcome-banner').style.display='none'" title="Fermer">✕</button>
   </div>
   <div id="products-container" class="products-grid">
     <div class="loading-wrap" style="grid-column:1/-1">
@@ -709,6 +856,9 @@
         </div>
       </div>
     </div>
+
+    <!-- Guide de démarrage -->
+    <button class="btn-guide-replay" onclick="startGuide(true)">🗺️ Revoir le guide de démarrage</button>
 
     <!-- Déconnexion -->
     <button class="btn-logout" onclick="logout()">🚪 Se déconnecter</button>
@@ -828,6 +978,23 @@
   </div>
 </div>
 
+<!-- ── GUIDE DE DÉMARRAGE (overlay) ─────────────────────── -->
+<div id="guide-overlay">
+  <div id="guide-spotlight"></div>
+  <div id="guide-tooltip">
+    <div id="guide-step-icon"></div>
+    <h3 id="guide-title"></h3>
+    <p id="guide-text"></p>
+    <div class="guide-footer">
+      <span id="guide-progress">1 / 5</span>
+      <div class="guide-btns">
+        <button id="guide-prev" onclick="guidePrev(event)">← Retour</button>
+        <button id="guide-next" onclick="guideNext(event)">Suivant →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ── SCRIPTS ───────────────────────────────────────────── -->
 <script>
   // ── SUPABASE ──────────────────────────────────────────────
@@ -865,22 +1032,19 @@
 
   function updateAuthUI() {
     var loggedIn = currentMember !== null;
-    // Body class pour afficher les onglets protégés
+    // Body class pour afficher les onglets protégés (et masquer accueil)
     document.body.classList.toggle('logged-in', loggedIn);
-    // Bouton connexion / chip membre
-    var btnCon  = document.getElementById('btn-show-connexion');
-    var chip    = document.getElementById('member-chip');
+    // Chip membre (le bouton connexion est maintenant sur la page accueil)
+    var chip = document.getElementById('member-chip');
     if (loggedIn) {
-      btnCon.style.display = 'none';
-      chip.style.display   = 'flex';
-      document.getElementById('chip-name').textContent =
-        currentMember.prenom + ' ' + currentMember.nom;
+      chip.style.display = 'flex';
+      // Afficher seulement le prénom (plus court, moins de risque d'overflow)
+      document.getElementById('chip-name').textContent = currentMember.prenom;
       var avatar = currentMember.photo_url;
       document.getElementById('chip-avatar').src =
-        avatar || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22%3E%3Ccircle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23D4A017%22/%3E%3Ctext x=%2220%22 y=%2226%22 text-anchor=%22middle%22 font-size=%2218%22 fill=%22%232D1B69%22%3E👤%3C/text%3E%3C/svg%3E';
+        avatar || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22%3E%3Ccircle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23D4A017%22/%3E%3Ctext x=%2220%22 y=%2226%22 text-anchor=%22middle%22 font-size=%2218%22 fill=%22%232D1B69%22%3E%F0%9F%91%A4%3C/text%3E%3C/svg%3E';
     } else {
-      btnCon.style.display = '';
-      chip.style.display   = 'none';
+      chip.style.display = 'none';
     }
   }
 
@@ -917,6 +1081,7 @@
     closeModal('modal-inscription');
     saveSession(data);
     navigate('boutique');
+    setTimeout(function() { startGuide(); }, 900);
   }
 
   async function submitConnexion() {
@@ -940,6 +1105,7 @@
     closeModal('modal-connexion');
     saveSession(data);
     navigate('boutique');
+    setTimeout(function() { startGuide(); }, 900);
   }
 
   function handleBoutiqueClick() {
@@ -1059,6 +1225,14 @@
   let productsLoaded = false;
   async function loadProducts() {
     if (productsLoaded) return;
+    // Afficher le bandeau de bienvenue si connecté
+    var banner = document.getElementById('welcome-banner');
+    if (banner && currentMember) {
+      document.getElementById('welcome-text').textContent =
+        '🌟 Bienvenue ' + currentMember.civilite + ' ' + currentMember.prenom
+        + ' dans la confrérie de Dah Gbesso !';
+      banner.style.display = 'flex';
+    }
     const container = document.getElementById('products-container');
     container.innerHTML = '<div class="loading-wrap" style="grid-column:1/-1"><div class="spinner"></div><p>Chargement des produits…</p></div>';
 
@@ -1279,6 +1453,124 @@
       .replace(/>/g,'&gt;')
       .replace(/"/g,'&quot;');
   }
+
+  // ── GUIDE DE DÉMARRAGE ────────────────────────────────────
+  var GUIDE_STEPS = [
+    {
+      target: null,
+      icon: '🌟',
+      title: 'Bienvenue dans la Confrérie !',
+      text: 'Dah Gbesso Adihodegemabou vous accueille. Laissez-nous vous faire découvrir l\'application en quelques étapes.'
+    },
+    {
+      target: '[data-section="boutique"]',
+      icon: '🛍',
+      title: 'La Boutique',
+      text: 'Découvrez et commandez nos savons, parfums et produits spirituels purifiants de Dah Gbesso.'
+    },
+    {
+      target: '[data-section="evenements"]',
+      icon: '📅',
+      title: 'Les Événements',
+      text: 'Participez aux cérémonies, rencontres et rituels organisés par Dah Gbesso Adihodegemabou.'
+    },
+    {
+      target: '[data-section="fanclub"]',
+      icon: '⭐',
+      title: 'Le Fan Club',
+      text: 'Rejoignez la communauté des initiés. De nouvelles fonctionnalités arrivent bientôt pour les membres.'
+    },
+    {
+      target: '[data-section="profil"]',
+      icon: '👤',
+      title: 'Votre Profil',
+      text: 'Gérez votre photo, consultez vos commandes passées. Vous pourrez aussi revoir ce guide depuis ici.'
+    }
+  ];
+  var currentGuideStep = 0;
+
+  function startGuide(force) {
+    if (!force && localStorage.getItem('guide_seen')) return;
+    currentGuideStep = 0;
+    document.getElementById('guide-overlay').style.display = 'block';
+    renderGuideStep();
+  }
+
+  function renderGuideStep() {
+    var step     = GUIDE_STEPS[currentGuideStep];
+    var total    = GUIDE_STEPS.length;
+    var overlay  = document.getElementById('guide-overlay');
+    var spotlight= document.getElementById('guide-spotlight');
+    var tooltip  = document.getElementById('guide-tooltip');
+
+    document.getElementById('guide-step-icon').textContent = step.icon;
+    document.getElementById('guide-title').textContent     = step.title;
+    document.getElementById('guide-text').textContent      = step.text;
+    document.getElementById('guide-progress').textContent  = (currentGuideStep + 1) + ' / ' + total;
+    document.getElementById('guide-prev').style.display    = currentGuideStep > 0 ? 'inline-block' : 'none';
+    document.getElementById('guide-next').textContent      =
+      currentGuideStep === total - 1 ? '✅ Terminer' : 'Suivant →';
+
+    if (step.target) {
+      var el = document.querySelector(step.target);
+      if (el) {
+        var r = el.getBoundingClientRect();
+        var pad = 6;
+        spotlight.style.left   = (r.left - pad) + 'px';
+        spotlight.style.top    = (r.top  - pad) + 'px';
+        spotlight.style.width  = (r.width  + pad * 2) + 'px';
+        spotlight.style.height = (r.height + pad * 2) + 'px';
+        spotlight.style.display = 'block';
+
+        // Positionner le tooltip au-dessus du spotlight (bottom nav en bas)
+        var tipW    = Math.min(300, window.innerWidth * 0.88);
+        var tipLeft = Math.max(8, Math.min(r.left + r.width / 2 - tipW / 2, window.innerWidth - tipW - 8));
+        var tipBottom = window.innerHeight - r.top + 16;
+
+        tooltip.style.bottom    = tipBottom + 'px';
+        tooltip.style.left      = tipLeft + 'px';
+        tooltip.style.top       = 'auto';
+        tooltip.style.transform = 'none';
+        tooltip.className       = 'arrow-down';
+      }
+    } else {
+      // Étape intro : centrer le tooltip
+      spotlight.style.display = 'none';
+      tooltip.style.top       = '50%';
+      tooltip.style.left      = '50%';
+      tooltip.style.bottom    = 'auto';
+      tooltip.style.transform = 'translate(-50%, -50%)';
+      tooltip.className       = '';
+    }
+  }
+
+  function guideNext(e) {
+    if (e) e.stopPropagation();
+    if (currentGuideStep < GUIDE_STEPS.length - 1) {
+      currentGuideStep++;
+      renderGuideStep();
+    } else {
+      closeGuide();
+    }
+  }
+
+  function guidePrev(e) {
+    if (e) e.stopPropagation();
+    if (currentGuideStep > 0) {
+      currentGuideStep--;
+      renderGuideStep();
+    }
+  }
+
+  function closeGuide() {
+    document.getElementById('guide-overlay').style.display = 'none';
+    localStorage.setItem('guide_seen', 'true');
+  }
+
+  // Clic sur le fond de l'overlay → fermer le guide
+  document.getElementById('guide-overlay').addEventListener('click', function(e) {
+    if (e.target === this) closeGuide();
+  });
 </script>
 </body>
 </html>
