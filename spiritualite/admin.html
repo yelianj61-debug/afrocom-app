@@ -388,6 +388,50 @@
     .toast.success { background: var(--green); }
     .toast.error   { background: var(--red); }
 
+    /* ── CARTES MEMBRES ────────────────────────────────────── */
+    .member-card {
+      background: var(--white);
+      border-radius: 12px;
+      padding: 1.25rem;
+      border: 1px solid #e5e7eb;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .member-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      margin-bottom: 0.5rem;
+    }
+    .member-card-avatar {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--gold);
+      flex-shrink: 0;
+    }
+    .member-card-avatar-ph {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--violet), var(--gold));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+    .member-card-name { font-weight: 700; font-size: 0.95rem; color: var(--violet); }
+    .member-card-civilite { font-size: 0.75rem; color: var(--gray); }
+    .member-card-row {
+      display: flex; justify-content: space-between;
+      font-size: 0.78rem;
+      padding: 0.2rem 0;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .member-card-row:last-child { border-bottom: none; }
+    .member-card-row .mk { color: var(--gray); font-weight: 600; }
+    .member-card-row .mv { color: var(--brown); }
+
     @media (max-width: 640px) {
       .form-row { grid-template-columns: 1fr; }
       .admin-section { padding: 1rem; }
@@ -424,6 +468,7 @@
     <button class="tab-btn active" onclick="showTab('products')">📦 Produits</button>
     <button class="tab-btn"        onclick="showTab('events')">📅 Événements</button>
     <button class="tab-btn"        onclick="showTab('orders')">🛒 Commandes</button>
+    <button class="tab-btn"        onclick="showTab('profiles')">👥 Profils</button>
   </div>
 
   <!-- ── TAB : PRODUITS ─────────────────────────────────── -->
@@ -555,6 +600,16 @@
     </div>
   </div>
 
+  <!-- ── TAB : PROFILS ───────────────────────────────────── -->
+  <div id="tab-profiles" class="admin-section">
+    <div class="card">
+      <div class="card-title">👥 Membres inscrits</div>
+      <div id="profiles-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;margin-top:0.5rem">
+        <div class="loading-wrap" style="grid-column:1/-1"><div class="spinner"></div><p>Chargement…</p></div>
+      </div>
+    </div>
+  </div>
+
 </div><!-- /#admin-panel -->
 
 <!-- Toast -->
@@ -608,6 +663,7 @@
     if (name === 'products') loadProducts();
     if (name === 'events')   loadEvents();
     if (name === 'orders')   loadOrders();
+    if (name === 'profiles') loadProfiles();
   }
 
   // ── UPLOAD CLOUDINARY (REST API directe, sans widget) ────
@@ -1019,6 +1075,33 @@
       day: 'numeric', month: 'short', year: 'numeric',
       hour: '2-digit', minute: '2-digit'
     });
+  }
+
+  // ── PROFILS MEMBRES ───────────────────────────────────────
+  async function loadProfiles() {
+    const grid = document.getElementById('profiles-grid');
+    grid.innerHTML = '<div class="loading-wrap" style="grid-column:1/-1"><div class="spinner"></div><p>Chargement…</p></div>';
+    const { data, error } = await sb.rpc('admin_get_all_members');
+    if (error) { grid.innerHTML = `<div class="empty-wrap" style="grid-column:1/-1">⚠️ ${error.message}</div>`; return; }
+    if (!data || !data.length) {
+      grid.innerHTML = '<div class="empty-wrap" style="grid-column:1/-1">Aucun membre inscrit pour le moment.</div>'; return;
+    }
+    grid.innerHTML = data.map(m => `
+      <div class="member-card">
+        <div class="member-card-header">
+          ${m.photo_url
+            ? `<img class="member-card-avatar" src="${escHtml(m.photo_url)}" alt="avatar" />`
+            : `<div class="member-card-avatar-ph">👤</div>`}
+          <div>
+            <div class="member-card-name">${escHtml(m.civilite)} ${escHtml(m.prenom)} ${escHtml(m.nom)}</div>
+            <div class="member-card-civilite">Membre depuis ${formatDate(m.created_at)}</div>
+          </div>
+        </div>
+        <div class="member-card-row"><span class="mk">Email</span>     <span class="mv">${escHtml(m.email)}</span></div>
+        <div class="member-card-row"><span class="mk">Téléphone</span> <span class="mv">${escHtml(m.telephone)}</span></div>
+        <div class="member-card-row"><span class="mk">Pays</span>      <span class="mv">${escHtml(m.pays)}</span></div>
+      </div>
+    `).join('');
   }
 
   let toastTimer = null;

@@ -424,6 +424,156 @@
     @media (max-width: 640px) {
       .products-grid, .events-list { grid-template-columns: 1fr; padding: 1rem; }
     }
+
+    /* ── AUTH ───────────────────────────────────────────────── */
+    .top-nav-actions {
+      position: absolute; right: 1rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .btn-connexion {
+      background: rgba(212,160,23,0.15);
+      border: 1.5px solid var(--gold);
+      color: var(--gold);
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 0.35rem 0.85rem;
+      border-radius: 100px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-connexion:hover { background: var(--gold); color: var(--violet); }
+    .member-chip {
+      display: none;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(212,160,23,0.15);
+      border: 1.5px solid var(--gold);
+      border-radius: 100px;
+      padding: 0.25rem 0.75rem 0.25rem 0.35rem;
+      cursor: pointer;
+    }
+    .member-chip img {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1.5px solid var(--gold);
+    }
+    .member-chip span { color: var(--gold); font-size: 0.72rem; font-weight: 700; }
+
+    /* Onglets cachés jusqu'à connexion */
+    .bottom-nav a.nav-protected { display: none; }
+    .logged-in .bottom-nav a.nav-protected { display: flex; }
+
+    /* ── INSCRIPTION / CONNEXION MODALS ─────────────────────── */
+    .modal-box .form-row-2 {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;
+    }
+    .form-group select {
+      width: 100%;
+      padding: 0.65rem 0.9rem;
+      border: 1.5px solid #ddd;
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.9rem;
+      background: white;
+      transition: border-color 0.2s;
+    }
+    .form-group select:focus { outline: none; border-color: var(--violet); }
+    .auth-switch {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--gray);
+      margin-top: 1rem;
+    }
+    .auth-switch a { color: var(--violet); font-weight: 600; cursor: pointer; text-decoration: none; }
+
+    /* ── SECTION PROFIL ─────────────────────────────────────── */
+    .profile-wrap { max-width: 500px; margin: 1.5rem auto; padding: 0 1rem 2rem; }
+    .profile-photo-block {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    .profile-avatar {
+      width: 90px; height: 90px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--gold);
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .profile-avatar:hover { opacity: 0.85; }
+    .profile-avatar-placeholder {
+      width: 90px; height: 90px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--violet), var(--gold));
+      display: inline-flex;
+      align-items: center; justify-content: center;
+      font-size: 2.5rem;
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+      border: 3px solid var(--gold);
+    }
+    .profile-card {
+      background: var(--white);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      box-shadow: var(--shadow);
+    }
+    .profile-card h3 {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--violet);
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid rgba(212,160,23,0.2);
+    }
+    .profile-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #f3f4f6;
+      font-size: 0.85rem;
+    }
+    .profile-row:last-child { border-bottom: none; }
+    .profile-row .label { color: var(--gray); font-weight: 600; }
+    .profile-row .value { color: var(--brown); font-weight: 500; text-align: right; }
+    .order-item {
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #f3f4f6;
+      font-size: 0.82rem;
+    }
+    .order-item:last-child { border-bottom: none; }
+    .order-item .o-name { font-weight: 700; color: var(--violet); }
+    .order-item .o-meta { color: var(--gray); margin-top: 0.2rem; }
+    .order-badge {
+      display: inline-block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 0.15rem 0.55rem;
+      border-radius: 100px;
+      text-transform: uppercase;
+    }
+    .order-badge.pending   { background: #fef9c3; color: #854d0e; }
+    .order-badge.delivered { background: #dcfce7; color: #16a34a; }
+    .btn-logout {
+      background: #fee2e2;
+      color: #dc2626;
+      border: none;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 0.6rem 1.5rem;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 0.5rem;
+    }
+    .btn-logout:hover { background: #fecaca; }
+    @media (max-width: 480px) { .form-row-2 { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -431,6 +581,17 @@
 <!-- ── BARRE DE TITRE (haut) ──────────────────────────────── -->
 <div class="top-nav">
   <div class="top-nav-title">✦ Dah Gbesso Adihodegemabou ✦</div>
+  <div class="top-nav-actions">
+    <!-- Bouton connexion (visible si non connecté) -->
+    <button class="btn-connexion" id="btn-show-connexion" onclick="openModal('modal-connexion')">
+      🔑 Connexion
+    </button>
+    <!-- Chip membre (visible si connecté) -->
+    <div class="member-chip" id="member-chip" onclick="navigate('profil')">
+      <img id="chip-avatar" src="" alt="avatar" />
+      <span id="chip-name">–</span>
+    </div>
+  </div>
 </div>
 
 <!-- ── NAVIGATION BAS ─────────────────────────────────────── -->
@@ -438,14 +599,17 @@
   <a onclick="navigate('accueil')"    data-section="accueil"    class="active">
     🏠<span>Accueil</span>
   </a>
-  <a onclick="navigate('boutique')"   data-section="boutique">
+  <a onclick="navigate('boutique')"   data-section="boutique"   class="nav-protected">
     🛍<span>Boutique</span>
   </a>
-  <a onclick="navigate('evenements')" data-section="evenements">
+  <a onclick="navigate('evenements')" data-section="evenements" class="nav-protected">
     📅<span>Événements</span>
   </a>
-  <a onclick="navigate('fanclub')"    data-section="fanclub">
+  <a onclick="navigate('fanclub')"    data-section="fanclub"    class="nav-protected">
     ⭐<span>Fan Club</span>
+  </a>
+  <a onclick="navigate('profil')"     data-section="profil"     class="nav-protected">
+    👤<span>Profil</span>
   </a>
 </nav>
 
@@ -462,8 +626,7 @@
       et une communauté ancrée dans la tradition et la sagesse africaine.
     </p>
     <div class="hero-cta">
-      <a href="#boutique" class="btn" onclick="navigate('boutique')">Voir la boutique</a>
-      <a href="#evenements" class="btn btn-outline" onclick="navigate('evenements')">Nos événements</a>
+      <a href="#boutique" class="btn" onclick="handleBoutiqueClick()">🛍 Voir la boutique</a>
     </div>
   </div>
 </section>
@@ -505,6 +668,121 @@
     <div class="fanclub-badge">⚙ Fonctionnalités en cours</div>
   </div>
 </section>
+
+<!-- ── SECTION PROFIL ─────────────────────────────────────── -->
+<section id="profil">
+  <div class="page-header">
+    <h2>👤 Mon Profil</h2>
+    <p>Vos informations et historique de commandes</p>
+  </div>
+  <div class="profile-wrap">
+
+    <!-- Photo de profil -->
+    <div class="profile-photo-block">
+      <div id="profile-avatar-wrap" onclick="document.getElementById('profile-photo-input').click()">
+        <div class="profile-avatar-placeholder" id="profile-avatar-placeholder">👤</div>
+        <img id="profile-avatar-img" class="profile-avatar" src="" alt="Photo" style="display:none" />
+      </div>
+      <div style="font-size:0.75rem;color:var(--gray);margin-top:0.4rem">Cliquer pour changer la photo</div>
+      <input type="file" id="profile-photo-input" accept="image/*" style="display:none"
+             onchange="uploadProfilePhoto(event)" />
+    </div>
+
+    <!-- Infos personnelles -->
+    <div class="profile-card">
+      <h3>📋 Informations personnelles</h3>
+      <div class="profile-row"><span class="label">Civilité</span>    <span class="value" id="pi-civilite">–</span></div>
+      <div class="profile-row"><span class="label">Nom</span>         <span class="value" id="pi-nom">–</span></div>
+      <div class="profile-row"><span class="label">Prénom</span>      <span class="value" id="pi-prenom">–</span></div>
+      <div class="profile-row"><span class="label">Email</span>       <span class="value" id="pi-email">–</span></div>
+      <div class="profile-row"><span class="label">Pays</span>        <span class="value" id="pi-pays">–</span></div>
+      <div class="profile-row"><span class="label">Téléphone</span>   <span class="value" id="pi-tel">–</span></div>
+      <div class="profile-row"><span class="label">Membre depuis</span><span class="value" id="pi-date">–</span></div>
+    </div>
+
+    <!-- Historique commandes -->
+    <div class="profile-card">
+      <h3>🛍 Historique des commandes</h3>
+      <div id="order-history-list">
+        <div style="text-align:center;color:var(--gray);padding:1rem;font-size:0.85rem">
+          Chargement…
+        </div>
+      </div>
+    </div>
+
+    <!-- Déconnexion -->
+    <button class="btn-logout" onclick="logout()">🚪 Se déconnecter</button>
+  </div>
+</section>
+
+<!-- ── MODAL : INSCRIPTION ───────────────────────────────── -->
+<div id="modal-inscription" class="modal-overlay">
+  <div class="modal-box" style="max-width:460px">
+    <div class="modal-title">✨ Rejoindre la Confrérie</div>
+    <p style="text-align:center;color:var(--gray);font-size:0.83rem;margin-bottom:1.25rem">
+      Veuillez vous inscrire pour accéder à la boutique de la confrérie
+    </p>
+    <div class="form-group">
+      <label>Civilité *</label>
+      <select id="ins-civilite">
+        <option value="">— Choisir —</option>
+        <option value="M.">M.</option>
+        <option value="Mme">Mme</option>
+        <option value="Dr">Dr</option>
+        <option value="Révd">Révd</option>
+      </select>
+    </div>
+    <div class="form-row-2">
+      <div class="form-group">
+        <label>Nom *</label>
+        <input type="text" id="ins-nom" placeholder="Votre nom" />
+      </div>
+      <div class="form-group">
+        <label>Prénom *</label>
+        <input type="text" id="ins-prenom" placeholder="Votre prénom" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Adresse email *</label>
+      <input type="email" id="ins-email" placeholder="vous@exemple.com" />
+    </div>
+    <div class="form-group">
+      <label>Pays *</label>
+      <input type="text" id="ins-pays" placeholder="Ex: Bénin, France, Côte d'Ivoire…" />
+    </div>
+    <div class="form-group">
+      <label>Numéro de téléphone *</label>
+      <input type="tel" id="ins-tel" placeholder="Ex: +229 97 00 00 00" />
+    </div>
+    <button class="btn btn-full" onclick="submitInscription()">✅ S'inscrire et accéder à la boutique</button>
+    <div class="auth-switch">
+      Déjà inscrit ? <a onclick="switchToConnexion()">Se connecter</a>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL : CONNEXION ──────────────────────────────────── -->
+<div id="modal-connexion" class="modal-overlay">
+  <div class="modal-box" style="max-width:400px">
+    <button class="modal-close" onclick="closeModal('modal-connexion')">✕</button>
+    <div class="modal-title">🔑 Connexion</div>
+    <p style="text-align:center;color:var(--gray);font-size:0.83rem;margin-bottom:1.25rem">
+      Entrez votre email et téléphone pour accéder à votre compte
+    </p>
+    <div class="form-group">
+      <label>Adresse email</label>
+      <input type="email" id="con-email" placeholder="vous@exemple.com" />
+    </div>
+    <div class="form-group">
+      <label>Numéro de téléphone</label>
+      <input type="tel" id="con-tel" placeholder="Ex: +229 97 00 00 00" />
+    </div>
+    <button class="btn btn-full" onclick="submitConnexion()">🔓 Se connecter</button>
+    <div class="auth-switch">
+      Pas encore inscrit ? <a onclick="switchToInscription()">S'inscrire</a>
+    </div>
+  </div>
+</div>
 
 <!-- ── MODAL : QUANTITÉ ──────────────────────────────────── -->
 <div id="modal-quantite" class="modal-overlay">
@@ -560,32 +838,212 @@
   // ── FEDAPAY ───────────────────────────────────────────────
   const FEDAPAY_KEY = 'pk_live_Qpb6YLLId44fyPDwP_uvoG2p';
 
-  // ── ÉTAT DE LA COMMANDE ───────────────────────────────────
+  // ── ÉTAT ──────────────────────────────────────────────────
   let currentProduct  = null;
   let currentQuantity = 1;
   let currentTrxId    = null;
+  let currentMember   = null; // membre connecté
+
+  // ── AUTHENTIFICATION ──────────────────────────────────────
+  function saveSession(member) {
+    currentMember = member;
+    localStorage.setItem('member_session', JSON.stringify(member));
+    updateAuthUI();
+  }
+
+  function loadSession() {
+    var stored = localStorage.getItem('member_session');
+    if (stored) { currentMember = JSON.parse(stored); updateAuthUI(); }
+  }
+
+  function logout() {
+    currentMember = null;
+    localStorage.removeItem('member_session');
+    updateAuthUI();
+    navigate('accueil');
+  }
+
+  function updateAuthUI() {
+    var loggedIn = currentMember !== null;
+    // Body class pour afficher les onglets protégés
+    document.body.classList.toggle('logged-in', loggedIn);
+    // Bouton connexion / chip membre
+    var btnCon  = document.getElementById('btn-show-connexion');
+    var chip    = document.getElementById('member-chip');
+    if (loggedIn) {
+      btnCon.style.display = 'none';
+      chip.style.display   = 'flex';
+      document.getElementById('chip-name').textContent =
+        currentMember.prenom + ' ' + currentMember.nom;
+      var avatar = currentMember.photo_url;
+      document.getElementById('chip-avatar').src =
+        avatar || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22%3E%3Ccircle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23D4A017%22/%3E%3Ctext x=%2220%22 y=%2226%22 text-anchor=%22middle%22 font-size=%2218%22 fill=%22%232D1B69%22%3E👤%3C/text%3E%3C/svg%3E';
+    } else {
+      btnCon.style.display = '';
+      chip.style.display   = 'none';
+    }
+  }
+
+  async function submitInscription() {
+    var civ  = document.getElementById('ins-civilite').value.trim();
+    var nom  = document.getElementById('ins-nom').value.trim();
+    var prn  = document.getElementById('ins-prenom').value.trim();
+    var em   = document.getElementById('ins-email').value.trim();
+    var pays = document.getElementById('ins-pays').value.trim();
+    var tel  = document.getElementById('ins-tel').value.trim();
+
+    if (!civ || !nom || !prn || !em || !pays || !tel) {
+      alert('Veuillez remplir tous les champs obligatoires.'); return;
+    }
+
+    var { data, error } = await sb.from('members').insert({
+      civilite: civ, nom, prenom: prn,
+      email: em, pays, telephone: tel
+    }).select().single();
+
+    if (error) {
+      if (error.code === '23505') {
+        alert('Cet email est déjà inscrit. Veuillez vous connecter.');
+        switchToConnexion();
+      } else {
+        alert('Erreur inscription : ' + error.message);
+      }
+      return;
+    }
+    closeModal('modal-inscription');
+    saveSession(data);
+    navigate('boutique');
+  }
+
+  async function submitConnexion() {
+    var em  = document.getElementById('con-email').value.trim();
+    var tel = document.getElementById('con-tel').value.trim();
+    if (!em || !tel) { alert('Veuillez remplir email et téléphone.'); return; }
+
+    var { data, error } = await sb.rpc('member_login', {
+      p_email: em, p_telephone: tel
+    });
+
+    if (error || !data) {
+      alert('Compte introuvable. Vérifiez vos informations ou inscrivez-vous.');
+      return;
+    }
+    closeModal('modal-connexion');
+    saveSession(data);
+    navigate('boutique');
+  }
+
+  function handleBoutiqueClick() {
+    if (currentMember) { navigate('boutique'); }
+    else               { openModal('modal-inscription'); }
+  }
+
+  function switchToConnexion() {
+    closeModal('modal-inscription');
+    openModal('modal-connexion');
+  }
+  function switchToInscription() {
+    closeModal('modal-connexion');
+    openModal('modal-inscription');
+  }
+
+  // ── PROFIL ────────────────────────────────────────────────
+  function fillProfileUI() {
+    if (!currentMember) return;
+    var m = currentMember;
+    document.getElementById('pi-civilite').textContent = m.civilite  || '–';
+    document.getElementById('pi-nom').textContent      = m.nom       || '–';
+    document.getElementById('pi-prenom').textContent   = m.prenom    || '–';
+    document.getElementById('pi-email').textContent    = m.email     || '–';
+    document.getElementById('pi-pays').textContent     = m.pays      || '–';
+    document.getElementById('pi-tel').textContent      = m.telephone || '–';
+    document.getElementById('pi-date').textContent     =
+      m.created_at ? new Date(m.created_at).toLocaleDateString('fr-FR', {
+        day:'numeric', month:'long', year:'numeric'}) : '–';
+    // Avatar
+    var imgEl  = document.getElementById('profile-avatar-img');
+    var phEl   = document.getElementById('profile-avatar-placeholder');
+    if (m.photo_url) {
+      imgEl.src = m.photo_url;
+      imgEl.style.display = 'block';
+      phEl.style.display  = 'none';
+    } else {
+      imgEl.style.display = 'none';
+      phEl.style.display  = 'inline-flex';
+    }
+  }
+
+  async function loadOrderHistory() {
+    if (!currentMember) return;
+    var container = document.getElementById('order-history-list');
+    var { data, error } = await sb.rpc('member_get_orders', {
+      p_telephone: currentMember.telephone
+    });
+    if (error || !data || data.length === 0) {
+      container.innerHTML =
+        '<p style="text-align:center;color:var(--gray);font-size:0.83rem;padding:1rem">Aucune commande pour le moment.</p>';
+      return;
+    }
+    container.innerHTML = data.map(function(o) {
+      return '<div class="order-item">' +
+        '<div class="o-name">' + escHtml(o.product_name) + '</div>' +
+        '<div class="o-meta">Qté ' + o.quantity + ' · ' + formatPrice(o.total_amount) + ' · ' +
+        formatDate(o.created_at) + ' ' +
+        '<span class="order-badge ' + o.status + '">' +
+          (o.status === 'delivered' ? '✅ Livré' : '⏳ En attente') +
+        '</span></div></div>';
+    }).join('');
+  }
+
+  async function uploadProfilePhoto(event) {
+    var file = event.target.files[0];
+    if (!file || !currentMember) return;
+    var fd = new FormData();
+    fd.append('file', file);
+    fd.append('upload_preset', 'afrotv_images');
+    try {
+      var res  = await fetch('https://api.cloudinary.com/v1_1/dx0dzt35e/image/upload',
+        { method: 'POST', body: fd });
+      var data = await res.json();
+      if (data.secure_url) {
+        await sb.rpc('member_update_photo', {
+          p_id: currentMember.id,
+          p_photo_url: data.secure_url
+        });
+        currentMember.photo_url = data.secure_url;
+        saveSession(currentMember);
+        fillProfileUI();
+      }
+    } catch(e) { alert('Erreur upload photo : ' + e.message); }
+  }
 
   // ── ROUTEUR HASH ──────────────────────────────────────────
   function navigate(id) {
-    document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-    const sec = document.getElementById(id);
-    if (sec) { sec.classList.add('active'); window.scrollTo(0,0); }
-    document.querySelectorAll('.bottom-nav a').forEach(a => {
+    // Sections protégées : redirige vers inscription si non connecté
+    var protected_sections = ['boutique', 'evenements', 'fanclub', 'profil'];
+    if (protected_sections.indexOf(id) !== -1 && !currentMember) {
+      openModal('modal-inscription');
+      return;
+    }
+    document.querySelectorAll('section').forEach(function(s) { s.classList.remove('active'); });
+    var sec = document.getElementById(id);
+    if (sec) { sec.classList.add('active'); window.scrollTo(0, 0); }
+    document.querySelectorAll('.bottom-nav a').forEach(function(a) {
       a.classList.toggle('active', a.dataset.section === id);
     });
     if (id === 'boutique')   loadProducts();
     if (id === 'evenements') loadEvents();
+    if (id === 'profil')     { fillProfileUI(); loadOrderHistory(); }
   }
 
-  window.addEventListener('hashchange', () => {
-    const id = location.hash.slice(1) || 'accueil';
-    navigate(id);
+  window.addEventListener('hashchange', function() {
+    navigate(location.hash.slice(1) || 'accueil');
   });
 
-  // Charge la section au démarrage
+  // Démarrage : toujours sur Accueil, charger session si existante
   (function init() {
-    const id = location.hash.slice(1) || 'accueil';
-    navigate(id);
+    loadSession();
+    navigate('accueil');
   })();
 
   // ── CHARGEMENT PRODUITS ───────────────────────────────────
