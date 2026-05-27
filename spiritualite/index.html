@@ -12,7 +12,7 @@
     /* Charge FedaPay dès le départ et détecte si ça échoue */
     (function() {
       var s = document.createElement('script');
-      s.src = 'https://cdn.fedapay.com/checkout.min.js';
+      s.src = 'https://cdn.fedapay.com/checkout.js?v=1.1.7';
       s.onerror = function() {
         window._fedapayFailed = true;
       };
