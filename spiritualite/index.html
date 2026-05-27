@@ -116,9 +116,9 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 3rem 1.5rem;
+      padding: 3rem 1.5rem 1.5rem;
       position: relative;
-      overflow: hidden;
+      /* overflow:hidden retiré — empêchait le clic sur bouton connexion */
     }
     .hero::before {
       content: '';
@@ -298,35 +298,101 @@
     .btn-participate:hover { background: var(--violet-light); }
 
     /* ── PAGE FAN CLUB ──────────────────────────────────────── */
-    .fanclub-wrap {
-      min-height: calc(100vh - 64px);
+    .fc-tabs {
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 3rem 1.5rem;
-      text-align: center;
+      background: var(--white);
+      border-bottom: 2px solid rgba(212,160,23,0.2);
+      position: sticky; top: 52px; z-index: 10;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
     }
-    .fanclub-icon { font-size: 5rem; margin-bottom: 1.5rem; }
-    .fanclub-wrap h2 {
-      font-size: 1.8rem;
-      font-weight: 800;
-      color: var(--violet);
-      text-transform: uppercase;
-      letter-spacing: 2px;
+    .fc-tabs::-webkit-scrollbar { display: none; }
+    .fc-tab {
+      flex: 1;
+      min-width: 78px;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 2px; padding: 0.65rem 0.3rem;
+      background: none; border: none;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.54rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;
+      color: var(--gray); cursor: pointer;
+      border-bottom: 3px solid transparent;
+      white-space: nowrap;
+      transition: all 0.2s;
     }
-    .fanclub-sub { color: var(--gray); margin-top: 0.75rem; font-size: 1rem; }
-    .fanclub-badge {
-      margin-top: 2rem;
-      display: inline-block;
-      background: var(--gold);
-      color: var(--violet);
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      padding: 0.5rem 1.5rem;
-      border-radius: 100px;
+    .fc-tab .t-icon { font-size: 1.15rem; line-height: 1; }
+    .fc-tab.active { color: var(--violet); border-bottom-color: var(--gold); }
+    .fc-tab:hover { color: var(--violet); }
+
+    .fc-count {
+      font-size: 0.8rem; color: rgba(255,255,255,0.75);
+      margin-top: 0.3rem;
+    }
+    .fc-panel { display: none; }
+    .fc-panel.active { display: block; }
+    .fc-inner {
+      max-width: 580px; margin: 0 auto; padding: 1.5rem 1rem 2rem;
+    }
+    .fc-section-title {
+      font-size: 1rem; font-weight: 800; color: var(--violet);
+      text-transform: uppercase; letter-spacing: 1px;
+      margin-bottom: 0.5rem;
+    }
+    .fc-section-desc {
+      font-size: 0.82rem; color: var(--gray); margin-bottom: 1.5rem; line-height: 1.6;
+    }
+
+    /* Avantages */
+    .fc-advantages { list-style: none; display: flex; flex-direction: column; gap: 0.85rem; }
+    .fc-advantage-item {
+      display: flex; align-items: flex-start; gap: 0.75rem;
+      background: var(--white); border-radius: 12px;
+      padding: 1rem; box-shadow: var(--shadow);
+      border-left: 4px solid var(--gold);
+    }
+    .fc-advantage-item .adv-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .fc-advantage-item .adv-text { font-size: 0.85rem; font-weight: 600; color: var(--brown); line-height: 1.4; }
+
+    /* Suggestions & feedbacks */
+    .fc-post-item {
+      background: var(--white); border-radius: 10px;
+      padding: 0.9rem 1rem; margin-bottom: 0.75rem;
+      box-shadow: 0 2px 8px rgba(45,27,105,0.08);
+      border: 1px solid rgba(212,160,23,0.15);
+    }
+    .fc-post-meta {
+      font-size: 0.7rem; color: var(--gray); margin-bottom: 0.35rem;
+    }
+    .fc-post-text { font-size: 0.83rem; color: var(--brown); line-height: 1.5; }
+    .fc-appreciation-yes { border-left: 4px solid #22c55e; }
+    .fc-appreciation-no  { border-left: 4px solid #ef4444; }
+    .fc-app-badge {
+      display: inline-block; font-size: 0.67rem; font-weight: 700;
+      padding: 0.15rem 0.5rem; border-radius: 100px; margin-bottom: 0.3rem;
+    }
+    .fc-app-badge.yes { background: #dcfce7; color: #16a34a; }
+    .fc-app-badge.no  { background: #fee2e2; color: #dc2626; }
+
+    /* Radios appréciations */
+    .fc-radio-group {
+      display: flex; gap: 1rem; margin-bottom: 1.25rem;
+    }
+    .fc-radio-btn {
+      flex: 1; padding: 0.75rem;
+      border: 2px solid #e5e7eb; border-radius: 10px;
+      background: none; font-family: 'Poppins', sans-serif;
+      font-size: 0.85rem; font-weight: 600; cursor: pointer;
+      transition: all 0.2s; text-align: center;
+    }
+    .fc-radio-btn.selected-yes { border-color: #22c55e; background: #f0fdf4; color: #16a34a; }
+    .fc-radio-btn.selected-no  { border-color: #ef4444; background: #fef2f2; color: #dc2626; }
+
+    /* Déjà envoyé */
+    .fc-already {
+      text-align: center; background: #f0fdf4; border: 2px solid #22c55e;
+      border-radius: 12px; padding: 1.5rem; color: #16a34a;
+      font-size: 0.88rem; font-weight: 600;
     }
 
     /* ── ÉTATS CHARGEMENT / VIDE ────────────────────────────── */
@@ -465,15 +531,26 @@
     /* Masquer ACCUEIL après connexion */
     body.logged-in .bottom-nav a[data-section="accueil"] { display: none !important; }
 
-    /* Bouton connexion dans la section accueil */
+    /* Bouton connexion — fixé juste au-dessus de la bottom nav */
     #hero-connexion {
-      margin-top: 1.25rem;
+      position: fixed;
+      bottom: 62px;
+      left: 0; right: 0;
+      z-index: 50;
+      background: rgba(30,15,70,0.97);
+      border-top: 1.5px solid rgba(212,160,23,0.35);
+      padding: 0.6rem 1rem;
       text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      backdrop-filter: blur(6px);
     }
     #hero-connexion p {
-      color: rgba(255,255,255,0.65);
-      font-size: 0.8rem;
-      margin-bottom: 0.5rem;
+      color: rgba(255,255,255,0.7);
+      font-size: 0.78rem;
+      margin: 0;
     }
     body.logged-in #hero-connexion { display: none; }
 
@@ -766,10 +843,11 @@
     <div class="hero-cta">
       <a href="#boutique" class="btn" onclick="handleBoutiqueClick()">🛍 Voir la boutique</a>
     </div>
-    <div id="hero-connexion">
-      <p>Déjà membre ?</p>
-      <button class="btn btn-outline" onclick="openModal('modal-connexion')">🔑 Se connecter</button>
-    </div>
+  </div>
+  <!-- Fixé au-dessus de la bottom nav — jamais clippé -->
+  <div id="hero-connexion">
+    <p>Déjà membre ?</p>
+    <button class="btn btn-outline" style="padding:0.45rem 1.25rem;font-size:0.78rem" onclick="openModal('modal-connexion')">🔑 Se connecter</button>
   </div>
 </section>
 
@@ -808,11 +886,152 @@
 
 <!-- ── SECTION FAN CLUB ──────────────────────────────────── -->
 <section id="fanclub">
-  <div class="fanclub-wrap">
-    <div class="fanclub-icon">⭐</div>
-    <h2>Fan Club</h2>
-    <p class="fanclub-sub">Rejoignez la communauté de Dah Gbesso Adihodegemabou</p>
-    <div class="fanclub-badge">⚙ Fonctionnalités en cours</div>
+  <!-- En-tête + compteur -->
+  <div class="page-header">
+    <h2>⭐ Fan Club Dah Gbesso</h2>
+    <p class="fc-count" id="fc-member-count">Chargement…</p>
+  </div>
+
+  <!-- Barre d'onglets -->
+  <div class="fc-tabs">
+    <button class="fc-tab active" onclick="switchFcTab(this,'fc-rejoindre')">
+      <span class="t-icon">👋</span><span>Rejoindre</span>
+    </button>
+    <button class="fc-tab" onclick="switchFcTab(this,'fc-avantages')">
+      <span class="t-icon">🎁</span><span>Avantages</span>
+    </button>
+    <button class="fc-tab" onclick="switchFcTab(this,'fc-suggestions')">
+      <span class="t-icon">💬</span><span>Suggestions</span>
+    </button>
+    <button class="fc-tab" onclick="switchFcTab(this,'fc-appreciations')">
+      <span class="t-icon">⭐</span><span>Appréciations</span>
+    </button>
+  </div>
+
+  <!-- ── ONGLET 1 : REJOINDRE ── -->
+  <div id="fc-rejoindre" class="fc-panel active">
+    <div class="fc-inner">
+      <div class="fc-section-title">👋 Rejoindre le Fan Club</div>
+      <p class="fc-section-desc">Remplissez ce formulaire pour soumettre votre demande de participation à la confrérie de Dah Gbesso Adihodegemabou.</p>
+      <div id="fc-join-already" class="fc-already" style="display:none">
+        ✅ Vous avez déjà envoyé une demande. Dah Gbesso vous contactera bientôt.
+      </div>
+      <form id="fc-join-form" onsubmit="submitFcRequest(event)">
+        <div class="form-group">
+          <label>Civilité *</label>
+          <select id="fc-civilite" required>
+            <option value="">-- Choisir --</option>
+            <option>Monsieur</option><option>Madame</option><option>Autre</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Nom et prénoms complets *</label>
+          <input type="text" id="fc-nom" placeholder="Ex: Kofi Mensah" required />
+        </div>
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" id="fc-email" placeholder="vous@exemple.com" required />
+        </div>
+        <div class="form-group">
+          <label>Numéro WhatsApp *</label>
+          <input type="tel" id="fc-whatsapp" placeholder="+229 97 00 00 00" required />
+        </div>
+        <div class="form-group">
+          <label>Numéro de téléphone *</label>
+          <input type="tel" id="fc-telephone" placeholder="+229 97 00 00 00" required />
+        </div>
+        <div class="form-group">
+          <label>Pays *</label>
+          <input type="text" id="fc-pays" placeholder="Ex: Bénin" required />
+        </div>
+        <div class="form-group">
+          <label>Ville *</label>
+          <input type="text" id="fc-ville" placeholder="Ex: Cotonou" required />
+        </div>
+        <div class="form-group">
+          <label>Âge *</label>
+          <input type="number" id="fc-age" min="1" max="120" placeholder="Ex: 35" required />
+        </div>
+        <div class="form-group">
+          <label>Profession *</label>
+          <input type="text" id="fc-profession" placeholder="Ex: Commerçant" required />
+        </div>
+        <div class="form-group">
+          <label>Pourquoi voulez-vous rejoindre le Fan Club ? *</label>
+          <textarea id="fc-motivation" rows="4" placeholder="Expliquez vos motivations…" required style="width:100%;padding:0.65rem 0.9rem;border:1.5px solid #ddd;border-radius:8px;font-family:'Poppins',sans-serif;font-size:0.9rem;resize:vertical"></textarea>
+        </div>
+        <button type="submit" class="btn btn-full">✉️ ENVOYER MA DEMANDE DE PARTICIPATION</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── ONGLET 2 : AVANTAGES ── -->
+  <div id="fc-avantages" class="fc-panel">
+    <div class="fc-inner">
+      <div class="fc-section-title">🎁 Avantages exclusifs</div>
+      <p class="fc-section-desc">En tant que membre du Fan Club, vous bénéficiez de :</p>
+      <ul class="fc-advantages">
+        <li class="fc-advantage-item"><span class="adv-icon">💰</span><span class="adv-text">Offres spéciales &amp; réductions sur les produits de Dah Gbesso</span></li>
+        <li class="fc-advantage-item"><span class="adv-icon">🔐</span><span class="adv-text">Recettes secrètes et puissantes transmises par Dah Gbesso</span></li>
+        <li class="fc-advantage-item"><span class="adv-icon">🙏</span><span class="adv-text">Cérémonies faites en votre nom auprès des divinités</span></li>
+        <li class="fc-advantage-item"><span class="adv-icon">📣</span><span class="adv-text">Avant-première des événements avant tout le monde</span></li>
+        <li class="fc-advantage-item"><span class="adv-icon">🎪</span><span class="adv-text">Participation à l'organisation des événements de Dah Gbesso</span></li>
+        <li class="fc-advantage-item"><span class="adv-icon">✨</span><span class="adv-text">Accès à des bénéfices spirituels exclusifs réservés aux membres</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ── ONGLET 3 : SUGGESTIONS ── -->
+  <div id="fc-suggestions" class="fc-panel">
+    <div class="fc-inner">
+      <div class="fc-section-title">💬 Suggestions</div>
+      <p class="fc-section-desc">Partagez vos suggestions avec la communauté. Elles sont visibles par tous.</p>
+      <form onsubmit="submitSuggestion(event)" style="margin-bottom:1.5rem">
+        <div class="form-group">
+          <label>Votre prénom *</label>
+          <input type="text" id="sug-prenom" placeholder="Ex: Ama" required />
+        </div>
+        <div class="form-group">
+          <label>Votre pays *</label>
+          <input type="text" id="sug-pays" placeholder="Ex: Bénin" required />
+        </div>
+        <div class="form-group">
+          <label>Votre suggestion *</label>
+          <textarea id="sug-message" rows="3" placeholder="Votre message…" required style="width:100%;padding:0.65rem 0.9rem;border:1.5px solid #ddd;border-radius:8px;font-family:'Poppins',sans-serif;font-size:0.9rem;resize:vertical"></textarea>
+        </div>
+        <button type="submit" class="btn btn-full">💬 ENVOYER MA SUGGESTION</button>
+      </form>
+      <div id="suggestions-list">
+        <div class="loading-wrap"><div class="spinner"></div><p>Chargement…</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ONGLET 4 : APPRÉCIATIONS ── -->
+  <div id="fc-appreciations" class="fc-panel">
+    <div class="fc-inner">
+      <div class="fc-section-title">⭐ Appréciations</div>
+      <p class="fc-section-desc">Appréciez-vous le travail de Dah Gbesso Adihodegemabou ?</p>
+      <form onsubmit="submitFeedback(event)" style="margin-bottom:1.5rem">
+        <div class="fc-radio-group">
+          <button type="button" id="fb-oui-btn" class="fc-radio-btn"
+                  onclick="selectFeedback(true)">👍 OUI</button>
+          <button type="button" id="fb-non-btn" class="fc-radio-btn"
+                  onclick="selectFeedback(false)">👎 NON</button>
+        </div>
+        <input type="hidden" id="fb-appreciation" value="" />
+        <div id="fb-text-wrap" style="display:none">
+          <div class="form-group">
+            <label id="fb-text-label">Qu'est-ce que vous appréciez ?</label>
+            <textarea id="fb-message" rows="3" placeholder="Exprimez-vous librement…" required style="width:100%;padding:0.65rem 0.9rem;border:1.5px solid #ddd;border-radius:8px;font-family:'Poppins',sans-serif;font-size:0.9rem;resize:vertical"></textarea>
+          </div>
+          <button type="submit" class="btn btn-full">⭐ ENVOYER</button>
+        </div>
+      </form>
+      <div id="feedbacks-list">
+        <div class="loading-wrap"><div class="spinner"></div><p>Chargement…</p></div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -1208,6 +1427,7 @@
     });
     if (id === 'boutique')   loadProducts();
     if (id === 'evenements') loadEvents();
+    if (id === 'fanclub')    initFanClub();
     if (id === 'profil')     { fillProfileUI(); loadOrderHistory(); }
   }
 
@@ -1219,6 +1439,13 @@
   (function init() {
     loadSession();
     navigate('accueil');
+    // Marquer formulaire FC déjà envoyé
+    if (localStorage.getItem('fc_request_sent')) {
+      var form = document.getElementById('fc-join-form');
+      var already = document.getElementById('fc-join-already');
+      if (form) form.style.display = 'none';
+      if (already) already.style.display = 'block';
+    }
   })();
 
   // ── CHARGEMENT PRODUITS ───────────────────────────────────
@@ -1452,6 +1679,175 @@
       .replace(/</g,'&lt;')
       .replace(/>/g,'&gt;')
       .replace(/"/g,'&quot;');
+  }
+
+  // ── FAN CLUB ──────────────────────────────────────────────
+  var fcInited        = false;
+  var fcSugLoaded     = false;
+  var fcFeedLoaded    = false;
+  var fcCurrentAppr   = null; // true=OUI, false=NON
+
+  function initFanClub() {
+    if (!fcInited) {
+      loadFcMemberCount();
+      loadSuggestions();
+      loadFeedbacks();
+      fcInited = true;
+    }
+  }
+
+  async function loadFcMemberCount() {
+    var { data, error } = await sb.rpc('fc_count_requests');
+    if (!error && data !== null) {
+      var n = parseInt(data) || 0;
+      document.getElementById('fc-member-count').textContent =
+        n + ' personne' + (n > 1 ? 's ont' : ' a') + ' déjà rejoint';
+    }
+  }
+
+  function switchFcTab(btn, panelId) {
+    document.querySelectorAll('.fc-tab').forEach(function(t){ t.classList.remove('active'); });
+    document.querySelectorAll('.fc-panel').forEach(function(p){ p.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById(panelId).classList.add('active');
+  }
+
+  // ── Onglet REJOINDRE ──
+  async function submitFcRequest(e) {
+    e.preventDefault();
+    var btn = e.target.querySelector('[type=submit]');
+    var civ  = document.getElementById('fc-civilite').value;
+    var nom  = document.getElementById('fc-nom').value.trim();
+    var em   = document.getElementById('fc-email').value.trim();
+    var wha  = document.getElementById('fc-whatsapp').value.trim();
+    var tel  = document.getElementById('fc-telephone').value.trim();
+    var pays = document.getElementById('fc-pays').value.trim();
+    var vil  = document.getElementById('fc-ville').value.trim();
+    var age  = parseInt(document.getElementById('fc-age').value);
+    var pro  = document.getElementById('fc-profession').value.trim();
+    var mot  = document.getElementById('fc-motivation').value.trim();
+
+    if (!civ || !nom || !em || !wha || !tel || !pays || !vil || !age || !pro || !mot) {
+      alert('Veuillez remplir tous les champs obligatoires.'); return;
+    }
+
+    btn.disabled = true; btn.textContent = '⏳ Envoi en cours…';
+
+    // Vérifier doublon
+    var { data: dup } = await sb.rpc('fc_check_duplicate', { p_email: em, p_telephone: tel });
+    if (dup) {
+      document.getElementById('fc-join-form').style.display = 'none';
+      document.getElementById('fc-join-already').style.display = 'block';
+      return;
+    }
+
+    var { error } = await sb.from('fanclub_requests').insert({
+      civilite: civ, nom_complet: nom, email: em,
+      whatsapp: wha, telephone: tel, pays, ville: vil,
+      age, profession: pro, motivation: mot
+    });
+
+    if (error) {
+      btn.disabled = false; btn.textContent = '✉️ ENVOYER MA DEMANDE DE PARTICIPATION';
+      alert('Erreur : ' + error.message); return;
+    }
+    document.getElementById('fc-join-form').style.display = 'none';
+    document.getElementById('fc-join-already').style.display = 'block';
+    localStorage.setItem('fc_request_sent', '1');
+    loadFcMemberCount();
+  }
+
+  // ── Onglet SUGGESTIONS ──
+  async function submitSuggestion(e) {
+    e.preventDefault();
+    var btn = e.target.querySelector('[type=submit]');
+    var prn = document.getElementById('sug-prenom').value.trim();
+    var pay = document.getElementById('sug-pays').value.trim();
+    var msg = document.getElementById('sug-message').value.trim();
+    if (!prn || !pay || !msg) { alert('Remplissez tous les champs.'); return; }
+
+    btn.disabled = true; btn.textContent = '⏳ Envoi…';
+    var { error } = await sb.from('suggestions').insert({ prenom: prn, pays: pay, message: msg });
+    if (error) {
+      btn.disabled = false; btn.textContent = '💬 ENVOYER MA SUGGESTION';
+      alert('Erreur : ' + error.message); return;
+    }
+    e.target.reset();
+    btn.disabled = false; btn.textContent = '💬 ENVOYER MA SUGGESTION';
+    fcSugLoaded = false; // force reload
+    loadSuggestions();
+  }
+
+  async function loadSuggestions() {
+    var list = document.getElementById('suggestions-list');
+    if (!list) return;
+    var { data, error } = await sb.from('suggestions').select('*').order('created_at', { ascending: false }).limit(50);
+    if (error) { list.innerHTML = '<p style="text-align:center;color:var(--gray)">Impossible de charger les suggestions.</p>'; return; }
+    if (!data || data.length === 0) {
+      list.innerHTML = '<p style="text-align:center;color:var(--gray);padding:1.5rem 0">Aucune suggestion pour le moment. Soyez le premier !</p>';
+      return;
+    }
+    list.innerHTML = data.map(function(s) {
+      return '<div class="fc-post-item">'
+        + '<div class="fc-post-meta">💬 <strong>' + escHtml(s.prenom) + '</strong> · ' + escHtml(s.pays)
+        + ' · ' + new Date(s.created_at).toLocaleDateString('fr-FR') + '</div>'
+        + '<div class="fc-post-text">' + escHtml(s.message) + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  // ── Onglet APPRÉCIATIONS ──
+  function selectFeedback(val) {
+    fcCurrentAppr = val;
+    document.getElementById('fb-appreciation').value = val ? 'true' : 'false';
+    document.getElementById('fb-oui-btn').className = 'fc-radio-btn' + (val ? ' selected-yes' : '');
+    document.getElementById('fb-non-btn').className = 'fc-radio-btn' + (!val ? ' selected-no' : '');
+    document.getElementById('fb-text-label').textContent = val
+      ? 'Qu\'est-ce que vous appréciez ?'
+      : 'Qu\'est-ce que vous n\'appréciez pas ?';
+    document.getElementById('fb-text-wrap').style.display = 'block';
+  }
+
+  async function submitFeedback(e) {
+    e.preventDefault();
+    if (fcCurrentAppr === null) { alert('Veuillez choisir OUI ou NON.'); return; }
+    var msg = document.getElementById('fb-message').value.trim();
+    if (!msg) { alert('Veuillez saisir un message.'); return; }
+    var btn = e.target.querySelector('[type=submit]');
+    btn.disabled = true; btn.textContent = '⏳ Envoi…';
+
+    var { error } = await sb.from('feedbacks').insert({ appreciation: fcCurrentAppr, message: msg });
+    if (error) {
+      btn.disabled = false; btn.textContent = '⭐ ENVOYER';
+      alert('Erreur : ' + error.message); return;
+    }
+    e.target.reset();
+    btn.disabled = false; btn.textContent = '⭐ ENVOYER';
+    document.getElementById('fb-text-wrap').style.display = 'none';
+    document.getElementById('fb-oui-btn').className = 'fc-radio-btn';
+    document.getElementById('fb-non-btn').className = 'fc-radio-btn';
+    fcCurrentAppr = null;
+    fcFeedLoaded = false;
+    loadFeedbacks();
+  }
+
+  async function loadFeedbacks() {
+    var list = document.getElementById('feedbacks-list');
+    if (!list) return;
+    var { data, error } = await sb.from('feedbacks').select('*').order('created_at', { ascending: false }).limit(50);
+    if (error) { list.innerHTML = '<p style="text-align:center;color:var(--gray)">Impossible de charger les appréciations.</p>'; return; }
+    if (!data || data.length === 0) {
+      list.innerHTML = '<p style="text-align:center;color:var(--gray);padding:1.5rem 0">Aucune appréciation pour le moment.</p>';
+      return;
+    }
+    list.innerHTML = data.map(function(f) {
+      var yes = f.appreciation;
+      return '<div class="fc-post-item ' + (yes ? 'fc-appreciation-yes' : 'fc-appreciation-no') + '">'
+        + '<div><span class="fc-app-badge ' + (yes ? 'yes' : 'no') + '">' + (yes ? '👍 OUI' : '👎 NON') + '</span></div>'
+        + '<div class="fc-post-meta">' + new Date(f.created_at).toLocaleDateString('fr-FR') + '</div>'
+        + '<div class="fc-post-text">' + escHtml(f.message) + '</div>'
+        + '</div>';
+    }).join('');
   }
 
   // ── GUIDE DE DÉMARRAGE ────────────────────────────────────
