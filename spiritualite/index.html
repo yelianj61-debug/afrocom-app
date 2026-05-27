@@ -8,17 +8,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script>
-    /* Charge FedaPay dès le départ et détecte si ça échoue */
-    (function() {
-      var s = document.createElement('script');
-      s.src = 'https://cdn.fedapay.com/checkout.js?v=1.1.7';
-      s.onerror = function() {
-        window._fedapayFailed = true;
-      };
-      document.head.appendChild(s);
-    })();
-  </script>
   <style>
     /* ── RESET & BASE ───────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -491,6 +480,30 @@
     }
     .confirm-sub { text-align: center; color: var(--gray); font-size: 0.85rem; margin-top: 0.5rem; }
 
+    /* ── FOOTER TIKTOK ──────────────────────────────────────── */
+    .tiktok-footer {
+      background: #010101;
+      padding: 1rem;
+      text-align: center;
+    }
+    .tiktok-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 0.55rem 1.2rem;
+      border-radius: 100px;
+      border: 1.5px solid rgba(255,255,255,0.25);
+      transition: border-color 0.2s;
+    }
+    .tiktok-btn:hover { border-color: #fff; }
+    .tiktok-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+
     /* ── RESPONSIVE ─────────────────────────────────────────── */
     @media (max-width: 640px) {
       .products-grid, .events-list { grid-template-columns: 1fr; padding: 1rem; }
@@ -849,6 +862,12 @@
     <p>Déjà membre ?</p>
     <button class="btn btn-outline" style="padding:0.45rem 1.25rem;font-size:0.78rem" onclick="openModal('modal-connexion')">🔑 Se connecter</button>
   </div>
+  <div class="tiktok-footer">
+    <a class="tiktok-btn" href="https://www.tiktok.com/@dah.gbesso.adihodg?_r=1&_t=ZG-96ibjJrW11k" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 0 0-.79-.05 6.33 6.33 0 0 0-6.33 6.33 6.33 6.33 0 0 0 6.33 6.33 6.33 6.33 0 0 0 6.32-6.33V8.73a8.26 8.26 0 0 0 4.83 1.54V6.8a4.85 4.85 0 0 1-1.05-.11z"/></svg>
+      Suivez Dah Gbesso sur TikTok
+    </a>
+  </div>
 </section>
 
 <!-- ── SECTION BOUTIQUE ──────────────────────────────────── -->
@@ -868,6 +887,12 @@
       <p>Chargement des produits…</p>
     </div>
   </div>
+  <div class="tiktok-footer">
+    <a class="tiktok-btn" href="https://www.tiktok.com/@dah.gbesso.adihodg?_r=1&_t=ZG-96ibjJrW11k" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 0 0-.79-.05 6.33 6.33 0 0 0-6.33 6.33 6.33 6.33 0 0 0 6.33 6.33 6.33 6.33 0 0 0 6.32-6.33V8.73a8.26 8.26 0 0 0 4.83 1.54V6.8a4.85 4.85 0 0 1-1.05-.11z"/></svg>
+      Suivez Dah Gbesso sur TikTok
+    </a>
+  </div>
 </section>
 
 <!-- ── SECTION ÉVÉNEMENTS ────────────────────────────────── -->
@@ -881,6 +906,12 @@
       <div class="spinner"></div>
       <p>Chargement des événements…</p>
     </div>
+  </div>
+  <div class="tiktok-footer">
+    <a class="tiktok-btn" href="https://www.tiktok.com/@dah.gbesso.adihodg?_r=1&_t=ZG-96ibjJrW11k" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 0 0-.79-.05 6.33 6.33 0 0 0-6.33 6.33 6.33 6.33 0 0 0 6.33 6.33 6.33 6.33 0 0 0 6.32-6.33V8.73a8.26 8.26 0 0 0 4.83 1.54V6.8a4.85 4.85 0 0 1-1.05-.11z"/></svg>
+      Suivez Dah Gbesso sur TikTok
+    </a>
   </div>
 </section>
 
@@ -1033,6 +1064,12 @@
       </div>
     </div>
   </div>
+  <div class="tiktok-footer">
+    <a class="tiktok-btn" href="https://www.tiktok.com/@dah.gbesso.adihodg?_r=1&_t=ZG-96ibjJrW11k" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 0 0-.79-.05 6.33 6.33 0 0 0-6.33 6.33 6.33 6.33 0 0 0 6.33 6.33 6.33 6.33 0 0 0 6.32-6.33V8.73a8.26 8.26 0 0 0 4.83 1.54V6.8a4.85 4.85 0 0 1-1.05-.11z"/></svg>
+      Suivez Dah Gbesso sur TikTok
+    </a>
+  </div>
 </section>
 
 <!-- ── SECTION PROFIL ─────────────────────────────────────── -->
@@ -1064,16 +1101,6 @@
       <div class="profile-row"><span class="label">Pays</span>        <span class="value" id="pi-pays">–</span></div>
       <div class="profile-row"><span class="label">Téléphone</span>   <span class="value" id="pi-tel">–</span></div>
       <div class="profile-row"><span class="label">Membre depuis</span><span class="value" id="pi-date">–</span></div>
-    </div>
-
-    <!-- Historique commandes -->
-    <div class="profile-card">
-      <h3>🛍 Historique des commandes</h3>
-      <div id="order-history-list">
-        <div style="text-align:center;color:var(--gray);padding:1rem;font-size:0.85rem">
-          Chargement…
-        </div>
-      </div>
     </div>
 
     <!-- Guide de démarrage -->
@@ -1164,38 +1191,10 @@
       <input type="number" id="input-qty" min="1" max="999" value="1" />
     </div>
     <div id="qty-total" class="modal-total"></div>
-    <button class="btn btn-full" onclick="confirmQuantity()">Confirmer & Payer</button>
+    <button class="btn btn-full" onclick="confirmQuantity()">📲 Commander sur WhatsApp</button>
   </div>
 </div>
 
-<!-- ── MODAL : CONTACT (après paiement) ─────────────────── -->
-<div id="modal-contact" class="modal-overlay">
-  <div class="modal-box">
-    <div class="modal-title">📦 Informations de livraison</div>
-    <p style="text-align:center;color:#6b7280;font-size:0.85rem;margin-bottom:1.25rem">
-      ✅ Paiement reçu ! Veuillez renseigner vos coordonnées pour la livraison.
-    </p>
-    <div class="form-group">
-      <label>Numéro de téléphone</label>
-      <input type="tel" id="input-phone" placeholder="Ex: +229 97 00 00 00" />
-    </div>
-    <div class="form-group">
-      <label>Votre ville</label>
-      <input type="text" id="input-city" placeholder="Ex: Cotonou, Lomé, Abidjan…" />
-    </div>
-    <button class="btn btn-full" onclick="submitOrder()">Valider ma commande</button>
-  </div>
-</div>
-
-<!-- ── MODAL : CONFIRMATION ──────────────────────────────── -->
-<div id="modal-confirmation" class="modal-overlay">
-  <div class="modal-box">
-    <div class="confirm-icon">✅</div>
-    <div class="confirm-text">Commande enregistrée,<br>vous serez contacté</div>
-    <p class="confirm-sub">Merci pour votre confiance ! Notre équipe vous contactera très prochainement.</p>
-    <button class="btn btn-full" style="margin-top:1.5rem" onclick="closeModal('modal-confirmation')">Fermer</button>
-  </div>
-</div>
 
 <!-- ── GUIDE DE DÉMARRAGE (overlay) ─────────────────────── -->
 <div id="guide-overlay">
@@ -1221,13 +1220,12 @@
   const SUPABASE_KEY = 'sb_publishable_MWM0Idwc3NEqpQxPDZioeQ_vdZ2hlew';
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // ── FEDAPAY ───────────────────────────────────────────────
-  const FEDAPAY_KEY = 'pk_live_Qpb6YLLId44fyPDwP_uvoG2p';
+  // ── COMMANDES WHATSAPP ────────────────────────────────────
+  const WHATSAPP_NUMBER = '22962206570';
 
   // ── ÉTAT ──────────────────────────────────────────────────
   let currentProduct  = null;
   let currentQuantity = 1;
-  let currentTrxId    = null;
   let currentMember   = null; // membre connecté
 
   // ── AUTHENTIFICATION ──────────────────────────────────────
@@ -1367,27 +1365,6 @@
     }
   }
 
-  async function loadOrderHistory() {
-    if (!currentMember) return;
-    var container = document.getElementById('order-history-list');
-    var { data, error } = await sb.rpc('member_get_orders', {
-      p_telephone: currentMember.telephone
-    });
-    if (error || !data || data.length === 0) {
-      container.innerHTML =
-        '<p style="text-align:center;color:var(--gray);font-size:0.83rem;padding:1rem">Aucune commande pour le moment.</p>';
-      return;
-    }
-    container.innerHTML = data.map(function(o) {
-      return '<div class="order-item">' +
-        '<div class="o-name">' + escHtml(o.product_name) + '</div>' +
-        '<div class="o-meta">Qté ' + o.quantity + ' · ' + formatPrice(o.total_amount) + ' · ' +
-        formatDate(o.created_at) + ' ' +
-        '<span class="order-badge ' + o.status + '">' +
-          (o.status === 'delivered' ? '✅ Livré' : '⏳ En attente') +
-        '</span></div></div>';
-    }).join('');
-  }
 
   async function uploadProfilePhoto(event) {
     var file = event.target.files[0];
@@ -1428,7 +1405,7 @@
     if (id === 'boutique')   loadProducts();
     if (id === 'evenements') loadEvents();
     if (id === 'fanclub')    initFanClub();
-    if (id === 'profil')     { fillProfileUI(); loadOrderHistory(); }
+    if (id === 'profil')     { fillProfileUI(); }
   }
 
   window.addEventListener('hashchange', function() {
@@ -1561,86 +1538,24 @@
   }
 
   function confirmQuantity() {
-    const qty = parseInt(document.getElementById('input-qty').value);
+    var qty = parseInt(document.getElementById('input-qty').value);
     if (!qty || qty < 1) { alert('Veuillez entrer une quantité valide.'); return; }
     currentQuantity = qty;
     closeModal('modal-quantite');
 
-    if (typeof FedaPay !== 'undefined' && !window._fedapayFailed) {
-      launchFedaPay();
-    } else {
-      // FedaPay non chargé → BLOQUER, pas de commande sans paiement
-      alert('❌ Paiement non disponible. Vérifiez votre connexion internet et réessayez.');
-    }
-  }
+    // Construire le message WhatsApp pré-rempli
+    var total = currentProduct.price * qty;
+    var totalFormatted = new Intl.NumberFormat('fr-FR').format(total);
+    var msg =
+      'Bonjour Dah Gbesso ! 👋\n\n' +
+      'Je souhaite commander :\n\n' +
+      '🛍 *Produit* : ' + currentProduct.name + '\n' +
+      '🔢 *Quantité* : ' + qty + '\n' +
+      '💰 *Prix total* : ' + totalFormatted + ' XOF\n\n' +
+      'Merci de confirmer ma commande. 🙏';
 
-  function launchFedaPay() {
-    var total = Math.round(currentProduct.price * currentQuantity);
-    try {
-      var widget = FedaPay.init({
-        public_key: FEDAPAY_KEY,
-        transaction: {
-          amount: total,
-          description: 'Achat: ' + currentProduct.name + ' x' + currentQuantity,
-          currency: { iso: 'XOF' }
-        },
-        customer: {
-          email: 'client@boutique.com'
-        },
-        onComplete: function(transaction) {
-          // L'utilisateur a fermé sans payer → ne rien faire
-          if (transaction && transaction.reason === FedaPay.DIALOG_DISMISSED) return;
-
-          // Vérifier que le paiement est VRAIMENT approuvé
-          if (transaction && transaction.status === 'approved') {
-            currentTrxId = transaction.id;
-            setTimeout(function() { openModal('modal-contact'); }, 400);
-          } else {
-            // Paiement échoué ou annulé → message clair
-            alert('Le paiement n\'a pas été confirmé. Veuillez réessayer.');
-          }
-        },
-        onError: function(error) {
-          console.error('FedaPay error:', error);
-          alert('Erreur lors du paiement. Veuillez réessayer.');
-        }
-      });
-      // Ouvrir le widget (obligatoire)
-      widget.open();
-    } catch(err) {
-      // Erreur JS inattendue
-      alert('Erreur paiement : ' + err.message);
-    }
-  }
-
-  async function submitOrder() {
-    const phone = document.getElementById('input-phone').value.trim();
-    const city  = document.getElementById('input-city').value.trim();
-    if (!phone) { alert('Veuillez entrer votre numéro de téléphone.'); return; }
-    if (!city)  { alert('Veuillez entrer votre ville.'); return; }
-
-    const { error } = await sb.from('orders').insert({
-      product_id:     currentProduct.id,
-      product_name:   currentProduct.name,
-      unit_price:     currentProduct.price,
-      quantity:       currentQuantity,
-      total_amount:   currentProduct.price * currentQuantity,
-      phone,
-      city,
-      fedapay_trx_id: currentTrxId,
-      status:         'pending'
-    });
-
-    if (error) {
-      alert('Une erreur est survenue lors de l\'enregistrement. Veuillez réessayer.');
-      console.error(error);
-      return;
-    }
-
-    closeModal('modal-contact');
-    document.getElementById('input-phone').value = '';
-    document.getElementById('input-city').value  = '';
-    openModal('modal-confirmation');
+    var url = 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(msg);
+    window.open(url, '_blank', 'noopener,noreferrer');
   }
 
   // ── ÉVÉNEMENTS : PARTICIPER ───────────────────────────────
