@@ -33,6 +33,29 @@ CREATE POLICY "members_public_insert"
 
 -- ── FONCTIONS ──────────────────────────────────────────────
 
+-- Inscription : créer un nouveau membre et le retourner
+CREATE OR REPLACE FUNCTION member_register(
+  p_civilite  TEXT,
+  p_nom       TEXT,
+  p_prenom    TEXT,
+  p_email     TEXT,
+  p_pays      TEXT,
+  p_telephone TEXT
+)
+RETURNS members
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE result members;
+BEGIN
+  INSERT INTO members (civilite, nom, prenom, email, pays, telephone)
+  VALUES (p_civilite, p_nom, p_prenom, p_email, p_pays, p_telephone)
+  RETURNING * INTO result;
+  RETURN result;
+END;
+$$;
+
 -- Connexion : vérifier email + téléphone et retourner le membre
 CREATE OR REPLACE FUNCTION member_login(p_email TEXT, p_telephone TEXT)
 RETURNS members
@@ -83,6 +106,14 @@ AS $$
 $$;
 
 -- ── PERMISSIONS ────────────────────────────────────────────
+
+-- Accès table membres pour le rôle anon
+GRANT INSERT ON TABLE members TO anon;
+GRANT SELECT ON TABLE members TO anon;
+GRANT UPDATE ON TABLE members TO anon;
+
+-- Fonctions
+GRANT EXECUTE ON FUNCTION member_register(TEXT, TEXT, TEXT, TEXT, TEXT, TEXT) TO anon;
 GRANT EXECUTE ON FUNCTION member_login(TEXT, TEXT)           TO anon;
 GRANT EXECUTE ON FUNCTION member_get_orders(TEXT)            TO anon;
 GRANT EXECUTE ON FUNCTION member_update_photo(UUID, TEXT)    TO anon;

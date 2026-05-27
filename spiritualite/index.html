@@ -896,18 +896,22 @@
       alert('Veuillez remplir tous les champs obligatoires.'); return;
     }
 
-    var { data, error } = await sb.from('members').insert({
-      civilite: civ, nom, prenom: prn,
-      email: em, pays, telephone: tel
-    }).select().single();
+    var { data, error } = await sb.rpc('member_register', {
+      p_civilite: civ, p_nom: nom, p_prenom: prn,
+      p_email: em, p_pays: pays, p_telephone: tel
+    });
 
     if (error) {
-      if (error.code === '23505') {
+      if (error.code === '23505' || (error.message && error.message.includes('unique'))) {
         alert('Cet email est déjà inscrit. Veuillez vous connecter.');
         switchToConnexion();
       } else {
         alert('Erreur inscription : ' + error.message);
       }
+      return;
+    }
+    if (!data || (typeof data === 'object' && !data.id)) {
+      alert('Erreur lors de la création du compte. Veuillez réessayer.');
       return;
     }
     closeModal('modal-inscription');
@@ -924,8 +928,13 @@
       p_email: em, p_telephone: tel
     });
 
-    if (error || !data) {
-      alert('Compte introuvable. Vérifiez vos informations ou inscrivez-vous.');
+    if (error) {
+      alert('Erreur de connexion : ' + error.message);
+      return;
+    }
+    // member_login retourne null ou un objet vide si introuvable
+    if (!data || !data.id) {
+      alert('Compte introuvable. Vérifiez votre email et téléphone, ou inscrivez-vous.');
       return;
     }
     closeModal('modal-connexion');
