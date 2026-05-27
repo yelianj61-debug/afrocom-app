@@ -722,20 +722,28 @@
           email: 'client@boutique.com'
         },
         onComplete: function(transaction) {
-          if (transaction.reason === FedaPay.DIALOG_DISMISSED) return;
-          // Paiement réussi → informations de livraison
-          currentTrxId = (transaction && transaction.id) ? transaction.id : null;
-          setTimeout(function() { openModal('modal-contact'); }, 400);
+          // L'utilisateur a fermé sans payer → ne rien faire
+          if (transaction && transaction.reason === FedaPay.DIALOG_DISMISSED) return;
+
+          // Vérifier que le paiement est VRAIMENT approuvé
+          if (transaction && transaction.status === 'approved') {
+            currentTrxId = transaction.id;
+            setTimeout(function() { openModal('modal-contact'); }, 400);
+          } else {
+            // Paiement échoué ou annulé → message clair
+            alert('Le paiement n\'a pas été confirmé. Veuillez réessayer.');
+          }
+        },
+        onError: function(error) {
+          console.error('FedaPay error:', error);
+          alert('Erreur lors du paiement. Veuillez réessayer.');
         }
       });
-      // Ouvrir le widget FedaPay
-      if (widget && typeof widget.open === 'function') {
-        widget.open();
-      }
+      // Ouvrir le widget (obligatoire)
+      widget.open();
     } catch(err) {
-      // Si erreur inattendue → commande directe
-      currentTrxId = null;
-      openModal('modal-contact');
+      // Erreur JS inattendue
+      alert('Erreur paiement : ' + err.message);
     }
   }
 
