@@ -1791,19 +1791,21 @@ async function creditUserSolde() {
   if (!amt || amt <= 0) { toast('Montant invalide', false); return; }
   const field = document.getElementById('sol-target').value;
   const current = field === 'balance' ? (_soldeUser.balance||0) : (_soldeUser.referral_balance||0);
-  const newVal = current + amt;
 
   const btn = document.getElementById('sol-credit-btn');
   btn.disabled = true; btn.textContent = 'En cours…';
 
-  const { error } = await sbAdmin.from('profiles')
-    .update({ [field]: newVal })
-    .eq('id', _soldeUser.id);
+  const { error } = await sbAdmin.rpc('admin_update_balance', {
+    p_user_id: _soldeUser.id,
+    p_amount:  amt,
+    p_field:   field
+  });
 
   btn.disabled = false; btn.textContent = '✅ Créditer le solde';
 
   if (error) { toast('Erreur : ' + error.message, false); return; }
 
+  const newVal = current + amt;
   _soldeUser[field] = newVal;
   if (field === 'balance') {
     document.getElementById('sol-bal-principal').textContent = newVal.toLocaleString('fr-FR') + ' FCFA';
@@ -1865,17 +1867,15 @@ async function loadRechargements(force) {
 }
 
 async function validerRecharge(id, userId, amount) {
-  // 1. Récupérer solde actuel
-  const { data: p, error: pe } = await sbAdmin.from('profiles').select('balance').eq('id', userId).single();
-  if (pe) { toast('Erreur profil : ' + pe.message, false); return; }
-
-  const newBal = (p.balance||0) + Number(amount);
-
-  // 2. Créditer solde
-  const { error: ue } = await sbAdmin.from('profiles').update({ balance: newBal }).eq('id', userId);
+  // Créditer via RPC (contourne le trigger trg_prevent_sensitive_profile_update)
+  const { error: ue } = await sbAdmin.rpc('admin_update_balance', {
+    p_user_id: userId,
+    p_amount:  Number(amount),
+    p_field:   'balance'
+  });
   if (ue) { toast('Erreur crédit : ' + ue.message, false); return; }
 
-  // 3. Marquer traité
+  // Marquer traité
   const { error: re } = await sbAdmin.from('recharge_requests').update({ status: 'traite' }).eq('id', id);
   if (re) { toast('Erreur statut : ' + re.message, false); return; }
 
