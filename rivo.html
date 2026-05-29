@@ -389,10 +389,27 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
   <div style="padding:1.5rem;max-width:1100px;padding-bottom:80px">
       <!-- Bord -->
       <div id="tab-bord" class="tab-panel active fade-in">
-        <div style="border-radius:1.5rem;padding:2rem;color:white;margin-bottom:2rem;background:linear-gradient(135deg,#2563EB,#1D4ED8)">
-          <h1 id="welcome-h" style="font-size:1.75rem;font-weight:900;margin-bottom:.4rem">Bienvenue !!!</h1>
-          <p style="color:#bfdbfe;font-weight:600;margin-bottom:.25rem">RIVO, la plateforme qui transforme l'apprentissage en opportunité.</p>
-          <p style="color:#93c5fd;font-size:.875rem">Développez vos compétences grâce à un apprentissage moderne, simple et accessible.</p>
+        <div style="border-radius:1.5rem;padding:1.5rem;color:white;margin-bottom:1.5rem;background:linear-gradient(135deg,#2563EB,#1D4ED8)">
+          <h1 id="welcome-h" style="font-size:1.4rem;font-weight:900;margin-bottom:.3rem">Bienvenue !!!</h1>
+          <div id="user-rivo-id" style="font-size:.78rem;color:#bfdbfe;font-weight:700;margin-bottom:1rem;letter-spacing:.03em">🆔 R.I.V.O_...</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.625rem">
+            <div style="background:rgba(255,255,255,.15);border-radius:.875rem;padding:.875rem">
+              <div style="font-size:.65rem;color:#bfdbfe;font-weight:700;margin-bottom:.2rem;text-transform:uppercase;letter-spacing:.04em">💰 Solde principal</div>
+              <div id="bal-principal" style="font-size:1.2rem;font-weight:900;margin-bottom:.5rem">0 FCFA</div>
+              <div style="display:flex;gap:.3rem">
+                <button onclick="openRecharge()" style="background:rgba(255,255,255,.25);border:none;color:white;font-size:.7rem;font-weight:700;padding:.3rem .55rem;border-radius:.45rem;cursor:pointer" onmouseover="this.style.background='rgba(255,255,255,.38)'" onmouseout="this.style.background='rgba(255,255,255,.25)'">➕ Recharger</button>
+                <button onclick="refreshBalances()" style="background:rgba(255,255,255,.12);border:none;color:white;font-size:.7rem;padding:.3rem .45rem;border-radius:.45rem;cursor:pointer" title="Actualiser">🔄</button>
+              </div>
+            </div>
+            <div style="background:rgba(255,255,255,.15);border-radius:.875rem;padding:.875rem">
+              <div style="font-size:.65rem;color:#bfdbfe;font-weight:700;margin-bottom:.2rem;text-transform:uppercase;letter-spacing:.04em">🤝 Solde parrainage</div>
+              <div id="bal-parrainage" style="font-size:1.2rem;font-weight:900;margin-bottom:.5rem">0 FCFA</div>
+              <div style="display:flex;gap:.3rem">
+                <button onclick="openRetrait()" style="background:rgba(255,255,255,.25);border:none;color:white;font-size:.7rem;font-weight:700;padding:.3rem .55rem;border-radius:.45rem;cursor:pointer" onmouseover="this.style.background='rgba(255,255,255,.38)'" onmouseout="this.style.background='rgba(255,255,255,.25)'">💸 Retirer</button>
+                <button onclick="refreshBalances()" style="background:rgba(255,255,255,.12);border:none;color:white;font-size:.7rem;padding:.3rem .45rem;border-radius:.45rem;cursor:pointer" title="Actualiser">🔄</button>
+              </div>
+            </div>
+          </div>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
           <h2 style="font-size:1.25rem;font-weight:800;color:#1F2937">Formations disponibles</h2>
@@ -476,41 +493,7 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
           </div>
         </div>
 
-        <!-- ── Retrait intégré dans Profil ── -->
-        <h2 style="font-size:1.2rem;font-weight:800;color:#1F2937;margin-bottom:1rem">💸 Retrait</h2>
-        <div style="border-radius:1.5rem;padding:1.5rem;color:white;margin-bottom:1.75rem;background:linear-gradient(135deg,#2563EB,#1D4ED8)">
-          <div style="font-size:.95rem;font-weight:600;margin-bottom:.4rem">💳 Solde disponible</div>
-          <div id="bal-display" style="font-size:2.5rem;font-weight:900">0 FCFA</div>
-          <p style="color:#bfdbfe;font-size:.85rem;margin-top:.3rem">Traitement : maximum 30 minutes</p>
-        </div>
-        <div class="card" style="padding:1.5rem;margin-bottom:1.75rem">
-          <h2 style="font-weight:800;font-size:1.05rem;color:#1F2937;margin-bottom:1.25rem">Nouvelle demande de retrait</h2>
-          <div style="display:flex;flex-direction:column;gap:1rem;margin-bottom:1.25rem">
-            <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Montant (FCFA)</label><input type="number" id="wd-amt" class="input" placeholder="Ex: 5000" min="1000"/><p style="font-size:.75rem;color:#9ca3af;margin-top:.3rem">Minimum : 1 000 FCFA</p></div>
-            <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Méthode</label><select id="wd-mth" class="input" onchange="switchWithdrawalMethod()"><option value="mobile_money">📱 Mobile Money</option><option value="carte_bancaire">💳 Carte bancaire</option><option value="autre">🔄 Autre</option></select></div>
-            <!-- Section Mobile Money -->
-            <div id="wd-section-mm">
-              <div style="display:grid;grid-template-columns:auto 1fr;gap:.625rem;margin-bottom:1rem">
-                <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Indicatif</label><select id="wd-cc" class="input" style="min-width:110px"><option value="+229">🇧🇯 +229</option><option value="+225">🇨🇮 +225</option><option value="+226">🇧🇫 +226</option><option value="+228">🇹🇬 +228</option><option value="+227">🇳🇪 +227</option><option value="+221">🇸🇳 +221</option><option value="+223">🇲🇱 +223</option><option value="+224">🇬🇳 +224</option><option value="+33">🇫🇷 +33</option></select></div>
-                <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Numéro de téléphone</label><input type="tel" id="wd-phone" class="input" placeholder="Ex: 97000000"/></div>
-              </div>
-              <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Opérateur</label><input type="text" id="wd-op" class="input" placeholder="MTN, Moov, Orange…"/></div>
-            </div>
-            <!-- Section Carte bancaire -->
-            <div id="wd-section-card" style="display:none">
-              <div style="margin-bottom:1rem"><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Titulaire du compte</label><input type="text" id="wd-iban-name" class="input" placeholder="Prénom Nom (comme sur la carte)"/></div>
-              <div style="margin-bottom:1rem"><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">IBAN</label><input type="text" id="wd-iban" class="input" placeholder="FR76 3000 6000 0112 3456 7890 189"/></div>
-              <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">BIC / SWIFT</label><input type="text" id="wd-bic" class="input" placeholder="BNPAFRPPXXX"/></div>
-            </div>
-            <!-- Section Autre (PayPal, Western Union…) -->
-            <div id="wd-section-other" style="display:none">
-              <div style="margin-bottom:1rem"><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Moyen de paiement</label><input type="text" id="wd-other-method" class="input" placeholder="PayPal, Western Union, Wise…"/></div>
-              <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Identifiant / Email / Numéro</label><input type="text" id="wd-other-detail" class="input" placeholder="Email PayPal, numéro de compte…"/></div>
-            </div>
-          </div>
-          <button id="wd-submit-btn" onclick="doWithdrawal()" class="btn-primary">📤 Demander le retrait</button>
-        </div>
-        <div><h2 style="font-weight:800;font-size:1.05rem;color:#1F2937;margin-bottom:1rem">Historique des retraits</h2><div id="wd-hist">...</div></div>
+        <!-- Retrait accessible depuis le tableau de bord (bouton 💸 Retirer) -->
 
         <!-- Voir le guide -->
         <div style="margin-top:1.5rem;text-align:center">
@@ -558,17 +541,115 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
     <button onclick="switchTab('profil')" id="bnav-profil"><span class="nav-icon">👤</span><span>Profil</span></button>
   </nav>
 
-  <!-- Payment modal -->
+  <!-- Payment modal — choix du solde -->
   <div id="pay-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;align-items:center;justify-content:center;padding:1rem">
-    <div style="background:white;border-radius:1.5rem;padding:2rem;max-width:380px;width:100%;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,.3)">
-      <div style="width:4rem;height:4rem;background:#dbeafe;border-radius:9999px;display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 1.25rem">💳</div>
-      <h3 style="font-size:1.25rem;font-weight:800;color:#1F2937;margin-bottom:.5rem">Procéder au paiement</h3>
-      <p id="pm-title" style="color:#6b7280;margin-bottom:.4rem;font-size:.9rem"></p>
-      <p id="pm-price" style="font-size:1.75rem;font-weight:900;color:#2563EB;margin-bottom:1.5rem"></p>
-      <div style="display:flex;gap:.75rem">
-        <button onclick="closePayModal()" style="flex:1;padding:.75rem;border-radius:.875rem;border:2px solid #e5e7eb;background:none;color:#6b7280;font-weight:700;cursor:pointer">Annuler</button>
-        <button onclick="confirmPay()" id="pay-btn" class="btn-accent" style="flex:1;justify-content:center;padding:.75rem">⚡ Payer</button>
+    <div style="background:white;border-radius:1.5rem;padding:1.75rem;max-width:380px;width:100%;box-shadow:0 25px 60px rgba(0,0,0,.3)">
+      <div style="text-align:center;margin-bottom:1.25rem">
+        <div style="width:3.5rem;height:3.5rem;background:#dbeafe;border-radius:9999px;display:flex;align-items:center;justify-content:center;font-size:1.75rem;margin:0 auto .75rem">🛒</div>
+        <h3 style="font-size:1.15rem;font-weight:800;color:#1F2937;margin-bottom:.3rem">Acheter cette formation</h3>
+        <p id="pm-title" style="color:#6b7280;font-size:.875rem;margin-bottom:.25rem"></p>
+        <p id="pm-price" style="font-size:1.6rem;font-weight:900;color:#2563EB"></p>
       </div>
+      <p style="font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.75rem">Quel solde utiliser ?</p>
+      <div style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.25rem">
+        <label id="pm-opt-principal" style="display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;border:2px solid #2563EB;border-radius:.875rem;cursor:pointer;background:#eff6ff">
+          <input type="radio" name="pay-source" value="principal" checked style="accent-color:#2563EB"/>
+          <span><span style="font-weight:700;color:#1e40af">💰 Solde principal</span><br><span id="pm-bal-principal" style="font-size:.8rem;color:#6b7280">0 FCFA</span></span>
+        </label>
+        <label id="pm-opt-parrainage" style="display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;border:2px solid #e5e7eb;border-radius:.875rem;cursor:pointer">
+          <input type="radio" name="pay-source" value="parrainage" style="accent-color:#2563EB"/>
+          <span><span style="font-weight:700;color:#374151">🤝 Solde parrainage</span><br><span id="pm-bal-parrainage" style="font-size:.8rem;color:#6b7280">0 FCFA</span></span>
+        </label>
+      </div>
+      <div style="display:flex;gap:.625rem">
+        <button onclick="closePayModal()" style="flex:1;padding:.7rem;border-radius:.875rem;border:2px solid #e5e7eb;background:none;color:#6b7280;font-weight:700;cursor:pointer">Annuler</button>
+        <button onclick="confirmPay()" id="pay-btn" class="btn-accent" style="flex:1;justify-content:center;padding:.7rem">⚡ Payer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Rechargement (3 étapes) -->
+  <div id="modal-recharge" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center;padding:1rem">
+    <div style="background:white;border-radius:1.5rem;padding:1.75rem;max-width:400px;width:100%;box-shadow:0 25px 60px rgba(0,0,0,.3);max-height:90vh;overflow-y:auto">
+      <!-- Étape 1 : formulaire -->
+      <div id="rch-step1">
+        <h3 style="font-size:1.15rem;font-weight:800;color:#1F2937;margin-bottom:1.25rem">➕ Recharger le solde principal</h3>
+        <div style="display:flex;flex-direction:column;gap:.875rem">
+          <div>
+            <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Votre ID RIVO</label>
+            <input type="text" id="rch-id" class="input" readonly style="background:#f9fafb;color:#6b7280"/>
+          </div>
+          <div>
+            <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Montant (FCFA)</label>
+            <input type="number" id="rch-amt" class="input" placeholder="Ex: 5000" min="500"/>
+          </div>
+          <div>
+            <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Numéro de téléphone</label>
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:.5rem">
+              <select id="rch-cc" class="input" style="min-width:105px"><option value="+229">🇧🇯 +229</option><option value="+225">🇨🇮 +225</option><option value="+226">🇧🇫 +226</option><option value="+228">🇹🇬 +228</option><option value="+227">🇳🇪 +227</option><option value="+221">🇸🇳 +221</option><option value="+223">🇲🇱 +223</option><option value="+224">🇬🇳 +224</option><option value="+33">🇫🇷 +33</option></select>
+              <input type="tel" id="rch-phone" class="input" placeholder="Ex: 97000000"/>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:.625rem;margin-top:1.25rem">
+          <button onclick="closeRecharge()" style="flex:1;padding:.7rem;border-radius:.875rem;border:2px solid #e5e7eb;background:none;color:#6b7280;font-weight:700;cursor:pointer">Annuler</button>
+          <button onclick="doRechargeStep2()" class="btn-primary" style="flex:1;justify-content:center;padding:.7rem">Continuer →</button>
+        </div>
+      </div>
+      <!-- Étape 2 : confirmation -->
+      <div id="rch-step2" style="display:none;text-align:center">
+        <div style="font-size:3rem;margin-bottom:.75rem">💳</div>
+        <h3 style="font-size:1.1rem;font-weight:800;color:#1F2937;margin-bottom:.75rem">Confirmer le rechargement</h3>
+        <p id="rch-confirm-msg" style="color:#374151;font-size:.95rem;margin-bottom:1.5rem;line-height:1.5"></p>
+        <div style="display:flex;gap:.625rem">
+          <button onclick="goRchStep(1)" style="flex:1;padding:.7rem;border-radius:.875rem;border:2px solid #e5e7eb;background:none;color:#6b7280;font-weight:700;cursor:pointer">Non</button>
+          <button onclick="doRechargeConfirm()" id="rch-confirm-btn" class="btn-primary" style="flex:1;justify-content:center;padding:.7rem">Oui, confirmer</button>
+        </div>
+      </div>
+      <!-- Étape 3 : succès -->
+      <div id="rch-step3" style="display:none;text-align:center">
+        <div style="font-size:3.5rem;margin-bottom:.75rem">✅</div>
+        <h3 style="font-size:1.1rem;font-weight:800;color:#10b981;margin-bottom:.75rem">Demande envoyée !</h3>
+        <p style="color:#374151;font-size:.9rem;line-height:1.6;margin-bottom:1.5rem">Votre demande de rechargement a été transmise.<br>Un assistant va valider sous <strong>2 à 5 minutes</strong>.</p>
+        <button onclick="closeRecharge()" class="btn-primary" style="width:100%;justify-content:center;padding:.75rem">← Retour</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Retrait (solde parrainage) -->
+  <div id="modal-retrait" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center;padding:1rem">
+    <div style="background:white;border-radius:1.5rem;padding:1.75rem;max-width:400px;width:100%;box-shadow:0 25px 60px rgba(0,0,0,.3);max-height:90vh;overflow-y:auto">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+        <h3 style="font-size:1.15rem;font-weight:800;color:#1F2937">💸 Retrait</h3>
+        <button onclick="closeRetrait()" style="background:none;border:none;font-size:1.25rem;cursor:pointer;color:#9ca3af">✕</button>
+      </div>
+      <div style="border-radius:1rem;padding:1rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);color:white;margin-bottom:1.25rem;text-align:center">
+        <div style="font-size:.8rem;color:#bfdbfe;font-weight:600;margin-bottom:.25rem">🤝 Solde parrainage disponible</div>
+        <div id="bal-display" style="font-size:2rem;font-weight:900">0 FCFA</div>
+        <p style="color:#bfdbfe;font-size:.8rem;margin-top:.25rem">Traitement : maximum 30 minutes</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.875rem;margin-bottom:1.25rem">
+        <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Montant (FCFA)</label><input type="number" id="wd-amt" class="input" placeholder="Ex: 5000" min="1000"/><p style="font-size:.75rem;color:#9ca3af;margin-top:.25rem">Minimum : 1 000 FCFA</p></div>
+        <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Méthode</label><select id="wd-mth" class="input" onchange="switchWithdrawalMethod()"><option value="mobile_money">📱 Mobile Money</option><option value="carte_bancaire">💳 Carte bancaire</option><option value="autre">🔄 Autre</option></select></div>
+        <div id="wd-section-mm">
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:.5rem;margin-bottom:.75rem">
+            <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Indicatif</label><select id="wd-cc" class="input" style="min-width:105px"><option value="+229">🇧🇯 +229</option><option value="+225">🇨🇮 +225</option><option value="+226">🇧🇫 +226</option><option value="+228">🇹🇬 +228</option><option value="+227">🇳🇪 +227</option><option value="+221">🇸🇳 +221</option><option value="+223">🇲🇱 +223</option><option value="+224">🇬🇳 +224</option><option value="+33">🇫🇷 +33</option></select></div>
+            <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Numéro</label><input type="tel" id="wd-phone" class="input" placeholder="Ex: 97000000"/></div>
+          </div>
+          <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Opérateur</label><input type="text" id="wd-op" class="input" placeholder="MTN, Moov, Orange…"/></div>
+        </div>
+        <div id="wd-section-card" style="display:none">
+          <div style="margin-bottom:.75rem"><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Titulaire</label><input type="text" id="wd-iban-name" class="input" placeholder="Prénom Nom"/></div>
+          <div style="margin-bottom:.75rem"><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">IBAN</label><input type="text" id="wd-iban" class="input" placeholder="FR76 3000…"/></div>
+          <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">BIC / SWIFT</label><input type="text" id="wd-bic" class="input" placeholder="BNPAFRPPXXX"/></div>
+        </div>
+        <div id="wd-section-other" style="display:none">
+          <div style="margin-bottom:.75rem"><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Moyen</label><input type="text" id="wd-other-method" class="input" placeholder="PayPal, Western Union…"/></div>
+          <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Identifiant</label><input type="text" id="wd-other-detail" class="input" placeholder="Email, numéro…"/></div>
+        </div>
+      </div>
+      <button id="wd-submit-btn" onclick="doWithdrawal()" class="btn-primary" style="width:100%;justify-content:center">📤 Demander le retrait</button>
+      <div style="margin-top:1.25rem"><h4 style="font-weight:700;font-size:.9rem;color:#1F2937;margin-bottom:.75rem">Historique</h4><div id="wd-hist">...</div></div>
     </div>
   </div>
 </div>
@@ -716,13 +797,14 @@ async function loadProfileData(){
       const pending=JSON.parse(localStorage.getItem('rivo_pending_profile')||'null')||{};
       const uid=crypto.randomUUID();
       const refCode='RIVO-'+Math.random().toString(36).substring(2,8).toUpperCase();
+      const rivoIdFb='R.I.V.O_'+Math.floor(Math.random()*900000000+100000000);
       const{data:newP,error:insertFallbackErr}=await withTimeout(sbAdmin.from('profiles').insert({
         id:uid,
         first_name:pending.first_name||FBU.displayName?.split(' ')[0]||'',
         last_name:pending.last_name||FBU.displayName?.split(' ').slice(1).join(' ')||'',
         email:FBU.email,
-        referral_code:refCode,
-        badge_level:'debutant', balance:0, currency:'XOF',
+        referral_code:refCode, rivo_id:rivoIdFb,
+        badge_level:'debutant', balance:0, referral_balance:0, currency:'XOF',
         birth_date:pending.birth_date||null,
         referred_by:pending.referred_by||null,
       }).select().single());
@@ -773,13 +855,24 @@ async function loadProfileData(){
     CP=p;
     // Shim de compatibilité pour tout le code qui utilise CU.id et CU.email
     CU={id:p.id, email:FBU.email};
+    // Générer rivo_id si absent
+    if(!p.rivo_id){
+      const newRivoId='R.I.V.O_'+Math.floor(Math.random()*900000000+100000000);
+      sbAdmin.from('profiles').update({rivo_id:newRivoId}).eq('id',p.id);
+      p.rivo_id=newRivoId;
+    }
     const fn=p.first_name||'';
     const ln=p.last_name||'';
     const fullName=`${fn} ${ln}`.trim()||'Utilisateur';
     const email=FBU.email||'—';
     const solde=fmt(p.balance||0,p.currency);
+    const soldeRef=fmt(p.referral_balance||0,p.currency||'XOF');
     const[ic,lb,bg,co]=badgeInfo(p.badge_level);
     document.getElementById('welcome-h').textContent=`Bienvenue ${fn} !!!`;
+    const rivoIdEl=document.getElementById('user-rivo-id');if(rivoIdEl)rivoIdEl.textContent='🆔 '+p.rivo_id;
+    const balP=document.getElementById('bal-principal');if(balP)balP.textContent=solde;
+    const balR=document.getElementById('bal-parrainage');if(balR)balR.textContent=soldeRef;
+    const balD=document.getElementById('bal-display');if(balD)balD.textContent=soldeRef;
     // Champs visibles partout
     document.getElementById('ref-code').textContent=p.referral_code||'—';
     document.getElementById('prof-name').textContent=fullName;
@@ -943,9 +1036,11 @@ async function doRegister(e){
     // Créer le profil via sbAdmin (service_role) — bypass RLS "TO authenticated"
     const uid=crypto.randomUUID();
     const refCode='RIVO-'+Math.random().toString(36).substring(2,8).toUpperCase();
+    const rivoId='R.I.V.O_'+Math.floor(Math.random()*900000000+100000000);
     const{error:insertErr}=await withTimeout(sbAdmin.from('profiles').insert({
       id:uid, first_name:fn, last_name:ln, email,
-      referral_code:refCode, badge_level:'debutant', balance:0, currency:'XOF',
+      referral_code:refCode, rivo_id:rivoId,
+      badge_level:'debutant', balance:0, referral_balance:0, currency:'XOF',
       birth_date:birth||null, referred_by:refId||null
     }));
     if(insertErr) console.warn('[doRegister] insert error:',insertErr.code, insertErr.message);
@@ -1044,69 +1139,126 @@ function showPaySuccess(title){
   </div>`;
   document.body.appendChild(el);
 }
-function buyModal(id,title,price,currency){pendingCourse={id,title,price,currency};document.getElementById('pm-title').textContent=title;document.getElementById('pm-price').textContent=fmt(price,currency);document.getElementById('pay-modal').style.display='flex';}
+function buyModal(id,title,price,currency){
+  pendingCourse={id,title,price,currency};
+  document.getElementById('pm-title').textContent=title;
+  document.getElementById('pm-price').textContent=fmt(price,currency);
+  const balP=fmt(CP?.balance||0,CP?.currency||'XOF');
+  const balR=fmt(CP?.referral_balance||0,CP?.currency||'XOF');
+  document.getElementById('pm-bal-principal').textContent=balP;
+  document.getElementById('pm-bal-parrainage').textContent=balR;
+  // Remettre la sélection par défaut sur "principal"
+  document.querySelector('input[name="pay-source"][value="principal"]').checked=true;
+  document.getElementById('pay-modal').style.display='flex';
+}
 function closePayModal(){document.getElementById('pay-modal').style.display='none';pendingCourse=null;}
 
 async function confirmPay(){
   if(!pendingCourse)return;
   const course={...pendingCourse};
-
   if(!CU?.id){
     closePayModal();
     toast('⚠️ Profil non synchronisé. Déconnectez-vous et reconnectez-vous.','err');
     return;
   }
+  const source=document.querySelector('input[name="pay-source"]:checked')?.value||'principal';
+  const soldeDisp=source==='parrainage'?(CP?.referral_balance||0):(CP?.balance||0);
+  if(soldeDisp<course.price){
+    toast('Solde insuffisant. Veuillez recharger votre solde '+(source==='parrainage'?'parrainage':'principal')+'.','err');
+    return;
+  }
   setBtn('pay-btn','<span class="spin"></span>',true);
-
   try{
-    // 1. Créer la commande en BDD (statut en_attente)
+    // Créer la commande
     const{data:pur,error}=await withTimeout(sb.from('purchases').insert({
       user_id:CU.id, course_id:course.id, amount:course.price,
-      currency:course.currency, status:'en_attente', payment_method:'kkiapay'
+      currency:course.currency||'XOF', status:'complete',
+      payment_method:'solde_'+source
     }).select().single());
     if(error){
-      const msg=error.code==='42501'
-        ?'Session expirée. Reconnectez-vous.'
-        :`Erreur création de commande : ${error.message}`;
+      const msg=error.code==='42501'?'Session expirée. Reconnectez-vous.':`Erreur commande : ${error.message}`;
       toast(msg,'err'); setBtn('pay-btn','⚡ Payer',false); return;
     }
-
+    // Déduire le solde choisi
+    const newBal=soldeDisp-course.price;
+    const field=source==='parrainage'?'referral_balance':'balance';
+    await sbAdmin.from('profiles').update({[field]:newBal}).eq('id',CU.id);
+    if(source==='parrainage') CP.referral_balance=newBal;
+    else CP.balance=newBal;
+    // Mettre à jour l'affichage des soldes
+    const balP=document.getElementById('bal-principal');if(balP)balP.textContent=fmt(CP.balance||0,CP.currency||'XOF');
+    const balR=document.getElementById('bal-parrainage');if(balR)balR.textContent=fmt(CP.referral_balance||0,CP.currency||'XOF');
     closePayModal();
     setBtn('pay-btn','⚡ Payer',false);
-
-    // 2. Ouvrir le widget KKiaPay (popup JS natif, zéro CORS)
-    // sandbox:true sur localhost, false en production
-    const isLocal=['localhost','127.0.0.1'].includes(location.hostname);
-    openKkiapayWidget({
-      amount:  Math.round(course.price),
-      key:     'ed70f0c0a6a211f0a67803089be21e8d',
-      sandbox: isLocal,
-      name:    ((CP?.first_name||'')+' '+(CP?.last_name||'')).trim()||'Client RIVO',
-      email:   CU.email||'',
-      phone:   CP?.phone||'',
-      data:    JSON.stringify({purchase_id: pur.id}),
-    });
-
-    // 3. Paiement réussi
-    addSuccessListener(async function(response){
-      console.log('[KKiaPay] succès:', response);
-      await sbAdmin.from('purchases').update({status:'complete'}).eq('id', pur.id);
-      await loadProfileData();
-      loaded.formations=false; loaded.profil=false;
-      goTo('dashboard');
-      setTimeout(()=>toast('Paiement réussi ! 🎉'),300);
-    });
-
-    // 4. Paiement échoué / annulé
-    addFailedListener(function(response){
-      console.log('[KKiaPay] échec:', response);
-      sbAdmin.from('purchases').update({status:'rejete'}).eq('id', pur.id);
-      toast('Paiement échoué ou annulé.','err');
-    });
-
+    loaded.formations=false;
+    await loadBord();
+    showPaySuccess(course.title);
   }catch(err){
     toast(err.message||'Erreur paiement, réessayez','err');
     setBtn('pay-btn','⚡ Payer',false);
+  }
+}
+
+// ── Rechargement solde principal ─────────────────────────
+function openRecharge(){
+  if(!CU?.id){toast('Connectez-vous d\'abord','err');return;}
+  const el=document.getElementById('rch-id');if(el)el.value=CP?.rivo_id||'';
+  document.getElementById('rch-amt').value='';
+  document.getElementById('rch-phone').value='';
+  goRchStep(1);
+  document.getElementById('modal-recharge').style.display='flex';
+}
+function closeRecharge(){document.getElementById('modal-recharge').style.display='none';}
+function goRchStep(n){[1,2,3].forEach(i=>{document.getElementById('rch-step'+i).style.display=i===n?'block':'none';});}
+function doRechargeStep2(){
+  const amt=parseFloat(document.getElementById('rch-amt').value);
+  const phone=document.getElementById('rch-phone').value.trim();
+  if(!amt||amt<500){toast('Montant minimum : 500 FCFA','err');return;}
+  if(!phone){toast('Numéro de téléphone requis','err');return;}
+  const cc=document.getElementById('rch-cc').value;
+  document.getElementById('rch-confirm-msg').innerHTML=
+    `Voulez-vous recharger <strong>${fmt(amt,'XOF')}</strong> ?<br><span style="font-size:.85rem;color:#6b7280">Téléphone : ${cc}${phone}</span>`;
+  goRchStep(2);
+}
+async function doRechargeConfirm(){
+  const btn=document.getElementById('rch-confirm-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span>';
+  try{
+    const amt=parseFloat(document.getElementById('rch-amt').value);
+    const phone=document.getElementById('rch-phone').value.trim();
+    const cc=document.getElementById('rch-cc').value;
+    await sbAdmin.from('recharge_requests').insert({
+      user_id:CU.id, rivo_id:CP?.rivo_id||null,
+      phone:phone, country_code:cc, amount:amt, status:'en_attente'
+    });
+    goRchStep(3);
+  }catch(e){
+    toast('Erreur lors de l\'envoi. Réessayez.','err');
+  }finally{
+    btn.disabled=false;btn.innerHTML='Oui, confirmer';
+  }
+}
+
+// ── Retrait solde parrainage ──────────────────────────────
+function openRetrait(){
+  if(!CU?.id){toast('Connectez-vous d\'abord','err');return;}
+  const d=document.getElementById('bal-display');if(d)d.textContent=fmt(CP?.referral_balance||0,CP?.currency||'XOF');
+  document.getElementById('wd-amt').value='';
+  switchWithdrawalMethod();
+  loadRetrait();
+  document.getElementById('modal-retrait').style.display='flex';
+}
+function closeRetrait(){document.getElementById('modal-retrait').style.display='none';}
+
+// ── Actualiser les deux soldes ────────────────────────────
+async function refreshBalances(){
+  if(!CU?.id)return;
+  const{data:p}=await sb.from('profiles').select('balance,referral_balance,currency').eq('id',CU.id).single();
+  if(p){
+    if(CP)CP.balance=p.balance||0,CP.referral_balance=p.referral_balance||0;
+    const balP=document.getElementById('bal-principal');if(balP)balP.textContent=fmt(p.balance||0,p.currency||'XOF');
+    const balR=document.getElementById('bal-parrainage');if(balR)balR.textContent=fmt(p.referral_balance||0,p.currency||'XOF');
+    toast('Soldes actualisés');
   }
 }
 
@@ -1297,7 +1449,7 @@ async function doWithdrawal(){
   const amt=parseFloat(document.getElementById('wd-amt').value);
   const mth=document.getElementById('wd-mth').value;
   if(!amt||amt<1000){toast('Minimum : 1 000 FCFA','err');return;}
-  if(!CP||amt>CP.balance){toast('Solde insuffisant','err');return;}
+  if(!CP||amt>(CP.referral_balance||0)){toast('Solde parrainage insuffisant','err');return;}
   let extra={};
   if(mth==='mobile_money'){
     const phone=document.getElementById('wd-phone').value.trim();
@@ -1321,9 +1473,11 @@ async function doWithdrawal(){
     user_id:CU.id,amount:amt,currency:CP.currency||'XOF',method:mth,status:'en_attente',...extra
   });
   if(error){toast('Erreur lors de la demande','err');return;}
-  const newBal=(CP.balance||0)-amt;
-  await sb.from('profiles').update({balance:newBal}).eq('id',CU.id);
-  CP.balance=newBal;
+  const newBal=(CP.referral_balance||0)-amt;
+  await sbAdmin.from('profiles').update({referral_balance:newBal}).eq('id',CU.id);
+  CP.referral_balance=newBal;
+  const balR=document.getElementById('bal-parrainage');if(balR)balR.textContent=fmt(newBal,CP.currency||'XOF');
+  const balD=document.getElementById('bal-display');if(balD)balD.textContent=fmt(newBal,CP.currency||'XOF');
   toast('Demande envoyée ! Traitement sous 30 min.');
   document.getElementById('wd-amt').value='';
   loadRetrait();
@@ -2114,7 +2268,5 @@ function closeLegal(){
   document.body.style.overflow='';
 }
 </script>
-<!-- KKiaPay — widget de paiement JS (MTN, Moov, Carte…) -->
-<script src="https://cdn.kkiapay.me/k.js"></script>
 </body>
 </html>

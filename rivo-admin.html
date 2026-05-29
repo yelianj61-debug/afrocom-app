@@ -130,6 +130,14 @@
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
         <span class="font-medium">🏅 Classement</span>
       </button>
+      <button onclick="switchTab('solde')" id="tab-solde" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-gray-300 hover:bg-gray-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span class="font-medium">💰 Solde</span>
+      </button>
+      <button onclick="switchTab('rechargements')" id="tab-rechargements" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-gray-300 hover:bg-gray-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        <span class="font-medium">🔄 Rechargements</span>
+      </button>
     </nav>
 
     <div class="p-4 border-t border-gray-700">
@@ -402,6 +410,79 @@
       </div>
     </div>
 
+    <!-- Section Solde -->
+    <div id="page-solde" class="p-8 hidden" style="display:none">
+      <div class="mb-6">
+        <h1 class="text-2xl font-bold text-white">💰 Gestion des soldes</h1>
+        <p class="text-gray-400 mt-1">Rechercher un utilisateur et créditer son solde principal</p>
+      </div>
+      <div class="card p-6 mb-6" style="max-width:520px">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm text-gray-400 mb-1">ID ou Email de l'utilisateur</label>
+            <input id="sol-search" type="text" class="input" placeholder="R.I.V.O_123456789 ou email@exemple.com" onkeydown="if(event.key==='Enter')searchUserSolde()"/>
+          </div>
+          <button onclick="searchUserSolde()" class="btn-primary w-full">🔍 Rechercher</button>
+        </div>
+        <div id="sol-user-info" style="display:none;margin-top:1.5rem;padding:1rem;background:#1f2937;border-radius:.75rem">
+          <div id="sol-user-name" class="font-bold text-white mb-1"></div>
+          <div id="sol-user-email" class="text-sm text-gray-400 mb-3"></div>
+          <div class="flex gap-4 mb-4">
+            <div style="flex:1;background:#111827;border-radius:.5rem;padding:.75rem;text-align:center">
+              <div class="text-xs text-gray-400 mb-1">Solde principal</div>
+              <div id="sol-bal-principal" class="font-bold text-green-400 text-lg">0 FCFA</div>
+            </div>
+            <div style="flex:1;background:#111827;border-radius:.5rem;padding:.75rem;text-align:center">
+              <div class="text-xs text-gray-400 mb-1">Solde parrainage</div>
+              <div id="sol-bal-parrainage" class="font-bold text-blue-400 text-lg">0 FCFA</div>
+            </div>
+          </div>
+          <div class="space-y-3">
+            <div>
+              <label class="block text-sm text-gray-400 mb-1">Montant à ajouter (FCFA)</label>
+              <input id="sol-add-amt" type="number" class="input" placeholder="Ex: 5000" min="0"/>
+            </div>
+            <div>
+              <label class="block text-sm text-gray-400 mb-1">Solde cible</label>
+              <select id="sol-target" class="input">
+                <option value="balance">💰 Solde principal</option>
+                <option value="referral_balance">🤝 Solde parrainage</option>
+              </select>
+            </div>
+            <button onclick="creditUserSolde()" id="sol-credit-btn" class="btn-primary w-full">✅ Créditer le solde</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section Rechargements -->
+    <div id="page-rechargements" class="p-8 hidden" style="display:none">
+      <div class="mb-6 flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-white">🔄 Demandes de rechargement</h1>
+          <p class="text-gray-400 mt-1">Valider les demandes des utilisateurs pour créditer leur solde</p>
+        </div>
+        <button onclick="loadRechargements(true)" class="btn-primary">🔄 Actualiser</button>
+      </div>
+      <div class="card overflow-hidden">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>ID RIVO</th>
+              <th>Téléphone</th>
+              <th>Montant</th>
+              <th>Statut</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="rechargements-table">
+            <tr><td colspan="6" class="text-center text-gray-500 py-8">Chargement…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -568,9 +649,11 @@
 <div id="toast" class="fixed bottom-6 right-6 px-4 py-3 rounded-xl shadow-lg text-white text-sm font-medium transform translate-y-16 opacity-0 transition-all duration-300 z-50"></div>
 
 <script>
-const SB_URL  = 'https://qwdttzsbbspayojzeugy.supabase.co';
-const SB_ANON = 'sb_publishable_tG64uzNsmT0XDV7pmglqFA_lxQ4xIFm';
+const SB_URL     = 'https://qwdttzsbbspayojzeugy.supabase.co';
+const SB_ANON    = 'sb_publishable_tG64uzNsmT0XDV7pmglqFA_lxQ4xIFm';
+const SB_SERVICE = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3ZHR0enNiYnNwYXlvanpldWd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODk3MTQzNSwiZXhwIjoyMDk0NTQ3NDM1fQ.Qh-1b3NA4wH5Km4W1v-nU0aGagkeIByet2INxccz3tw';
 let sb = null;
+let sbAdmin = null;
 
 function withTimeout(p, ms = 25000) {
   return Promise.race([p, new Promise((_,rej) => setTimeout(() => rej(new Error('Délai dépassé. Vérifiez votre connexion internet.')), ms))]);
@@ -630,7 +713,7 @@ async function doLogout() {
 
 /* ── Tab navigation ───────────────────────────────────── */
 function switchTab(name) {
-  ['dashboard','utilisateurs','formations','retraits','attestations','notifications','videos','events','classement'].forEach(t => {
+  ['dashboard','utilisateurs','formations','retraits','attestations','notifications','videos','events','classement','solde','rechargements'].forEach(t => {
     const el = document.getElementById('page-' + t);
     if(el){el.classList.add('hidden'); el.style.display = 'none';}
     const btn = document.getElementById('tab-' + t);
@@ -652,6 +735,7 @@ function switchTab(name) {
     if (name === 'videos')         loadVideos();
     if (name === 'events')         loadEvents();
     if (name === 'classement')     loadClassement();
+    if (name === 'rechargements')  loadRechargements(false);
   }
 }
 
@@ -1666,6 +1750,146 @@ async function loadClassement() {
   }).join('');
 }
 
+/* ── Solde ────────────────────────────────────────────── */
+let _soldeUser = null;
+
+async function searchUserSolde() {
+  const q = document.getElementById('sol-search').value.trim();
+  if (!q) { toast('Entrez un ID RIVO ou un email', false); return; }
+  const info = document.getElementById('sol-user-info');
+  info.style.display = 'none';
+  _soldeUser = null;
+
+  let res;
+  try {
+    if (q.startsWith('R.I.V.O_') || /^\d+$/.test(q)) {
+      res = await sbAdmin.from('profiles')
+        .select('id,first_name,last_name,email,balance,referral_balance,rivo_id')
+        .eq('rivo_id', q).single();
+    } else {
+      res = await sbAdmin.from('profiles')
+        .select('id,first_name,last_name,email,balance,referral_balance,rivo_id')
+        .eq('email', q).single();
+    }
+  } catch(e) { toast('Erreur réseau : ' + e.message, false); return; }
+
+  if (res.error || !res.data) { toast('Utilisateur introuvable', false); return; }
+
+  _soldeUser = res.data;
+  const u = res.data;
+  document.getElementById('sol-user-name').textContent = (u.first_name||'') + ' ' + (u.last_name||'');
+  document.getElementById('sol-user-email').textContent = u.email + (u.rivo_id ? ' · ' + u.rivo_id : '');
+  document.getElementById('sol-bal-principal').textContent = (u.balance||0).toLocaleString('fr-FR') + ' FCFA';
+  document.getElementById('sol-bal-parrainage').textContent = (u.referral_balance||0).toLocaleString('fr-FR') + ' FCFA';
+  document.getElementById('sol-add-amt').value = '';
+  info.style.display = 'block';
+}
+
+async function creditUserSolde() {
+  if (!_soldeUser) { toast('Recherchez d\'abord un utilisateur', false); return; }
+  const amt = parseFloat(document.getElementById('sol-add-amt').value);
+  if (!amt || amt <= 0) { toast('Montant invalide', false); return; }
+  const field = document.getElementById('sol-target').value;
+  const current = field === 'balance' ? (_soldeUser.balance||0) : (_soldeUser.referral_balance||0);
+  const newVal = current + amt;
+
+  const btn = document.getElementById('sol-credit-btn');
+  btn.disabled = true; btn.textContent = 'En cours…';
+
+  const { error } = await sbAdmin.from('profiles')
+    .update({ [field]: newVal })
+    .eq('id', _soldeUser.id);
+
+  btn.disabled = false; btn.textContent = '✅ Créditer le solde';
+
+  if (error) { toast('Erreur : ' + error.message, false); return; }
+
+  _soldeUser[field] = newVal;
+  if (field === 'balance') {
+    document.getElementById('sol-bal-principal').textContent = newVal.toLocaleString('fr-FR') + ' FCFA';
+  } else {
+    document.getElementById('sol-bal-parrainage').textContent = newVal.toLocaleString('fr-FR') + ' FCFA';
+  }
+  document.getElementById('sol-add-amt').value = '';
+  toast(`✅ ${amt.toLocaleString('fr-FR')} FCFA crédité sur ${field === 'balance' ? 'solde principal' : 'solde parrainage'}`);
+}
+
+/* ── Rechargements ────────────────────────────────────── */
+async function loadRechargements(force) {
+  const tb = document.getElementById('rechargements-table');
+  if (!tb) return;
+  tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:2rem">Chargement…</td></tr>';
+
+  let data;
+  try {
+    const res = await sbAdmin
+      .from('recharge_requests')
+      .select('id,user_id,rivo_id,phone,country_code,amount,status,created_at,profiles(first_name,last_name,email)')
+      .order('created_at', { ascending: false })
+      .limit(200);
+    if (res.error) throw res.error;
+    data = res.data;
+  } catch(e) {
+    tb.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#ef4444;padding:2rem">Erreur : ${e.message}</td></tr>`;
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#6b7280;padding:2rem">Aucune demande de rechargement</td></tr>';
+    return;
+  }
+
+  const statusLabel = { en_attente: '🟡 En attente', traite: '✅ Traité', rejete: '❌ Rejeté' };
+  const statusStyle = { en_attente: 'color:#fbbf24', traite: 'color:#34d399', rejete: 'color:#f87171' };
+
+  tb.innerHTML = data.map(r => {
+    const p = r.profiles || {};
+    const nom = [(p.first_name||''), (p.last_name||'')].filter(Boolean).join(' ') || r.rivo_id || '—';
+    const date = new Date(r.created_at).toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    const actions = r.status === 'en_attente'
+      ? `<button onclick="validerRecharge('${r.id}','${r.user_id}',${r.amount})" class="btn-success" style="margin-right:.25rem">✅ Valider</button>
+         <button onclick="rejeterRecharge('${r.id}')" class="btn-danger">❌ Rejeter</button>`
+      : '—';
+    return `<tr>
+      <td style="font-size:.8rem;color:#9ca3af">${date}</td>
+      <td>
+        <div style="font-weight:600">${nom}</div>
+        <div style="font-size:.75rem;color:#9ca3af">${r.rivo_id||''}</div>
+      </td>
+      <td>${r.country_code||'+229'} ${r.phone}</td>
+      <td style="font-weight:700;color:#34d399">${Number(r.amount).toLocaleString('fr-FR')} FCFA</td>
+      <td style="${statusStyle[r.status]||''};font-weight:600;font-size:.8rem">${statusLabel[r.status]||r.status}</td>
+      <td>${actions}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function validerRecharge(id, userId, amount) {
+  // 1. Récupérer solde actuel
+  const { data: p, error: pe } = await sbAdmin.from('profiles').select('balance').eq('id', userId).single();
+  if (pe) { toast('Erreur profil : ' + pe.message, false); return; }
+
+  const newBal = (p.balance||0) + Number(amount);
+
+  // 2. Créditer solde
+  const { error: ue } = await sbAdmin.from('profiles').update({ balance: newBal }).eq('id', userId);
+  if (ue) { toast('Erreur crédit : ' + ue.message, false); return; }
+
+  // 3. Marquer traité
+  const { error: re } = await sbAdmin.from('recharge_requests').update({ status: 'traite' }).eq('id', id);
+  if (re) { toast('Erreur statut : ' + re.message, false); return; }
+
+  toast(`✅ ${Number(amount).toLocaleString('fr-FR')} FCFA crédité avec succès`);
+  loadRechargements(true);
+}
+
+async function rejeterRecharge(id) {
+  const { error } = await sbAdmin.from('recharge_requests').update({ status: 'rejete' }).eq('id', id);
+  if (error) { toast('Erreur : ' + error.message, false); return; }
+  toast('Demande rejetée');
+  loadRechargements(true);
+}
+
 /* ── Dynamic CDN loader with fallback ────────────────── */
 (function(){
   var cdns=[
@@ -1682,6 +1906,7 @@ async function loadClassement() {
     s.onload=function(){
       try{
         sb=window.supabase.createClient(SB_URL,SB_ANON);
+        sbAdmin=window.supabase.createClient(SB_URL,SB_SERVICE,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
         init();
       }catch(e){tryLoad(i+1);}
     };
