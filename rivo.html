@@ -18,7 +18,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box}
-body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
+body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
 .page{display:none}.page.active{display:block}
 .gradient-hero{background:linear-gradient(135deg,#1e3a8a 0%,#2563EB 55%,#3b82f6 100%)}
 .card{background:white;border-radius:1rem;box-shadow:0 2px 20px rgba(0,0,0,.07);overflow:hidden;transition:box-shadow .3s}
@@ -95,7 +96,7 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
 #legal-modal-body .badge{background:linear-gradient(135deg,#2563EB,#1D4ED8);color:white;border-radius:9999px;padding:.5rem 1.25rem;font-size:.85rem;font-weight:700}
 </style>
 </head>
-<body>
+<body oncontextmenu="return false" onselectstart="return false">
 <div id="toasts"></div>
 
 <!-- ═══════════════════ PAGE: LANDING ═══════════════════ -->
@@ -1456,7 +1457,6 @@ async function loadHistorique(tab){
   _histTab=tab||_histTab;
   const box=document.getElementById('hist-content');
   if(!box||!CU?.id)return;
-  // Mise à jour des onglets
   ['achats','recharges','retraits'].forEach(t=>{
     const btn=document.getElementById('hist-tab-'+t);
     if(!btn)return;
@@ -1466,19 +1466,30 @@ async function loadHistorique(tab){
   box.innerHTML='<p style="color:#9ca3af;text-align:center;padding:1.5rem">Chargement…</p>';
   try{
     if(_histTab==='achats'){
-      const{data}=await sb.from('purchases').select('amount,currency,status,purchased_at,created_at,courses(title)').eq('user_id',CU.id).order('created_at',{ascending:false}).limit(20);
+      // sbAdmin bypasse le RLS (auth.uid() = null avec Firebase) pour lire les achats
+      const{data,error}=await sbAdmin.from('purchases')
+        .select('amount,currency,status,purchased_at,created_at,course_id')
+        .eq('user_id',CU.id).order('created_at',{ascending:false}).limit(20);
+      if(error)throw error;
       if(!data||data.length===0){box.innerHTML='<p style="color:#9ca3af;text-align:center;padding:1.5rem">Aucun achat</p>';return;}
+      // Récupérer les titres des formations séparément
+      const ids=[...new Set(data.map(r=>r.course_id).filter(Boolean))];
+      const{data:courses}=ids.length?await sbAdmin.from('courses').select('id,title').in('id',ids):{data:[]};
+      const cmap=Object.fromEntries((courses||[]).map(c=>[c.id,c.title]));
       const smap={complete:['✅','Complété','#d1fae5','#065f46'],en_attente:['⏳','En attente','#fef3c7','#92400e'],rejete:['❌','Rejeté','#fee2e2','#991b1b']};
       box.innerHTML=data.map(r=>{
         const[ic,lb,bg,co]=smap[r.status]||smap.en_attente;
         const d=new Date(r.purchased_at||r.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});
         return`<div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem;background:#f8fafc;border-radius:.75rem;margin-bottom:.5rem">
-          <div><div style="font-weight:700;font-size:.875rem;color:#1F2937">${r.courses?.title||'Formation'}</div><div style="font-size:.72rem;color:#9ca3af">${d}</div></div>
-          <div style="text-align:right"><div style="font-weight:800;color:#2563EB;font-size:.9rem">${fmt(r.amount,r.currency)}</div><span style="background:${bg};color:${co};font-size:.68rem;font-weight:700;padding:1px 7px;border-radius:9999px">${ic} ${lb}</span></div>
+          <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.875rem;color:#1F2937;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cmap[r.course_id]||'Formation'}</div><div style="font-size:.72rem;color:#9ca3af">${d}</div></div>
+          <div style="text-align:right;flex-shrink:0;margin-left:.5rem"><div style="font-weight:800;color:#2563EB;font-size:.9rem">${fmt(r.amount,r.currency)}</div><span style="background:${bg};color:${co};font-size:.68rem;font-weight:700;padding:1px 7px;border-radius:9999px">${ic} ${lb}</span></div>
         </div>`;
       }).join('');
     } else if(_histTab==='recharges'){
-      const{data}=await sb.from('recharge_requests').select('amount,status,created_at,phone,country_code').eq('user_id',CU.id).order('created_at',{ascending:false}).limit(20);
+      const{data,error}=await sbAdmin.from('recharge_requests')
+        .select('amount,status,created_at,phone,country_code')
+        .eq('user_id',CU.id).order('created_at',{ascending:false}).limit(20);
+      if(error)throw error;
       if(!data||data.length===0){box.innerHTML='<p style="color:#9ca3af;text-align:center;padding:1.5rem">Aucune demande de rechargement</p>';return;}
       const smap={en_attente:['⏳','En attente','#fef3c7','#92400e'],traite:['✅','Validé','#d1fae5','#065f46'],rejete:['❌','Rejeté','#fee2e2','#991b1b']};
       box.innerHTML=data.map(r=>{
@@ -1490,7 +1501,10 @@ async function loadHistorique(tab){
         </div>`;
       }).join('');
     } else {
-      const{data}=await sb.from('withdrawals').select('amount,currency,status,created_at,method').eq('user_id',CU.id).order('created_at',{ascending:false}).limit(20);
+      const{data,error}=await sbAdmin.from('withdrawals')
+        .select('amount,currency,status,created_at,method')
+        .eq('user_id',CU.id).order('created_at',{ascending:false}).limit(20);
+      if(error)throw error;
       if(!data||data.length===0){box.innerHTML='<p style="color:#9ca3af;text-align:center;padding:1.5rem">Aucun retrait</p>';return;}
       const smap={en_attente:['⏳','En attente','#fef3c7','#92400e'],en_cours:['🔄','En cours','#dbeafe','#1d4ed8'],complete:['✅','Complété','#d1fae5','#065f46'],rejete:['❌','Rejeté','#fee2e2','#991b1b']};
       const mmap={mobile_money:'📱 Mobile Money',carte_bancaire:'💳 Carte',autre:'🔄 Autre'};
