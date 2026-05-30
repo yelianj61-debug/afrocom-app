@@ -495,6 +495,19 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
 
         <!-- Retrait accessible depuis le tableau de bord (bouton 💸 Retirer) -->
 
+        <!-- Historique des transactions -->
+        <div class="card" style="padding:1.25rem;margin-bottom:1.5rem" id="hist-section">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+            <h3 style="font-weight:800;font-size:1.05rem;color:#1F2937">📋 Historique</h3>
+            <div style="display:flex;gap:.4rem">
+              <button id="hist-tab-achats" onclick="loadHistorique('achats')" style="font-size:.75rem;font-weight:700;padding:.3rem .75rem;border-radius:9999px;border:none;background:#2563EB;color:white;cursor:pointer">💳 Achats</button>
+              <button id="hist-tab-recharges" onclick="loadHistorique('recharges')" style="font-size:.75rem;font-weight:700;padding:.3rem .75rem;border-radius:9999px;border:1.5px solid #e5e7eb;background:none;color:#6b7280;cursor:pointer">➕ Recharges</button>
+              <button id="hist-tab-retraits" onclick="loadHistorique('retraits')" style="font-size:.75rem;font-weight:700;padding:.3rem .75rem;border-radius:9999px;border:1.5px solid #e5e7eb;background:none;color:#6b7280;cursor:pointer">💸 Retraits</button>
+            </div>
+          </div>
+          <div id="hist-content"><p style="color:#9ca3af;text-align:center;padding:1.5rem">Chargement…</p></div>
+        </div>
+
         <!-- Voir le guide -->
         <div style="margin-top:1.5rem;text-align:center">
           <button onclick="startTutorial()" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:2px solid #bfdbfe;color:#1d4ed8;border-radius:1rem;padding:.875rem 2rem;font-weight:700;cursor:pointer;font-size:.9rem;width:100%;transition:all .2s" onmouseover="this.style.background='linear-gradient(135deg,#dbeafe,#bfdbfe)'" onmouseout="this.style.background='linear-gradient(135deg,#eff6ff,#dbeafe)'">
@@ -589,6 +602,7 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
               <select id="rch-cc" class="input" style="min-width:105px"><option value="+229">🇧🇯 +229</option><option value="+225">🇨🇮 +225</option><option value="+226">🇧🇫 +226</option><option value="+228">🇹🇬 +228</option><option value="+227">🇳🇪 +227</option><option value="+221">🇸🇳 +221</option><option value="+223">🇲🇱 +223</option><option value="+224">🇬🇳 +224</option><option value="+33">🇫🇷 +33</option></select>
               <input type="tel" id="rch-phone" class="input" placeholder="Ex: 97000000"/>
             </div>
+            <p style="font-size:.75rem;color:#d97706;margin-top:.35rem;font-weight:600">⚠️ Assurez-vous de disposer des fonds sur ce numéro avant de confirmer.</p>
           </div>
         </div>
         <div style="display:flex;gap:.625rem;margin-top:1.25rem">
@@ -610,7 +624,11 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
       <div id="rch-step3" style="display:none;text-align:center">
         <div style="font-size:3.5rem;margin-bottom:.75rem">✅</div>
         <h3 style="font-size:1.1rem;font-weight:800;color:#10b981;margin-bottom:.75rem">Demande envoyée !</h3>
-        <p style="color:#374151;font-size:.9rem;line-height:1.6;margin-bottom:1.5rem">Votre demande de rechargement a été transmise.<br>Un assistant va valider sous <strong>2 à 5 minutes</strong>.</p>
+        <p style="color:#374151;font-size:.9rem;line-height:1.6;margin-bottom:.75rem">Votre demande de rechargement a été transmise.<br>Un assistant va valider sous <strong>2 à 5 minutes</strong>.</p>
+        <div style="background:#fef9c3;border:1px solid #fbbf24;border-radius:.75rem;padding:.75rem 1rem;margin-bottom:1.5rem;text-align:left">
+          <p style="font-size:.82rem;color:#92400e;font-weight:700;margin-bottom:.2rem">📱 Important</p>
+          <p style="font-size:.82rem;color:#92400e;line-height:1.5">Veuillez garder votre téléphone allumé et accessible. L'assistant vous contactera pour valider le paiement.</p>
+        </div>
         <button onclick="closeRecharge()" class="btn-primary" style="width:100%;justify-content:center;padding:.75rem">← Retour</button>
       </div>
     </div>
@@ -1179,12 +1197,11 @@ async function confirmPay(){
       const msg=error.code==='42501'?'Session expirée. Reconnectez-vous.':`Erreur commande : ${error.message}`;
       toast(msg,'err'); setBtn('pay-btn','⚡ Payer',false); return;
     }
-    // Déduire le solde choisi
-    const newBal=soldeDisp-course.price;
+    // Déduire le solde choisi via RPC (contourne trg_prevent_sensitive_profile_update)
     const field=source==='parrainage'?'referral_balance':'balance';
-    await sbAdmin.from('profiles').update({[field]:newBal}).eq('id',CU.id);
-    if(source==='parrainage') CP.referral_balance=newBal;
-    else CP.balance=newBal;
+    await sbAdmin.rpc('admin_update_balance',{p_user_id:CU.id,p_amount:-(course.price),p_field:field});
+    if(source==='parrainage') CP.referral_balance=(CP.referral_balance||0)-course.price;
+    else CP.balance=(CP.balance||0)-course.price;
     // Mettre à jour l'affichage des soldes
     const balP=document.getElementById('bal-principal');if(balP)balP.textContent=fmt(CP.balance||0,CP.currency||'XOF');
     const balR=document.getElementById('bal-parrainage');if(balR)balR.textContent=fmt(CP.referral_balance||0,CP.currency||'XOF');
@@ -1360,8 +1377,8 @@ async function loadProfil(){
     ]);
     document.getElementById('st-f').textContent=fc||0;
     document.getElementById('st-a').textContent=ac||0;
-    // Retrait intégré dans le profil — charger le solde et l'historique
     loadRetrait();
+    loadHistorique('achats');
   }catch(e){
     console.error('[loadProfil] erreur:',e?.message||e);
   }
@@ -1421,7 +1438,7 @@ async function updateAvatar(input){
 
 // ── Dashboard: Retrait ────────────────────────────────
 async function loadRetrait(){
-  if(CP)document.getElementById('bal-display').textContent=fmt(CP.balance||0,CP.currency||'XOF');
+  if(CP)document.getElementById('bal-display').textContent=fmt(CP.referral_balance||0,CP.currency||'XOF');
   const{data:ws}=await sb.from('withdrawals').select('*').eq('user_id',CU.id).order('created_at',{ascending:false});
   const mmap={mobile_money:'📱 Mobile Money',carte_bancaire:'💳 Carte bancaire',autre:'🔄 Autre'};
   const smap={en_attente:['⏳','En attente','#fef3c7','#92400e'],en_cours:['🔄','En cours','#dbeafe','#1d4ed8'],complete:['✅','Complété','#d1fae5','#065f46'],rejete:['❌','Rejeté','#fee2e2','#991b1b']};
@@ -1431,6 +1448,62 @@ async function loadRetrait(){
     const d=new Date(w.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});
     return`<div class="card fade-in" style="padding:1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.625rem"><div><div style="font-weight:700;color:#1F2937">${fmt(w.amount,w.currency)}</div><div style="font-size:.75rem;color:#9ca3af;margin-top:.2rem">${mmap[w.method]} • Demande du ${d}</div></div><span class="badge" style="background:${bg};color:${co}">${ic} ${lb}</span></div>`;
   }).join('');
+}
+
+// ── Historique profil ─────────────────────────────────
+let _histTab='achats';
+async function loadHistorique(tab){
+  _histTab=tab||_histTab;
+  const box=document.getElementById('hist-content');
+  if(!box||!CU?.id)return;
+  // Mise à jour des onglets
+  ['achats','recharges','retraits'].forEach(t=>{
+    const btn=document.getElementById('hist-tab-'+t);
+    if(!btn)return;
+    if(t===_histTab){btn.style.background='#2563EB';btn.style.color='white';btn.style.border='none';}
+    else{btn.style.background='none';btn.style.color='#6b7280';btn.style.border='1.5px solid #e5e7eb';}
+  });
+  box.innerHTML='<p style="color:#9ca3af;text-align:center;padding:1.5rem">Chargement…</p>';
+  try{
+    if(_histTab==='achats'){
+      const{data}=await sb.from('purchases').select('amount,currency,status,purchased_at,created_at,courses(title)').eq('user_id',CU.id).order('created_at',{ascending:false}).limit(20);
+      if(!data||data.length===0){box.innerHTML='<p style="color:#9ca3af;text-align:center;padding:1.5rem">Aucun achat</p>';return;}
+      const smap={complete:['✅','Complété','#d1fae5','#065f46'],en_attente:['⏳','En attente','#fef3c7','#92400e'],rejete:['❌','Rejeté','#fee2e2','#991b1b']};
+      box.innerHTML=data.map(r=>{
+        const[ic,lb,bg,co]=smap[r.status]||smap.en_attente;
+        const d=new Date(r.purchased_at||r.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});
+        return`<div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem;background:#f8fafc;border-radius:.75rem;margin-bottom:.5rem">
+          <div><div style="font-weight:700;font-size:.875rem;color:#1F2937">${r.courses?.title||'Formation'}</div><div style="font-size:.72rem;color:#9ca3af">${d}</div></div>
+          <div style="text-align:right"><div style="font-weight:800;color:#2563EB;font-size:.9rem">${fmt(r.amount,r.currency)}</div><span style="background:${bg};color:${co};font-size:.68rem;font-weight:700;padding:1px 7px;border-radius:9999px">${ic} ${lb}</span></div>
+        </div>`;
+      }).join('');
+    } else if(_histTab==='recharges'){
+      const{data}=await sb.from('recharge_requests').select('amount,status,created_at,phone,country_code').eq('user_id',CU.id).order('created_at',{ascending:false}).limit(20);
+      if(!data||data.length===0){box.innerHTML='<p style="color:#9ca3af;text-align:center;padding:1.5rem">Aucune demande de rechargement</p>';return;}
+      const smap={en_attente:['⏳','En attente','#fef3c7','#92400e'],traite:['✅','Validé','#d1fae5','#065f46'],rejete:['❌','Rejeté','#fee2e2','#991b1b']};
+      box.innerHTML=data.map(r=>{
+        const[ic,lb,bg,co]=smap[r.status]||smap.en_attente;
+        const d=new Date(r.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});
+        return`<div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem;background:#f8fafc;border-radius:.75rem;margin-bottom:.5rem">
+          <div><div style="font-weight:700;font-size:.875rem;color:#1F2937">➕ Rechargement</div><div style="font-size:.72rem;color:#9ca3af">${d} · ${r.country_code||''} ${r.phone}</div></div>
+          <div style="text-align:right"><div style="font-weight:800;color:#10b981;font-size:.9rem">+${fmt(r.amount,'XOF')}</div><span style="background:${bg};color:${co};font-size:.68rem;font-weight:700;padding:1px 7px;border-radius:9999px">${ic} ${lb}</span></div>
+        </div>`;
+      }).join('');
+    } else {
+      const{data}=await sb.from('withdrawals').select('amount,currency,status,created_at,method').eq('user_id',CU.id).order('created_at',{ascending:false}).limit(20);
+      if(!data||data.length===0){box.innerHTML='<p style="color:#9ca3af;text-align:center;padding:1.5rem">Aucun retrait</p>';return;}
+      const smap={en_attente:['⏳','En attente','#fef3c7','#92400e'],en_cours:['🔄','En cours','#dbeafe','#1d4ed8'],complete:['✅','Complété','#d1fae5','#065f46'],rejete:['❌','Rejeté','#fee2e2','#991b1b']};
+      const mmap={mobile_money:'📱 Mobile Money',carte_bancaire:'💳 Carte',autre:'🔄 Autre'};
+      box.innerHTML=data.map(r=>{
+        const[ic,lb,bg,co]=smap[r.status]||smap.en_attente;
+        const d=new Date(r.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});
+        return`<div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem;background:#f8fafc;border-radius:.75rem;margin-bottom:.5rem">
+          <div><div style="font-weight:700;font-size:.875rem;color:#1F2937">💸 Retrait ${mmap[r.method]||''}</div><div style="font-size:.72rem;color:#9ca3af">${d}</div></div>
+          <div style="text-align:right"><div style="font-weight:800;color:#ef4444;font-size:.9rem">-${fmt(r.amount,r.currency)}</div><span style="background:${bg};color:${co};font-size:.68rem;font-weight:700;padding:1px 7px;border-radius:9999px">${ic} ${lb}</span></div>
+        </div>`;
+      }).join('');
+    }
+  }catch(e){box.innerHTML=`<p style="color:#ef4444;text-align:center;padding:1.5rem">Erreur : ${e.message}</p>`;}
 }
 
 function switchWithdrawalMethod(){
@@ -1473,9 +1546,9 @@ async function doWithdrawal(){
     user_id:CU.id,amount:amt,currency:CP.currency||'XOF',method:mth,status:'en_attente',...extra
   });
   if(error){toast('Erreur lors de la demande','err');return;}
-  const newBal=(CP.referral_balance||0)-amt;
-  await sbAdmin.from('profiles').update({referral_balance:newBal}).eq('id',CU.id);
-  CP.referral_balance=newBal;
+  await sbAdmin.rpc('admin_update_balance',{p_user_id:CU.id,p_amount:-amt,p_field:'referral_balance'});
+  CP.referral_balance=(CP.referral_balance||0)-amt;
+  const newBal=CP.referral_balance;
   const balR=document.getElementById('bal-parrainage');if(balR)balR.textContent=fmt(newBal,CP.currency||'XOF');
   const balD=document.getElementById('bal-display');if(balD)balD.textContent=fmt(newBal,CP.currency||'XOF');
   toast('Demande envoyée ! Traitement sous 30 min.');
