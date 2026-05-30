@@ -1468,8 +1468,8 @@ async function loadHistorique(tab){
     if(_histTab==='achats'){
       // sbAdmin bypasse le RLS (auth.uid() = null avec Firebase) pour lire les achats
       const{data,error}=await sbAdmin.from('purchases')
-        .select('amount,currency,status,purchased_at,created_at,course_id')
-        .eq('user_id',CU.id).order('created_at',{ascending:false}).limit(20);
+        .select('amount,currency,status,purchased_at,course_id')
+        .eq('user_id',CU.id).order('purchased_at',{ascending:false}).limit(20);
       if(error)throw error;
       if(!data||data.length===0){box.innerHTML='<p style="color:#9ca3af;text-align:center;padding:1.5rem">Aucun achat</p>';return;}
       // Récupérer les titres des formations séparément
@@ -1479,7 +1479,7 @@ async function loadHistorique(tab){
       const smap={complete:['✅','Complété','#d1fae5','#065f46'],en_attente:['⏳','En attente','#fef3c7','#92400e'],rejete:['❌','Rejeté','#fee2e2','#991b1b']};
       box.innerHTML=data.map(r=>{
         const[ic,lb,bg,co]=smap[r.status]||smap.en_attente;
-        const d=new Date(r.purchased_at||r.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});
+        const d=new Date(r.purchased_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});
         return`<div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem;background:#f8fafc;border-radius:.75rem;margin-bottom:.5rem">
           <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.875rem;color:#1F2937;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cmap[r.course_id]||'Formation'}</div><div style="font-size:.72rem;color:#9ca3af">${d}</div></div>
           <div style="text-align:right;flex-shrink:0;margin-left:.5rem"><div style="font-weight:800;color:#2563EB;font-size:.9rem">${fmt(r.amount,r.currency)}</div><span style="background:${bg};color:${co};font-size:.68rem;font-weight:700;padding:1px 7px;border-radius:9999px">${ic} ${lb}</span></div>
