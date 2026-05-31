@@ -397,20 +397,17 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
             <div style="background:rgba(255,255,255,.15);border-radius:.875rem;padding:.875rem">
               <div style="font-size:.65rem;color:#bfdbfe;font-weight:700;margin-bottom:.2rem;text-transform:uppercase;letter-spacing:.04em">💰 Solde principal</div>
               <div id="bal-principal" style="font-size:1.2rem;font-weight:900;margin-bottom:.5rem">0 FCFA</div>
-              <div style="display:flex;gap:.3rem">
-                <button onclick="openRecharge()" style="background:rgba(255,255,255,.25);border:none;color:white;font-size:.7rem;font-weight:700;padding:.3rem .55rem;border-radius:.45rem;cursor:pointer" onmouseover="this.style.background='rgba(255,255,255,.38)'" onmouseout="this.style.background='rgba(255,255,255,.25)'">➕ Recharger</button>
-                <button onclick="refreshBalances()" style="background:rgba(255,255,255,.12);border:none;color:white;font-size:.7rem;padding:.3rem .45rem;border-radius:.45rem;cursor:pointer" title="Actualiser">🔄</button>
-              </div>
+              <button onclick="openRecharge()" style="background:rgba(255,255,255,.25);border:none;color:white;font-size:.7rem;font-weight:700;padding:.3rem .55rem;border-radius:.45rem;cursor:pointer" onmouseover="this.style.background='rgba(255,255,255,.38)'" onmouseout="this.style.background='rgba(255,255,255,.25)'">➕ Recharger</button>
             </div>
             <div style="background:rgba(255,255,255,.15);border-radius:.875rem;padding:.875rem">
               <div style="font-size:.65rem;color:#bfdbfe;font-weight:700;margin-bottom:.2rem;text-transform:uppercase;letter-spacing:.04em">🤝 Solde parrainage</div>
               <div id="bal-parrainage" style="font-size:1.2rem;font-weight:900;margin-bottom:.5rem">0 FCFA</div>
-              <div style="display:flex;gap:.3rem">
-                <button onclick="openRetrait()" style="background:rgba(255,255,255,.25);border:none;color:white;font-size:.7rem;font-weight:700;padding:.3rem .55rem;border-radius:.45rem;cursor:pointer" onmouseover="this.style.background='rgba(255,255,255,.38)'" onmouseout="this.style.background='rgba(255,255,255,.25)'">💸 Retirer</button>
-                <button onclick="refreshBalances()" style="background:rgba(255,255,255,.12);border:none;color:white;font-size:.7rem;padding:.3rem .45rem;border-radius:.45rem;cursor:pointer" title="Actualiser">🔄</button>
-              </div>
+              <button onclick="openRetrait()" style="background:rgba(255,255,255,.25);border:none;color:white;font-size:.7rem;font-weight:700;padding:.3rem .55rem;border-radius:.45rem;cursor:pointer" onmouseover="this.style.background='rgba(255,255,255,.38)'" onmouseout="this.style.background='rgba(255,255,255,.25)'">💸 Retirer</button>
             </div>
           </div>
+          <button id="refresh-btn" onclick="refreshBalances()" style="width:100%;margin-top:.75rem;background:linear-gradient(135deg,#f59e0b,#d97706);border:none;color:white;font-size:.875rem;font-weight:800;padding:.65rem 1rem;border-radius:.75rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;transition:opacity .2s" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+            🔄 Actualiser les soldes
+          </button>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
           <h2 style="font-size:1.25rem;font-weight:800;color:#1F2937">Formations disponibles</h2>
@@ -1271,12 +1268,21 @@ function closeRetrait(){document.getElementById('modal-retrait').style.display='
 // ── Actualiser les deux soldes ────────────────────────────
 async function refreshBalances(){
   if(!CU?.id)return;
-  const{data:p}=await sb.from('profiles').select('balance,referral_balance,currency').eq('id',CU.id).single();
-  if(p){
-    if(CP)CP.balance=p.balance||0,CP.referral_balance=p.referral_balance||0;
-    const balP=document.getElementById('bal-principal');if(balP)balP.textContent=fmt(p.balance||0,p.currency||'XOF');
-    const balR=document.getElementById('bal-parrainage');if(balR)balR.textContent=fmt(p.referral_balance||0,p.currency||'XOF');
-    toast('Soldes actualisés');
+  const btn=document.getElementById('refresh-btn');
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span> Actualisation…';}
+  try{
+    const{data:p}=await sb.from('profiles').select('balance,referral_balance,currency').eq('id',CU.id).single();
+    if(p){
+      if(CP)CP.balance=p.balance||0,CP.referral_balance=p.referral_balance||0;
+      const balP=document.getElementById('bal-principal');
+      const balR=document.getElementById('bal-parrainage');
+      if(balP){balP.style.transform='scale(1.18)';balP.style.transition='transform .25s';balP.textContent=fmt(p.balance||0,p.currency||'XOF');setTimeout(()=>{balP.style.transform='scale(1)';},260);}
+      if(balR){balR.style.transform='scale(1.18)';balR.style.transition='transform .25s';balR.textContent=fmt(p.referral_balance||0,p.currency||'XOF');setTimeout(()=>{balR.style.transform='scale(1)';},260);}
+      if(btn){btn.innerHTML='✅ Actualisé !';btn.style.background='linear-gradient(135deg,#10b981,#059669)';}
+      setTimeout(()=>{if(btn){btn.disabled=false;btn.innerHTML='🔄 Actualiser les soldes';btn.style.background='linear-gradient(135deg,#f59e0b,#d97706)';}},2000);
+    }
+  }catch(e){
+    if(btn){btn.disabled=false;btn.innerHTML='🔄 Actualiser les soldes';}
   }
 }
 

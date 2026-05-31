@@ -138,6 +138,10 @@
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
         <span class="font-medium">🔄 Rechargements</span>
       </button>
+      <button onclick="switchTab('achats')" id="tab-achats" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-gray-300 hover:bg-gray-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        <span class="font-medium">🛒 Achats</span>
+      </button>
     </nav>
 
     <div class="p-4 border-t border-gray-700">
@@ -483,6 +487,72 @@
       </div>
     </div>
 
+    <!-- Section Achats -->
+    <div id="page-achats" class="p-8 hidden" style="display:none">
+      <div class="mb-6">
+        <h1 class="text-2xl font-bold text-white">🛒 Achats par utilisateur</h1>
+        <p class="text-gray-400 mt-1">Consulter les formations achetées par un utilisateur</p>
+      </div>
+      <div class="card p-6 mb-6" style="max-width:520px">
+        <div>
+          <label class="block text-sm text-gray-400 mb-1">ID RIVO ou Email de l'utilisateur</label>
+          <div style="display:flex;gap:.5rem">
+            <input id="ach-search" type="text" class="input" placeholder="R.I.V.O_123456789 ou email@exemple.com" onkeydown="if(event.key==='Enter')searchUserAchats()" style="flex:1"/>
+            <button onclick="searchUserAchats()" class="btn-primary" style="white-space:nowrap">🔍 Rechercher</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Résultats -->
+      <div id="ach-result" style="display:none">
+        <!-- Infos utilisateur + notif rapide -->
+        <div class="card p-5 mb-5" style="max-width:700px">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+            <div>
+              <div id="ach-user-name" class="font-bold text-white text-lg"></div>
+              <div id="ach-user-email" class="text-sm text-gray-400 mt-1"></div>
+            </div>
+            <button onclick="openNotifAchats()" class="btn-primary" style="font-size:.82rem;padding:.45rem .9rem">
+              📣 Envoyer notification
+            </button>
+          </div>
+        </div>
+
+        <!-- Modal notif rapide -->
+        <div id="ach-notif-modal" style="display:none;background:#111827;border:1px solid #374151;border-radius:.875rem;padding:1.25rem;margin-bottom:1.25rem;max-width:700px">
+          <div class="font-semibold text-white mb-3">📣 Notification à <span id="ach-notif-target-name"></span></div>
+          <div style="display:flex;flex-direction:column;gap:.75rem">
+            <input id="ach-notif-title" type="text" class="input" placeholder="Titre de la notification"/>
+            <textarea id="ach-notif-msg" class="input" rows="3" placeholder="Message…" style="resize:vertical"></textarea>
+            <div style="display:flex;gap:.5rem">
+              <button onclick="sendNotifAchats()" class="btn-primary">📤 Envoyer</button>
+              <button onclick="document.getElementById('ach-notif-modal').style.display='none'" style="background:#374151;color:#d1d5db;border:none;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600">Annuler</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Liste des achats -->
+        <div class="card overflow-hidden" style="max-width:700px">
+          <div style="padding:1rem 1.25rem;border-bottom:1px solid #2d2d4e;font-weight:700;color:white">
+            📚 Formations achetées — <span id="ach-count" style="color:#a78bfa">0</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Formation</th>
+                <th>Date d'achat</th>
+                <th>Montant</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody id="ach-table">
+              <tr><td colspan="4" class="text-center text-gray-500 py-8">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -713,7 +783,7 @@ async function doLogout() {
 
 /* ── Tab navigation ───────────────────────────────────── */
 function switchTab(name) {
-  ['dashboard','utilisateurs','formations','retraits','attestations','notifications','videos','events','classement','solde','rechargements'].forEach(t => {
+  ['dashboard','utilisateurs','formations','retraits','attestations','notifications','videos','events','classement','solde','rechargements','achats'].forEach(t => {
     const el = document.getElementById('page-' + t);
     if(el){el.classList.add('hidden'); el.style.display = 'none';}
     const btn = document.getElementById('tab-' + t);
@@ -1888,6 +1958,94 @@ async function rejeterRecharge(id) {
   if (error) { toast('Erreur : ' + error.message, false); return; }
   toast('Demande rejetée');
   loadRechargements(true);
+}
+
+/* ── Achats par utilisateur ───────────────────────────── */
+let _achUser = null;
+
+async function searchUserAchats() {
+  const q = document.getElementById('ach-search').value.trim();
+  if (!q) { toast('Entrez un ID RIVO ou un email', false); return; }
+  const res = document.getElementById('ach-result');
+  res.style.display = 'none';
+  _achUser = null;
+
+  let profRes;
+  try {
+    if (q.startsWith('R.I.V.O_') || /^R\.I\.V\.O_/.test(q)) {
+      profRes = await sbAdmin.from('profiles').select('id,first_name,last_name,email,rivo_id').eq('rivo_id', q).single();
+    } else {
+      profRes = await sbAdmin.from('profiles').select('id,first_name,last_name,email,rivo_id').eq('email', q).single();
+    }
+  } catch(e) { toast('Erreur réseau : ' + e.message, false); return; }
+
+  if (profRes.error || !profRes.data) { toast('Utilisateur introuvable', false); return; }
+
+  _achUser = profRes.data;
+  const u = profRes.data;
+  const name = [(u.first_name||''), (u.last_name||'')].filter(Boolean).join(' ') || u.email;
+  document.getElementById('ach-user-name').textContent = name;
+  document.getElementById('ach-user-email').textContent = u.email + (u.rivo_id ? ' · ' + u.rivo_id : '');
+  document.getElementById('ach-notif-modal').style.display = 'none';
+
+  // Charger les achats
+  const tb = document.getElementById('ach-table');
+  tb.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#9ca3af;padding:1.5rem">Chargement…</td></tr>';
+
+  const { data: purchases, error: pe } = await sbAdmin.from('purchases')
+    .select('id,amount,currency,status,purchased_at,course_id')
+    .eq('user_id', u.id)
+    .order('purchased_at', { ascending: false });
+
+  if (pe) { tb.innerHTML = `<tr><td colspan="4" style="color:#ef4444;text-align:center;padding:1.5rem">Erreur : ${pe.message}</td></tr>`; res.style.display = 'block'; return; }
+
+  document.getElementById('ach-count').textContent = (purchases||[]).length;
+
+  if (!purchases || purchases.length === 0) {
+    tb.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#6b7280;padding:2rem">Aucun achat</td></tr>';
+    res.style.display = 'block'; return;
+  }
+
+  // Récupérer titres formations
+  const ids = [...new Set(purchases.map(p => p.course_id).filter(Boolean))];
+  const { data: courses } = ids.length ? await sbAdmin.from('courses').select('id,title').in('id', ids) : { data: [] };
+  const cmap = Object.fromEntries((courses||[]).map(c => [c.id, c.title]));
+
+  const smap = { complete: ['✅','Complété','#d1fae5','#065f46'], en_attente: ['⏳','En attente','#fef3c7','#92400e'], rejete: ['❌','Rejeté','#fee2e2','#991b1b'] };
+
+  tb.innerHTML = purchases.map(p => {
+    const [ic, lb, bg, co] = smap[p.status] || smap.en_attente;
+    const d = p.purchased_at ? new Date(p.purchased_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+    return `<tr>
+      <td style="font-weight:600;color:white">${cmap[p.course_id] || '—'}</td>
+      <td style="color:#9ca3af;font-size:.82rem">${d}</td>
+      <td style="font-weight:700;color:#34d399">${Number(p.amount||0).toLocaleString('fr-FR')} ${p.currency||'FCFA'}</td>
+      <td><span style="background:${bg};color:${co};font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:9999px">${ic} ${lb}</span></td>
+    </tr>`;
+  }).join('');
+
+  res.style.display = 'block';
+}
+
+function openNotifAchats() {
+  if (!_achUser) return;
+  document.getElementById('ach-notif-target-name').textContent = [((_achUser.first_name||''), (_achUser.last_name||''))].join(' ').trim() || _achUser.email;
+  document.getElementById('ach-notif-title').value = '';
+  document.getElementById('ach-notif-msg').value = '';
+  document.getElementById('ach-notif-modal').style.display = 'block';
+}
+
+async function sendNotifAchats() {
+  if (!_achUser) return;
+  const title = document.getElementById('ach-notif-title').value.trim();
+  const message = document.getElementById('ach-notif-msg').value.trim();
+  if (!title || !message) { toast('Renseignez le titre et le message', false); return; }
+  const { error } = await sbAdmin.from('notifications').insert([{
+    user_id: _achUser.id, title, message, sender: 'Support RIVO'
+  }]);
+  if (error) { toast('Erreur : ' + error.message, false); return; }
+  document.getElementById('ach-notif-modal').style.display = 'none';
+  toast('✅ Notification envoyée !');
 }
 
 /* ── Dynamic CDN loader with fallback ────────────────── */
