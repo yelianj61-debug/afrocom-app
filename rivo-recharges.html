@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RIVO — Rechargements</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
+header{background:#1e293b;border-bottom:1px solid #334155;padding:1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.logo{display:flex;align-items:center;gap:.6rem}
+.logo-icon{width:2.2rem;height:2.2rem;border-radius:.5rem;background:linear-gradient(135deg,#7c3aed,#6d28d9);display:flex;align-items:center;justify-content:center;font-weight:900;color:white;font-size:1rem}
+.logo-text{font-weight:800;font-size:1rem;color:white}
+.logo-sub{font-size:.7rem;color:#94a3b8}
+.header-right{display:flex;align-items:center;gap:.75rem}
+#badge-attente{background:#fbbf24;color:#1c1917;font-size:.75rem;font-weight:800;padding:.25rem .65rem;border-radius:9999px}
+.btn-refresh{background:#334155;border:none;color:#94a3b8;border-radius:.5rem;padding:.45rem .9rem;cursor:pointer;font-size:.82rem;font-weight:600;display:flex;align-items:center;gap:.4rem;transition:background .2s}
+.btn-refresh:hover{background:#475569;color:white}
+
+.container{padding:1rem;max-width:700px;margin:0 auto}
+
+/* Stats bar */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.625rem;margin-bottom:1.25rem}
+.stat{background:#1e293b;border:1px solid #334155;border-radius:.75rem;padding:.875rem;text-align:center}
+.stat-val{font-size:1.5rem;font-weight:900;margin-bottom:.2rem}
+.stat-lbl{font-size:.7rem;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+
+/* Filtres */
+.filters{display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap}
+.filter-btn{background:#1e293b;border:1.5px solid #334155;color:#94a3b8;border-radius:9999px;padding:.35rem .875rem;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .2s}
+.filter-btn.active{background:#7c3aed;border-color:#7c3aed;color:white}
+
+/* Cartes */
+.card{background:#1e293b;border:1px solid #334155;border-radius:.875rem;padding:1rem;margin-bottom:.75rem;transition:border-color .2s}
+.card:hover{border-color:#7c3aed}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;margin-bottom:.75rem}
+.user-info{}
+.user-name{font-weight:700;color:white;font-size:.95rem}
+.user-sub{font-size:.75rem;color:#64748b;margin-top:.2rem}
+.amount{font-size:1.4rem;font-weight:900;color:#34d399;white-space:nowrap}
+.card-meta{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;margin-bottom:.875rem}
+.meta-item{font-size:.78rem;color:#94a3b8;display:flex;align-items:center;gap:.3rem}
+.status-badge{font-size:.7rem;font-weight:700;padding:2px 9px;border-radius:9999px}
+.s-attente{background:#fef3c7;color:#92400e}
+.s-traite{background:#d1fae5;color:#065f46}
+.s-rejete{background:#fee2e2;color:#991b1b}
+.actions{display:flex;gap:.5rem}
+.btn-ok{background:#059669;color:white;border:none;border-radius:.5rem;padding:.55rem 1.1rem;font-weight:800;font-size:.85rem;cursor:pointer;flex:1;transition:opacity .2s}
+.btn-ok:hover{opacity:.85}
+.btn-ko{background:#dc2626;color:white;border:none;border-radius:.5rem;padding:.55rem 1.1rem;font-weight:800;font-size:.85rem;cursor:pointer;flex:1;transition:opacity .2s}
+.btn-ko:hover{opacity:.85}
+.btn-ok:disabled,.btn-ko:disabled{opacity:.5;cursor:not-allowed}
+
+/* Empty */
+.empty{text-align:center;padding:3rem 1rem;color:#475569}
+.empty-icon{font-size:3rem;margin-bottom:.75rem}
+.empty-txt{font-size:.95rem;font-weight:600}
+
+/* Toast */
+#toast{position:fixed;bottom:1.25rem;right:1.25rem;padding:.75rem 1.1rem;border-radius:.75rem;color:white;font-weight:700;font-size:.875rem;z-index:99;transform:translateY(80px);opacity:0;transition:all .3s;max-width:280px}
+
+/* Spin */
+.spin{width:1rem;height:1rem;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:rot .6s linear infinite;display:inline-block;vertical-align:middle}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* Auto-refresh indicator */
+.auto-refresh{font-size:.7rem;color:#475569;display:flex;align-items:center;gap:.3rem}
+.dot{width:.45rem;height:.45rem;border-radius:50%;background:#22c55e;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">R</div>
+    <div>
+      <div class="logo-text">RIVO</div>
+      <div class="logo-sub">Rechargements</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span id="badge-attente" style="display:none">0</span>
+    <div class="auto-refresh"><div class="dot"></div> Actualisation auto</div>
+    <button class="btn-refresh" onclick="loadData(true)" id="refresh-btn">🔄 Actualiser</button>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-val" id="stat-att" style="color:#fbbf24">—</div>
+      <div class="stat-lbl">⏳ En attente</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="stat-trt" style="color:#34d399">—</div>
+      <div class="stat-lbl">✅ Traités</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="stat-tot" style="color:#a78bfa">—</div>
+      <div class="stat-lbl">📋 Total</div>
+    </div>
+  </div>
+
+  <!-- Filtres -->
+  <div class="filters">
+    <button class="filter-btn active" id="f-all"       onclick="setFilter('all')">Tous</button>
+    <button class="filter-btn"        id="f-en_attente" onclick="setFilter('en_attente')">⏳ En attente</button>
+    <button class="filter-btn"        id="f-traite"     onclick="setFilter('traite')">✅ Traités</button>
+    <button class="filter-btn"        id="f-rejete"     onclick="setFilter('rejete')">❌ Rejetés</button>
+  </div>
+
+  <!-- Liste -->
+  <div id="list"><div class="empty"><div class="spin"></div></div></div>
+
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+const SB_URL     = 'https://qwdttzsbbspayojzeugy.supabase.co';
+const SB_SERVICE = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3ZHR0enNiYnNwYXlvanpldWd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODk3MTQzNSwiZXhwIjoyMDk0NTQ3NDM1fQ.Qh-1b3NA4wH5Km4W1v-nU0aGagkeIByet2INxccz3tw';
+let sb = null;
+let _all = [];
+let _filter = 'all';
+let _autoTimer = null;
+
+function toast(msg, ok = true) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.background = ok ? '#059669' : '#dc2626';
+  el.style.transform = 'translateY(0)'; el.style.opacity = '1';
+  setTimeout(() => { el.style.transform = 'translateY(80px)'; el.style.opacity = '0'; }, 3000);
+}
+
+function setFilter(f) {
+  _filter = f;
+  ['all','en_attente','traite','rejete'].forEach(k => {
+    const b = document.getElementById('f-' + k);
+    if (b) b.classList.toggle('active', k === f);
+  });
+  render();
+}
+
+function fmt(n) { return Number(n||0).toLocaleString('fr-FR') + ' FCFA'; }
+
+async function loadData(manual = false) {
+  const btn = document.getElementById('refresh-btn');
+  if (manual && btn) { btn.disabled = true; btn.innerHTML = '<span class="spin"></span>'; }
+
+  const { data, error } = await sb
+    .from('recharge_requests')
+    .select('id,user_id,rivo_id,phone,country_code,amount,status,created_at,profiles(first_name,last_name,email)')
+    .order('created_at', { ascending: false })
+    .limit(300);
+
+  if (manual && btn) { btn.disabled = false; btn.innerHTML = '🔄 Actualiser'; }
+  if (error) { toast('Erreur chargement : ' + error.message, false); return; }
+
+  _all = data || [];
+
+  // Stats
+  const att = _all.filter(r => r.status === 'en_attente').length;
+  const trt = _all.filter(r => r.status === 'traite').length;
+  document.getElementById('stat-att').textContent = att;
+  document.getElementById('stat-trt').textContent = trt;
+  document.getElementById('stat-tot').textContent = _all.length;
+
+  // Badge header
+  const badge = document.getElementById('badge-attente');
+  if (att > 0) { badge.style.display = ''; badge.textContent = att + ' en attente'; }
+  else { badge.style.display = 'none'; }
+
+  render();
+}
+
+function render() {
+  const list = document.getElementById('list');
+  const items = _filter === 'all' ? _all : _all.filter(r => r.status === _filter);
+
+  if (items.length === 0) {
+    const msg = _filter === 'en_attente' ? 'Aucune demande en attente 🎉'
+              : _filter === 'traite'     ? 'Aucun rechargement traité'
+              : _filter === 'rejete'     ? 'Aucun rejet'
+              : 'Aucune demande de rechargement';
+    list.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><div class="empty-txt">${msg}</div></div>`;
+    return;
+  }
+
+  list.innerHTML = items.map(r => {
+    const p = r.profiles || {};
+    const nom = [(p.first_name||''), (p.last_name||'')].filter(Boolean).join(' ') || '—';
+    const d = new Date(r.created_at).toLocaleString('fr-FR', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    const sClass = { en_attente:'s-attente', traite:'s-traite', rejete:'s-rejete' }[r.status] || 's-attente';
+    const sLabel = { en_attente:'⏳ En attente', traite:'✅ Traité', rejete:'❌ Rejeté' }[r.status] || r.status;
+
+    const actions = r.status === 'en_attente' ? `
+      <div class="actions">
+        <button class="btn-ok" onclick="valider('${r.id}','${r.user_id}',${r.amount},this)">✅ Valider</button>
+        <button class="btn-ko" onclick="rejeter('${r.id}',this)">❌ Rejeter</button>
+      </div>` : '';
+
+    return `<div class="card" id="card-${r.id}">
+      <div class="card-top">
+        <div class="user-info">
+          <div class="user-name">${nom}</div>
+          <div class="user-sub">${p.email || '—'}</div>
+        </div>
+        <div class="amount">+${fmt(r.amount)}</div>
+      </div>
+      <div class="card-meta">
+        <span class="meta-item">📱 ${r.country_code||'+229'} ${r.phone}</span>
+        ${r.rivo_id ? `<span class="meta-item">🆔 ${r.rivo_id}</span>` : ''}
+        <span class="meta-item">🕐 ${d}</span>
+        <span class="status-badge ${sClass}">${sLabel}</span>
+      </div>
+      ${actions}
+    </div>`;
+  }).join('');
+}
+
+async function valider(id, userId, amount, btn) {
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span>';
+  btn.closest('.card').querySelector('.btn-ko').disabled = true;
+
+  // Créditer via RPC
+  const { error: ue } = await sb.rpc('admin_update_balance', {
+    p_user_id: userId, p_amount: Number(amount), p_field: 'balance'
+  });
+  if (ue) { toast('Erreur crédit : ' + ue.message, false); btn.disabled = false; btn.innerHTML = '✅ Valider'; return; }
+
+  // Marquer traité
+  const { error: re } = await sb.from('recharge_requests').update({ status: 'traite' }).eq('id', id);
+  if (re) { toast('Erreur statut : ' + re.message, false); return; }
+
+  toast(`✅ ${fmt(amount)} crédité !`);
+  loadData();
+}
+
+async function rejeter(id, btn) {
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span>';
+  btn.closest('.card').querySelector('.btn-ok').disabled = true;
+
+  const { error } = await sb.from('recharge_requests').update({ status: 'rejete' }).eq('id', id);
+  if (error) { toast('Erreur : ' + error.message, false); btn.disabled = false; btn.innerHTML = '❌ Rejeter'; return; }
+
+  toast('Demande rejetée');
+  loadData();
+}
+
+function startAutoRefresh() {
+  if (_autoTimer) clearInterval(_autoTimer);
+  _autoTimer = setInterval(() => loadData(false), 30000); // toutes les 30s
+}
+
+// Chargement Supabase
+(function(){
+  var cdns = [
+    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js',
+    'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js'
+  ];
+  function tryLoad(i) {
+    if (i >= cdns.length) { document.getElementById('list').innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-txt">Erreur réseau — rechargez la page</div></div>'; return; }
+    var s = document.createElement('script');
+    s.src = cdns[i];
+    s.onload = function() {
+      sb = window.supabase.createClient(SB_URL, SB_SERVICE, {
+        auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+      });
+      loadData(true);
+      startAutoRefresh();
+    };
+    s.onerror = function() { tryLoad(i + 1); };
+    document.head.appendChild(s);
+  }
+  tryLoad(0);
+})();
+</script>
+</body>
+</html>
