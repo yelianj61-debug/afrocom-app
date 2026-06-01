@@ -2025,7 +2025,7 @@ async function loadPartenaires() {
       </div>
       <div style="display:flex;flex-direction:column;gap:.4rem;flex-shrink:0">
         <button onclick="editPartenaire(${JSON.stringify(p).replace(/"/g,"'")})" class="btn-warning" style="font-size:.75rem;padding:4px 10px">✏️ Modifier</button>
-        <button onclick="deletePartenaire('${p.id}')" class="btn-danger" style="font-size:.75rem;padding:4px 10px">🗑️ Supprimer</button>
+        <button onclick="deletePartenaire('${p.id}', this)" class="btn-danger" style="font-size:.75rem;padding:4px 10px">🗑️ Supprimer</button>
       </div>
     </div>`).join('');
 }
@@ -2118,10 +2118,17 @@ async function savePartenaire() {
   loadPartenaires();
 }
 
-async function deletePartenaire(id) {
-  if (!window.confirm('Supprimer ce partenaire ?')) return;
+async function deletePartenaire(id, btn) {
+  if (btn && btn.dataset.confirm !== '1') {
+    btn.dataset.confirm = '1';
+    btn.textContent = '⚠️ Confirmer ?';
+    btn.style.background = '#b91c1c';
+    setTimeout(() => { if (btn.dataset.confirm) { btn.dataset.confirm=''; btn.textContent='🗑️ Supprimer'; btn.style.background=''; } }, 3000);
+    return;
+  }
+  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
   const { error } = await sbAdmin.from('partners').delete().eq('id', id);
-  if (error) { toast('Erreur : ' + error.message, false); return; }
+  if (error) { toast('Erreur : ' + error.message, false); if (btn) { btn.disabled=false; btn.textContent='🗑️ Supprimer'; } return; }
   toast('Partenaire supprimé');
   loadPartenaires();
 }
