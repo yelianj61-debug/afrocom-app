@@ -1783,8 +1783,7 @@ async function loadRecompensesTab(tab){
         ${st==='rejected'&&u.rejection_reason?`<div style="margin-top:.4rem;font-size:.8rem;color:#ef4444">Motif : ${u.rejection_reason}</div>`:''}
       </div>`;
     }).join('');
-  }else{
-    // Mes points
+  }else if(tab==='points'){
     const pts=CP?.points||0;
     const pct=Math.min(100,Math.round(pts/10));
     cont.innerHTML=`
