@@ -521,6 +521,7 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
           <button id="rt-events" onclick="loadRecompensesTab('events')" style="flex:1;padding:.875rem .5rem;background:none;border:none;border-bottom:3px solid #f59e0b;cursor:pointer;font-weight:700;font-size:.875rem;color:#1F2937;white-space:nowrap">🎉 Événements</button>
           <button id="rt-mine" onclick="loadRecompensesTab('mine')" style="flex:1;padding:.875rem .5rem;background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;font-weight:500;font-size:.875rem;color:#6b7280;white-space:nowrap">📋 Mes événements</button>
           <button id="rt-points" onclick="loadRecompensesTab('points')" style="flex:1;padding:.875rem .5rem;background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;font-weight:500;font-size:.875rem;color:#6b7280;white-space:nowrap">⭐ Mes points</button>
+          <button id="rt-partners" onclick="loadRecompensesTab('partners')" style="flex:1;padding:.875rem .5rem;background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;font-weight:500;font-size:.875rem;color:#6b7280;white-space:nowrap">🤝 Partenaires</button>
         </div>
         <div id="recompenses-content">
           <p style="text-align:center;color:#9ca3af;padding:2rem">Chargement...</p>
@@ -1123,13 +1124,13 @@ async function loadBord(){
     const own=owned.has(c.id);
     return`<div class="card fade-in">
       <div style="height:10rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden">
-        ${c.cover_url?`<img src="${c.cover_url}" style="width:100%;height:100%;object-fit:cover"/>`:'<span style="font-size:2.5rem;opacity:.35">📚</span>'}
+        ${c.cover_url?`<img src="${c.cover_url}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block"/>`:'<span style="font-size:2.5rem;opacity:.35">📚</span>'}
         <span style="position:absolute;top:.5rem;right:.5rem;background:#F59E0B;color:white;font-weight:800;font-size:.75rem;padding:.2rem .65rem;border-radius:9999px">${fmt(c.price,c.currency)}</span>
         ${own?'<span style="position:absolute;top:.5rem;left:.5rem;background:#10b981;color:white;font-weight:800;font-size:.7rem;padding:.2rem .6rem;border-radius:9999px">✓ Acheté</span>':''}
       </div>
       <div style="padding:1rem">
         <h3 style="font-weight:800;color:#1F2937;font-size:.95rem;margin-bottom:.35rem">${c.title}</h3>
-        <p style="color:#6b7280;font-size:.82rem;margin-bottom:.75rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${c.description||''}</p>
+        <p style="color:#6b7280;font-size:.82rem;margin-bottom:.75rem;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${c.description||''}</p>
         <div id="exp-${c.id}" style="display:none;font-size:.82rem;color:#374151;background:#f8fafc;padding:.75rem;border-radius:.75rem;margin-bottom:.75rem;line-height:1.6">${c.full_description||c.description||''}</div>
         <div style="display:flex;gap:.5rem">
           <button onclick="expToggle('${c.id}')" class="btn-outline" style="flex:1;justify-content:center;font-size:.8rem;padding:.45rem .5rem">Lire plus</button>
@@ -1704,7 +1705,7 @@ let currentApplyEventId=null;
 
 async function loadRecompensesTab(tab){
   // Highlight active tab
-  ['events','mine','points'].forEach(t=>{
+  ['events','mine','points','partners'].forEach(t=>{
     const btn=document.getElementById('rt-'+t);
     if(btn){
       btn.style.fontWeight=tab===t?'700':'500';
@@ -1727,16 +1728,19 @@ async function loadRecompensesTab(tab){
       const eligible=myPts>=(e.points_required||1000);
       const pct=Math.min(100,Math.round((myPts/(e.points_required||1000))*100));
       const d=e.event_date?new Date(e.event_date).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}):'—';
+      const isPast=e.event_date&&new Date(e.event_date)<new Date();
       const appStatus=appliedMap[e.id];
       let joinBtn='';
-      if(appStatus){
+      if(isPast){
+        joinBtn=`<button disabled style="background:#e5e7eb;color:#9ca3af;border:none;border-radius:.75rem;padding:.625rem 1rem;font-weight:700;font-size:.8rem;cursor:not-allowed">🏁 Événement terminé</button>`;
+      }else if(appStatus){
         const label=appStatus==='approved'||appStatus==='selected'?'✅ Approuvé':appStatus==='rejected'?'❌ Rejeté':'✅ Demande envoyée';
         joinBtn=`<button disabled style="background:#e5e7eb;color:#6b7280;border:none;border-radius:.75rem;padding:.625rem 1rem;font-weight:700;font-size:.8rem;cursor:not-allowed">${label}</button>`;
       }else if(eligible){
         joinBtn=`<button onclick="openEventApply('${e.id}','${e.title.replace(/'/g,'\\\'')}')" style="background:linear-gradient(135deg,#f59e0b,#ef4444);color:white;border:none;border-radius:.75rem;padding:.625rem 1rem;font-weight:700;font-size:.8rem;cursor:pointer">🎉 Rejoindre cet événement</button>`;
       }
       return `<div style="background:white;border-radius:1rem;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08);margin-bottom:1rem">
-        ${e.image_url?`<img src="${e.image_url}" style="width:100%;height:140px;object-fit:cover"/>`:''}
+        ${e.image_url?`<div style="height:140px;overflow:hidden"><img src="${e.image_url}" style="width:100%;height:100%;object-fit:cover;display:block"/></div>`:''}
         <div style="padding:1rem">
           <div style="font-weight:800;font-size:1rem;margin-bottom:.35rem">${e.title}</div>
           ${e.description?`<p style="font-size:.85rem;color:#6b7280;margin-bottom:.75rem">${e.description}</p>`:''}
@@ -1821,7 +1825,34 @@ async function loadRecompensesTab(tab){
           📤 Envoyer ma vidéo
         </button>
       </div>`;
+  } else if(tab==='partners'){
+    const{data:parts}=await sb.from('partners').select('*').eq('is_active',true).order('sort_order',{ascending:true});
+    if(!parts||parts.length===0){cont.innerHTML='<p style="text-align:center;color:#9ca3af;padding:2rem">Aucun partenaire pour le moment.</p>';return;}
+    cont.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1rem;padding:.25rem">${parts.map(p=>`
+      <div style="background:white;border-radius:1rem;padding:1.25rem;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.07)">
+        ${p.logo_url?`<img src="${p.logo_url}" style="width:5rem;height:5rem;object-fit:contain;border-radius:.75rem;margin:0 auto .75rem;display:block"/>`:'<div style="width:5rem;height:5rem;background:#f1f5f9;border-radius:.75rem;margin:0 auto .75rem;display:flex;align-items:center;justify-content:center;font-size:2rem">🤝</div>'}
+        <div style="font-weight:800;font-size:.875rem;color:#1F2937;margin-bottom:.625rem">${p.name}</div>
+        <button onclick="openPartnerInfo(${JSON.stringify(p).replace(/"/g,'&quot;')})" style="background:#2563eb;color:white;border:none;border-radius:.625rem;padding:.4rem .875rem;font-size:.78rem;font-weight:700;cursor:pointer;width:100%">En savoir plus</button>
+      </div>`).join('')}</div>`;
   }
+}
+
+function openPartnerInfo(p){
+  const el=document.createElement('div');
+  el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1.25rem';
+  el.onclick=function(ev){if(ev.target===el)el.remove();};
+  el.innerHTML=`<div style="background:white;border-radius:1.5rem;padding:1.75rem;max-width:380px;width:100%;box-shadow:0 25px 60px rgba(0,0,0,.3)">
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem">
+      ${p.logo_url?`<img src="${p.logo_url}" style="width:4rem;height:4rem;object-fit:contain;border-radius:.75rem;flex-shrink:0"/>`:'' }
+      <div>
+        <div style="font-weight:900;font-size:1.1rem;color:#1F2937">${p.name}</div>
+        ${p.website_url?`<a href="${p.website_url}" target="_blank" style="font-size:.78rem;color:#2563eb;text-decoration:none">${p.website_url}</a>`:''}
+      </div>
+    </div>
+    <p style="font-size:.9rem;color:#374151;line-height:1.6;margin-bottom:1.25rem">${p.description||'Aucune description.'}</p>
+    <button onclick="this.closest('div[style*=fixed]').remove()" style="width:100%;padding:.75rem;background:#2563eb;color:white;border:none;border-radius:.875rem;font-weight:700;cursor:pointer">Fermer</button>
+  </div>`;
+  document.body.appendChild(el);
 }
 
 function openEventApply(eventId,eventTitle){
@@ -1855,9 +1886,15 @@ async function submitVideo(){
   const msgEl=document.getElementById('video-submit-msg');
   const url=urlEl?.value.trim();
   if(!url){toast('Entrez un lien YouTube/TikTok valide.','err');return;}
-  const {error}=await sb.from('recommendation_videos').insert({user_id:CU.id,video_url:url});
+  // Vérifier si déjà soumise et non refusée
+  const{data:existing}=await sb.from('recommendation_videos').select('id,status').eq('user_id',CU.id).neq('status','rejected').limit(1);
+  if(existing&&existing.length>0){
+    if(msgEl){msgEl.style.display='block';msgEl.style.background='#fef3c7';msgEl.style.color='#92400e';msgEl.textContent='⚠️ Vous avez déjà soumis une vidéo. Notre équipe est en train de l\'examiner.';}
+    return;
+  }
+  const{error}=await sb.from('recommendation_videos').insert({user_id:CU.id,video_url:url});
   if(error){toast('Erreur. Réessayez.','err');return;}
-  if(msgEl){msgEl.style.display='block';msgEl.textContent='✅ Vidéo soumise ! Elle sera examinée sous peu. +500 pts si approuvée.';}
+  if(msgEl){msgEl.style.display='block';msgEl.style.background='#d1fae5';msgEl.style.color='#059669';msgEl.textContent='✅ Vidéo soumise ! Elle sera examinée sous peu. +500 pts si approuvée.';}
   if(urlEl) urlEl.value='';
   toast('Vidéo soumise ! En attente de validation.');
 }
