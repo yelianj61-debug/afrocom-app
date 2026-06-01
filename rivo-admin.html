@@ -507,10 +507,19 @@
         <input type="hidden" id="part-id"/>
         <div class="space-y-3">
           <div><label class="block text-sm text-gray-400 mb-1">Nom du partenaire *</label><input id="part-name" type="text" class="input" placeholder="Ex: Banque Atlantique"/></div>
-          <div><label class="block text-sm text-gray-400 mb-1">URL du logo</label><input id="part-logo" type="url" class="input" placeholder="https://..."/></div>
+          <div>
+            <label class="block text-sm text-gray-400 mb-1">Logo du partenaire</label>
+            <div style="display:flex;align-items:center;gap:.875rem">
+              <div id="part-logo-preview" style="width:3.5rem;height:3.5rem;background:#374151;border-radius:.5rem;display:flex;align-items:center;justify-content:center;font-size:1.5rem;overflow:hidden;flex-shrink:0">🤝</div>
+              <label style="flex:1;background:#1f2937;border:1.5px dashed #4b5563;border-radius:.5rem;padding:.65rem 1rem;cursor:pointer;display:flex;align-items:center;gap:.5rem;color:#9ca3af;font-size:.875rem">
+                📁 Choisir une image
+                <input id="part-logo-file" type="file" accept="image/*" style="display:none" onchange="previewPartLogo(this)"/>
+              </label>
+            </div>
+            <input type="hidden" id="part-logo"/>
+          </div>
           <div><label class="block text-sm text-gray-400 mb-1">Description</label><textarea id="part-desc" class="input" rows="3" style="resize:vertical" placeholder="Présentation du partenaire…"></textarea></div>
           <div><label class="block text-sm text-gray-400 mb-1">Site web</label><input id="part-url" type="url" class="input" placeholder="https://..."/></div>
-          <div><label class="block text-sm text-gray-400 mb-1">Ordre d'affichage</label><input id="part-order" type="number" class="input" value="0" min="0"/></div>
           <div style="display:flex;gap:.5rem">
             <button onclick="savePartenaire()" class="btn-primary">💾 Enregistrer</button>
             <button onclick="document.getElementById('part-form').style.display='none'" style="background:#374151;color:#d1d5db;border:none;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600">Annuler</button>
@@ -2021,13 +2030,25 @@ async function loadPartenaires() {
     </div>`).join('');
 }
 
+function previewPartLogo(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const prev = document.getElementById('part-logo-preview');
+    prev.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:contain"/>`;
+  };
+  reader.readAsDataURL(file);
+}
+
 function openPartenaireForm() {
   document.getElementById('part-id').value = '';
   document.getElementById('part-name').value = '';
   document.getElementById('part-logo').value = '';
+  document.getElementById('part-logo-file').value = '';
+  document.getElementById('part-logo-preview').innerHTML = '🤝';
   document.getElementById('part-desc').value = '';
   document.getElementById('part-url').value = '';
-  document.getElementById('part-order').value = '0';
   document.getElementById('part-form-title').textContent = 'Nouveau partenaire';
   document.getElementById('part-form').style.display = 'block';
 }
@@ -2036,24 +2057,52 @@ function editPartenaire(p) {
   document.getElementById('part-id').value = p.id || '';
   document.getElementById('part-name').value = p.name || '';
   document.getElementById('part-logo').value = p.logo_url || '';
+  document.getElementById('part-logo-file').value = '';
+  const prev = document.getElementById('part-logo-preview');
+  if (p.logo_url) {
+    prev.innerHTML = `<img src="${p.logo_url}" style="width:100%;height:100%;object-fit:contain"/>`;
+  } else {
+    prev.innerHTML = '🤝';
+  }
   document.getElementById('part-desc').value = p.description || '';
   document.getElementById('part-url').value = p.website_url || '';
-  document.getElementById('part-order').value = p.sort_order || 0;
   document.getElementById('part-form-title').textContent = 'Modifier le partenaire';
   document.getElementById('part-form').style.display = 'block';
   document.getElementById('part-form').scrollIntoView({ behavior: 'smooth' });
 }
 
 async function savePartenaire() {
-  const id = document.getElementById('part-id').value;
+  const id   = document.getElementById('part-id').value;
   const name = document.getElementById('part-name').value.trim();
   if (!name) { toast('Le nom est obligatoire', false); return; }
+
+  const saveBtn = document.querySelector('#part-form .btn-primary');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '⏳ Enregistrement…'; }
+
+  // Upload image si un fichier a été sélectionné
+  let logoUrl = document.getElementById('part-logo').value.trim() || null;
+  const fileInput = document.getElementById('part-logo-file');
+  if (fileInput.files[0]) {
+    try {
+      const fd = new FormData();
+      fd.append('file', fileInput.files[0]);
+      fd.append('upload_preset', 'afrotv_avatars');
+      const r = await fetch('https://api.cloudinary.com/v1_1/dx0dzt35e/image/upload', { method: 'POST', body: fd });
+      const d = await r.json();
+      if (d.error) throw new Error(d.error.message);
+      logoUrl = d.secure_url;
+    } catch (e) {
+      toast('Erreur upload logo : ' + e.message, false);
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '💾 Enregistrer'; }
+      return;
+    }
+  }
+
   const payload = {
     name,
-    logo_url:    document.getElementById('part-logo').value.trim() || null,
+    logo_url:    logoUrl,
     description: document.getElementById('part-desc').value.trim() || null,
     website_url: document.getElementById('part-url').value.trim() || null,
-    sort_order:  parseInt(document.getElementById('part-order').value) || 0,
     is_active:   true
   };
   let error;
@@ -2062,6 +2111,7 @@ async function savePartenaire() {
   } else {
     ({ error } = await sbAdmin.from('partners').insert([payload]));
   }
+  if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '💾 Enregistrer'; }
   if (error) { toast('Erreur : ' + error.message, false); return; }
   toast(id ? '✅ Partenaire modifié' : '✅ Partenaire ajouté');
   document.getElementById('part-form').style.display = 'none';
