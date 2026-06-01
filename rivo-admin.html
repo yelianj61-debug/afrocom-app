@@ -142,6 +142,10 @@
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
         <span class="font-medium">🛒 Achats</span>
       </button>
+      <button onclick="switchTab('partenaires')" id="tab-partenaires" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-gray-300 hover:bg-gray-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <span class="font-medium">🤝 Partenaires</span>
+      </button>
     </nav>
 
     <div class="p-4 border-t border-gray-700">
@@ -487,6 +491,39 @@
       </div>
     </div>
 
+    <!-- Section Partenaires -->
+    <div id="page-partenaires" class="p-8 hidden" style="display:none">
+      <div class="mb-6 flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-white">🤝 Partenaires</h1>
+          <p class="text-gray-400 mt-1">Gérer les partenaires affichés dans l'application</p>
+        </div>
+        <button onclick="openPartenaireForm()" class="btn-primary">➕ Ajouter</button>
+      </div>
+
+      <!-- Formulaire ajout/modif -->
+      <div id="part-form" style="display:none;background:#111827;border:1px solid #374151;border-radius:.875rem;padding:1.5rem;margin-bottom:1.5rem;max-width:540px">
+        <h3 id="part-form-title" class="font-bold text-white mb-4">Nouveau partenaire</h3>
+        <input type="hidden" id="part-id"/>
+        <div class="space-y-3">
+          <div><label class="block text-sm text-gray-400 mb-1">Nom du partenaire *</label><input id="part-name" type="text" class="input" placeholder="Ex: Banque Atlantique"/></div>
+          <div><label class="block text-sm text-gray-400 mb-1">URL du logo</label><input id="part-logo" type="url" class="input" placeholder="https://..."/></div>
+          <div><label class="block text-sm text-gray-400 mb-1">Description</label><textarea id="part-desc" class="input" rows="3" style="resize:vertical" placeholder="Présentation du partenaire…"></textarea></div>
+          <div><label class="block text-sm text-gray-400 mb-1">Site web</label><input id="part-url" type="url" class="input" placeholder="https://..."/></div>
+          <div><label class="block text-sm text-gray-400 mb-1">Ordre d'affichage</label><input id="part-order" type="number" class="input" value="0" min="0"/></div>
+          <div style="display:flex;gap:.5rem">
+            <button onclick="savePartenaire()" class="btn-primary">💾 Enregistrer</button>
+            <button onclick="document.getElementById('part-form').style.display='none'" style="background:#374151;color:#d1d5db;border:none;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600">Annuler</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Liste -->
+      <div id="part-list" class="space-y-3" style="max-width:700px">
+        <p class="text-gray-500 text-center py-8">Chargement…</p>
+      </div>
+    </div>
+
     <!-- Section Achats -->
     <div id="page-achats" class="p-8 hidden" style="display:none">
       <div class="mb-6">
@@ -783,7 +820,7 @@ async function doLogout() {
 
 /* ── Tab navigation ───────────────────────────────────── */
 function switchTab(name) {
-  ['dashboard','utilisateurs','formations','retraits','attestations','notifications','videos','events','classement','solde','rechargements','achats'].forEach(t => {
+  ['dashboard','utilisateurs','formations','retraits','attestations','notifications','videos','events','classement','solde','rechargements','achats','partenaires'].forEach(t => {
     const el = document.getElementById('page-' + t);
     if(el){el.classList.add('hidden'); el.style.display = 'none';}
     const btn = document.getElementById('tab-' + t);
@@ -806,6 +843,7 @@ function switchTab(name) {
     if (name === 'events')         loadEvents();
     if (name === 'classement')     loadClassement();
     if (name === 'rechargements')  loadRechargements(false);
+    if (name === 'partenaires')    loadPartenaires();
   }
 }
 
@@ -1958,6 +1996,84 @@ async function rejeterRecharge(id) {
   if (error) { toast('Erreur : ' + error.message, false); return; }
   toast('Demande rejetée');
   loadRechargements(true);
+}
+
+/* ── Partenaires ──────────────────────────────────────── */
+async function loadPartenaires() {
+  const list = document.getElementById('part-list');
+  if (!list) return;
+  list.innerHTML = '<p class="text-gray-500 text-center py-8">Chargement…</p>';
+  const { data, error } = await sbAdmin.from('partners').select('*').order('sort_order', { ascending: true });
+  if (error) { list.innerHTML = `<p style="color:#ef4444;text-align:center;padding:2rem">Erreur : ${error.message}</p>`; return; }
+  if (!data || data.length === 0) { list.innerHTML = '<p class="text-gray-500 text-center py-8">Aucun partenaire. Cliquez sur ➕ Ajouter.</p>'; return; }
+  list.innerHTML = data.map(p => `
+    <div style="background:#1e293b;border:1px solid #334155;border-radius:.875rem;padding:1rem;display:flex;align-items:center;gap:1rem">
+      ${p.logo_url ? `<img src="${p.logo_url}" style="width:3.5rem;height:3.5rem;object-fit:contain;border-radius:.5rem;flex-shrink:0;background:white;padding:.25rem"/>` : '<div style="width:3.5rem;height:3.5rem;background:#374151;border-radius:.5rem;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0">🤝</div>'}
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;color:white">${p.name}</div>
+        <div style="font-size:.78rem;color:#94a3b8;margin-top:.2rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.description||'—'}</div>
+        ${p.website_url ? `<a href="${p.website_url}" target="_blank" style="font-size:.75rem;color:#60a5fa">${p.website_url}</a>` : ''}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.4rem;flex-shrink:0">
+        <button onclick="editPartenaire(${JSON.stringify(p).replace(/"/g,"'")})" class="btn-warning" style="font-size:.75rem;padding:4px 10px">✏️ Modifier</button>
+        <button onclick="deletePartenaire('${p.id}')" class="btn-danger" style="font-size:.75rem;padding:4px 10px">🗑️ Supprimer</button>
+      </div>
+    </div>`).join('');
+}
+
+function openPartenaireForm() {
+  document.getElementById('part-id').value = '';
+  document.getElementById('part-name').value = '';
+  document.getElementById('part-logo').value = '';
+  document.getElementById('part-desc').value = '';
+  document.getElementById('part-url').value = '';
+  document.getElementById('part-order').value = '0';
+  document.getElementById('part-form-title').textContent = 'Nouveau partenaire';
+  document.getElementById('part-form').style.display = 'block';
+}
+
+function editPartenaire(p) {
+  document.getElementById('part-id').value = p.id || '';
+  document.getElementById('part-name').value = p.name || '';
+  document.getElementById('part-logo').value = p.logo_url || '';
+  document.getElementById('part-desc').value = p.description || '';
+  document.getElementById('part-url').value = p.website_url || '';
+  document.getElementById('part-order').value = p.sort_order || 0;
+  document.getElementById('part-form-title').textContent = 'Modifier le partenaire';
+  document.getElementById('part-form').style.display = 'block';
+  document.getElementById('part-form').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function savePartenaire() {
+  const id = document.getElementById('part-id').value;
+  const name = document.getElementById('part-name').value.trim();
+  if (!name) { toast('Le nom est obligatoire', false); return; }
+  const payload = {
+    name,
+    logo_url:    document.getElementById('part-logo').value.trim() || null,
+    description: document.getElementById('part-desc').value.trim() || null,
+    website_url: document.getElementById('part-url').value.trim() || null,
+    sort_order:  parseInt(document.getElementById('part-order').value) || 0,
+    is_active:   true
+  };
+  let error;
+  if (id) {
+    ({ error } = await sbAdmin.from('partners').update(payload).eq('id', id));
+  } else {
+    ({ error } = await sbAdmin.from('partners').insert([payload]));
+  }
+  if (error) { toast('Erreur : ' + error.message, false); return; }
+  toast(id ? '✅ Partenaire modifié' : '✅ Partenaire ajouté');
+  document.getElementById('part-form').style.display = 'none';
+  loadPartenaires();
+}
+
+async function deletePartenaire(id) {
+  if (!window.confirm('Supprimer ce partenaire ?')) return;
+  const { error } = await sbAdmin.from('partners').delete().eq('id', id);
+  if (error) { toast('Erreur : ' + error.message, false); return; }
+  toast('Partenaire supprimé');
+  loadPartenaires();
 }
 
 /* ── Achats par utilisateur ───────────────────────────── */
