@@ -738,8 +738,9 @@ function linkOneSignalUser(userId) {
 }
 
 function showNotifBanner() {
-  if (localStorage.getItem('rivo_notif_dismissed')) return;
-  if (typeof Notification !== 'undefined' && Notification.permission !== 'default') return;
+  if (typeof Notification !== 'undefined' && Notification.permission === 'granted') return;
+  if (typeof Notification !== 'undefined' && Notification.permission === 'denied') return;
+  if (sessionStorage.getItem('rivo_notif_dismissed')) return;
   const b = document.getElementById('notif-banner');
   if (b) b.style.display = 'flex';
 }
@@ -747,16 +748,19 @@ function showNotifBanner() {
 async function acceptNotif() {
   const b = document.getElementById('notif-banner');
   if (b) b.style.display = 'none';
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  window.OneSignalDeferred.push(async function(OneSignal) {
-    try { await OneSignal.Notifications.requestPermission(); } catch(e) {}
-  });
+  try {
+    if (window.OneSignal && window.OneSignal.Notifications) {
+      await window.OneSignal.Notifications.requestPermission();
+    } else {
+      await Notification.requestPermission();
+    }
+  } catch(e) { console.warn('[notif]', e); }
 }
 
 function dismissNotifBanner() {
   const b = document.getElementById('notif-banner');
   if (b) b.style.display = 'none';
-  localStorage.setItem('rivo_notif_dismissed', '1');
+  sessionStorage.setItem('rivo_notif_dismissed', '1');
 }
 // Déclenche la notification d'encouragement quotidienne (pseudo-cron via api.php)
 async function checkDailyNotif() {
