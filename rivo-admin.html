@@ -768,34 +768,8 @@
 const SB_URL     = 'https://qwdttzsbbspayojzeugy.supabase.co';
 const SB_ANON    = 'sb_publishable_tG64uzNsmT0XDV7pmglqFA_lxQ4xIFm';
 const SB_SERVICE = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3ZHR0enNiYnNwYXlvanpldWd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODk3MTQzNSwiZXhwIjoyMDk0NTQ3NDM1fQ.Qh-1b3NA4wH5Km4W1v-nU0aGagkeIByet2INxccz3tw';
-const OS_APP_ID  = 'cd5c4766-ed24-448f-af41-661f02dfe084';
-const OS_REST_KEY = 'os_v2_app_zvoeozxnerci7l2bmypqfx7aqsknyefffj6u2kf6udqbftah37i6bndmmpfzqie7gyovjw25z7pduvevji7ovdfwkilvfwxmbnupv3q';
 let sb = null;
 let sbAdmin = null;
-
-// ── OneSignal push helper (conservé, non utilisé) ─────────────────────────────
-async function osNotify(target, title, message, url = '') {
-  if (!OS_REST_KEY) return;
-  const payload = {
-    app_id:   OS_APP_ID,
-    headings: { fr: title,   en: title },
-    contents: { fr: message, en: message },
-  };
-  if (url) payload.url = url;
-  if (target === 'all') {
-    payload.included_segments = ['All'];
-  } else {
-    payload.include_aliases = { external_id: [target] };
-    payload.target_channel  = 'push';
-  }
-  try {
-    await fetch('https://onesignal.com/api/v1/notifications', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Key ' + OS_REST_KEY },
-      body:    JSON.stringify(payload),
-    });
-  } catch(e) { console.warn('[OneSignal]', e?.message); }
-}
 
 async function fcmNotify(target, title, message, url = '') {
   try {

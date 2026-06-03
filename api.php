@@ -12,12 +12,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 // ── Clés (server-side only) ──────────────────────────────────────────────────
 define('SB_URL',     'https://qwdttzsbbspayojzeugy.supabase.co');
 define('SB_SERVICE', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3ZHR0enNiYnNwYXlvanpldWd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODk3MTQzNSwiZXhwIjoyMDk0NTQ3NDM1fQ.Qh-1b3NA4wH5Km4W1v-nU0aGagkeIByet2INxccz3tw');
-define('OS_APP_ID',  'cd5c4766-ed24-448f-af41-661f02dfe084');
-define('OS_REST_KEY','os_v2_app_zvoeozxnerci7l2bmypqfx7aqsknyefffj6u2kf6udqbftah37i6bndmmpfzqie7gyovjw25z7pduvevji7ovdfwkilvfwxmbnupv3q');
 
 // ── Firebase Cloud Messaging ─────────────────────────────────────────────────
 define('FCM_PROJECT_ID', 'afrotv-b57a1');
-// Clé stockée dans un fichier séparé (jamais commité dans git)
 define('FCM_SERVICE_ACCOUNT', file_get_contents(__DIR__ . '/fcm-service-account.json') ?: '{}');
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -184,75 +181,6 @@ if ($q['type'] === 'query') {
     exit;
 }
 
-// ── NOTIFY (OneSignal push notification) ─────────────────────────────────────
-if ($q['type'] === 'notify') {
-    if (!OS_REST_KEY) { echo json_encode(['skipped' => true, 'reason' => 'REST key not set']); exit; }
-    $title   = $q['title']   ?? 'RIVO';
-    $message = $q['message'] ?? '';
-    $url     = $q['url']     ?? '';
-    $target  = $q['target']  ?? 'all';
-    $payload = [
-        'app_id'   => OS_APP_ID,
-        'headings' => ['fr' => $title,   'en' => $title],
-        'contents' => ['fr' => $message, 'en' => $message],
-    ];
-    if ($url) $payload['url'] = $url;
-    if ($target === 'all') {
-        $payload['included_segments'] = ['All'];
-    } else {
-        $payload['include_aliases'] = ['external_id' => [$target]];
-        $payload['target_channel']  = 'push';
-    }
-    $ch = curl_init('https://onesignal.com/api/v1/notifications');
-    curl_setopt_array($ch, [
-        CURLOPT_POST           => true,
-        CURLOPT_POSTFIELDS     => json_encode($payload),
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT        => 10,
-        CURLOPT_HTTPHEADER     => ['Content-Type: application/json', 'Authorization: Key ' . OS_REST_KEY],
-    ]);
-    $raw = curl_exec($ch); $err = curl_error($ch); curl_close($ch);
-    echo $err ? json_encode(['error' => ['message' => $err]]) : $raw;
-    exit;
-}
-
-// ── DAILY NOTIF (pseudo-cron encouragement) ───────────────────────────────────
-if ($q['type'] === 'daily_notif') {
-    if (!OS_REST_KEY) { echo json_encode(['skipped' => true, 'reason' => 'REST key not set']); exit; }
-    $dateFile = sys_get_temp_dir() . '/rivo_daily_notif.txt';
-    $today    = date('Y-m-d');
-    if (file_exists($dateFile) && trim(file_get_contents($dateFile)) === $today) {
-        echo json_encode(['skipped' => true, 'reason' => 'already_sent_today']); exit;
-    }
-    $messages = [
-        ['🔥 Continue d\'apprendre !', 'Connecte-toi pour gagner des points aujourd\'hui sur RIVO'],
-        ['📚 Une formation t\'attend !', 'Termine ce que tu as commencé et progresse chaque jour'],
-        ['⭐ Objectif du jour', 'Découvre une nouvelle formation et gagne des points sur RIVO'],
-        ['💪 Les meilleurs gagnent des récompenses !', 'Voiture, Moto, Visa… Et si c\'était toi ? Continue d\'apprendre !'],
-        ['🎯 Prêt pour aujourd\'hui ?', 'Achète des formations et gagne des récompenses incroyables sur RIVO'],
-        ['🏆 Les champions apprennent chaque jour', 'Rejoins les meilleurs apprenants RIVO et gagne des lots'],
-        ['🚀 Ta prochaine récompense t\'attend', 'Continue d\'apprendre sur RIVO : Voiture / Moto / Visa / Emploi'],
-    ];
-    $pick    = $messages[array_rand($messages)];
-    $payload = [
-        'app_id'            => OS_APP_ID,
-        'included_segments' => ['All'],
-        'headings'          => ['fr' => $pick[0], 'en' => $pick[0]],
-        'contents'          => ['fr' => $pick[1], 'en' => $pick[1]],
-    ];
-    $ch = curl_init('https://onesignal.com/api/v1/notifications');
-    curl_setopt_array($ch, [
-        CURLOPT_POST           => true,
-        CURLOPT_POSTFIELDS     => json_encode($payload),
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT        => 10,
-        CURLOPT_HTTPHEADER     => ['Content-Type: application/json', 'Authorization: Key ' . OS_REST_KEY],
-    ]);
-    $raw = curl_exec($ch); $err = curl_error($ch); curl_close($ch);
-    if (!$err) @file_put_contents($dateFile, $today);
-    echo $err ? json_encode(['error' => ['message' => $err]]) : $raw;
-    exit;
-}
 
 // ── FCM helpers ───────────────────────────────────────────────────────────────
 function fcmB64u(string $d): string {
