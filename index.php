@@ -102,17 +102,6 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
 <div id="toasts"></div>
 
 <!-- Bannière activation notifications push -->
-<div id="notif-banner" style="display:none;position:fixed;bottom:5.5rem;left:.875rem;right:.875rem;background:white;border-radius:1.25rem;padding:1rem 1.1rem;box-shadow:0 8px 32px rgba(0,0,0,.18);z-index:998;align-items:center;gap:.875rem;border:1.5px solid #e0e7ff;animation:slideIn .3s ease">
-  <div style="font-size:1.75rem;flex-shrink:0">🔔</div>
-  <div style="flex:1;min-width:0">
-    <div style="font-weight:800;font-size:.9rem;color:#1F2937">Activer les notifications</div>
-    <div style="font-size:.78rem;color:#6b7280;margin-top:.15rem">Attestations, rechargements, alertes RIVO en temps réel</div>
-  </div>
-  <div style="display:flex;flex-direction:column;gap:.35rem;flex-shrink:0">
-    <button onclick="acceptNotif()" style="background:#2563EB;color:white;border:none;border-radius:.5rem;padding:.4rem .875rem;font-size:.8rem;font-weight:700;cursor:pointer;white-space:nowrap">✅ Oui</button>
-    <button onclick="dismissNotifBanner()" style="background:#f1f5f9;color:#6b7280;border:none;border-radius:.5rem;padding:.4rem .875rem;font-size:.8rem;font-weight:600;cursor:pointer">Non merci</button>
-  </div>
-</div>
 
 <!-- ═══════════════════ PAGE: LANDING ═══════════════════ -->
 <div id="page-landing" class="page active">
@@ -740,42 +729,11 @@ function linkOneSignalUser(userId) {
     try { await OneSignal.login(userId); } catch(e) {}
     if (typeof Notification === 'undefined' || Notification.permission !== 'default') return;
     setTimeout(async () => {
-      try {
-        // Tente le vrai popup natif Chrome directement
-        await OneSignal.Notifications.requestPermission();
-      } catch(e) {
-        // Si bloqué par le navigateur, afficher la bannière comme fallback
-        showNotifBanner();
-      }
+      try { await OneSignal.Notifications.requestPermission(); } catch(e) {}
     }, 1500);
   });
 }
 
-function showNotifBanner() {
-  if (typeof Notification !== 'undefined' && Notification.permission === 'granted') return;
-  if (typeof Notification !== 'undefined' && Notification.permission === 'denied') return;
-  if (sessionStorage.getItem('rivo_notif_dismissed')) return;
-  const b = document.getElementById('notif-banner');
-  if (b) b.style.display = 'flex';
-}
-
-async function acceptNotif() {
-  const b = document.getElementById('notif-banner');
-  if (b) b.style.display = 'none';
-  try {
-    if (window.OneSignal && window.OneSignal.Notifications) {
-      await window.OneSignal.Notifications.requestPermission();
-    } else {
-      await Notification.requestPermission();
-    }
-  } catch(e) { console.warn('[notif]', e); }
-}
-
-function dismissNotifBanner() {
-  const b = document.getElementById('notif-banner');
-  if (b) b.style.display = 'none';
-  sessionStorage.setItem('rivo_notif_dismissed', '1');
-}
 // Déclenche la notification d'encouragement quotidienne (pseudo-cron via api.php)
 async function checkDailyNotif() {
   try {
