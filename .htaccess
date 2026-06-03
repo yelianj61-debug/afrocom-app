@@ -1,0 +1,6 @@
+Options -Indexes
+# Autoriser l'accès au dossier .well-known (requis pour Android TWA)
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^\.well-known/ - [L]
+</IfModule>

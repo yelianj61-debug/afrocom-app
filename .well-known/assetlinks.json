@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.freedev.rivo.twa",
+        "sha256_cert_fingerprints": ["09:BA:98:76:DA:1A:73:7B:F6:32:F8:0E:BE:B4:DF:0F:69:4E:32:29:70:1D:72:4E:9A:DC:A9:7D:32:FB:B8:AC"]
+      }
+    }]
