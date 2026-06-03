@@ -11,11 +11,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="RIVO">
 <link rel="apple-touch-icon" href="icon-192.png">
-<!-- OneSignal Web Push -->
-<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<!-- Firebase Auth (compat SDK — accès via firebase.auth() global) -->
+<!-- Firebase Auth + Messaging (compat SDK) -->
 <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-messaging-compat.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <style>
@@ -708,30 +707,35 @@ const OS_APP_ID = 'cd5c4766-ed24-448f-af41-661f02dfe084';
 // SB_SERVICE est stocké côté serveur (api.php) — jamais exposé ici
 let sb = null;
 
-// ── OneSignal : init au chargement de la page ─────────────────────────────────
-window.OneSignalDeferred = window.OneSignalDeferred || [];
-window.OneSignalDeferred.push(async function(OneSignal) {
+// ── Firebase Cloud Messaging ───────────────────────────────────────────────────
+const FCM_CONFIG = {
+  apiKey:            'AIzaSyB_60iiusL6VBU0XCFrU73KIkKn690Sy_E',
+  authDomain:        'afrotv-b57a1.firebaseapp.com',
+  projectId:         'afrotv-b57a1',
+  storageBucket:     'afrotv-b57a1.firebasestorage.app',
+  messagingSenderId: '1070632769878',
+  appId:             '1:1070632769878:web:b2c5f41896265e3a979ef7',
+};
+const FCM_VAPID = 'BBOOP7-ny_XIW88wDcLZ06l_7HbHItb8fql6TvjGdnl8r1ZeN_RbNywUkadszl50MKDeENLl6ERHLLzi3RspQec';
+
+async function initFCM(userId) {
+  if (!userId || !('Notification' in window) || !('serviceWorker' in navigator)) return;
   try {
-    await OneSignal.init({
-      appId: OS_APP_ID,
-      notifyButton: { enable: false },
-      allowLocalhostAsSecureOrigin: false,
-      serviceWorkerParam: { scope: '/' },
-      serviceWorkerPath: 'OneSignalSDKWorker.js',
+    const fcmApp = firebase.apps.find(a => a.name === 'fcm') ||
+                   firebase.initializeApp(FCM_CONFIG, 'fcm');
+    const messaging = fcmApp.messaging();
+    const swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') return;
+    const token = await messaging.getToken({ vapidKey: FCM_VAPID, serviceWorkerRegistration: swReg });
+    if (!token) return;
+    await sbAdmin.from('profiles').update({ fcm_token: token }).eq('id', userId);
+    messaging.onMessage(payload => {
+      const title = payload.notification?.title || 'RIVO';
+      const body  = payload.notification?.body  || '';
+      toast(`🔔 ${title} — ${body}`, 'ok', 6000);
     });
-  } catch(e) { console.warn('[OneSignal init]', e?.message); }
-});
-// Lie l'abonnement OneSignal à l'ID Supabase + demande permission push
-function linkOneSignalUser(userId) {
-  if (!userId) return;
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  window.OneSignalDeferred.push(async function(OneSignal) {
-    try { await OneSignal.login(userId); } catch(e) {}
-    if (typeof Notification === 'undefined' || Notification.permission !== 'default') return;
-    setTimeout(async () => {
-      try { await OneSignal.Notifications.requestPermission(); } catch(e) {}
-    }, 1500);
-  });
+  } catch(e) { console.warn('[FCM]', e?.message); }
 }
 
 // Déclenche la notification d'encouragement quotidienne (pseudo-cron via api.php)
@@ -740,7 +744,7 @@ async function checkDailyNotif() {
     await fetch('api.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'daily_notif' })
+      body: JSON.stringify({ type: 'fcm_daily_notif' })
     });
   } catch(e) {}
 }
@@ -953,8 +957,8 @@ async function loadProfileData(){
     CP=p;
     // Shim de compatibilité pour tout le code qui utilise CU.id et CU.email
     CU={id:p.id, email:FBU.email};
-    // OneSignal : lier l'abonnement push + vérifier notif quotidienne
-    linkOneSignalUser(p.id);
+    // FCM : demander permission + enregistrer token + notif quotidienne
+    initFCM(p.id);
     checkDailyNotif();
     // Générer rivo_id si absent
     if(!p.rivo_id){

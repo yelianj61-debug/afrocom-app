@@ -15,6 +15,11 @@ define('SB_SERVICE', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 define('OS_APP_ID',  'cd5c4766-ed24-448f-af41-661f02dfe084');
 define('OS_REST_KEY','os_v2_app_zvoeozxnerci7l2bmypqfx7aqsknyefffj6u2kf6udqbftah37i6bndmmpfzqie7gyovjw25z7pduvevji7ovdfwkilvfwxmbnupv3q');
 
+// ── Firebase Cloud Messaging ─────────────────────────────────────────────────
+define('FCM_PROJECT_ID', 'afrotv-b57a1');
+// Depuis Firebase Console → Paramètres du projet → Comptes de service → Générer une clé privée
+define('FCM_SERVICE_ACCOUNT', '{}');
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function sbHeaders(): array {
     return [
@@ -246,6 +251,90 @@ if ($q['type'] === 'daily_notif') {
     $raw = curl_exec($ch); $err = curl_error($ch); curl_close($ch);
     if (!$err) @file_put_contents($dateFile, $today);
     echo $err ? json_encode(['error' => ['message' => $err]]) : $raw;
+    exit;
+}
+
+// ── FCM helpers ───────────────────────────────────────────────────────────────
+function fcmB64u(string $d): string {
+    return rtrim(strtr(base64_encode($d), '+/', '-_'), '=');
+}
+function fcmAccessToken(): ?string {
+    $sa = json_decode(FCM_SERVICE_ACCOUNT, true);
+    if (empty($sa['private_key'])) return null;
+    $now = time();
+    $h = fcmB64u(json_encode(['alg' => 'RS256', 'typ' => 'JWT']));
+    $p = fcmB64u(json_encode([
+        'iss'   => $sa['client_email'],
+        'scope' => 'https://www.googleapis.com/auth/firebase.messaging',
+        'aud'   => 'https://oauth2.googleapis.com/token',
+        'iat'   => $now,
+        'exp'   => $now + 3600,
+    ]));
+    openssl_sign("$h.$p", $sig, $sa['private_key'], 'sha256WithRSAEncryption');
+    $jwt = "$h.$p." . fcmB64u($sig);
+    $ch = curl_init('https://oauth2.googleapis.com/token');
+    curl_setopt_array($ch, [CURLOPT_POST => true, CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 10,
+        CURLOPT_POSTFIELDS => http_build_query(['grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer', 'assertion' => $jwt])]);
+    $resp = json_decode(curl_exec($ch), true); curl_close($ch);
+    return $resp['access_token'] ?? null;
+}
+function fcmSendOne(string $token, string $title, string $body, string $url = ''): array {
+    $at = fcmAccessToken();
+    if (!$at) return ['error' => 'service_account_not_configured'];
+    $msg = ['token' => $token, 'notification' => ['title' => $title, 'body' => $body],
+        'webpush' => ['notification' => ['icon' => '/icon-192.png', 'badge' => '/icon-192.png', 'vibrate' => [200, 100, 200]],
+                      'fcm_options'  => ['link' => $url ?: '/']]];
+    $ch = curl_init('https://fcm.googleapis.com/v1/projects/' . FCM_PROJECT_ID . '/messages:send');
+    curl_setopt_array($ch, [CURLOPT_POST => true, CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 10,
+        CURLOPT_POSTFIELDS => json_encode(['message' => $msg]),
+        CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'Authorization: Bearer ' . $at]]);
+    $raw = curl_exec($ch); $err = curl_error($ch); curl_close($ch);
+    return $err ? ['error' => $err] : (json_decode($raw, true) ?? ['error' => 'invalid_response']);
+}
+
+// ── FCM NOTIFY ────────────────────────────────────────────────────────────────
+if ($q['type'] === 'fcm_notify') {
+    $title  = $q['title']   ?? 'RIVO';
+    $msg    = $q['message'] ?? '';
+    $url    = $q['url']     ?? '';
+    $target = $q['target']  ?? 'all';
+    if ($target === 'all') {
+        $r = sbRequest('GET', '/rest/v1/profiles?select=fcm_token&fcm_token=not.is.null&limit=2000');
+        $tokens = array_filter(array_column($r['data'] ?? [], 'fcm_token'));
+    } else {
+        $r = sbRequest('GET', '/rest/v1/profiles?select=fcm_token&id=eq.' . urlencode($target));
+        $tk = $r['data'][0]['fcm_token'] ?? null;
+        $tokens = $tk ? [$tk] : [];
+    }
+    $sent = 0;
+    foreach ($tokens as $tok) { if (!isset(fcmSendOne($tok, $title, $msg, $url)['error'])) $sent++; }
+    echo json_encode(['sent' => $sent, 'total' => count($tokens)]);
+    exit;
+}
+
+// ── FCM DAILY NOTIF ───────────────────────────────────────────────────────────
+if ($q['type'] === 'fcm_daily_notif') {
+    $dateFile = sys_get_temp_dir() . '/rivo_fcm_daily.txt';
+    $today    = date('Y-m-d');
+    if (file_exists($dateFile) && trim(file_get_contents($dateFile)) === $today) {
+        echo json_encode(['skipped' => true, 'reason' => 'already_sent_today']); exit;
+    }
+    $messages = [
+        ['🔥 Continue d\'apprendre !', 'Connecte-toi pour gagner des points aujourd\'hui sur RIVO'],
+        ['📚 Une formation t\'attend !', 'Termine ce que tu as commencé et progresse chaque jour'],
+        ['⭐ Objectif du jour', 'Découvre une nouvelle formation et gagne des points sur RIVO'],
+        ['💪 Les meilleurs gagnent des récompenses !', 'Voiture, Moto, Visa… Et si c\'était toi ? Continue d\'apprendre !'],
+        ['🎯 Prêt pour aujourd\'hui ?', 'Achète des formations et gagne des récompenses incroyables sur RIVO'],
+        ['🏆 Les champions apprennent chaque jour', 'Rejoins les meilleurs apprenants RIVO et gagne des lots'],
+        ['🚀 Ta prochaine récompense t\'attend', 'Continue d\'apprendre sur RIVO : Voiture / Moto / Visa / Emploi'],
+    ];
+    $pick = $messages[array_rand($messages)];
+    $r    = sbRequest('GET', '/rest/v1/profiles?select=fcm_token&fcm_token=not.is.null&limit=2000');
+    $tokens = array_filter(array_column($r['data'] ?? [], 'fcm_token'));
+    $sent = 0;
+    foreach ($tokens as $tok) { if (!isset(fcmSendOne($tok, $pick[0], $pick[1])['error'])) $sent++; }
+    if ($sent > 0 || empty($tokens)) @file_put_contents($dateFile, $today);
+    echo json_encode(['sent' => $sent, 'total' => count($tokens)]);
     exit;
 }
 
