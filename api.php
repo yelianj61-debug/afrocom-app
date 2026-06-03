@@ -204,7 +204,7 @@ if ($q['type'] === 'notify') {
         CURLOPT_POSTFIELDS     => json_encode($payload),
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT        => 10,
-        CURLOPT_HTTPHEADER     => ['Content-Type: application/json', 'Authorization: Basic ' . OS_REST_KEY],
+        CURLOPT_HTTPHEADER     => ['Content-Type: application/json', 'Authorization: Key ' . OS_REST_KEY],
     ]);
     $raw = curl_exec($ch); $err = curl_error($ch); curl_close($ch);
     echo $err ? json_encode(['error' => ['message' => $err]]) : $raw;
@@ -214,7 +214,7 @@ if ($q['type'] === 'notify') {
 // ── DAILY NOTIF (pseudo-cron encouragement) ───────────────────────────────────
 if ($q['type'] === 'daily_notif') {
     if (!OS_REST_KEY) { echo json_encode(['skipped' => true, 'reason' => 'REST key not set']); exit; }
-    $dateFile = __DIR__ . '/daily_notif_sent.txt';
+    $dateFile = sys_get_temp_dir() . '/rivo_daily_notif.txt';
     $today    = date('Y-m-d');
     if (file_exists($dateFile) && trim(file_get_contents($dateFile)) === $today) {
         echo json_encode(['skipped' => true, 'reason' => 'already_sent_today']); exit;
@@ -241,7 +241,7 @@ if ($q['type'] === 'daily_notif') {
         CURLOPT_POSTFIELDS     => json_encode($payload),
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT        => 10,
-        CURLOPT_HTTPHEADER     => ['Content-Type: application/json', 'Authorization: Basic ' . OS_REST_KEY],
+        CURLOPT_HTTPHEADER     => ['Content-Type: application/json', 'Authorization: Key ' . OS_REST_KEY],
     ]);
     $raw = curl_exec($ch); $err = curl_error($ch); curl_close($ch);
     if (!$err) @file_put_contents($dateFile, $today);

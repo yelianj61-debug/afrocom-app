@@ -791,7 +791,7 @@ async function osNotify(target, title, message, url = '') {
   try {
     await fetch('https://onesignal.com/api/v1/notifications', {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Basic ' + OS_REST_KEY },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Key ' + OS_REST_KEY },
       body:    JSON.stringify(payload),
     });
   } catch(e) { console.warn('[OneSignal]', e?.message); }
