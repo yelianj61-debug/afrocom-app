@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 define('SB_URL',     'https://qwdttzsbbspayojzeugy.supabase.co');
 define('SB_SERVICE', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3ZHR0enNiYnNwYXlvanpldWd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODk3MTQzNSwiZXhwIjoyMDk0NTQ3NDM1fQ.Qh-1b3NA4wH5Km4W1v-nU0aGagkeIByet2INxccz3tw');
 define('OS_APP_ID',  'cd5c4766-ed24-448f-af41-661f02dfe084');
-define('OS_REST_KEY',''); // ← Remplir : OneSignal > Settings > Keys & IDs > REST API Key
+define('OS_REST_KEY','os_v2_app_zvoeozxnerci7l2bmypqfx7aqsknyefffj6u2kf6udqbftah37i6bndmmpfzqie7gyovjw25z7pduvevji7ovdfwkilvfwxmbnupv3q');
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function sbHeaders(): array {
