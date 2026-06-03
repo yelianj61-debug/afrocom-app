@@ -141,6 +141,12 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
           Voir les formations
         </button>
       </div>
+      <!-- Bouton téléchargement APK -->
+      <div style="margin-top:1.25rem">
+        <a href="RIVO.apk" download style="display:inline-flex;align-items:center;gap:.6rem;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.35);color:white;font-weight:700;font-size:.95rem;padding:.75rem 1.75rem;border-radius:.875rem;text-decoration:none;transition:background .2s;backdrop-filter:blur(8px)" onmouseover="this.style.background='rgba(255,255,255,.22)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">
+          📲 Télécharger l'application Android
+        </a>
+      </div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;max-width:380px;margin:3.5rem auto 0">
         <div style="text-align:center"><div style="font-size:2rem;font-weight:900;color:white">200+</div><div style="font-size:.8rem;color:#93c5fd;margin-top:.25rem">Formations</div></div>
         <div style="text-align:center"><div style="font-size:2rem;font-weight:900;color:white">5K+</div><div style="font-size:.8rem;color:#93c5fd;margin-top:.25rem">Apprenants</div></div>
