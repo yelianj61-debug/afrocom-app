@@ -11,6 +11,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="RIVO">
 <link rel="apple-touch-icon" href="icon-192.png">
+<!-- OneSignal Web Push -->
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <!-- Firebase Auth (compat SDK — accès via firebase.auth() global) -->
 <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js"></script>
@@ -686,10 +688,41 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
 <!-- ══════════════ SCRIPTS ══════════════ -->
 <script>
 // ── Config ────────────────────────────────────────────
-const SB_URL  = 'https://qwdttzsbbspayojzeugy.supabase.co';
-const SB_ANON = 'sb_publishable_tG64uzNsmT0XDV7pmglqFA_lxQ4xIFm';
+const SB_URL   = 'https://qwdttzsbbspayojzeugy.supabase.co';
+const SB_ANON  = 'sb_publishable_tG64uzNsmT0XDV7pmglqFA_lxQ4xIFm';
+const OS_APP_ID = 'cd5c4766-ed24-448f-af41-661f02dfe084';
 // SB_SERVICE est stocké côté serveur (api.php) — jamais exposé ici
 let sb = null;
+
+// ── OneSignal : init au chargement de la page ─────────────────────────────────
+window.OneSignalDeferred = window.OneSignalDeferred || [];
+window.OneSignalDeferred.push(async function(OneSignal) {
+  try {
+    await OneSignal.init({
+      appId: OS_APP_ID,
+      notifyButton: { enable: false },
+      allowLocalhostAsSecureOrigin: false,
+    });
+  } catch(e) { console.warn('[OneSignal init]', e?.message); }
+});
+// Lie l'abonnement OneSignal à l'ID Supabase de l'utilisateur connecté
+function linkOneSignalUser(userId) {
+  if (!userId) return;
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  window.OneSignalDeferred.push(async function(OneSignal) {
+    try { await OneSignal.login(userId); } catch(e) {}
+  });
+}
+// Déclenche la notification d'encouragement quotidienne (pseudo-cron via api.php)
+async function checkDailyNotif() {
+  try {
+    await fetch('api.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'daily_notif' })
+    });
+  } catch(e) {}
+}
 
 // ── Proxy sbAdmin → api.php (la clé service_role reste sur le serveur) ────────
 async function _apiCall(payload){
@@ -899,6 +932,9 @@ async function loadProfileData(){
     CP=p;
     // Shim de compatibilité pour tout le code qui utilise CU.id et CU.email
     CU={id:p.id, email:FBU.email};
+    // OneSignal : lier l'abonnement push + vérifier notif quotidienne
+    linkOneSignalUser(p.id);
+    checkDailyNotif();
     // Générer rivo_id si absent
     if(!p.rivo_id){
       const newRivoId='R.I.V.O_'+Math.floor(Math.random()*900000000+100000000);

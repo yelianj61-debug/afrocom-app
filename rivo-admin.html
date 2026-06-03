@@ -768,8 +768,34 @@
 const SB_URL     = 'https://qwdttzsbbspayojzeugy.supabase.co';
 const SB_ANON    = 'sb_publishable_tG64uzNsmT0XDV7pmglqFA_lxQ4xIFm';
 const SB_SERVICE = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3ZHR0enNiYnNwYXlvanpldWd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODk3MTQzNSwiZXhwIjoyMDk0NTQ3NDM1fQ.Qh-1b3NA4wH5Km4W1v-nU0aGagkeIByet2INxccz3tw';
+const OS_APP_ID  = 'cd5c4766-ed24-448f-af41-661f02dfe084';
+const OS_REST_KEY = ''; // ← Remplir : OneSignal > Settings > Keys & IDs > REST API Key
 let sb = null;
 let sbAdmin = null;
+
+// ── OneSignal push helper (appelle directement l'API OneSignal) ───────────────
+async function osNotify(target, title, message, url = '') {
+  if (!OS_REST_KEY) return;
+  const payload = {
+    app_id:   OS_APP_ID,
+    headings: { fr: title,   en: title },
+    contents: { fr: message, en: message },
+  };
+  if (url) payload.url = url;
+  if (target === 'all') {
+    payload.included_segments = ['All'];
+  } else {
+    payload.include_aliases = { external_id: [target] };
+    payload.target_channel  = 'push';
+  }
+  try {
+    await fetch('https://onesignal.com/api/v1/notifications', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Basic ' + OS_REST_KEY },
+      body:    JSON.stringify(payload),
+    });
+  } catch(e) { console.warn('[OneSignal]', e?.message); }
+}
 
 function withTimeout(p, ms = 25000) {
   return Promise.race([p, new Promise((_,rej) => setTimeout(() => rej(new Error('Délai dépassé. Vérifiez votre connexion internet.')), ms))]);
@@ -1201,6 +1227,10 @@ async function saveCourse(e) {
 async function togglePublish(id, current) {
   const { error } = await sb.from('courses').update({ is_published: !current }).eq('id', id);
   if (error) { toast(error.message, false); return; }
+  if (!current) {
+    const { data: c } = await sb.from('courses').select('title').eq('id', id).single();
+    osNotify('all', '📚 Nouvelle formation disponible !', `"${c?.title || 'Une nouvelle formation'}" vient d'être ajoutée sur RIVO. Découvrez-la maintenant !`);
+  }
   toast(current ? 'Formation dépubliée' : 'Formation publiée !');
   loaded.formations = false;
   loadFormations();
@@ -1424,6 +1454,7 @@ async function sendAttestation(purchaseId, userId, courseId) {
     if (certErr) throw certErr;
 
     toast('Attestation envoyée avec succès !');
+    osNotify(userId, '🎓 Votre attestation est prête !', 'Félicitations ! Votre attestation RIVO est disponible dans votre espace Profil.');
     try{
       const{data:up}=await sb.from('profiles').select('points').eq('id',userId).single();
       await sb.from('profiles').update({points:(up?.points||0)+10}).eq('id',userId);
@@ -1473,6 +1504,7 @@ async function sendAdminNotification() {
   if (!notifSelectedUserId) { toast('Sélectionnez d\'abord un utilisateur ou utilisez "Envoyer à tous".', false); return; }
   const { error } = await sb.from('notifications').insert({ user_id: notifSelectedUserId, title, message, sender: 'Support RIVO' });
   if (error) { toast(error.message || 'Erreur', false); return; }
+  osNotify(notifSelectedUserId, title, message);
   toast('Notification envoyée !');
   document.getElementById('notif-title').value = '';
   document.getElementById('notif-message').value = '';
@@ -1489,6 +1521,7 @@ async function sendNotifToAll() {
   const rows = users.map(u => ({ user_id: u.id, title, message, sender: 'Support RIVO' }));
   const { error } = await sb.from('notifications').insert(rows);
   if (error) { toast(error.message || 'Erreur', false); return; }
+  osNotify('all', title, message);
   toast(`Notification envoyée à ${users.length} utilisateur(s) !`);
   document.getElementById('notif-title').value = '';
   document.getElementById('notif-message').value = '';
@@ -1576,6 +1609,7 @@ async function approveVideo(videoId, userId) {
     message: 'Votre vidéo est validée ! 500 points déposés. Félicitations !',
     sender: 'Support RIVO'
   });
+  osNotify(userId, 'Vidéo approuvée ! 🎉', 'Votre vidéo est validée ! 500 points déposés. Félicitations !');
   toast('Vidéo approuvée ! +500 points attribués');
   loaded.videos = false;
   loadVideos();
@@ -1800,12 +1834,14 @@ async function approveApplication(appId, userId) {
       }
     }
 
+    const notifMsg = `Votre candidature pour "${ev?.title || 'l\'événement'}" a été approuvée !${ptsRequired > 0 ? ` ${ptsRequired} points ont été déduits de votre solde.` : ''} Félicitations !`;
     await sb.from('notifications').insert({
       user_id: userId,
       title: 'Candidature approuvée ! 🎉',
-      message: `Votre candidature pour "${ev?.title || 'l\'événement'}" a été approuvée !${ptsRequired > 0 ? ` ${ptsRequired} points ont été déduits de votre solde.` : ''} Félicitations !`,
+      message: notifMsg,
       sender: 'Support RIVO'
     });
+    osNotify(userId, 'Candidature approuvée ! 🎉', notifMsg);
     toast(`Candidature approuvée !${ptsRequired > 0 ? ` −${ptsRequired.toLocaleString('fr-FR')} pts déduits.` : ''}`);
     document.getElementById('app-' + appId)?.remove();
     const container = document.getElementById('applications-list');
@@ -1821,8 +1857,10 @@ async function rejectApplication(appId) {
   const reason = prompt('Motif du rejet (optionnel) :') || '';
   const payload = { status: 'rejected' };
   if (reason) payload.rejection_reason = reason;
+  const { data: rejApp } = await sb.from('user_events').select('user_id').eq('id', appId).single();
   const { error } = await sb.from('user_events').update(payload).eq('id', appId);
   if (error) { toast(error.message, false); return; }
+  if (rejApp?.user_id) osNotify(rejApp.user_id, 'Candidature non retenue', reason ? `Motif : ${reason}` : 'Votre candidature n\'a pas été retenue cette fois. Continuez à vous améliorer !');
   toast('Candidature rejetée');
   document.getElementById('app-' + appId)?.remove();
   const container = document.getElementById('applications-list');
@@ -1996,13 +2034,16 @@ async function validerRecharge(id, userId, amount) {
   const { error: re } = await sbAdmin.from('recharge_requests').update({ status: 'traite' }).eq('id', id);
   if (re) { toast('Erreur statut : ' + re.message, false); return; }
 
+  osNotify(userId, '💰 Rechargement validé !', `${Number(amount).toLocaleString('fr-FR')} FCFA ont été crédités sur votre solde principal RIVO.`);
   toast(`✅ ${Number(amount).toLocaleString('fr-FR')} FCFA crédité avec succès`);
   loadRechargements(true);
 }
 
 async function rejeterRecharge(id) {
+  const { data: rq } = await sbAdmin.from('recharge_requests').select('user_id,amount').eq('id', id).single();
   const { error } = await sbAdmin.from('recharge_requests').update({ status: 'rejete' }).eq('id', id);
   if (error) { toast('Erreur : ' + error.message, false); return; }
+  if (rq?.user_id) osNotify(rq.user_id, '❌ Rechargement non traité', `Votre demande de rechargement de ${Number(rq.amount||0).toLocaleString('fr-FR')} FCFA n'a pas pu être traitée. Contactez le support.`);
   toast('Demande rejetée');
   loadRechargements(true);
 }
@@ -2217,6 +2258,7 @@ async function sendNotifAchats() {
     user_id: _achUser.id, title, message, sender: 'Support RIVO'
   }]);
   if (error) { toast('Erreur : ' + error.message, false); return; }
+  osNotify(_achUser.id, title, message);
   document.getElementById('ach-notif-modal').style.display = 'none';
   toast('✅ Notification envoyée !');
 }
