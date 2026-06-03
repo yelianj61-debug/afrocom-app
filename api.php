@@ -17,8 +17,8 @@ define('OS_REST_KEY','os_v2_app_zvoeozxnerci7l2bmypqfx7aqsknyefffj6u2kf6udqbftah
 
 // ── Firebase Cloud Messaging ─────────────────────────────────────────────────
 define('FCM_PROJECT_ID', 'afrotv-b57a1');
-// Depuis Firebase Console → Paramètres du projet → Comptes de service → Générer une clé privée
-define('FCM_SERVICE_ACCOUNT', '{}');
+// Clé stockée dans un fichier séparé (jamais commité dans git)
+define('FCM_SERVICE_ACCOUNT', file_get_contents(__DIR__ . '/fcm-service-account.json') ?: '{}');
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function sbHeaders(): array {
