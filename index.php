@@ -406,6 +406,9 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
       <button onclick="clearNotifications()" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:.8rem;font-weight:600">🗑️ Supprimer tout</button>
     </div>
     <div id="notif-list" style="padding:.5rem"></div>
+    <div style="padding:.6rem 1rem;background:#fef9c3;border-top:1px solid #fde68a;font-size:.75rem;color:#92400e;text-align:center;font-weight:600">
+      💡 Veuillez supprimer les notifications si vous avez fini de lire.
+    </div>
   </div>
 
   <div style="padding:1.5rem;max-width:1100px;padding-bottom:80px">
@@ -701,6 +704,9 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
   </header>
   <div style="padding:1rem;max-width:600px;margin:0 auto">
     <div id="notif-page-list"></div>
+    <div style="margin-top:1rem;padding:.75rem 1rem;background:#fef9c3;border-radius:.75rem;font-size:.8rem;color:#92400e;text-align:center;font-weight:600">
+      💡 Veuillez supprimer les notifications si vous avez fini de lire.
+    </div>
   </div>
 </div>
 
@@ -721,6 +727,8 @@ window.OneSignalDeferred.push(async function(OneSignal) {
       appId: OS_APP_ID,
       notifyButton: { enable: false },
       allowLocalhostAsSecureOrigin: false,
+      serviceWorkerParam: { scope: '/' },
+      serviceWorkerPath: 'OneSignalSDKWorker.js',
     });
   } catch(e) { console.warn('[OneSignal init]', e?.message); }
 });
@@ -731,9 +739,9 @@ function linkOneSignalUser(userId) {
   window.OneSignalDeferred.push(async function(OneSignal) {
     try {
       await OneSignal.login(userId);
-      // Afficher bannière si permission pas encore accordée
-      setTimeout(showNotifBanner, 2500);
     } catch(e) {}
+    // Toujours afficher la bannière après connexion si permission pas encore accordée
+    setTimeout(showNotifBanner, 1500);
   });
 }
 
