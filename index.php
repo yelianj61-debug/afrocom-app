@@ -732,16 +732,22 @@ window.OneSignalDeferred.push(async function(OneSignal) {
     });
   } catch(e) { console.warn('[OneSignal init]', e?.message); }
 });
-// Lie l'abonnement OneSignal à l'ID Supabase + affiche la bannière d'activation
+// Lie l'abonnement OneSignal à l'ID Supabase + demande permission push
 function linkOneSignalUser(userId) {
   if (!userId) return;
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   window.OneSignalDeferred.push(async function(OneSignal) {
-    try {
-      await OneSignal.login(userId);
-    } catch(e) {}
-    // Toujours afficher la bannière après connexion si permission pas encore accordée
-    setTimeout(showNotifBanner, 1500);
+    try { await OneSignal.login(userId); } catch(e) {}
+    if (typeof Notification === 'undefined' || Notification.permission !== 'default') return;
+    setTimeout(async () => {
+      try {
+        // Tente le vrai popup natif Chrome directement
+        await OneSignal.Notifications.requestPermission();
+      } catch(e) {
+        // Si bloqué par le navigateur, afficher la bannière comme fallback
+        showNotifBanner();
+      }
+    }, 1500);
   });
 }
 
