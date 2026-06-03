@@ -3,3 +3,8 @@ Options -Indexes
     RewriteEngine On
     RewriteRule ^\.well-known/(.*)$ /well-known/$1 [L]
 </IfModule>
+
+<Files "firebase-messaging-sw.js">
+    Header set Service-Worker-Allowed "/"
+    Header set Cache-Control "no-cache"
+</Files>

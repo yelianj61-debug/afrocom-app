@@ -721,15 +721,24 @@ const FCM_VAPID = 'BBOOP7-ny_XIW88wDcLZ06l_7HbHItb8fql6TvjGdnl8r1ZeN_RbNywUkadsz
 async function initFCM(userId) {
   if (!userId || !('Notification' in window) || !('serviceWorker' in navigator)) return;
   try {
+    // Désinscrire les anciens service workers (OneSignal etc.)
+    const regs = await navigator.serviceWorker.getRegistrations();
+    for (const reg of regs) {
+      if (reg.active?.scriptURL && !reg.active.scriptURL.includes('firebase-messaging-sw.js')) {
+        await reg.unregister();
+      }
+    }
     const fcmApp = firebase.apps.find(a => a.name === 'fcm') ||
                    firebase.initializeApp(FCM_CONFIG, 'fcm');
     const messaging = fcmApp.messaging();
     const swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
+    await navigator.serviceWorker.ready; // Attendre que le SW soit actif
     const perm = await Notification.requestPermission();
     if (perm !== 'granted') return;
     const token = await messaging.getToken({ vapidKey: FCM_VAPID, serviceWorkerRegistration: swReg });
     if (!token) return;
     await sbAdmin.from('profiles').update({ fcm_token: token }).eq('id', userId);
+    toast('🔔 Notifications activées !', 'ok', 3000);
     messaging.onMessage(payload => {
       const title = payload.notification?.title || 'RIVO';
       const body  = payload.notification?.body  || '';
