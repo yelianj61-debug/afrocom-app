@@ -134,7 +134,7 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
         Transformez votre avenir<br><span style="color:#F59E0B">grâce au savoir</span>
       </h1>
       <p style="font-size:1.15rem;color:#bfdbfe;margin-bottom:.75rem">
-        Plus de <strong style="color:white">200 formations disponibles</strong>. Apprenez à votre rythme et obtenez une attestation reconnue.
+        Apprenez à votre rythme et obtenez une attestation délivrée par RIVO.
       </p>
       <p style="font-style:italic;color:#93c5fd;font-size:1.05rem;margin-bottom:2.5rem">"RIVO, la plateforme qui transforme l'apprentissage en opportunité."</p>
       <div style="display:flex;flex-wrap:wrap;gap:1rem;justify-content:center">
@@ -168,9 +168,9 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
         </div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;max-width:380px;margin:3.5rem auto 0">
-        <div style="text-align:center"><div id="stat-formations" style="font-size:2rem;font-weight:900;color:white">…</div><div style="font-size:.8rem;color:#93c5fd;margin-top:.25rem">Formations</div></div>
-        <div style="text-align:center"><div id="stat-apprenants" style="font-size:2rem;font-weight:900;color:white">…</div><div style="font-size:.8rem;color:#93c5fd;margin-top:.25rem">Apprenants</div></div>
-        <div style="text-align:center"><div style="font-size:2rem;font-weight:900;color:white">98%</div><div style="font-size:.8rem;color:#93c5fd;margin-top:.25rem">Satisfaction</div></div>
+        <div style="text-align:center"><div style="font-size:2rem;font-weight:900;color:white">100+</div><div style="font-size:.8rem;color:#93c5fd;margin-top:.25rem">Formations</div></div>
+        <div style="text-align:center"><div style="font-size:2rem;font-weight:900;color:white">+2000</div><div style="font-size:.8rem;color:#93c5fd;margin-top:.25rem">Utilisateurs</div></div>
+        <div style="text-align:center"><div style="font-size:2rem;font-weight:900;color:white">100%</div><div style="font-size:.8rem;color:#93c5fd;margin-top:.25rem">Satisfaction</div></div>
       </div>
     </div>
   </section>
@@ -184,7 +184,7 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem">
         <div class="card" style="padding:1.5rem"><div style="width:3.25rem;height:3.25rem;background:#dbeafe;border-radius:1rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:1.5rem">📚</div><h3 style="font-weight:800;margin-bottom:.5rem">Formations de qualité</h3><p style="color:#6b7280;font-size:.9rem">Des contenus soigneusement sélectionnés par des experts du domaine.</p></div>
-        <div class="card" style="padding:1.5rem"><div style="width:3.25rem;height:3.25rem;background:#fef3c7;border-radius:1rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:1.5rem">🏆</div><h3 style="font-weight:800;margin-bottom:.5rem">Attestation reconnue</h3><p style="color:#6b7280;font-size:.9rem">Obtenez une attestation officielle après chaque formation validée.</p></div>
+        <div class="card" style="padding:1.5rem"><div style="width:3.25rem;height:3.25rem;background:#fef3c7;border-radius:1rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:1.5rem">🏆</div><h3 style="font-weight:800;margin-bottom:.5rem">Attestation délivrée</h3><p style="color:#6b7280;font-size:.9rem">Obtenez une attestation officielle après chaque formation validée.</p></div>
         <div class="card" style="padding:1.5rem"><div style="width:3.25rem;height:3.25rem;background:#d1fae5;border-radius:1rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:1.5rem">🤝</div><h3 style="font-weight:800;margin-bottom:.5rem">Parrainage lucratif</h3><p style="color:#6b7280;font-size:.9rem">Gagnez <strong>1 000 FCFA</strong> pour chaque ami parrainé qui achète une formation.</p></div>
         <div class="card" style="padding:1.5rem"><div style="width:3.25rem;height:3.25rem;background:#ede9fe;border-radius:1rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:1.5rem">🎖️</div><h3 style="font-weight:800;margin-bottom:.5rem">Badges progressifs</h3><p style="color:#6b7280;font-size:.9rem">Évoluez de Débutant → Bronze → Argent → Or → Diamant selon vos achats.</p></div>
         <div class="card" style="padding:1.5rem"><div style="width:3.25rem;height:3.25rem;background:#fef9c3;border-radius:1rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:1.5rem">⚡</div><h3 style="font-weight:800;margin-bottom:.5rem">Accès immédiat</h3><p style="color:#6b7280;font-size:.9rem">Après paiement, téléchargez et consultez vos formations immédiatement.</p></div>
@@ -221,9 +221,8 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
       </div>
       <p style="font-size:.85rem;color:#6b7280;margin-bottom:1.25rem">Votre avis sera publié après validation par notre équipe.</p>
       <div style="display:flex;flex-direction:column;gap:.875rem">
-        <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Votre nom *</label><input id="rev-name" type="text" class="input" placeholder="Ex: Jean D."/></div>
-        <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Photo (URL, optionnel)</label><input id="rev-photo" type="url" class="input" placeholder="https://…"/></div>
-        <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Votre témoignage *</label><textarea id="rev-text" class="input" rows="4" style="resize:vertical" placeholder="Partagez votre expérience avec RIVO…"></textarea></div>
+        <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Votre prénom *</label><input id="rev-name" type="text" class="input" placeholder="Ex: Jean"/></div>
+        <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Votre avis *</label><textarea id="rev-text" class="input" rows="4" style="resize:vertical" placeholder="Partagez votre expérience avec RIVO…"></textarea></div>
         <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.5rem">Note</label>
           <div style="display:flex;gap:.5rem">
             <button onclick="setRevRating(1)" id="rev-star-1" style="font-size:1.5rem;background:none;border:none;cursor:pointer;transition:transform .15s" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">⭐</button>
@@ -326,23 +325,23 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
     <div style="max-width:540px;margin:0 auto">
       <div class="card" style="padding:2rem">
         <h2 style="font-size:1.3rem;font-weight:800;color:#1F2937;margin-bottom:.5rem;text-align:center">Vérification d'authenticité</h2>
-        <p style="color:#6b7280;font-size:.875rem;text-align:center;margin-bottom:1.75rem">Entrez le code NPI à 13 chiffres figurant sur l'attestation.</p>
-        <!-- Option A : saisie manuelle -->
-        <div style="margin-bottom:1.5rem">
-          <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.5rem">Code NPI (13 chiffres)</label>
-          <div style="display:flex;gap:.5rem">
-            <input type="text" id="verify-code" class="input" placeholder="Ex: 1234567890123" maxlength="13" style="letter-spacing:.1em;font-size:1.1rem;font-weight:700" oninput="this.value=this.value.replace(/\D/g,'').slice(0,13)"/>
-            <button onclick="verifyNPI()" id="verify-btn" class="btn-primary" style="white-space:nowrap;padding:.75rem 1.25rem">🔍 Vérifier</button>
+        <p style="color:#6b7280;font-size:.875rem;text-align:center;margin-bottom:1.75rem">Renseignez les informations figurant sur l'attestation pour confirmer son authenticité.</p>
+        <div style="display:flex;flex-direction:column;gap:1rem;margin-bottom:1.5rem">
+          <div>
+            <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.5rem">Code NPI (13 chiffres) *</label>
+            <input type="text" id="verify-code" class="input" placeholder="Ex: 1234567890123" maxlength="13" style="letter-spacing:.1em;font-size:1.05rem;font-weight:700" oninput="this.value=this.value.replace(/\D/g,'').slice(0,13)"/>
           </div>
+          <div>
+            <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.5rem">Nom complet du titulaire *</label>
+            <input type="text" id="verify-name" class="input" placeholder="Ex: Jean Dupont"/>
+          </div>
+          <div>
+            <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.5rem">Date de naissance</label>
+            <input type="date" id="verify-dob" class="input"/>
+            <p style="font-size:.75rem;color:#9ca3af;margin-top:.25rem">Optionnel — améliore la précision de la vérification</p>
+          </div>
+          <button onclick="verifyNPI()" id="verify-btn" class="btn-primary" style="width:100%;justify-content:center;padding:.875rem;font-size:1rem">🔍 Vérifier l'attestation</button>
         </div>
-        <!-- Option B : upload fichier -->
-        <div style="border:2px dashed #e5e7eb;border-radius:1rem;padding:1.25rem;text-align:center;margin-bottom:1.5rem;cursor:pointer" onclick="document.getElementById('verify-file').click()" onmouseover="this.style.borderColor='#2563eb'" onmouseout="this.style.borderColor='#e5e7eb'">
-          <input type="file" id="verify-file" accept="image/*,.pdf" style="display:none" onchange="previewVerifyFile(this)"/>
-          <div style="font-size:2rem;margin-bottom:.5rem">📄</div>
-          <p style="font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.25rem">Uploader l'attestation</p>
-          <p style="font-size:.78rem;color:#9ca3af">Image ou PDF — puis saisissez le code visible ci-dessus</p>
-        </div>
-        <div id="verify-file-preview" style="display:none;margin-bottom:1rem"></div>
         <!-- Résultat -->
         <div id="verify-result" style="display:none"></div>
       </div>
@@ -529,7 +528,7 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
               <h3 style="font-weight:800;color:#1F2937;margin-bottom:.25rem">💰 Mes ventes</h3>
               <p style="font-size:.85rem;color:#6b7280">Total gagné : <strong id="ts-total-ventes" style="color:#10b981">0 FCFA</strong></p>
             </div>
-            <button onclick="openRetrait()" class="btn-primary" style="font-size:.85rem;padding:.5rem 1rem">💸 Retirer mes gains</button>
+            <button onclick="openRetraitVentes()" class="btn-primary" style="font-size:.85rem;padding:.5rem 1rem">💸 Retirer mes gains</button>
           </div>
           <div id="ts-ventes-list"><p style="color:#9ca3af;text-align:center;padding:1.5rem">Chargement…</p></div>
         </div>
@@ -961,11 +960,11 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
   <div id="modal-retrait" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center;padding:1rem">
     <div style="background:white;border-radius:1.5rem;padding:1.75rem;max-width:400px;width:100%;box-shadow:0 25px 60px rgba(0,0,0,.3);max-height:90vh;overflow-y:auto">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
-        <h3 style="font-size:1.15rem;font-weight:800;color:#1F2937">💸 Retrait</h3>
+        <h3 id="modal-retrait-title" style="font-size:1.15rem;font-weight:800;color:#1F2937">💸 Retrait — Parrainage</h3>
         <button onclick="closeRetrait()" style="background:none;border:none;font-size:1.25rem;cursor:pointer;color:#9ca3af">✕</button>
       </div>
       <div style="border-radius:1rem;padding:1rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);color:white;margin-bottom:1.25rem;text-align:center">
-        <div style="font-size:.8rem;color:#bfdbfe;font-weight:600;margin-bottom:.25rem">🤝 Solde parrainage disponible</div>
+        <div id="modal-retrait-bal-label" style="font-size:.8rem;color:#bfdbfe;font-weight:600;margin-bottom:.25rem">🤝 Solde parrainage disponible</div>
         <div id="bal-display" style="font-size:2rem;font-weight:900">0 FCFA</div>
         <p style="color:#bfdbfe;font-size:.8rem;margin-top:.25rem">Traitement : maximum 30 minutes</p>
       </div>
@@ -1208,7 +1207,6 @@ async function startApp(){
         fbAuth=firebase.auth();
         startApp();
         loadTestimonials();
-        loadLandingStats();
       }catch(e){tryLoad(i+1);}
     };
     s.onerror=function(){tryLoad(i+1);};
@@ -1709,17 +1707,25 @@ async function doRechargeConfirm(){
   }
 }
 
-// ── Retrait solde parrainage ──────────────────────────────
-function openRetrait(){
+// ── Retrait ───────────────────────────────────────────
+let _wdType='parrainage';
+function openRetrait(type='parrainage'){
   if(!CU?.id){toast('Connectez-vous d\'abord','err');return;}
   if(!CP?.whatsapp){toast('📱 Veuillez ajouter votre numéro WhatsApp dans votre Profil','err',6000);return;}
-  const d=document.getElementById('bal-display');if(d)d.textContent=fmt(CP?.referral_balance||0,CP?.currency||'XOF');
+  _wdType=type;
+  const solde=type==='ventes'?(CP?.balance||0):(CP?.referral_balance||0);
+  const title=document.getElementById('modal-retrait-title');
+  const lbl=document.getElementById('modal-retrait-bal-label');
+  if(title)title.textContent=type==='ventes'?'💰 Retrait — Mes ventes':'💸 Retrait — Parrainage';
+  if(lbl)lbl.textContent=type==='ventes'?'💰 Solde ventes disponible':'🤝 Solde parrainage disponible';
+  const d=document.getElementById('bal-display');if(d)d.textContent=fmt(solde,CP?.currency||'XOF');
   document.getElementById('wd-amt').value='';
   const wdPhone=document.getElementById('wd-phone');if(wdPhone)wdPhone.value=CP?.whatsapp||'';
   switchWithdrawalMethod();
   loadRetrait();
   document.getElementById('modal-retrait').style.display='flex';
 }
+function openRetraitVentes(){openRetrait('ventes');}
 function closeRetrait(){document.getElementById('modal-retrait').style.display='none';}
 
 // ── Devise / Currency ─────────────────────────────────────
@@ -2014,7 +2020,9 @@ async function doWithdrawal(){
   const amt=parseFloat(document.getElementById('wd-amt').value);
   const mth=document.getElementById('wd-mth').value;
   if(!amt||amt<1000){toast('Minimum : 1 000 FCFA','err');return;}
-  if(!CP||amt>(CP.referral_balance||0)){toast('Solde parrainage insuffisant','err');return;}
+  const _solde=_wdType==='ventes'?(CP?.balance||0):(CP?.referral_balance||0);
+  const _label=_wdType==='ventes'?'Solde ventes':'Solde parrainage';
+  if(!CP||amt>_solde){toast(_label+' insuffisant','err');return;}
   let extra={};
   if(mth==='mobile_money'){
     const phone=document.getElementById('wd-phone').value.trim();
@@ -2036,10 +2044,12 @@ async function doWithdrawal(){
     user_id:CU.id,amount:amt,currency:CP.currency||'XOF',method:mth,status:'en_attente',...extra
   });
   if(error){toast('Erreur lors de la demande','err');return;}
-  await sbAdmin.rpc('admin_update_balance',{p_user_id:CU.id,p_amount:-amt,p_field:'referral_balance'});
-  CP.referral_balance=(CP.referral_balance||0)-amt;
-  const newBal=CP.referral_balance;
-  const balR=document.getElementById('bal-parrainage');if(balR)balR.textContent=fmt(newBal,CP.currency||'XOF');
+  const _field=_wdType==='ventes'?'balance':'referral_balance';
+  await sbAdmin.rpc('admin_update_balance',{p_user_id:CU.id,p_amount:-amt,p_field:_field});
+  if(_wdType==='ventes'){CP.balance=(CP.balance||0)-amt;}
+  else{CP.referral_balance=(CP.referral_balance||0)-amt;}
+  const newBal=_wdType==='ventes'?(CP.balance||0):(CP.referral_balance||0);
+  const balR=document.getElementById(_wdType==='ventes'?'bal-principal':'bal-parrainage');if(balR)balR.textContent=fmt(newBal,CP.currency||'XOF');
   const balD=document.getElementById('bal-display');if(balD)balD.textContent=fmt(newBal,CP.currency||'XOF');
   toast('Demande envoyée ! Traitement sous 30 min.');
   document.getElementById('wd-amt').value='';
@@ -2069,51 +2079,59 @@ function toggleDark(){
 })();
 
 // ── Vérification NPI ──────────────────────────────────
-function previewVerifyFile(input){
-  const file=input.files[0];if(!file)return;
-  const prev=document.getElementById('verify-file-preview');
-  prev.style.display='block';
-  if(file.type.startsWith('image/')){
-    const reader=new FileReader();
-    reader.onload=e=>{ prev.innerHTML=`<img src="${e.target.result}" style="max-width:100%;border-radius:.75rem;border:2px solid #e5e7eb"/>`; };
-    reader.readAsDataURL(file);
-  } else {
-    prev.innerHTML=`<div style="background:#f1f5f9;border-radius:.75rem;padding:1rem;text-align:center;color:#374151;font-weight:600">📄 ${file.name}</div>`;
-  }
-}
 async function verifyNPI(){
   const code=document.getElementById('verify-code').value.trim();
-  if(code.length!==13){toast('Le code doit contenir exactement 13 chiffres','err');return;}
+  const nameIn=(document.getElementById('verify-name')?.value||'').trim().toLowerCase();
+  const dob=document.getElementById('verify-dob')?.value||'';
+  if(code.length!==13){toast('Le code NPI doit contenir exactement 13 chiffres','err');return;}
+  if(!nameIn){toast('Veuillez entrer le nom complet du titulaire','err');return;}
   const btn=document.getElementById('verify-btn');
-  btn.disabled=true;btn.innerHTML='<span class="spin"></span>';
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span> Vérification…';
   const res=document.getElementById('verify-result');
   res.style.display='none';
   try{
     const{data,error}=await sb.from('certificates')
-      .select('*,courses(title),profiles(first_name,last_name,avatar_url)')
+      .select('*,courses(title),profiles(first_name,last_name)')
       .eq('npi_code',code).maybeSingle();
     if(error||!data){
       res.style.display='block';
-      res.innerHTML=`<div style="background:#fee2e2;border:2px solid #fca5a5;border-radius:1rem;padding:1.25rem;text-align:center">
+      res.innerHTML=`<div style="background:#fee2e2;border:2px solid #fca5a5;border-radius:1rem;padding:1.5rem;text-align:center">
         <div style="font-size:2.5rem;margin-bottom:.5rem">❌</div>
         <p style="font-weight:800;color:#dc2626;font-size:1rem;margin-bottom:.25rem">Document introuvable</p>
-        <p style="color:#7f1d1d;font-size:.85rem">Aucune attestation n'a été délivrée pour ce code.</p>
+        <p style="color:#7f1d1d;font-size:.85rem">Aucune attestation n'a été délivrée pour ce code NPI.</p>
       </div>`;
-    } else {
-      const p=data.profiles;const c=data.courses;
-      const name=p?`${p.first_name||''} ${p.last_name||''}`.trim():'—';
-      const avatar=p?.avatar_url?`<img src="${p.avatar_url}" style="width:5rem;height:5rem;object-fit:cover;border-radius:9999px;border:3px solid #3b82f6;margin:0 auto .75rem;display:block"/>`:`<div style="width:5rem;height:5rem;border-radius:9999px;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;color:white;font-size:1.75rem;font-weight:900;margin:0 auto .75rem">${name[0]||'?'}</div>`;
-      res.style.display='block';
-      res.innerHTML=`<div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:2px solid #3b82f6;border-radius:1.25rem;padding:1.5rem;text-align:center">
-        ${avatar}
-        <div style="display:inline-flex;align-items:center;gap:.4rem;background:#2563EB;color:white;font-size:.8rem;font-weight:700;padding:.3rem .875rem;border-radius:9999px;margin-bottom:.875rem">✅ Attestation vérifiée</div>
-        <p style="font-weight:900;font-size:1.15rem;color:#1F2937;margin-bottom:.25rem">${name}</p>
-        <p style="font-size:.9rem;color:#374151;margin-bottom:.25rem">📚 ${c?.title||'—'}</p>
-        <p style="font-size:.78rem;color:#6b7280">Cette attestation est authentique et délivrée par RIVO.</p>
-      </div>`;
+      return;
     }
+    // Vérifier nom
+    const p=data.profiles;
+    const holderName=((p?.first_name||'')+' '+(p?.last_name||'')).trim().toLowerCase();
+    const nameOk=holderName===nameIn||holderName.includes(nameIn)||nameIn.includes(holderName);
+    // Vérifier date de naissance (seulement si renseignée en base)
+    const dobOk=!data.holder_birth_date||!dob||(data.holder_birth_date===dob);
+    if(!nameOk||!dobOk){
+      res.style.display='block';
+      res.innerHTML=`<div style="background:#fff7ed;border:2px solid #fdba74;border-radius:1rem;padding:1.5rem;text-align:center">
+        <div style="font-size:2.5rem;margin-bottom:.5rem">⚠️</div>
+        <p style="font-weight:800;color:#c2410c;font-size:1rem;margin-bottom:.25rem">Informations incorrectes</p>
+        <p style="color:#7c2d12;font-size:.85rem">Les informations ne correspondent pas. Veuillez réessayer.</p>
+      </div>`;
+      return;
+    }
+    // Succès — afficher photo admin (holder_photo_url), PAS la photo de profil
+    const fullName=((p?.first_name||'')+' '+(p?.last_name||'')).trim()||'—';
+    const photoHtml=data.holder_photo_url
+      ?`<img src="${data.holder_photo_url}" style="width:5rem;height:5rem;object-fit:cover;border-radius:9999px;border:3px solid #16a34a;margin:0 auto .875rem;display:block"/>`
+      :`<div style="width:5rem;height:5rem;border-radius:9999px;background:linear-gradient(135deg,#16a34a,#15803d);display:flex;align-items:center;justify-content:center;color:white;font-size:1.75rem;font-weight:900;margin:0 auto .875rem">${fullName[0]||'?'}</div>`;
+    res.style.display='block';
+    res.innerHTML=`<div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #16a34a;border-radius:1.25rem;padding:1.75rem;text-align:center">
+      ${photoHtml}
+      <div style="display:inline-flex;align-items:center;gap:.4rem;background:#16a34a;color:white;font-size:.8rem;font-weight:700;padding:.35rem 1rem;border-radius:9999px;margin-bottom:1rem">✅ Attestation vérifiée</div>
+      <p style="font-weight:900;font-size:1.2rem;color:#14532d;margin-bottom:.35rem">${fullName}</p>
+      <p style="font-size:.9rem;color:#166534;margin-bottom:.5rem">📚 ${data.courses?.title||'—'}</p>
+      <p style="font-size:.82rem;color:#15803d;font-style:italic">Cette attestation est authentique et délivrée par RIVO.</p>
+    </div>`;
   }catch(e){toast('Erreur réseau. Réessayez.','err');}
-  finally{btn.disabled=false;btn.innerHTML='🔍 Vérifier';}
+  finally{btn.disabled=false;btn.innerHTML='🔍 Vérifier l\'attestation';}
 }
 
 // ── Témoignages landing ───────────────────────────────
@@ -2135,28 +2153,12 @@ async function loadTestimonials(){
   }catch(e){grid.innerHTML='';}
 }
 
-// ── Stats landing page ────────────────────────────────
-async function loadLandingStats(){
-  try{
-    const [r1,r2]=await Promise.all([
-      sb.from('courses').select('id',{count:'exact',head:true}).eq('is_published',true),
-      sb.from('profiles').select('id',{count:'exact',head:true})
-    ]);
-    const f=document.getElementById('stat-formations');
-    const a=document.getElementById('stat-apprenants');
-    if(f)f.textContent=(r1.count||0)+'';
-    if(a){const n=r2.count||0;a.textContent=n>=1000?(Math.floor(n/100)/10)+'K+':n+'';}
-  }catch(e){}
-}
-
 // ── Avis / Témoignages ────────────────────────────────
 let _revRating=5;
 function openLeaveReview(){
-  if(!CU?.id){toast('Connectez-vous pour laisser un avis','warn');goTo('login');return;}
   _revRating=5;
-  const n=document.getElementById('rev-name');if(n&&CP)n.value=((CP.first_name||'')+' '+(CP.last_name||'')).trim();
+  document.getElementById('rev-name').value='';
   document.getElementById('rev-text').value='';
-  document.getElementById('rev-photo').value=CP?.avatar_url||'';
   updateRevStars();
   document.getElementById('modal-leave-review').style.display='flex';
 }
@@ -2170,11 +2172,10 @@ function updateRevStars(){
 async function submitLeaveReview(){
   const name=document.getElementById('rev-name')?.value.trim();
   const text=document.getElementById('rev-text')?.value.trim();
-  const photo=document.getElementById('rev-photo')?.value.trim()||null;
-  if(!name||!text){toast('Nom et témoignage obligatoires','err');return;}
+  if(!name||!text){toast('Prénom et avis obligatoires','err');return;}
   const btn=document.getElementById('rev-btn');
   btn.disabled=true;btn.innerHTML='<span class="spin"></span>';
-  const {error}=await sb.from('testimonials').insert({name,text,photo_url:photo,rating:_revRating,is_active:false,sort_order:0});
+  const {error}=await sb.from('testimonials').insert({name,text,photo_url:null,rating:_revRating,is_active:false,sort_order:0});
   btn.disabled=false;btn.innerHTML='📤 Envoyer mon avis';
   if(error){toast('Erreur : '+error.message,'err');return;}
   document.getElementById('modal-leave-review').style.display='none';

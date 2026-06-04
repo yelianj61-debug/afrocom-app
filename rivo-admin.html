@@ -605,7 +605,17 @@
           <div><label class="block text-sm text-gray-400 mb-1">Email utilisateur *</label><input id="npi-emit-email" type="email" class="input" placeholder="user@email.com"/></div>
           <div><label class="block text-sm text-gray-400 mb-1">Titre de la formation *</label><input id="npi-emit-course" type="text" class="input" placeholder="Ex: Excel avancé"/></div>
           <div><label class="block text-sm text-gray-400 mb-1">Code NPI (13 chiffres) *</label><input id="npi-emit-code" type="text" class="input" maxlength="13" placeholder="1234567890123"/></div>
-          <div><label class="block text-sm text-gray-400 mb-1">Photo URL (optionnel)</label><input id="npi-emit-photo" type="url" class="input" placeholder="https://…"/></div>
+          <div><label class="block text-sm text-gray-400 mb-1">Date de naissance du titulaire</label><input id="npi-emit-dob" type="date" class="input"/></div>
+          <div style="grid-column:1/-1">
+            <label class="block text-sm text-gray-400 mb-1">Photo du titulaire (affichée lors de la vérification)</label>
+            <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+              <input type="file" id="npi-emit-photo-file" accept="image/*" style="display:none" onchange="previewNpiEmitPhoto(this)"/>
+              <button type="button" onclick="document.getElementById('npi-emit-photo-file').click()" style="background:#374151;color:#d1d5db;border:1px solid #4b5563;border-radius:8px;padding:7px 12px;cursor:pointer;font-size:.8rem;font-weight:600">📷 Choisir une photo</button>
+              <span id="npi-emit-photo-name" style="color:#9ca3af;font-size:.78rem">Aucun fichier</span>
+              <img id="npi-emit-photo-preview" style="display:none;width:2.5rem;height:2.5rem;border-radius:50%;object-fit:cover;border:2px solid #374151"/>
+            </div>
+            <input type="hidden" id="npi-emit-photo"/>
+          </div>
         </div>
         <div style="display:flex;gap:.5rem;margin-top:1rem">
           <button onclick="emitNpi()" class="btn-primary">💾 Créer l'attestation</button>
@@ -616,7 +626,7 @@
       <div class="card" style="overflow:auto">
         <table>
           <thead><tr>
-            <th>Utilisateur</th><th>Formation</th><th>Date</th><th>Code NPI</th><th>Photo URL</th><th>Action</th>
+            <th>Utilisateur</th><th>Formation</th><th>Date</th><th>Code NPI</th><th>Né(e) le</th><th>Photo titulaire</th><th>Action</th>
           </tr></thead>
           <tbody id="npi-table">
             <tr><td colspan="6" class="text-center text-gray-500 py-8">Chargement…</td></tr>
@@ -640,7 +650,16 @@
         <input type="hidden" id="temo-id"/>
         <div class="space-y-3">
           <div><label class="block text-sm text-gray-400 mb-1">Nom *</label><input id="temo-name" type="text" class="input" placeholder="Ex: Marie D."/></div>
-          <div><label class="block text-sm text-gray-400 mb-1">Photo URL</label><input id="temo-photo" type="url" class="input" placeholder="https://…"/></div>
+          <div>
+            <label class="block text-sm text-gray-400 mb-1">Photo</label>
+            <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+              <input type="file" id="temo-photo-file" accept="image/*" style="display:none" onchange="previewTemoPhoto(this)"/>
+              <button type="button" onclick="document.getElementById('temo-photo-file').click()" style="background:#374151;color:#d1d5db;border:1px solid #4b5563;border-radius:8px;padding:7px 12px;cursor:pointer;font-size:.8rem;font-weight:600">📷 Choisir une photo</button>
+              <span id="temo-photo-name" style="color:#9ca3af;font-size:.78rem">Aucun fichier</span>
+              <img id="temo-photo-preview" style="display:none;width:2.5rem;height:2.5rem;border-radius:50%;object-fit:cover;border:2px solid #374151"/>
+            </div>
+            <input type="hidden" id="temo-photo"/>
+          </div>
           <div><label class="block text-sm text-gray-400 mb-1">Témoignage *</label><textarea id="temo-text" class="input" rows="3" style="resize:vertical" placeholder="Ce que dit l'apprenant…"></textarea></div>
           <div><label class="block text-sm text-gray-400 mb-1">Note (1-5)</label><input id="temo-rating" type="number" class="input" min="1" max="5" value="5"/></div>
           <div style="display:flex;align-items:center;gap:.5rem"><input type="checkbox" id="temo-active" checked/><label for="temo-active" class="text-sm text-gray-300">Actif (visible)</label></div>
@@ -2323,6 +2342,46 @@ async function deletePartenaire(id, btn) {
   loadPartenaires();
 }
 
+/* ── Upload helpers (témoignages + NPI) ──────────────── */
+async function previewTemoPhoto(input){
+  const file=input.files[0];if(!file)return;
+  const name=document.getElementById('temo-photo-name');
+  const prev=document.getElementById('temo-photo-preview');
+  if(name)name.textContent='Envoi en cours…';
+  try{
+    const url=await uploadCloudinary(file,'afrotv_images');
+    document.getElementById('temo-photo').value=url;
+    if(name)name.textContent=file.name;
+    if(prev){prev.src=url;prev.style.display='inline-block';}
+  }catch(e){if(name)name.textContent='Erreur : '+e.message;}
+}
+async function previewNpiEmitPhoto(input){
+  const file=input.files[0];if(!file)return;
+  const name=document.getElementById('npi-emit-photo-name');
+  const prev=document.getElementById('npi-emit-photo-preview');
+  if(name)name.textContent='Envoi en cours…';
+  try{
+    const url=await uploadCloudinary(file,'afrotv_images');
+    document.getElementById('npi-emit-photo').value=url;
+    if(name)name.textContent=file.name;
+    if(prev){prev.src=url;prev.style.display='inline-block';}
+  }catch(e){if(name)name.textContent='Erreur : '+e.message;}
+}
+async function uploadNpiPhoto(input, certId){
+  const file=input.files[0];if(!file)return;
+  const thumb=document.getElementById('npi-photo-thumb-'+certId);
+  if(thumb)thumb.textContent='…';
+  try{
+    const url=await uploadCloudinary(file,'afrotv_images');
+    document.getElementById('npi-photo-'+certId).value=url;
+    if(thumb){
+      const img=document.createElement('img');
+      img.src=url;img.style.cssText='width:2.25rem;height:2.25rem;border-radius:50%;object-fit:cover;border:2px solid #374151;display:inline-block;vertical-align:middle';
+      thumb.replaceWith(img);
+    }
+  }catch(e){toast('Erreur upload : '+e.message,false);}
+}
+
 /* ── NPI Attestations ─────────────────────────────────── */
 function toggleNpiForm(){
   const f=document.getElementById('npi-emit-form');
@@ -2333,6 +2392,7 @@ async function emitNpi(){
   const courseTitle=document.getElementById('npi-emit-course')?.value.trim();
   const code=document.getElementById('npi-emit-code')?.value.trim();
   const photo=document.getElementById('npi-emit-photo')?.value.trim()||null;
+  const dob=document.getElementById('npi-emit-dob')?.value||null;
   const errEl=document.getElementById('npi-emit-err');
   errEl.style.display='none';
   if(!email||!courseTitle||!code){errEl.style.display='block';errEl.textContent='Email, formation et code NPI sont obligatoires.';return;}
@@ -2346,7 +2406,7 @@ async function emitNpi(){
   // Créer le certificat
   const{error:ins}=await sbAdmin.from('certificates').insert({
     user_id:pData.id,course_id:cData.id,npi_code:code,holder_photo_url:photo,
-    issued_at:new Date().toISOString()
+    holder_birth_date:dob||null,issued_at:new Date().toISOString()
   });
   if(ins){errEl.style.display='block';errEl.textContent='Erreur : '+ins.message;return;}
   toast('Attestation NPI créée ✅');
@@ -2356,40 +2416,53 @@ async function emitNpi(){
 async function loadNpi() {
   const tbody = document.getElementById('npi-table');
   if(!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500 py-8">Chargement…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500 py-8">Chargement…</td></tr>';
   try {
     const { data, error } = await sb.from('certificates')
-      .select('id,npi_code,holder_photo_url,issued_at,profiles(first_name,last_name,email),courses(title)')
+      .select('id,npi_code,holder_photo_url,holder_birth_date,issued_at,profiles(first_name,last_name,email),courses(title)')
       .order('issued_at', { ascending: false }).limit(200);
     if (error) throw error;
     if (!data || data.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500 py-8">Aucune attestation.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500 py-8">Aucune attestation.</td></tr>';
       return;
     }
     tbody.innerHTML = data.map(c => {
       const p = c.profiles; const co = c.courses;
       const name = p ? `${p.first_name||''} ${p.last_name||''}`.trim() : '—';
       const d = new Date(c.issued_at).toLocaleDateString('fr-FR');
+      const photoThumb = c.holder_photo_url
+        ? `<img src="${escHtml(c.holder_photo_url)}" id="npi-photo-thumb-${c.id}" style="width:2.25rem;height:2.25rem;border-radius:50%;object-fit:cover;border:2px solid #374151;display:inline-block;vertical-align:middle"/>`
+        : `<span id="npi-photo-thumb-${c.id}" style="font-size:.75rem;color:#6b7280">Pas de photo</span>`;
       return `<tr>
         <td class="text-white font-medium">${escHtml(name)}<br><span class="text-gray-500" style="font-size:.75rem">${escHtml(p?.email||'')}</span></td>
         <td class="text-gray-300">${escHtml(co?.title||'—')}</td>
         <td class="text-gray-400">${d}</td>
-        <td><input type="text" value="${escHtml(c.npi_code||'')}" id="npi-code-${c.id}" class="input" style="width:160px;font-size:.8rem;padding:6px 10px" placeholder="13 chiffres" maxlength="13"/></td>
-        <td><input type="url" value="${escHtml(c.holder_photo_url||'')}" id="npi-photo-${c.id}" class="input" style="width:200px;font-size:.8rem;padding:6px 10px" placeholder="https://…"/></td>
+        <td><input type="text" value="${escHtml(c.npi_code||'')}" id="npi-code-${c.id}" class="input" style="width:150px;font-size:.8rem;padding:6px 10px" placeholder="13 chiffres" maxlength="13"/></td>
+        <td><input type="date" value="${escHtml(c.holder_birth_date||'')}" id="npi-dob-${c.id}" class="input" style="width:140px;font-size:.8rem;padding:6px 8px"/></td>
+        <td>
+          <input type="hidden" id="npi-photo-${c.id}" value="${escHtml(c.holder_photo_url||'')}"/>
+          <input type="file" id="npi-photo-file-${c.id}" accept="image/*" style="display:none" onchange="uploadNpiPhoto(this,'${c.id}')"/>
+          <div style="display:flex;align-items:center;gap:.4rem">
+            ${photoThumb}
+            <button onclick="document.getElementById('npi-photo-file-${c.id}').click()" style="background:#374151;color:#d1d5db;border:1px solid #4b5563;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:.75rem">📷</button>
+          </div>
+        </td>
         <td><button onclick="saveNpi('${c.id}')" class="btn-success" style="font-size:.75rem;padding:5px 10px">💾 Enregistrer</button></td>
       </tr>`;
     }).join('');
   } catch(e) {
-    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-red-400 py-8">Erreur : ${escHtml(e.message)}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-red-400 py-8">Erreur : ${escHtml(e.message)}</td></tr>`;
   }
 }
 async function saveNpi(certId) {
   const code = document.getElementById(`npi-code-${certId}`)?.value.trim();
   const photo = document.getElementById(`npi-photo-${certId}`)?.value.trim();
+  const dob = document.getElementById(`npi-dob-${certId}`)?.value || null;
   if (code && code.length !== 13) { toast('Le code NPI doit contenir exactement 13 chiffres', false); return; }
   const { error } = await sb.from('certificates').update({
     npi_code: code || null,
-    holder_photo_url: photo || null
+    holder_photo_url: photo || null,
+    holder_birth_date: dob || null
   }).eq('id', certId);
   if (error) { toast('Erreur : ' + error.message, false); return; }
   toast('NPI enregistré ✅');
@@ -2427,6 +2500,9 @@ function openTemoignageForm() {
   document.getElementById('temo-id').value = '';
   document.getElementById('temo-name').value = '';
   document.getElementById('temo-photo').value = '';
+  const n=document.getElementById('temo-photo-name');if(n)n.textContent='Aucun fichier';
+  const pv=document.getElementById('temo-photo-preview');if(pv)pv.style.display='none';
+  const fi=document.getElementById('temo-photo-file');if(fi)fi.value='';
   document.getElementById('temo-text').value = '';
   document.getElementById('temo-rating').value = '5';
   document.getElementById('temo-active').checked = true;
