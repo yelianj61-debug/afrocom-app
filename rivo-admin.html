@@ -146,6 +146,14 @@
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
         <span class="font-medium">🤝 Partenaires</span>
       </button>
+      <button onclick="switchTab('numeros')" id="tab-numeros" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-gray-300 hover:bg-gray-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+        <span class="font-medium">📱 Numéros</span>
+      </button>
+      <button onclick="switchTab('parrainage-admin')" id="tab-parrainage-admin" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-gray-300 hover:bg-gray-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        <span class="font-medium">🤝 Parrainage</span>
+      </button>
     </nav>
 
     <div class="p-4 border-t border-gray-700">
@@ -533,6 +541,38 @@
       </div>
     </div>
 
+    <!-- Section Numéros -->
+    <div id="page-numeros" class="p-8 hidden" style="display:none">
+      <div class="mb-6 flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 class="text-2xl font-bold text-white">📱 Numéros WhatsApp</h1>
+          <p class="text-gray-400 mt-1">Liste des utilisateurs avec leur numéro WhatsApp</p>
+        </div>
+        <button onclick="exportNumeros()" style="background:#059669;color:#fff;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;font-weight:600;font-size:.875rem">📥 Exporter CSV</button>
+      </div>
+      <div class="card" style="overflow:auto">
+        <table>
+          <thead><tr>
+            <th>Nom</th><th>Email</th><th>ID RIVO</th><th>WhatsApp</th><th>Action</th>
+          </tr></thead>
+          <tbody id="numeros-table">
+            <tr><td colspan="5" class="text-center text-gray-500 py-8">Chargement…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Section Parrainage Admin -->
+    <div id="page-parrainage-admin" class="p-8 hidden" style="display:none">
+      <div class="mb-6">
+        <h1 class="text-2xl font-bold text-white">🤝 Parrainage</h1>
+        <p class="text-gray-400 mt-1">Parrains et leurs filleuls avec numéros WhatsApp</p>
+      </div>
+      <div id="parrainage-admin-content">
+        <p class="text-gray-500 text-center py-8">Chargement…</p>
+      </div>
+    </div>
+
     <!-- Section Achats -->
     <div id="page-achats" class="p-8 hidden" style="display:none">
       <div class="mb-6">
@@ -839,7 +879,7 @@ async function doLogout() {
 
 /* ── Tab navigation ───────────────────────────────────── */
 function switchTab(name) {
-  ['dashboard','utilisateurs','formations','retraits','attestations','notifications','videos','events','classement','solde','rechargements','achats','partenaires'].forEach(t => {
+  ['dashboard','utilisateurs','formations','retraits','attestations','notifications','videos','events','classement','solde','rechargements','achats','partenaires','numeros','parrainage-admin'].forEach(t => {
     const el = document.getElementById('page-' + t);
     if(el){el.classList.add('hidden'); el.style.display = 'none';}
     const btn = document.getElementById('tab-' + t);
@@ -863,6 +903,8 @@ function switchTab(name) {
     if (name === 'classement')     loadClassement();
     if (name === 'rechargements')  loadRechargements(false);
     if (name === 'partenaires')    loadPartenaires();
+    if (name === 'numeros')        loadNumeros();
+    if (name === 'parrainage-admin') loadParrainageAdmin();
   }
 }
 
@@ -2156,6 +2198,125 @@ async function deletePartenaire(id, btn) {
   if (error) { toast('Erreur : ' + error.message, false); if (btn) { btn.disabled=false; btn.textContent='🗑️ Supprimer'; } return; }
   toast('Partenaire supprimé');
   loadPartenaires();
+}
+
+/* ── Numéros WhatsApp ─────────────────────────────────── */
+async function loadNumeros() {
+  const tbody = document.getElementById('numeros-table');
+  if(!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500 py-8">Chargement…</td></tr>';
+  try {
+    const { data, error } = await sb.from('profiles')
+      .select('first_name,last_name,email,rivo_id,whatsapp')
+      .not('whatsapp', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(500);
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500 py-8">Aucun utilisateur avec WhatsApp renseigné.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.map(u => `
+      <tr>
+        <td class="font-medium text-white">${escHtml((u.first_name||'') + ' ' + (u.last_name||''))}</td>
+        <td class="text-gray-400">${escHtml(u.email||'')}</td>
+        <td><code style="font-size:.75rem">${escHtml(u.rivo_id||'—')}</code></td>
+        <td class="text-green-400 font-medium">${escHtml(u.whatsapp||'—')}</td>
+        <td><button onclick="copyText('${escHtml(u.whatsapp||'')}',this)" style="background:#059669;color:#fff;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:.75rem;font-weight:600">📋 Copier</button></td>
+      </tr>`).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-red-400 py-8">Erreur : ${escHtml(e.message)}</td></tr>`;
+  }
+}
+
+function copyText(text, btn) {
+  navigator.clipboard?.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = '✅ Copié';
+    setTimeout(() => { btn.textContent = orig; }, 1500);
+  }).catch(() => toast('Impossible de copier', false));
+}
+
+function exportNumeros() {
+  const rows = document.querySelectorAll('#numeros-table tr');
+  let csv = 'Nom,Email,ID RIVO,WhatsApp\n';
+  rows.forEach(r => {
+    const tds = r.querySelectorAll('td');
+    if (tds.length >= 4) {
+      csv += [tds[0],tds[1],tds[2],tds[3]].map(td => `"${td.textContent.replace(/"/g,'""')}"`).join(',') + '\n';
+    }
+  });
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'rivo_numeros_whatsapp.csv';
+  a.click();
+}
+
+/* ── Parrainage Admin ──────────────────────────────────── */
+async function loadParrainageAdmin() {
+  const box = document.getElementById('parrainage-admin-content');
+  if(!box) return;
+  box.innerHTML = '<p class="text-gray-500 text-center py-8">Chargement…</p>';
+  try {
+    const { data, error } = await sb.from('profiles')
+      .select('id,first_name,last_name,email,rivo_id,whatsapp,referral_code,referred_by')
+      .order('created_at', { ascending: false })
+      .limit(1000);
+    if (error) throw error;
+
+    // Build map id → profile
+    const byId = {};
+    (data||[]).forEach(u => { byId[u.id] = u; });
+
+    // Group filleuls by referrer id
+    const referrers = {};
+    (data||[]).forEach(u => {
+      if (u.referred_by) {
+        if (!referrers[u.referred_by]) referrers[u.referred_by] = [];
+        referrers[u.referred_by].push(u);
+      }
+    });
+
+    const parrains = Object.keys(referrers);
+    if (parrains.length === 0) {
+      box.innerHTML = '<p class="text-gray-500 text-center py-8">Aucun parrainage enregistré.</p>';
+      return;
+    }
+
+    box.innerHTML = parrains.map(pid => {
+      const p = byId[pid];
+      const name = p ? `${p.first_name||''} ${p.last_name||''}`.trim() : '—';
+      const wa = p?.whatsapp || '—';
+      const filleuls = referrers[pid] || [];
+      const rows = filleuls.map(f => `
+        <tr>
+          <td class="text-gray-300">${escHtml((f.first_name||'') + ' ' + (f.last_name||''))}</td>
+          <td class="text-gray-400" style="font-size:.8rem">${escHtml(f.email||'')}</td>
+          <td class="text-green-400">${escHtml(f.whatsapp||'—')}</td>
+          <td>${f.whatsapp ? `<button onclick="copyText('${escHtml(f.whatsapp)}',this)" style="background:#059669;color:#fff;border:none;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:.72rem;font-weight:600">📋</button>` : ''}</td>
+        </tr>`).join('');
+      return `<div class="card p-5 mb-5">
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:.875rem;flex-wrap:wrap">
+          <div style="background:#7c3aed;border-radius:9999px;width:2.5rem;height:2.5rem;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;flex-shrink:0">${escHtml(name[0]||'?')}</div>
+          <div>
+            <div class="font-bold text-white">${escHtml(name)}</div>
+            <div class="text-green-400 text-sm">📱 ${escHtml(wa)}</div>
+          </div>
+          ${wa!=='—' ? `<button onclick="copyText('${escHtml(wa)}',this)" style="margin-left:auto;background:#059669;color:#fff;border:none;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:.8rem;font-weight:600">📋 Copier</button>` : ''}
+        </div>
+        <div style="font-size:.8rem;color:#9ca3af;margin-bottom:.625rem;font-weight:600">${filleuls.length} filleul${filleuls.length!==1?'s':''}</div>
+        <div style="overflow:auto"><table><thead><tr>
+          <th>Filleul</th><th>Email</th><th>WhatsApp</th><th></th>
+        </tr></thead><tbody>${rows}</tbody></table></div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    box.innerHTML = `<p class="text-red-400 text-center py-8">Erreur : ${escHtml(e.message)}</p>`;
+  }
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 /* ── Achats par utilisateur ───────────────────────────── */

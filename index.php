@@ -350,6 +350,11 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
             <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.4rem">Code de parrainage <span style="color:#9ca3af;font-weight:400">(optionnel)</span></label>
             <input type="text" id="rg-ref" class="input" placeholder="Ex: RIVO2024" style="text-transform:uppercase"/>
           </div>
+          <div>
+            <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.4rem">Numéro WhatsApp <span style="color:#dc2626">*</span></label>
+            <input type="tel" id="rg-whatsapp" class="input" placeholder="Ex: +229 97000000" required/>
+            <p style="font-size:.75rem;color:#6b7280;margin-top:.25rem">📱 Inclure l'indicatif pays. Ex: +229 97000000</p>
+          </div>
           <button type="submit" id="rg-btn" class="btn-accent" style="width:100%;justify-content:center;padding:.875rem;font-size:1rem;margin-top:.25rem">
             Créer mon compte
           </button>
@@ -417,9 +422,16 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
               <button onclick="openRetrait()" style="background:rgba(255,255,255,.25);border:none;color:white;font-size:.7rem;font-weight:700;padding:.3rem .55rem;border-radius:.45rem;cursor:pointer" onmouseover="this.style.background='rgba(255,255,255,.38)'" onmouseout="this.style.background='rgba(255,255,255,.25)'">💸 Retirer</button>
             </div>
           </div>
-          <button id="refresh-btn" onclick="refreshBalances()" style="width:100%;margin-top:.75rem;background:linear-gradient(135deg,#f59e0b,#d97706);border:none;color:white;font-size:.875rem;font-weight:800;padding:.65rem 1rem;border-radius:.75rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;transition:opacity .2s" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
-            🔄 Actualiser les soldes
-          </button>
+          <div style="display:flex;gap:.5rem;margin-top:.75rem">
+            <button id="refresh-btn" onclick="refreshBalances()" style="flex:1;background:linear-gradient(135deg,#f59e0b,#d97706);border:none;color:white;font-size:.875rem;font-weight:800;padding:.65rem 1rem;border-radius:.75rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;transition:opacity .2s" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+              🔄 Actualiser
+            </button>
+            <select id="currency-sel" onchange="changeCurrency(this.value)" style="background:rgba(255,255,255,.2);border:none;color:white;font-size:.8rem;font-weight:700;padding:.5rem .6rem;border-radius:.75rem;cursor:pointer;outline:none">
+              <option value="XOF" style="color:#1F2937">XOF / FCFA</option>
+              <option value="EUR" style="color:#1F2937">EUR / €</option>
+              <option value="USD" style="color:#1F2937">USD / $</option>
+            </select>
+          </div>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
           <h2 style="font-size:1.25rem;font-weight:800;color:#1F2937">Formations disponibles</h2>
@@ -499,6 +511,17 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
             <div style="display:flex;justify-content:space-between;align-items:center;padding:.75rem;background:#fef9c3;border-radius:.75rem" id="birth-row">
               <span style="font-size:.85rem;color:#92400e;font-weight:600">Date de naissance</span>
               <span id="info-birth" style="font-weight:700;color:#92400e">...</span>
+            </div>
+            <div style="padding:.75rem;background:#f0fdf4;border-radius:.75rem;border:1px solid #bbf7d0">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
+                <span style="font-size:.85rem;color:#166534;font-weight:600">📱 WhatsApp</span>
+                <span id="info-whatsapp" style="font-weight:700;color:#166534;font-size:.875rem">—</span>
+              </div>
+              <div style="display:flex;gap:.5rem">
+                <input type="tel" id="edit-whatsapp" class="input" placeholder="Ex: +229 97000000" style="flex:1;font-size:.8rem;padding:.4rem .625rem"/>
+                <button onclick="saveWhatsapp()" style="background:#16a34a;color:white;border:none;border-radius:.5rem;padding:.4rem .75rem;font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap">💾 Enregistrer</button>
+              </div>
+              <p style="font-size:.72rem;color:#6b7280;margin-top:.25rem">📱 Inclure l'indicatif pays. Ex: +229 97000000</p>
             </div>
           </div>
         </div>
@@ -608,12 +631,10 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
             <input type="number" id="rch-amt" class="input" placeholder="Ex: 5000" min="500"/>
           </div>
           <div>
-            <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Numéro de téléphone</label>
-            <div style="display:grid;grid-template-columns:auto 1fr;gap:.5rem">
-              <select id="rch-cc" class="input" style="min-width:105px"><option value="+229">🇧🇯 +229</option><option value="+225">🇨🇮 +225</option><option value="+226">🇧🇫 +226</option><option value="+228">🇹🇬 +228</option><option value="+227">🇳🇪 +227</option><option value="+221">🇸🇳 +221</option><option value="+223">🇲🇱 +223</option><option value="+224">🇬🇳 +224</option><option value="+33">🇫🇷 +33</option></select>
-              <input type="tel" id="rch-phone" class="input" placeholder="Ex: 97000000"/>
-            </div>
-            <p style="font-size:.75rem;color:#d97706;margin-top:.35rem;font-weight:600">⚠️ Assurez-vous de disposer des fonds sur ce numéro avant de confirmer.</p>
+            <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Numéro WhatsApp</label>
+            <input type="tel" id="rch-phone" class="input" placeholder="Ex: +229 97000000"/>
+            <p style="font-size:.75rem;color:#6b7280;margin-top:.25rem">📱 Inclure l'indicatif pays. Ex: +229 97000000</p>
+            <p style="font-size:.75rem;color:#d97706;margin-top:.25rem;font-weight:600">⚠️ Assurez-vous de disposer des fonds avant de confirmer.</p>
           </div>
         </div>
         <div style="display:flex;gap:.625rem;margin-top:1.25rem">
@@ -661,11 +682,7 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
         <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Montant (FCFA)</label><input type="number" id="wd-amt" class="input" placeholder="Ex: 5000" min="1000"/><p style="font-size:.75rem;color:#9ca3af;margin-top:.25rem">Minimum : 1 000 FCFA</p></div>
         <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Méthode</label><select id="wd-mth" class="input" onchange="switchWithdrawalMethod()"><option value="mobile_money">📱 Mobile Money</option><option value="carte_bancaire">💳 Carte bancaire</option><option value="autre">🔄 Autre</option></select></div>
         <div id="wd-section-mm">
-          <div style="display:grid;grid-template-columns:auto 1fr;gap:.5rem;margin-bottom:.75rem">
-            <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Indicatif</label><select id="wd-cc" class="input" style="min-width:105px"><option value="+229">🇧🇯 +229</option><option value="+225">🇨🇮 +225</option><option value="+226">🇧🇫 +226</option><option value="+228">🇹🇬 +228</option><option value="+227">🇳🇪 +227</option><option value="+221">🇸🇳 +221</option><option value="+223">🇲🇱 +223</option><option value="+224">🇬🇳 +224</option><option value="+33">🇫🇷 +33</option></select></div>
-            <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Numéro</label><input type="tel" id="wd-phone" class="input" placeholder="Ex: 97000000"/></div>
-          </div>
-          <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Opérateur</label><input type="text" id="wd-op" class="input" placeholder="MTN, Moov, Orange…"/></div>
+          <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Numéro WhatsApp</label><input type="tel" id="wd-phone" class="input" placeholder="Ex: +229 97000000"/><p style="font-size:.75rem;color:#6b7280;margin-top:.25rem">📱 Inclure l'indicatif pays. Ex: +229 97000000</p></div>
         </div>
         <div id="wd-section-card" style="display:none">
           <div style="margin-bottom:.75rem"><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Titulaire</label><input type="text" id="wd-iban-name" class="input" placeholder="Prénom Nom"/></div>
@@ -810,11 +827,11 @@ const loaded = {};
 let wdInProgress = false;
 
 // ── Helpers ───────────────────────────────────────────
-function toast(msg, type='ok'){
+function toast(msg, type='ok', ms=5000){
   const el=document.createElement('div');
   el.className=`toast ${type}`;el.textContent=msg;
   document.getElementById('toasts').appendChild(el);
-  setTimeout(()=>el.remove(),5000);
+  setTimeout(()=>el.remove(),ms);
 }
 function fmt(n,c='XOF'){return c==='XOF'?new Intl.NumberFormat('fr-FR').format(n)+' FCFA':new Intl.NumberFormat('fr-FR',{style:'currency',currency:c}).format(n);}
 function badgeInfo(l){const m={debutant:['🌱','Débutant','#dbeafe','#1d4ed8'],bronze:['🥉','Bronze','#fef3c7','#92400e'],argent:['🥈','Argent','#f1f5f9','#475569'],or:['🥇','Or','#fef9c3','#854d0e'],diamant:['💎','Diamant','#dbeafe','#1d4ed8'],admin:['👑','Admin','#ede9fe','#6d28d9']};return m[l]||m.debutant;}
@@ -1005,6 +1022,9 @@ async function loadProfileData(){
     const infoName=document.getElementById('info-name');if(infoName)infoName.textContent=fullName;
     const infoEmail=document.getElementById('info-email');if(infoEmail)infoEmail.textContent=email;
     const infoSolde=document.getElementById('info-solde');if(infoSolde)infoSolde.textContent=solde;
+    const infoWa=document.getElementById('info-whatsapp');if(infoWa)infoWa.textContent=p.whatsapp||'— Non renseigné';
+    const editWa=document.getElementById('edit-whatsapp');if(editWa)editWa.value=p.whatsapp||'';
+    const curSel=document.getElementById('currency-sel');if(curSel)curSel.value=p.currency||'XOF';
     const ib=document.getElementById('info-badge');
     if(ib){ib.textContent=`${ic} ${lb}`;ib.style.background=bg;ib.style.color=co;}
     const av=document.getElementById('big-av');
@@ -1016,6 +1036,19 @@ async function loadProfileData(){
       const el=document.getElementById(id);if(el && el.textContent==='...')el.textContent='—';
     });
   }
+}
+
+// ── Mise à jour WhatsApp depuis le profil ─────────────
+async function saveWhatsapp(){
+  const val=document.getElementById('edit-whatsapp')?.value.trim();
+  if(!val){toast('Entrez un numéro WhatsApp','err');return;}
+  if(!CU?.id){toast('Connectez-vous d\'abord','err');return;}
+  try{
+    await sbAdmin.from('profiles').update({whatsapp:val}).eq('id',CU.id);
+    if(CP)CP.whatsapp=val;
+    const el=document.getElementById('info-whatsapp');if(el)el.textContent=val;
+    toast('WhatsApp mis à jour ✅');
+  }catch(e){toast('Erreur. Réessayez.','err');}
 }
 
 // ── Login ─────────────────────────────────────────────
@@ -1131,7 +1164,9 @@ async function doRegister(e){
   const pwd=document.getElementById('rg-pwd').value;
   const cpwd=document.getElementById('rg-cpwd').value;
   const ref=document.getElementById('rg-ref').value.trim().toUpperCase();
+  const whatsapp=document.getElementById('rg-whatsapp').value.trim();
   if(fn.length<2||ln.length<2){showErr('rg-err','Prénom et nom requis');return;}
+  if(!whatsapp){showErr('rg-err','Numéro WhatsApp requis');return;}
   if(pwd.length<8){showErr('rg-err','Mot de passe : minimum 8 caractères');return;}
   if(pwd!==cpwd){showErr('rg-err','Les mots de passe ne correspondent pas');return;}
   setBtn('rg-btn','<span class="spin"></span> Création...',true);
@@ -1155,7 +1190,7 @@ async function doRegister(e){
       id:uid, first_name:fn, last_name:ln, email,
       referral_code:refCode, rivo_id:rivoId,
       badge_level:'debutant', balance:0, referral_balance:0, currency:'XOF',
-      birth_date:birth||null, referred_by:refId||null
+      birth_date:birth||null, referred_by:refId||null, whatsapp:whatsapp||null
     }));
     if(insertErr) console.warn('[doRegister] insert error:',insertErr.code, insertErr.message);
     else console.log('[doRegister] profil créé:', uid);
@@ -1275,6 +1310,11 @@ async function confirmPay(){
     toast('⚠️ Profil non synchronisé. Déconnectez-vous et reconnectez-vous.','err');
     return;
   }
+  if(!CP?.whatsapp){
+    closePayModal();
+    toast('📱 Veuillez ajouter votre numéro WhatsApp dans votre Profil','err',6000);
+    return;
+  }
   const source=document.querySelector('input[name="pay-source"]:checked')?.value||'principal';
   const soldeDisp=source==='parrainage'?(CP?.referral_balance||0):(CP?.balance||0);
   if(soldeDisp<course.price){
@@ -1315,9 +1355,10 @@ async function confirmPay(){
 // ── Rechargement solde principal ─────────────────────────
 function openRecharge(){
   if(!CU?.id){toast('Connectez-vous d\'abord','err');return;}
+  if(!CP?.whatsapp){toast('📱 Veuillez ajouter votre numéro WhatsApp dans votre Profil','err',6000);return;}
   const el=document.getElementById('rch-id');if(el)el.value=CP?.rivo_id||'';
   document.getElementById('rch-amt').value='';
-  document.getElementById('rch-phone').value='';
+  document.getElementById('rch-phone').value=CP?.whatsapp||'';
   goRchStep(1);
   document.getElementById('modal-recharge').style.display='flex';
 }
@@ -1327,10 +1368,9 @@ function doRechargeStep2(){
   const amt=parseFloat(document.getElementById('rch-amt').value);
   const phone=document.getElementById('rch-phone').value.trim();
   if(!amt||amt<500){toast('Montant minimum : 500 FCFA','err');return;}
-  if(!phone){toast('Numéro de téléphone requis','err');return;}
-  const cc=document.getElementById('rch-cc').value;
+  if(!phone){toast('Numéro WhatsApp requis','err');return;}
   document.getElementById('rch-confirm-msg').innerHTML=
-    `Voulez-vous recharger <strong>${fmt(amt,'XOF')}</strong> ?<br><span style="font-size:.85rem;color:#6b7280">Téléphone : ${cc}${phone}</span>`;
+    `Voulez-vous recharger <strong>${fmt(amt,'XOF')}</strong> ?<br><span style="font-size:.85rem;color:#6b7280">WhatsApp : ${phone}</span>`;
   goRchStep(2);
 }
 async function doRechargeConfirm(){
@@ -1339,10 +1379,9 @@ async function doRechargeConfirm(){
   try{
     const amt=parseFloat(document.getElementById('rch-amt').value);
     const phone=document.getElementById('rch-phone').value.trim();
-    const cc=document.getElementById('rch-cc').value;
     await sbAdmin.from('recharge_requests').insert({
       user_id:CU.id, rivo_id:CP?.rivo_id||null,
-      phone:phone, country_code:cc, amount:amt, status:'en_attente'
+      phone:phone, country_code:null, amount:amt, status:'en_attente'
     });
     goRchStep(3);
   }catch(e){
@@ -1355,13 +1394,31 @@ async function doRechargeConfirm(){
 // ── Retrait solde parrainage ──────────────────────────────
 function openRetrait(){
   if(!CU?.id){toast('Connectez-vous d\'abord','err');return;}
+  if(!CP?.whatsapp){toast('📱 Veuillez ajouter votre numéro WhatsApp dans votre Profil','err',6000);return;}
   const d=document.getElementById('bal-display');if(d)d.textContent=fmt(CP?.referral_balance||0,CP?.currency||'XOF');
   document.getElementById('wd-amt').value='';
+  const wdPhone=document.getElementById('wd-phone');if(wdPhone)wdPhone.value=CP?.whatsapp||'';
   switchWithdrawalMethod();
   loadRetrait();
   document.getElementById('modal-retrait').style.display='flex';
 }
 function closeRetrait(){document.getElementById('modal-retrait').style.display='none';}
+
+// ── Devise / Currency ─────────────────────────────────────
+const RATES={XOF:1, EUR:0.00152, USD:0.00165};
+function changeCurrency(c){
+  if(!CP)return;
+  CP.currency=c;
+  if(CU?.id) sbAdmin.from('profiles').update({currency:c}).eq('id',CU.id);
+  const bal=CP.balance||0;
+  const balRef=CP.referral_balance||0;
+  const r=RATES[c]||1;
+  const balC=c==='XOF'?bal:bal*r;
+  const balRefC=c==='XOF'?balRef:balRef*r;
+  const fmtC=(n)=>c==='XOF'?new Intl.NumberFormat('fr-FR').format(Math.round(n))+' FCFA':new Intl.NumberFormat('fr-FR',{style:'currency',currency:c}).format(n);
+  const balP=document.getElementById('bal-principal');if(balP)balP.textContent=fmtC(balC);
+  const balR=document.getElementById('bal-parrainage');if(balR)balR.textContent=fmtC(balRefC);
+}
 
 // ── Actualiser les deux soldes ────────────────────────────
 async function refreshBalances(){
@@ -1643,10 +1700,8 @@ async function doWithdrawal(){
   let extra={};
   if(mth==='mobile_money'){
     const phone=document.getElementById('wd-phone').value.trim();
-    const cc=document.getElementById('wd-cc').value;
-    const op=document.getElementById('wd-op').value.trim();
-    if(!phone){toast('Numéro de téléphone requis','err');return;}
-    extra={phone_number:cc+phone,country_code:cc,operator:op||null};
+    if(!phone){toast('Numéro WhatsApp requis','err');return;}
+    extra={phone_number:phone,country_code:null,operator:null};
   }else if(mth==='carte_bancaire'){
     const iban=document.getElementById('wd-iban').value.trim();
     const bic=document.getElementById('wd-bic').value.trim();
@@ -1951,10 +2006,11 @@ function openPartnerInfo(p){
 }
 
 function openEventApply(eventId,eventTitle){
+  if(!CP?.whatsapp){toast('📱 Veuillez ajouter votre numéro WhatsApp dans votre Profil','err',6000);return;}
   currentApplyEventId=eventId;
   document.getElementById('apply-event-title').textContent='Événement : '+eventTitle;
   document.getElementById('apply-name').value=`${CP?.first_name||''} ${CP?.last_name||''}`.trim();
-  document.getElementById('apply-whatsapp').value='';
+  document.getElementById('apply-whatsapp').value=CP?.whatsapp||'';
   document.getElementById('apply-country').value='';
   document.getElementById('apply-msg').style.display='none';
   document.getElementById('event-apply-popup').style.display='flex';
