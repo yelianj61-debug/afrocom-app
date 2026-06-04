@@ -95,6 +95,9 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
 #legal-modal-body .offer-text{font-size:.9rem;color:#374151;line-height:1.6}
 #legal-modal-body .badge-row{display:flex;flex-wrap:wrap;justify-content:center;gap:.75rem;margin-top:1rem}
 #legal-modal-body .badge{background:linear-gradient(135deg,#2563EB,#1D4ED8);color:white;border-radius:9999px;padding:.5rem 1.25rem;font-size:.85rem;font-weight:700}
+/* ── Dark mode ── */
+[data-theme="dark"] .page { filter: invert(1) hue-rotate(180deg); }
+[data-theme="dark"] img,[data-theme="dark"] video,[data-theme="dark"] .gradient-hero,[data-theme="dark"] .spin,[data-theme="dark"] .spin-blue,[data-theme="dark"] .badge { filter: invert(1) hue-rotate(180deg); }
 </style>
 </head>
 <body oncontextmenu="return false" onselectstart="return false">
@@ -114,6 +117,7 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
         <span style="font-size:1.25rem;font-weight:900;color:#1F2937">RIVO</span>
       </div>
       <div style="display:flex;align-items:center;gap:.75rem">
+        <button id="dark-toggle" onclick="toggleDark()" style="background:none;border:1px solid #e5e7eb;border-radius:.625rem;padding:.4rem .65rem;cursor:pointer;font-size:1rem;color:#374151" title="Mode sombre">🌙</button>
         <button onclick="goTo('login')" class="btn-outline" style="padding:.5rem 1.1rem">Connexion</button>
         <button onclick="goTo('register')" class="btn-accent" style="padding:.5rem 1.1rem">S'inscrire</button>
       </div>
@@ -160,6 +164,11 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
           </ol>
         </div>
       </div>
+      <div style="margin-top:1rem">
+        <button onclick="goTo('verify')" style="display:inline-flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.4);color:white;font-weight:700;font-size:.9rem;padding:.7rem 1.5rem;border-radius:.875rem;cursor:pointer;backdrop-filter:blur(8px);transition:background .2s" onmouseover="this.style.background='rgba(255,255,255,.25)'" onmouseout="this.style.background='rgba(255,255,255,.15)'">
+          🔍 Vérifier un certificat
+        </button>
+      </div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;max-width:380px;margin:3.5rem auto 0">
         <div style="text-align:center"><div style="font-size:2rem;font-weight:900;color:white">200+</div><div style="font-size:.8rem;color:#93c5fd;margin-top:.25rem">Formations</div></div>
         <div style="text-align:center"><div style="font-size:2rem;font-weight:900;color:white">5K+</div><div style="font-size:.8rem;color:#93c5fd;margin-top:.25rem">Apprenants</div></div>
@@ -182,6 +191,20 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
         <div class="card" style="padding:1.5rem"><div style="width:3.25rem;height:3.25rem;background:#ede9fe;border-radius:1rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:1.5rem">🎖️</div><h3 style="font-weight:800;margin-bottom:.5rem">Badges progressifs</h3><p style="color:#6b7280;font-size:.9rem">Évoluez de Débutant → Bronze → Argent → Or → Diamant selon vos achats.</p></div>
         <div class="card" style="padding:1.5rem"><div style="width:3.25rem;height:3.25rem;background:#fef9c3;border-radius:1rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:1.5rem">⚡</div><h3 style="font-weight:800;margin-bottom:.5rem">Accès immédiat</h3><p style="color:#6b7280;font-size:.9rem">Après paiement, téléchargez et consultez vos formations immédiatement.</p></div>
         <div class="card" style="padding:1.5rem"><div style="width:3.25rem;height:3.25rem;background:#fee2e2;border-radius:1rem;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:1.5rem">🔒</div><h3 style="font-weight:800;margin-bottom:.5rem">Paiement sécurisé</h3><p style="color:#6b7280;font-size:.9rem">Mobile Money, carte bancaire. Retraits traités en moins de 30 min.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Témoignages -->
+  <section style="padding:5rem 1.25rem;background:white">
+    <div style="max-width:1100px;margin:0 auto">
+      <div style="text-align:center;margin-bottom:3rem">
+        <div style="display:inline-flex;align-items:center;gap:.5rem;background:#fef3c7;color:#92400e;padding:.4rem 1rem;border-radius:9999px;font-size:.85rem;font-weight:700;margin-bottom:1rem">⭐ Avis vérifiés</div>
+        <h2 style="font-size:2.1rem;font-weight:900;color:#1F2937;margin-bottom:.75rem">Ce que disent nos apprenants</h2>
+        <p style="color:#6b7280;font-size:1.05rem">Des milliers d'apprenants font confiance à RIVO.</p>
+      </div>
+      <div id="testimonials-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem">
+        <div style="text-align:center;padding:2rem;color:#9ca3af"><div class="spin-blue" style="margin:0 auto"></div></div>
       </div>
     </div>
   </section>
@@ -260,6 +283,230 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
       </div>
     </div>
   </footer>
+</div>
+
+<!-- ═══════════════════ PAGE: VÉRIFIER CERTIFICAT ═══════════════════ -->
+<div id="page-verify" class="page">
+  <nav class="top-nav">
+    <div style="max-width:1200px;margin:0 auto;padding:0 1.25rem;height:4rem;display:flex;align-items:center;gap:1rem">
+      <button onclick="goTo('landing')" style="background:none;border:none;cursor:pointer;font-size:.95rem;color:#2563EB;font-weight:700;padding:.35rem .75rem;border-radius:.5rem;border:1px solid #bfdbfe">← Retour</button>
+      <span style="font-weight:900;font-size:1.1rem;color:#1F2937">🔍 Vérifier un certificat</span>
+    </div>
+  </nav>
+  <div style="min-height:100vh;background:#f8fafc;padding:5rem 1.25rem 2rem">
+    <div style="max-width:540px;margin:0 auto">
+      <div class="card" style="padding:2rem">
+        <h2 style="font-size:1.3rem;font-weight:800;color:#1F2937;margin-bottom:.5rem;text-align:center">Vérification d'authenticité</h2>
+        <p style="color:#6b7280;font-size:.875rem;text-align:center;margin-bottom:1.75rem">Entrez le code NPI à 13 chiffres figurant sur l'attestation.</p>
+        <!-- Option A : saisie manuelle -->
+        <div style="margin-bottom:1.5rem">
+          <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.5rem">Code NPI (13 chiffres)</label>
+          <div style="display:flex;gap:.5rem">
+            <input type="text" id="verify-code" class="input" placeholder="Ex: 1234567890123" maxlength="13" style="letter-spacing:.1em;font-size:1.1rem;font-weight:700" oninput="this.value=this.value.replace(/\D/g,'').slice(0,13)"/>
+            <button onclick="verifyNPI()" id="verify-btn" class="btn-primary" style="white-space:nowrap;padding:.75rem 1.25rem">🔍 Vérifier</button>
+          </div>
+        </div>
+        <!-- Option B : upload fichier -->
+        <div style="border:2px dashed #e5e7eb;border-radius:1rem;padding:1.25rem;text-align:center;margin-bottom:1.5rem;cursor:pointer" onclick="document.getElementById('verify-file').click()" onmouseover="this.style.borderColor='#2563eb'" onmouseout="this.style.borderColor='#e5e7eb'">
+          <input type="file" id="verify-file" accept="image/*,.pdf" style="display:none" onchange="previewVerifyFile(this)"/>
+          <div style="font-size:2rem;margin-bottom:.5rem">📄</div>
+          <p style="font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.25rem">Uploader l'attestation</p>
+          <p style="font-size:.78rem;color:#9ca3af">Image ou PDF — puis saisissez le code visible ci-dessus</p>
+        </div>
+        <div id="verify-file-preview" style="display:none;margin-bottom:1rem"></div>
+        <!-- Résultat -->
+        <div id="verify-result" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE: DEVENIR FORMATEUR ═══════════════════ -->
+<div id="page-formateur" class="page">
+  <nav class="top-nav">
+    <div style="max-width:1200px;margin:0 auto;padding:0 1.25rem;height:4rem;display:flex;align-items:center;gap:1rem">
+      <button onclick="goTo('dashboard')" style="background:none;border:none;cursor:pointer;font-size:.95rem;color:#2563EB;font-weight:700;padding:.35rem .75rem;border-radius:.5rem;border:1px solid #bfdbfe">← Retour</button>
+      <span style="font-weight:900;font-size:1.1rem;color:#1F2937">🎓 Devenir formateur</span>
+    </div>
+  </nav>
+  <div style="min-height:100vh;background:#f8fafc;padding:5rem 1.25rem 2rem">
+    <div style="max-width:560px;margin:0 auto">
+
+      <!-- Étape 1 : Intro -->
+      <div id="fmt-step1" class="card" style="padding:2.5rem;text-align:center">
+        <div style="font-size:4rem;margin-bottom:1rem">🎓</div>
+        <h1 style="font-size:1.75rem;font-weight:900;color:#1F2937;margin-bottom:.75rem">Transmettez votre savoir<br><span style="color:#2563EB">au monde entier</span></h1>
+        <p style="color:#6b7280;font-size:1rem;line-height:1.7;margin-bottom:1rem">Rejoignez la communauté des formateurs RIVO. Publiez vos formations, touchez des milliers d'apprenants en Afrique et gagnez des revenus.</p>
+        <div style="background:#f0fdf4;border-radius:1rem;padding:1rem;margin-bottom:1.5rem;text-align:left">
+          <p style="font-size:.875rem;color:#166534;font-weight:600;margin-bottom:.5rem">✅ Ce que vous obtenez :</p>
+          <ul style="font-size:.85rem;color:#166534;padding-left:1.25rem;line-height:1.9;margin:0">
+            <li>Publiez vos formations sur RIVO</li>
+            <li>Badge officiel <strong>FORMATEUR</strong></li>
+            <li>Espace de gestion personnel</li>
+            <li>100% des revenus (aucune commission RIVO)</li>
+          </ul>
+        </div>
+        <p style="font-size:.78rem;color:#9ca3af;margin-bottom:1.5rem">Abonnement d'activation : <strong style="color:#374151">2 200 FCFA</strong> (une seule fois)</p>
+        <button onclick="goFmtStep(2)" class="btn-primary" style="width:100%;justify-content:center;padding:.875rem;font-size:1rem">Commencer →</button>
+      </div>
+
+      <!-- Étape 2 : Infos personnelles -->
+      <div id="fmt-step2" style="display:none">
+        <div class="card" style="padding:2rem">
+          <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem">
+            <div style="width:2rem;height:2rem;background:#2563EB;border-radius:9999px;display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:.9rem;flex-shrink:0">2</div>
+            <h3 style="font-weight:800;color:#1F2937">Informations personnelles</h3>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:.875rem">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+              <div><label style="display:block;font-size:.8rem;font-weight:700;color:#374151;margin-bottom:.3rem">Prénom *</label><input id="fmt-fn" type="text" class="input" placeholder="Jean"/></div>
+              <div><label style="display:block;font-size:.8rem;font-weight:700;color:#374151;margin-bottom:.3rem">Nom *</label><input id="fmt-ln" type="text" class="input" placeholder="Dupont"/></div>
+            </div>
+            <div><label style="display:block;font-size:.8rem;font-weight:700;color:#374151;margin-bottom:.3rem">Email *</label><input id="fmt-email" type="email" class="input" placeholder="votre@email.com"/></div>
+            <div><label style="display:block;font-size:.8rem;font-weight:700;color:#374151;margin-bottom:.3rem">Téléphone *</label><input id="fmt-phone" type="tel" class="input" placeholder="+229 97000000"/></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+              <div><label style="display:block;font-size:.8rem;font-weight:700;color:#374151;margin-bottom:.3rem">Pays *</label><input id="fmt-country" type="text" class="input" placeholder="Bénin"/></div>
+              <div><label style="display:block;font-size:.8rem;font-weight:700;color:#374151;margin-bottom:.3rem">Code postal</label><input id="fmt-postal" type="text" class="input" placeholder="00000"/></div>
+            </div>
+            <div><label style="display:block;font-size:.8rem;font-weight:700;color:#374151;margin-bottom:.3rem">Profession *</label><input id="fmt-profession" type="text" class="input" placeholder="Ex: Développeur Web, Comptable…"/></div>
+          </div>
+          <div style="display:flex;gap:.625rem;margin-top:1.5rem">
+            <button onclick="goFmtStep(1)" style="flex:1;padding:.7rem;border-radius:.875rem;border:2px solid #e5e7eb;background:none;color:#6b7280;font-weight:700;cursor:pointer">← Retour</button>
+            <button onclick="goFmtStep(3)" class="btn-primary" style="flex:1;justify-content:center;padding:.7rem">Suivant →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Étape 3 : Expérience -->
+      <div id="fmt-step3" style="display:none">
+        <div class="card" style="padding:2rem">
+          <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem">
+            <div style="width:2rem;height:2rem;background:#2563EB;border-radius:9999px;display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:.9rem;flex-shrink:0">3</div>
+            <h3 style="font-weight:800;color:#1F2937">Votre expérience</h3>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:.875rem">
+            <div><label style="display:block;font-size:.8rem;font-weight:700;color:#374151;margin-bottom:.3rem">Combien de formations maîtrisez-vous ? *</label><input id="fmt-num" type="number" class="input" placeholder="Ex: 5" min="1"/></div>
+            <div><label style="display:block;font-size:.8rem;font-weight:700;color:#374151;margin-bottom:.3rem">Listez vos formations *</label><textarea id="fmt-list" class="input" rows="4" style="resize:vertical" placeholder="Ex: Excel avancé, Marketing digital, Comptabilité…"></textarea></div>
+            <div>
+              <label style="display:block;font-size:.8rem;font-weight:700;color:#374151;margin-bottom:.3rem">Avez-vous un site web ?</label>
+              <div style="display:flex;gap:.75rem;margin-bottom:.5rem">
+                <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="radio" name="fmt-web" value="non" checked onchange="document.getElementById('fmt-url-row').style.display='none'"/> Non</label>
+                <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="radio" name="fmt-web" value="oui" onchange="document.getElementById('fmt-url-row').style.display='block'"/> Oui</label>
+              </div>
+              <div id="fmt-url-row" style="display:none"><input id="fmt-url" type="url" class="input" placeholder="https://monsite.com"/></div>
+            </div>
+            <div>
+              <label style="display:block;font-size:.8rem;font-weight:700;color:#374151;margin-bottom:.3rem">Qui délivre les attestations ?</label>
+              <div style="display:flex;gap:.75rem">
+                <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="radio" name="fmt-cert" value="rivo" checked/> RIVO</label>
+                <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="radio" name="fmt-cert" value="formateur"/> Le formateur</label>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;gap:.625rem;margin-top:1.5rem">
+            <button onclick="goFmtStep(2)" style="flex:1;padding:.7rem;border-radius:.875rem;border:2px solid #e5e7eb;background:none;color:#6b7280;font-weight:700;cursor:pointer">← Retour</button>
+            <button onclick="goFmtStep(4)" class="btn-primary" style="flex:1;justify-content:center;padding:.7rem">Suivant →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Étape 4 : Paiement -->
+      <div id="fmt-step4" style="display:none">
+        <div class="card" style="padding:2rem;text-align:center">
+          <div style="font-size:3rem;margin-bottom:.75rem">💳</div>
+          <h3 style="font-weight:800;color:#1F2937;font-size:1.2rem;margin-bottom:.5rem">Abonnement formateur</h3>
+          <p style="color:#6b7280;font-size:.9rem;margin-bottom:1.25rem">Pour activer votre espace formateur et envoyer votre candidature.</p>
+          <div style="background:#f8fafc;border-radius:1rem;padding:1.25rem;margin-bottom:1.25rem">
+            <div style="font-size:2rem;font-weight:900;color:#2563EB;margin-bottom:.25rem">2 200 FCFA</div>
+            <p style="font-size:.8rem;color:#6b7280">Paiement unique — débité de votre solde principal</p>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.625rem;margin-bottom:1.25rem">
+            <div style="background:#eff6ff;border-radius:.875rem;padding:.875rem">
+              <div style="font-size:.7rem;color:#6b7280;font-weight:600;margin-bottom:.2rem">Solde principal</div>
+              <div id="fmt-bal-principal" style="font-size:1.1rem;font-weight:900;color:#1d4ed8">0 FCFA</div>
+            </div>
+            <div style="background:#f0fdf4;border-radius:.875rem;padding:.875rem">
+              <div style="font-size:.7rem;color:#6b7280;font-weight:600;margin-bottom:.2rem">Solde parrainage</div>
+              <div id="fmt-bal-parrainage" style="font-size:1.1rem;font-weight:900;color:#166534">0 FCFA</div>
+            </div>
+          </div>
+          <div style="margin-bottom:1.25rem;text-align:left">
+            <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.5rem">Payer avec :</label>
+            <label style="display:flex;align-items:center;gap:.5rem;padding:.625rem;border-radius:.75rem;border:2px solid #e5e7eb;cursor:pointer;margin-bottom:.4rem"><input type="radio" name="fmt-pay-src" value="principal" checked/> <span>💰 Solde principal</span></label>
+            <label style="display:flex;align-items:center;gap:.5rem;padding:.625rem;border-radius:.75rem;border:2px solid #e5e7eb;cursor:pointer"><input type="radio" name="fmt-pay-src" value="parrainage"/> <span>🤝 Solde parrainage</span></label>
+          </div>
+          <div style="display:flex;gap:.625rem">
+            <button onclick="goFmtStep(3)" style="flex:1;padding:.7rem;border-radius:.875rem;border:2px solid #e5e7eb;background:none;color:#6b7280;font-weight:700;cursor:pointer">← Retour</button>
+            <button onclick="submitFmtApp()" id="fmt-pay-btn" class="btn-accent" style="flex:1;justify-content:center;padding:.7rem">⚡ Payer &amp; Envoyer</button>
+          </div>
+          <p id="fmt-err" style="display:none;color:#dc2626;font-size:.8rem;margin-top:.75rem;text-align:center"></p>
+        </div>
+      </div>
+
+      <!-- Étape 5 : Confirmation -->
+      <div id="fmt-step5" style="display:none">
+        <div class="card" style="padding:2.5rem;text-align:center">
+          <div style="font-size:4rem;margin-bottom:.75rem">✅</div>
+          <h3 style="font-size:1.3rem;font-weight:900;color:#10b981;margin-bottom:.75rem">Demande envoyée !</h3>
+          <p style="color:#374151;font-size:.95rem;line-height:1.7;margin-bottom:1.5rem">Votre candidature a bien été reçue. Notre équipe vous contactera sous <strong>48h</strong> pour valider votre espace formateur.</p>
+          <button onclick="goTo('dashboard')" class="btn-primary" style="width:100%;justify-content:center;padding:.875rem">← Retour au tableau de bord</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE: ESPACE FORMATEUR ═══════════════════ -->
+<div id="page-trainer-space" class="page">
+  <nav class="top-nav">
+    <div style="max-width:1200px;margin:0 auto;padding:0 1.25rem;height:4rem;display:flex;align-items:center;gap:1rem">
+      <button onclick="goTo('dashboard')" style="background:none;border:none;cursor:pointer;font-size:.95rem;color:#2563EB;font-weight:700;padding:.35rem .75rem;border-radius:.5rem;border:1px solid #bfdbfe">← Retour</button>
+      <span style="font-weight:900;font-size:1.1rem;color:#1F2937">🎓 Mon espace formateur</span>
+    </div>
+  </nav>
+  <div style="padding:5rem 1.25rem 2rem;max-width:900px;margin:0 auto">
+    <!-- Tabs -->
+    <div style="display:flex;gap:.5rem;overflow-x:auto;margin-bottom:1.5rem;padding-bottom:.25rem">
+      <button id="ts-tab-pub" onclick="switchTrainerTab('pub')" style="white-space:nowrap;padding:.6rem 1.1rem;border-radius:.75rem;border:none;cursor:pointer;font-weight:700;font-size:.85rem;background:#2563EB;color:white">➕ Publier</button>
+      <button id="ts-tab-mes" onclick="switchTrainerTab('mes')" style="white-space:nowrap;padding:.6rem 1.1rem;border-radius:.75rem;border:none;cursor:pointer;font-weight:600;font-size:.85rem;background:#f1f5f9;color:#6b7280">📚 Mes formations</button>
+      <button id="ts-tab-ventes" onclick="switchTrainerTab('ventes')" style="white-space:nowrap;padding:.6rem 1.1rem;border-radius:.75rem;border:none;cursor:pointer;font-weight:600;font-size:.85rem;background:#f1f5f9;color:#6b7280">💰 Mes ventes</button>
+    </div>
+    <div id="ts-content">
+      <!-- Publier une formation -->
+      <div id="ts-panel-pub">
+        <div class="card" style="padding:1.75rem">
+          <h3 style="font-weight:800;color:#1F2937;margin-bottom:1.25rem">Soumettre une nouvelle formation</h3>
+          <div style="display:flex;flex-direction:column;gap:.875rem">
+            <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Titre *</label><input id="ts-title" type="text" class="input" placeholder="Ex: Excel pour débutants"/></div>
+            <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Prix (FCFA) *</label><input id="ts-price" type="number" class="input" placeholder="Ex: 5000" min="0"/></div>
+            <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Description *</label><textarea id="ts-desc" class="input" rows="4" style="resize:vertical" placeholder="Décrivez le contenu, les objectifs, à qui s'adresse cette formation…"></textarea></div>
+            <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">URL de la photo de couverture</label><input id="ts-img" type="url" class="input" placeholder="https://..."/></div>
+            <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">URL du contenu (PDF, Drive, lien…)</label><input id="ts-content-url" type="url" class="input" placeholder="https://drive.google.com/…"/></div>
+          </div>
+          <button onclick="submitTrainerCourse()" id="ts-submit-btn" class="btn-primary" style="width:100%;justify-content:center;padding:.875rem;margin-top:1.5rem">📤 Soumettre pour validation</button>
+          <p style="font-size:.78rem;color:#9ca3af;margin-top:.75rem;text-align:center">Votre formation sera visible après validation par l'équipe RIVO.</p>
+        </div>
+      </div>
+      <!-- Mes formations -->
+      <div id="ts-panel-mes" style="display:none">
+        <div id="ts-mes-list"><p style="color:#9ca3af;text-align:center;padding:2rem">Chargement…</p></div>
+      </div>
+      <!-- Mes ventes -->
+      <div id="ts-panel-ventes" style="display:none">
+        <div class="card" style="padding:1.75rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.75rem">
+            <div>
+              <h3 style="font-weight:800;color:#1F2937;margin-bottom:.25rem">💰 Mes ventes</h3>
+              <p style="font-size:.85rem;color:#6b7280">Total gagné : <strong id="ts-total-ventes" style="color:#10b981">0 FCFA</strong></p>
+            </div>
+            <button onclick="openRetrait()" class="btn-primary" style="font-size:.85rem;padding:.5rem 1rem">💸 Retirer mes gains</button>
+          </div>
+          <div id="ts-ventes-list"><p style="color:#9ca3af;text-align:center;padding:1.5rem">Chargement…</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════════════ PAGE: LOGIN ═══════════════════ -->
@@ -390,6 +637,7 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
       <span style="font-size:1.1rem;font-weight:900;color:#1F2937">RIVO</span>
     </div>
     <div style="display:flex;align-items:center;gap:.75rem">
+      <button id="dark-toggle-dash" onclick="toggleDark()" style="background:none;border:none;cursor:pointer;font-size:1.1rem;padding:.25rem">🌙</button>
       <div style="position:relative">
         <button onclick="goTo('notifs')" style="background:none;border:none;cursor:pointer;font-size:1.4rem;padding:.25rem;line-height:1">🔔</button>
         <span id="notif-badge" style="display:none;position:absolute;top:-2px;right:-2px;background:#ef4444;color:white;font-size:.6rem;font-weight:800;min-width:1rem;height:1rem;border-radius:9999px;align-items:center;justify-content:center;padding:0 .2rem">0</span>
@@ -559,6 +807,8 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
             🗺️ Voir le guide de démarrage
           </button>
         </div>
+        <!-- Espace formateur / Devenir formateur -->
+        <div id="formateur-section" style="margin-top:1.5rem;text-align:center"></div>
       </div>
 
       <!-- ══ Récompenses ══ -->
@@ -708,6 +958,22 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
       </div>
       <button id="wd-submit-btn" onclick="doWithdrawal()" class="btn-primary" style="width:100%;justify-content:center">📤 Demander le retrait</button>
       <div style="margin-top:1.25rem"><h4 style="font-weight:700;font-size:.9rem;color:#1F2937;margin-bottom:.75rem">Historique</h4><div id="wd-hist">...</div></div>
+    </div>
+  </div>
+
+  <!-- Modal Devenir Partenaire -->
+  <div id="modal-partner-req" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center;padding:1rem">
+    <div style="background:white;border-radius:1.5rem;padding:1.75rem;max-width:400px;width:100%;box-shadow:0 25px 60px rgba(0,0,0,.3)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+        <h3 style="font-size:1.1rem;font-weight:800;color:#1F2937">🤝 Devenir partenaire</h3>
+        <button onclick="document.getElementById('modal-partner-req').style.display='none'" style="background:none;border:none;font-size:1.25rem;cursor:pointer;color:#9ca3af">✕</button>
+      </div>
+      <p style="font-size:.9rem;color:#6b7280;margin-bottom:1.25rem">Merci pour votre intérêt ! Dites-nous comment vous souhaitez collaborer avec RIVO.</p>
+      <div style="display:flex;flex-direction:column;gap:.875rem;margin-bottom:1.25rem">
+        <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Que souhaitez-vous apporter à RIVO ? *</label><textarea id="pr-message" class="input" rows="3" style="resize:vertical" placeholder="Ex: Proposer des formations, un sponsoring, un partenariat commercial…"></textarea></div>
+        <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Numéro de téléphone *</label><input type="tel" id="pr-phone" class="input" placeholder="+229 97000000"/></div>
+      </div>
+      <button onclick="submitPartnerRequest()" id="pr-btn" class="btn-primary" style="width:100%;justify-content:center;padding:.75rem">📤 Envoyer la demande</button>
     </div>
   </div>
 </div>
@@ -912,6 +1178,7 @@ async function startApp(){
         if(!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
         fbAuth=firebase.auth();
         startApp();
+        loadTestimonials();
       }catch(e){tryLoad(i+1);}
     };
     s.onerror=function(){tryLoad(i+1);};
@@ -1037,6 +1304,15 @@ async function loadProfileData(){
     const infoWa=document.getElementById('info-whatsapp');if(infoWa)infoWa.textContent=p.whatsapp||'— Non renseigné';
     const editWa=document.getElementById('edit-whatsapp');if(editWa)editWa.value=p.whatsapp||'';
     const curSel=document.getElementById('currency-sel');if(curSel)curSel.value=p.currency||'XOF';
+    // Section formateur dans le profil
+    const fmtSection=document.getElementById('formateur-section');
+    if(fmtSection){
+      if(p.is_trainer){
+        fmtSection.innerHTML=`<button onclick="goTo('trainer-space')" style="width:100%;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:white;border:none;border-radius:1rem;padding:.875rem;font-weight:800;font-size:.9rem;cursor:pointer">🎓 Administration formateur</button>`;
+      } else {
+        fmtSection.innerHTML=`<button onclick="goTo('formateur')" style="width:100%;background:linear-gradient(135deg,#f59e0b,#d97706);color:white;border:none;border-radius:1rem;padding:.875rem;font-weight:800;font-size:.9rem;cursor:pointer">🎓 Devenir formateur</button>`;
+      }
+    }
     const ib=document.getElementById('info-badge');
     if(ib){ib.textContent=`${ic} ${lb}`;ib.style.background=bg;ib.style.color=co;}
     const av=document.getElementById('big-av');
@@ -1745,6 +2021,236 @@ async function doWithdrawal(){
   }
 }
 
+// ── Dark mode ─────────────────────────────────────────
+function toggleDark(){
+  const dark=document.documentElement.dataset.theme==='dark';
+  document.documentElement.dataset.theme=dark?'':'dark';
+  localStorage.setItem('rivo_theme',dark?'':'dark');
+  const icon=dark?'🌙':'☀️';
+  ['dark-toggle','dark-toggle-dash'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=icon;});
+}
+(function(){
+  if(localStorage.getItem('rivo_theme')==='dark'){
+    document.documentElement.dataset.theme='dark';
+    window.addEventListener('DOMContentLoaded',()=>{
+      ['dark-toggle','dark-toggle-dash'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='☀️';});
+    });
+  }
+})();
+
+// ── Vérification NPI ──────────────────────────────────
+function previewVerifyFile(input){
+  const file=input.files[0];if(!file)return;
+  const prev=document.getElementById('verify-file-preview');
+  prev.style.display='block';
+  if(file.type.startsWith('image/')){
+    const reader=new FileReader();
+    reader.onload=e=>{ prev.innerHTML=`<img src="${e.target.result}" style="max-width:100%;border-radius:.75rem;border:2px solid #e5e7eb"/>`; };
+    reader.readAsDataURL(file);
+  } else {
+    prev.innerHTML=`<div style="background:#f1f5f9;border-radius:.75rem;padding:1rem;text-align:center;color:#374151;font-weight:600">📄 ${file.name}</div>`;
+  }
+}
+async function verifyNPI(){
+  const code=document.getElementById('verify-code').value.trim();
+  if(code.length!==13){toast('Le code doit contenir exactement 13 chiffres','err');return;}
+  const btn=document.getElementById('verify-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span>';
+  const res=document.getElementById('verify-result');
+  res.style.display='none';
+  try{
+    const{data,error}=await sb.from('certificates')
+      .select('*,courses(title),profiles(first_name,last_name,avatar_url)')
+      .eq('npi_code',code).maybeSingle();
+    if(error||!data){
+      res.style.display='block';
+      res.innerHTML=`<div style="background:#fee2e2;border:2px solid #fca5a5;border-radius:1rem;padding:1.25rem;text-align:center">
+        <div style="font-size:2.5rem;margin-bottom:.5rem">❌</div>
+        <p style="font-weight:800;color:#dc2626;font-size:1rem;margin-bottom:.25rem">Document introuvable</p>
+        <p style="color:#7f1d1d;font-size:.85rem">Aucune attestation n'a été délivrée pour ce code.</p>
+      </div>`;
+    } else {
+      const p=data.profiles;const c=data.courses;
+      const name=p?`${p.first_name||''} ${p.last_name||''}`.trim():'—';
+      const avatar=p?.avatar_url?`<img src="${p.avatar_url}" style="width:5rem;height:5rem;object-fit:cover;border-radius:9999px;border:3px solid #3b82f6;margin:0 auto .75rem;display:block"/>`:`<div style="width:5rem;height:5rem;border-radius:9999px;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;color:white;font-size:1.75rem;font-weight:900;margin:0 auto .75rem">${name[0]||'?'}</div>`;
+      res.style.display='block';
+      res.innerHTML=`<div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:2px solid #3b82f6;border-radius:1.25rem;padding:1.5rem;text-align:center">
+        ${avatar}
+        <div style="display:inline-flex;align-items:center;gap:.4rem;background:#2563EB;color:white;font-size:.8rem;font-weight:700;padding:.3rem .875rem;border-radius:9999px;margin-bottom:.875rem">✅ Attestation vérifiée</div>
+        <p style="font-weight:900;font-size:1.15rem;color:#1F2937;margin-bottom:.25rem">${name}</p>
+        <p style="font-size:.9rem;color:#374151;margin-bottom:.25rem">📚 ${c?.title||'—'}</p>
+        <p style="font-size:.78rem;color:#6b7280">Cette attestation est authentique et délivrée par RIVO.</p>
+      </div>`;
+    }
+  }catch(e){toast('Erreur réseau. Réessayez.','err');}
+  finally{btn.disabled=false;btn.innerHTML='🔍 Vérifier';}
+}
+
+// ── Témoignages landing ───────────────────────────────
+async function loadTestimonials(){
+  const grid=document.getElementById('testimonials-grid');
+  if(!grid)return;
+  try{
+    const{data}=await sb.from('testimonials').select('*').eq('is_active',true).order('sort_order',{ascending:true}).limit(12);
+    if(!data||data.length===0){grid.innerHTML='<p style="text-align:center;color:#9ca3af;grid-column:1/-1;padding:2rem">Aucun témoignage disponible.</p>';return;}
+    const stars=n=>'⭐'.repeat(Math.min(5,Math.max(1,n||5)));
+    grid.innerHTML=data.map(t=>`
+      <div class="card" style="padding:1.5rem">
+        <div style="display:flex;align-items:center;gap:.875rem;margin-bottom:1rem">
+          ${t.photo_url?`<img src="${t.photo_url}" style="width:3.25rem;height:3.25rem;object-fit:cover;border-radius:9999px;flex-shrink:0"/>`:`<div style="width:3.25rem;height:3.25rem;border-radius:9999px;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:1.2rem;flex-shrink:0">${(t.name||'?')[0]}</div>`}
+          <div><div style="font-weight:800;color:#1F2937;font-size:.95rem">${t.name||''}</div><div style="font-size:.85rem;color:#f59e0b">${stars(t.rating)}</div></div>
+        </div>
+        <p style="color:#4b5563;font-size:.9rem;line-height:1.7;font-style:italic">"${t.text||''}"</p>
+      </div>`).join('');
+  }catch(e){grid.innerHTML='';}
+}
+
+// ── Devenir formateur ─────────────────────────────────
+function goFmtStep(n){
+  [1,2,3,4,5].forEach(i=>{
+    const el=document.getElementById('fmt-step'+i);
+    if(el)el.style.display=i===n?'block':'none';
+  });
+  if(n===4&&CP){
+    const balP=document.getElementById('fmt-bal-principal');if(balP)balP.textContent=fmt(CP.balance||0,CP.currency||'XOF');
+    const balR=document.getElementById('fmt-bal-parrainage');if(balR)balR.textContent=fmt(CP.referral_balance||0,CP.currency||'XOF');
+  }
+}
+async function submitFmtApp(){
+  if(!CU?.id){toast('Connectez-vous d\'abord','err');return;}
+  const fn=document.getElementById('fmt-fn')?.value.trim();
+  const ln=document.getElementById('fmt-ln')?.value.trim();
+  const email=document.getElementById('fmt-email')?.value.trim();
+  const phone=document.getElementById('fmt-phone')?.value.trim();
+  const country=document.getElementById('fmt-country')?.value.trim();
+  const profession=document.getElementById('fmt-profession')?.value.trim();
+  const num=document.getElementById('fmt-num')?.value;
+  const list=document.getElementById('fmt-list')?.value.trim();
+  const hasWeb=document.querySelector('input[name="fmt-web"]:checked')?.value==='oui';
+  const url=document.getElementById('fmt-url')?.value.trim();
+  const certIssuer=document.querySelector('input[name="fmt-cert"]:checked')?.value||'rivo';
+  const src=document.querySelector('input[name="fmt-pay-src"]:checked')?.value||'principal';
+  if(!fn||!ln||!email||!phone||!country||!profession||!num||!list){
+    document.getElementById('fmt-err').style.display='block';
+    document.getElementById('fmt-err').textContent='Veuillez remplir tous les champs obligatoires.';return;
+  }
+  const solde=src==='parrainage'?(CP?.referral_balance||0):(CP?.balance||0);
+  if(solde<2200){
+    document.getElementById('fmt-err').style.display='block';
+    document.getElementById('fmt-err').textContent=`Solde ${src} insuffisant (${fmt(solde,CP?.currency||'XOF')} disponible). Rechargez votre solde.`;return;
+  }
+  const btn=document.getElementById('fmt-pay-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span>';
+  try{
+    // Déduire 2200 FCFA
+    await sbAdmin.rpc('admin_update_balance',{p_user_id:CU.id,p_amount:-2200,p_field:src==='parrainage'?'referral_balance':'balance'});
+    if(src==='parrainage')CP.referral_balance=(CP.referral_balance||0)-2200;
+    else CP.balance=(CP.balance||0)-2200;
+    // Insérer la demande
+    await sbAdmin.from('trainer_applications').insert({
+      user_id:CU.id,first_name:fn,last_name:ln,email,phone,
+      country,profession,num_courses:parseInt(num)||0,courses_list:list,
+      has_website:hasWeb,website_url:hasWeb?url:null,cert_issuer:certIssuer,
+      payment_status:'paid',status:'en_attente'
+    });
+    // Mettre à jour l'affichage des soldes
+    const balP=document.getElementById('bal-principal');if(balP)balP.textContent=fmt(CP.balance||0,CP.currency||'XOF');
+    const balR=document.getElementById('bal-parrainage');if(balR)balR.textContent=fmt(CP.referral_balance||0,CP.currency||'XOF');
+    goFmtStep(5);
+  }catch(e){
+    document.getElementById('fmt-err').style.display='block';
+    document.getElementById('fmt-err').textContent='Erreur. Réessayez.';
+  }finally{btn.disabled=false;btn.innerHTML='⚡ Payer &amp; Envoyer';}
+}
+
+// ── Espace formateur ──────────────────────────────────
+function switchTrainerTab(name){
+  ['pub','mes','ventes'].forEach(t=>{
+    const panel=document.getElementById('ts-panel-'+t);
+    const btn=document.getElementById('ts-tab-'+t);
+    if(panel)panel.style.display=t===name?'block':'none';
+    if(btn){btn.style.background=t===name?'#2563EB':'#f1f5f9';btn.style.color=t===name?'white':'#6b7280';}
+  });
+  if(name==='mes')loadTrainerCourses();
+  if(name==='ventes')loadTrainerVentes();
+}
+async function loadTrainerCourses(){
+  const box=document.getElementById('ts-mes-list');if(!box||!CU?.id)return;
+  box.innerHTML='<p style="color:#9ca3af;text-align:center;padding:2rem">Chargement…</p>';
+  const{data}=await sb.from('courses').select('*').eq('submitted_by',CU.id).order('created_at',{ascending:false});
+  if(!data||data.length===0){box.innerHTML='<p style="color:#9ca3af;text-align:center;padding:2rem">Aucune formation soumise.</p>';return;}
+  const smap={pending:'🕐 En attente',approved:'✅ Validée',rejected:'❌ Refusée'};
+  box.innerHTML=data.map(c=>`<div class="card" style="padding:1.25rem;margin-bottom:.875rem;display:flex;align-items:center;gap:1rem">
+    ${c.image_url?`<img src="${c.image_url}" style="width:4rem;height:4rem;object-fit:cover;border-radius:.75rem;flex-shrink:0"/>`:'<div style="width:4rem;height:4rem;background:#f1f5f9;border-radius:.75rem;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.5rem">📚</div>'}
+    <div style="flex:1;min-width:0"><div style="font-weight:800;color:#1F2937;margin-bottom:.2rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.title||'—'}</div>
+    <div style="font-size:.8rem;color:#6b7280">${fmt(c.price||0,'XOF')}</div></div>
+    <span style="font-size:.78rem;font-weight:700;white-space:nowrap">${smap[c.approval_status||'approved']||'—'}</span>
+  </div>`).join('');
+}
+async function loadTrainerVentes(){
+  const box=document.getElementById('ts-ventes-list');if(!box||!CU?.id)return;
+  box.innerHTML='<p style="color:#9ca3af;text-align:center;padding:1.5rem">Chargement…</p>';
+  // Get trainer's course IDs
+  const{data:courses}=await sb.from('courses').select('id,title,price').eq('submitted_by',CU.id);
+  if(!courses||courses.length===0){box.innerHTML='<p style="color:#9ca3af;text-align:center;padding:1.5rem">Aucune vente.</p>';return;}
+  const ids=courses.map(c=>c.id);
+  const{data:purchases}=await sb.from('purchases').select('*').in('course_id',ids).eq('status','complete').order('purchased_at',{ascending:false});
+  const total=(purchases||[]).reduce((s,p)=>s+(p.amount||0),0);
+  const totalEl=document.getElementById('ts-total-ventes');if(totalEl)totalEl.textContent=fmt(total,'XOF');
+  if(!purchases||purchases.length===0){box.innerHTML='<p style="color:#9ca3af;text-align:center;padding:1.5rem">Aucune vente pour le moment.</p>';return;}
+  const courseMap={};courses.forEach(c=>courseMap[c.id]=c);
+  box.innerHTML=purchases.map(p=>{
+    const c=courseMap[p.course_id];
+    const d=new Date(p.purchased_at).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});
+    return`<div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem;background:#f8fafc;border-radius:.75rem;margin-bottom:.5rem">
+      <div><div style="font-weight:700;font-size:.875rem;color:#1F2937">${c?.title||'—'}</div><div style="font-size:.72rem;color:#9ca3af">${d}</div></div>
+      <div style="font-weight:800;color:#10b981;font-size:.9rem">+${fmt(p.amount||0,'XOF')}</div>
+    </div>`;
+  }).join('');
+}
+async function submitTrainerCourse(){
+  if(!CU?.id){toast('Connectez-vous d\'abord','err');return;}
+  const title=document.getElementById('ts-title')?.value.trim();
+  const price=parseFloat(document.getElementById('ts-price')?.value);
+  const desc=document.getElementById('ts-desc')?.value.trim();
+  const img=document.getElementById('ts-img')?.value.trim();
+  const contentUrl=document.getElementById('ts-content-url')?.value.trim();
+  if(!title||!price||!desc){toast('Titre, prix et description sont requis','err');return;}
+  const btn=document.getElementById('ts-submit-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span>';
+  try{
+    await sbAdmin.from('courses').insert({
+      title,price,description:desc,image_url:img||null,
+      content_url:contentUrl||null,is_published:false,
+      submitted_by:CU.id,approval_status:'pending',currency:'XOF'
+    });
+    toast('Formation soumise ! En attente de validation. ✅');
+    document.getElementById('ts-title').value='';
+    document.getElementById('ts-price').value='';
+    document.getElementById('ts-desc').value='';
+    document.getElementById('ts-img').value='';
+    document.getElementById('ts-content-url').value='';
+  }catch(e){toast('Erreur. Réessayez.','err');}
+  finally{btn.disabled=false;btn.innerHTML='📤 Soumettre pour validation';}
+}
+
+// ── Demande partenaire ────────────────────────────────
+async function submitPartnerRequest(){
+  const msg=document.getElementById('pr-message')?.value.trim();
+  const phone=document.getElementById('pr-phone')?.value.trim();
+  if(!msg||!phone){toast('Tous les champs sont requis','err');return;}
+  const btn=document.getElementById('pr-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span>';
+  try{
+    await sbAdmin.from('partner_requests').insert({message:msg,phone,status:'en_attente'});
+    document.getElementById('modal-partner-req').style.display='none';
+    document.getElementById('pr-message').value='';
+    document.getElementById('pr-phone').value='';
+    toast('Demande envoyée ! Nous vous contacterons bientôt. 🤝');
+  }catch(e){toast('Erreur. Réessayez.','err');}
+  finally{btn.disabled=false;btn.innerHTML='📤 Envoyer la demande';}
+}
+
 // ── Tab switching ─────────────────────────────────────
 function switchTab(name){
   document.querySelectorAll('.tab-panel').forEach(t=>t.classList.remove('active'));
@@ -1989,13 +2495,18 @@ async function loadRecompensesTab(tab){
       </div>`;
   } else if(tab==='partners'){
     const{data:parts}=await sb.from('partners').select('*').eq('is_active',true).order('sort_order',{ascending:true});
-    if(!parts||parts.length===0){cont.innerHTML='<p style="text-align:center;color:#9ca3af;padding:2rem">Aucun partenaire pour le moment.</p>';return;}
+    if(!parts||parts.length===0){cont.innerHTML='<p style="text-align:center;color:#9ca3af;padding:2rem">Aucun partenaire pour le moment.</p><div style="margin-top:1.5rem;text-align:center"><button onclick="document.getElementById(\'modal-partner-req\').style.display=\'flex\'" style="background:linear-gradient(135deg,#2563EB,#1D4ED8);color:white;border:none;border-radius:.875rem;padding:.75rem 1.75rem;font-weight:700;cursor:pointer">🤝 Devenir partenaire</button></div>';return;}
     cont.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1rem;padding:.25rem">${parts.map(p=>`
       <div style="background:white;border-radius:1rem;padding:1.25rem;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.07)">
         ${p.logo_url?`<img src="${p.logo_url}" style="width:5rem;height:5rem;object-fit:contain;border-radius:.75rem;margin:0 auto .75rem;display:block"/>`:'<div style="width:5rem;height:5rem;background:#f1f5f9;border-radius:.75rem;margin:0 auto .75rem;display:flex;align-items:center;justify-content:center;font-size:2rem">🤝</div>'}
         <div style="font-weight:800;font-size:.875rem;color:#1F2937;margin-bottom:.625rem">${p.name}</div>
         <button onclick="openPartnerInfo(${JSON.stringify(p).replace(/"/g,'&quot;')})" style="background:#2563eb;color:white;border:none;border-radius:.625rem;padding:.4rem .875rem;font-size:.78rem;font-weight:700;cursor:pointer;width:100%">En savoir plus</button>
-      </div>`).join('')}</div>`;
+      </div>`).join('')}</div>
+      <div style="margin-top:2rem;text-align:center;padding:1.5rem;background:#f8fafc;border-radius:1.25rem;border:2px dashed #e5e7eb">
+        <p style="font-size:1rem;font-weight:700;color:#1F2937;margin-bottom:.5rem">Vous voulez devenir partenaire RIVO ?</p>
+        <p style="font-size:.85rem;color:#6b7280;margin-bottom:1rem">Proposez votre collaboration et rejoignez notre réseau.</p>
+        <button onclick="document.getElementById('modal-partner-req').style.display='flex'" style="background:linear-gradient(135deg,#2563EB,#1D4ED8);color:white;border:none;border-radius:.875rem;padding:.75rem 1.75rem;font-weight:700;cursor:pointer;font-size:.9rem">🤝 Devenir partenaire</button>
+      </div>`;
   }
 }
 

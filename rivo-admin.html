@@ -154,6 +154,22 @@
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
         <span class="font-medium">🤝 Parrainage</span>
       </button>
+      <button onclick="switchTab('npi')" id="tab-npi" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-gray-300 hover:bg-gray-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+        <span class="font-medium">📋 NPI Attestations</span>
+      </button>
+      <button onclick="switchTab('temoignages')" id="tab-temoignages" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-gray-300 hover:bg-gray-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        <span class="font-medium">💬 Témoignages</span>
+      </button>
+      <button onclick="switchTab('formateurs')" id="tab-formateurs" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-gray-300 hover:bg-gray-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>
+        <span class="font-medium">🎓 Formateurs</span>
+      </button>
+      <button onclick="switchTab('demandes-partenaires')" id="tab-demandes-partenaires" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-gray-300 hover:bg-gray-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        <span class="font-medium">📨 Demandes Partenaires</span>
+      </button>
     </nav>
 
     <div class="p-4 border-t border-gray-700">
@@ -573,6 +589,91 @@
       </div>
     </div>
 
+    <!-- Section NPI Attestations -->
+    <div id="page-npi" class="p-8 hidden" style="display:none">
+      <div class="mb-6">
+        <h1 class="text-2xl font-bold text-white">📋 NPI Attestations</h1>
+        <p class="text-gray-400 mt-1">Attribuer un code NPI (13 chiffres) à chaque attestation envoyée</p>
+      </div>
+      <div class="card" style="overflow:auto">
+        <table>
+          <thead><tr>
+            <th>Utilisateur</th><th>Formation</th><th>Date</th><th>Code NPI</th><th>Photo URL</th><th>Action</th>
+          </tr></thead>
+          <tbody id="npi-table">
+            <tr><td colspan="6" class="text-center text-gray-500 py-8">Chargement…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Section Témoignages -->
+    <div id="page-temoignages" class="p-8 hidden" style="display:none">
+      <div class="mb-6 flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-white">💬 Témoignages</h1>
+          <p class="text-gray-400 mt-1">Gérer les témoignages affichés sur la page d'accueil</p>
+        </div>
+        <button onclick="openTemoignageForm()" class="btn-primary">➕ Ajouter</button>
+      </div>
+      <!-- Formulaire -->
+      <div id="temo-form" style="display:none;background:#111827;border:1px solid #374151;border-radius:.875rem;padding:1.5rem;margin-bottom:1.5rem;max-width:540px">
+        <h3 id="temo-form-title" class="font-bold text-white mb-4">Nouveau témoignage</h3>
+        <input type="hidden" id="temo-id"/>
+        <div class="space-y-3">
+          <div><label class="block text-sm text-gray-400 mb-1">Nom *</label><input id="temo-name" type="text" class="input" placeholder="Ex: Marie D."/></div>
+          <div><label class="block text-sm text-gray-400 mb-1">Photo URL</label><input id="temo-photo" type="url" class="input" placeholder="https://…"/></div>
+          <div><label class="block text-sm text-gray-400 mb-1">Témoignage *</label><textarea id="temo-text" class="input" rows="3" style="resize:vertical" placeholder="Ce que dit l'apprenant…"></textarea></div>
+          <div><label class="block text-sm text-gray-400 mb-1">Note (1-5)</label><input id="temo-rating" type="number" class="input" min="1" max="5" value="5"/></div>
+          <div style="display:flex;align-items:center;gap:.5rem"><input type="checkbox" id="temo-active" checked/><label for="temo-active" class="text-sm text-gray-300">Actif (visible)</label></div>
+          <div><label class="block text-sm text-gray-400 mb-1">Ordre d'affichage</label><input id="temo-order" type="number" class="input" value="0"/></div>
+          <div style="display:flex;gap:.5rem">
+            <button onclick="saveTemoignage()" class="btn-primary">💾 Enregistrer</button>
+            <button onclick="document.getElementById('temo-form').style.display='none'" style="background:#374151;color:#d1d5db;border:none;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600">Annuler</button>
+          </div>
+        </div>
+      </div>
+      <!-- Liste -->
+      <div id="temo-list" class="space-y-3" style="max-width:700px">
+        <p class="text-gray-500 text-center py-8">Chargement…</p>
+      </div>
+    </div>
+
+    <!-- Section Formateurs -->
+    <div id="page-formateurs" class="p-8 hidden" style="display:none">
+      <div class="mb-6">
+        <h1 class="text-2xl font-bold text-white">🎓 Formateurs</h1>
+        <p class="text-gray-400 mt-1">Demandes, formateurs actifs et formations à valider</p>
+      </div>
+      <!-- Sous-onglets -->
+      <div style="display:flex;gap:.5rem;margin-bottom:1.5rem;overflow-x:auto">
+        <button id="fmt-sub-demandes" onclick="switchFmtTab('demandes')" style="white-space:nowrap;padding:.5rem 1rem;border-radius:.625rem;border:none;cursor:pointer;font-weight:700;font-size:.8rem;background:#7c3aed;color:white">📋 Demandes en attente</button>
+        <button id="fmt-sub-actifs" onclick="switchFmtTab('actifs')" style="white-space:nowrap;padding:.5rem 1rem;border-radius:.625rem;border:none;cursor:pointer;font-weight:600;font-size:.8rem;background:#374151;color:#d1d5db">✅ Formateurs actifs</button>
+        <button id="fmt-sub-formations" onclick="switchFmtTab('formations')" style="white-space:nowrap;padding:.5rem 1rem;border-radius:.625rem;border:none;cursor:pointer;font-weight:600;font-size:.8rem;background:#374151;color:#d1d5db">📚 Formations à valider</button>
+      </div>
+      <div id="fmt-content">
+        <p class="text-gray-500 text-center py-8">Chargement…</p>
+      </div>
+    </div>
+
+    <!-- Section Demandes Partenaires -->
+    <div id="page-demandes-partenaires" class="p-8 hidden" style="display:none">
+      <div class="mb-6">
+        <h1 class="text-2xl font-bold text-white">📨 Demandes Partenaires</h1>
+        <p class="text-gray-400 mt-1">Personnes souhaitant devenir partenaires RIVO</p>
+      </div>
+      <div class="card" style="overflow:auto">
+        <table>
+          <thead><tr>
+            <th>Date</th><th>Téléphone</th><th>Message</th><th>Statut</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="demandes-part-table">
+            <tr><td colspan="5" class="text-center text-gray-500 py-8">Chargement…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- Section Achats -->
     <div id="page-achats" class="p-8 hidden" style="display:none">
       <div class="mb-6">
@@ -879,7 +980,7 @@ async function doLogout() {
 
 /* ── Tab navigation ───────────────────────────────────── */
 function switchTab(name) {
-  ['dashboard','utilisateurs','formations','retraits','attestations','notifications','videos','events','classement','solde','rechargements','achats','partenaires','numeros','parrainage-admin'].forEach(t => {
+  ['dashboard','utilisateurs','formations','retraits','attestations','notifications','videos','events','classement','solde','rechargements','achats','partenaires','numeros','parrainage-admin','npi','temoignages','formateurs','demandes-partenaires'].forEach(t => {
     const el = document.getElementById('page-' + t);
     if(el){el.classList.add('hidden'); el.style.display = 'none';}
     const btn = document.getElementById('tab-' + t);
@@ -905,6 +1006,10 @@ function switchTab(name) {
     if (name === 'partenaires')    loadPartenaires();
     if (name === 'numeros')        loadNumeros();
     if (name === 'parrainage-admin') loadParrainageAdmin();
+    if (name === 'npi')            loadNpi();
+    if (name === 'temoignages')    loadTemoignages();
+    if (name === 'formateurs')     { switchFmtTab('demandes'); }
+    if (name === 'demandes-partenaires') loadDemandesPartenaires();
   }
 }
 
@@ -2198,6 +2303,237 @@ async function deletePartenaire(id, btn) {
   if (error) { toast('Erreur : ' + error.message, false); if (btn) { btn.disabled=false; btn.textContent='🗑️ Supprimer'; } return; }
   toast('Partenaire supprimé');
   loadPartenaires();
+}
+
+/* ── NPI Attestations ─────────────────────────────────── */
+async function loadNpi() {
+  const tbody = document.getElementById('npi-table');
+  if(!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500 py-8">Chargement…</td></tr>';
+  try {
+    const { data, error } = await sb.from('certificates')
+      .select('id,npi_code,holder_photo_url,issued_at,profiles(first_name,last_name,email),courses(title)')
+      .order('issued_at', { ascending: false }).limit(200);
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500 py-8">Aucune attestation.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.map(c => {
+      const p = c.profiles; const co = c.courses;
+      const name = p ? `${p.first_name||''} ${p.last_name||''}`.trim() : '—';
+      const d = new Date(c.issued_at).toLocaleDateString('fr-FR');
+      return `<tr>
+        <td class="text-white font-medium">${escHtml(name)}<br><span class="text-gray-500" style="font-size:.75rem">${escHtml(p?.email||'')}</span></td>
+        <td class="text-gray-300">${escHtml(co?.title||'—')}</td>
+        <td class="text-gray-400">${d}</td>
+        <td><input type="text" value="${escHtml(c.npi_code||'')}" id="npi-code-${c.id}" class="input" style="width:160px;font-size:.8rem;padding:6px 10px" placeholder="13 chiffres" maxlength="13"/></td>
+        <td><input type="url" value="${escHtml(c.holder_photo_url||'')}" id="npi-photo-${c.id}" class="input" style="width:200px;font-size:.8rem;padding:6px 10px" placeholder="https://…"/></td>
+        <td><button onclick="saveNpi('${c.id}')" class="btn-success" style="font-size:.75rem;padding:5px 10px">💾 Enregistrer</button></td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-red-400 py-8">Erreur : ${escHtml(e.message)}</td></tr>`;
+  }
+}
+async function saveNpi(certId) {
+  const code = document.getElementById(`npi-code-${certId}`)?.value.trim();
+  const photo = document.getElementById(`npi-photo-${certId}`)?.value.trim();
+  if (code && code.length !== 13) { toast('Le code NPI doit contenir exactement 13 chiffres', false); return; }
+  const { error } = await sb.from('certificates').update({
+    npi_code: code || null,
+    holder_photo_url: photo || null
+  }).eq('id', certId);
+  if (error) { toast('Erreur : ' + error.message, false); return; }
+  toast('NPI enregistré ✅');
+}
+
+/* ── Témoignages ──────────────────────────────────────── */
+async function loadTemoignages() {
+  const box = document.getElementById('temo-list');
+  if(!box) return;
+  box.innerHTML = '<p class="text-gray-500 text-center py-8">Chargement…</p>';
+  try {
+    const { data, error } = await sb.from('testimonials').select('*').order('sort_order');
+    if (error) throw error;
+    if (!data || data.length === 0) { box.innerHTML = '<p class="text-gray-500 text-center py-8">Aucun témoignage.</p>'; return; }
+    const stars = n => '⭐'.repeat(Math.min(5, Math.max(1, n||5)));
+    box.innerHTML = data.map(t => `
+      <div class="card p-4 flex items-start gap-4">
+        ${t.photo_url ? `<img src="${t.photo_url}" style="width:3rem;height:3rem;object-fit:cover;border-radius:9999px;flex-shrink:0"/>` : `<div style="width:3rem;height:3rem;border-radius:9999px;background:#374151;display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff;flex-shrink:0">${(t.name||'?')[0]}</div>`}
+        <div style="flex:1;min-width:0">
+          <div class="font-bold text-white">${escHtml(t.name)}</div>
+          <div style="font-size:.8rem;color:#f59e0b;margin:.1rem 0">${stars(t.rating)}</div>
+          <p class="text-gray-400 text-sm">"${escHtml(t.text)}"</p>
+          <div style="font-size:.72rem;color:#6b7280;margin-top:.25rem">Ordre: ${t.sort_order} | ${t.is_active ? '<span style="color:#4ade80">Actif</span>' : '<span style="color:#f87171">Inactif</span>'}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.35rem;flex-shrink:0">
+          <button onclick="editTemoignage(${JSON.stringify(t).replace(/"/g,'&quot;')})" class="btn-warning" style="font-size:.72rem;padding:4px 8px">✏️</button>
+          <button onclick="deleteTemoignage('${t.id}')" class="btn-danger" style="font-size:.72rem;padding:4px 8px">🗑️</button>
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    box.innerHTML = `<p class="text-red-400 text-center py-8">Erreur : ${escHtml(e.message)}</p>`;
+  }
+}
+function openTemoignageForm() {
+  document.getElementById('temo-id').value = '';
+  document.getElementById('temo-name').value = '';
+  document.getElementById('temo-photo').value = '';
+  document.getElementById('temo-text').value = '';
+  document.getElementById('temo-rating').value = '5';
+  document.getElementById('temo-active').checked = true;
+  document.getElementById('temo-order').value = '0';
+  document.getElementById('temo-form-title').textContent = 'Nouveau témoignage';
+  document.getElementById('temo-form').style.display = 'block';
+}
+function editTemoignage(t) {
+  document.getElementById('temo-id').value = t.id;
+  document.getElementById('temo-name').value = t.name || '';
+  document.getElementById('temo-photo').value = t.photo_url || '';
+  document.getElementById('temo-text').value = t.text || '';
+  document.getElementById('temo-rating').value = t.rating || 5;
+  document.getElementById('temo-active').checked = !!t.is_active;
+  document.getElementById('temo-order').value = t.sort_order || 0;
+  document.getElementById('temo-form-title').textContent = 'Modifier le témoignage';
+  document.getElementById('temo-form').style.display = 'block';
+}
+async function saveTemoignage() {
+  const id = document.getElementById('temo-id').value;
+  const payload = {
+    name: document.getElementById('temo-name').value.trim(),
+    photo_url: document.getElementById('temo-photo').value.trim() || null,
+    text: document.getElementById('temo-text').value.trim(),
+    rating: parseInt(document.getElementById('temo-rating').value) || 5,
+    is_active: document.getElementById('temo-active').checked,
+    sort_order: parseInt(document.getElementById('temo-order').value) || 0,
+  };
+  if (!payload.name || !payload.text) { toast('Nom et témoignage requis', false); return; }
+  const { error } = id
+    ? await sb.from('testimonials').update(payload).eq('id', id)
+    : await sb.from('testimonials').insert(payload);
+  if (error) { toast('Erreur : ' + error.message, false); return; }
+  document.getElementById('temo-form').style.display = 'none';
+  loaded['temoignages'] = false;
+  loadTemoignages();
+  toast('Témoignage enregistré ✅');
+}
+async function deleteTemoignage(id) {
+  if (!window.confirm('Supprimer ce témoignage ?')) return;
+  const { error } = await sb.from('testimonials').delete().eq('id', id);
+  if (error) { toast('Erreur', false); return; }
+  loaded['temoignages'] = false;
+  loadTemoignages();
+  toast('Supprimé');
+}
+
+/* ── Formateurs ────────────────────────────────────────── */
+let fmtCurrentTab = 'demandes';
+async function switchFmtTab(tab) {
+  fmtCurrentTab = tab;
+  ['demandes','actifs','formations'].forEach(t => {
+    const btn = document.getElementById('fmt-sub-' + t);
+    if(btn){ btn.style.background = t===tab ? '#7c3aed' : '#374151'; btn.style.color = t===tab ? 'white' : '#d1d5db'; }
+  });
+  const box = document.getElementById('fmt-content');
+  if(!box) return;
+  box.innerHTML = '<p class="text-gray-500 text-center py-8">Chargement…</p>';
+  if (tab === 'demandes') {
+    const { data } = await sb.from('trainer_applications').select('*').eq('status','en_attente').order('created_at',{ascending:false});
+    if (!data || data.length === 0) { box.innerHTML = '<p class="text-gray-500 text-center py-8">Aucune demande en attente.</p>'; return; }
+    box.innerHTML = data.map(a => `
+      <div class="card p-5 mb-4">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+          <div>
+            <div class="font-bold text-white text-lg">${escHtml((a.first_name||'') + ' ' + (a.last_name||''))}</div>
+            <div class="text-gray-400 text-sm">${escHtml(a.email||'')} · ${escHtml(a.phone||'')} · ${escHtml(a.country||'')}</div>
+            <div class="text-gray-300 text-sm mt-1"><strong>Profession :</strong> ${escHtml(a.profession||'—')}</div>
+            <div class="text-gray-300 text-sm"><strong>Formations maîtrisées :</strong> ${a.num_courses||0}</div>
+            <div class="text-gray-400 text-sm mt-1">${escHtml(a.courses_list||'')}</div>
+            ${a.has_website && a.website_url ? `<div class="text-sm mt-1"><a href="${escHtml(a.website_url)}" target="_blank" style="color:#60a5fa">${escHtml(a.website_url)}</a></div>` : ''}
+            <div class="text-gray-400 text-sm">Attestations : ${a.cert_issuer==='rivo'?'RIVO':'Le formateur'} · Paiement : <span style="color:${a.payment_status==='paid'?'#4ade80':'#f87171'}">${a.payment_status==='paid'?'✅ Payé':'⏳ Non payé'}</span></div>
+          </div>
+          <div style="display:flex;gap:.5rem;flex-shrink:0">
+            <button onclick="approveFmt('${a.id}','${a.user_id}')" class="btn-success">✅ Approuver</button>
+            <button onclick="rejectFmt('${a.id}')" class="btn-danger">❌ Rejeter</button>
+          </div>
+        </div>
+      </div>`).join('');
+  } else if (tab === 'actifs') {
+    const { data } = await sb.from('profiles').select('id,first_name,last_name,email,whatsapp').eq('is_trainer',true).order('created_at',{ascending:false});
+    if (!data || data.length === 0) { box.innerHTML = '<p class="text-gray-500 text-center py-8">Aucun formateur actif.</p>'; return; }
+    box.innerHTML = `<div class="card" style="overflow:auto"><table><thead><tr><th>Nom</th><th>Email</th><th>WhatsApp</th></tr></thead><tbody>${data.map(p=>`<tr><td class="text-white font-medium">${escHtml((p.first_name||'')+' '+(p.last_name||''))}</td><td class="text-gray-400">${escHtml(p.email||'')}</td><td class="text-green-400">${escHtml(p.whatsapp||'—')}</td></tr>`).join('')}</tbody></table></div>`;
+  } else if (tab === 'formations') {
+    const { data } = await sb.from('courses').select('id,title,price,approval_status,submitted_by,profiles(first_name,last_name)').eq('approval_status','pending').order('created_at',{ascending:false});
+    if (!data || data.length === 0) { box.innerHTML = '<p class="text-gray-500 text-center py-8">Aucune formation à valider.</p>'; return; }
+    box.innerHTML = data.map(c => `
+      <div class="card p-4 mb-3 flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <div class="font-bold text-white">${escHtml(c.title||'—')}</div>
+          <div class="text-gray-400 text-sm">${escHtml((c.profiles?.first_name||'')+(c.profiles?.last_name||''))} · ${c.price?.toLocaleString('fr-FR')||0} FCFA</div>
+        </div>
+        <div style="display:flex;gap:.5rem">
+          <button onclick="approveCourse('${c.id}')" class="btn-success">✅ Valider</button>
+          <button onclick="rejectCourse('${c.id}')" class="btn-danger">❌ Refuser</button>
+        </div>
+      </div>`).join('');
+  }
+}
+async function approveFmt(appId, userId) {
+  await sb.from('trainer_applications').update({ status: 'approuve' }).eq('id', appId);
+  await sb.from('profiles').update({ is_trainer: true }).eq('id', userId);
+  toast('Formateur approuvé ✅');
+  switchFmtTab('demandes');
+}
+async function rejectFmt(appId) {
+  await sb.from('trainer_applications').update({ status: 'rejete' }).eq('id', appId);
+  toast('Demande rejetée');
+  switchFmtTab('demandes');
+}
+async function approveCourse(courseId) {
+  await sb.from('courses').update({ approval_status: 'approved', is_published: true }).eq('id', courseId);
+  toast('Formation validée ✅');
+  switchFmtTab('formations');
+}
+async function rejectCourse(courseId) {
+  await sb.from('courses').update({ approval_status: 'rejected' }).eq('id', courseId);
+  toast('Formation refusée');
+  switchFmtTab('formations');
+}
+
+/* ── Demandes Partenaires ─────────────────────────────── */
+async function loadDemandesPartenaires() {
+  const tbody = document.getElementById('demandes-part-table');
+  if(!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500 py-8">Chargement…</td></tr>';
+  try {
+    const { data, error } = await sb.from('partner_requests').select('*').order('created_at',{ascending:false});
+    if (error) throw error;
+    if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500 py-8">Aucune demande.</td></tr>'; return; }
+    const smap = { en_attente: ['🕐','En attente','#fef3c7','#92400e'], contacte: ['✅','Contacté','#d1fae5','#065f46'], rejete: ['❌','Rejeté','#fee2e2','#991b1b'] };
+    tbody.innerHTML = data.map(r => {
+      const d = new Date(r.created_at).toLocaleDateString('fr-FR');
+      const [ic,lb,bg,co] = smap[r.status] || smap.en_attente;
+      return `<tr>
+        <td class="text-gray-400">${d}</td>
+        <td class="text-green-400">${escHtml(r.phone||'—')}</td>
+        <td class="text-gray-300" style="max-width:300px;white-space:pre-wrap">${escHtml(r.message||'—')}</td>
+        <td><span style="background:${bg};color:${co};padding:2px 8px;border-radius:9999px;font-size:.72rem;font-weight:700">${ic} ${lb}</span></td>
+        <td style="display:flex;gap:.35rem;flex-wrap:wrap">
+          <button onclick="updatePartReq('${r.id}','contacte')" class="btn-success" style="font-size:.72rem;padding:4px 8px">✅ Contacté</button>
+          <button onclick="updatePartReq('${r.id}','rejete')" class="btn-danger" style="font-size:.72rem;padding:4px 8px">❌ Rejeter</button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="5" class="text-red-400 text-center py-8">Erreur : ${escHtml(e.message)}</td></tr>`;
+  }
+}
+async function updatePartReq(id, status) {
+  await sb.from('partner_requests').update({ status }).eq('id', id);
+  toast(status === 'contacte' ? 'Marqué comme contacté ✅' : 'Demande rejetée');
+  loaded['demandes-partenaires'] = false;
+  loadDemandesPartenaires();
 }
 
 /* ── Numéros WhatsApp ─────────────────────────────────── */
