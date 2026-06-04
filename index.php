@@ -219,7 +219,7 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
         <h3 style="font-size:1.1rem;font-weight:800;color:#1F2937">⭐ Partager mon expérience</h3>
         <button onclick="document.getElementById('modal-leave-review').style.display='none'" style="background:none;border:none;font-size:1.25rem;cursor:pointer;color:#9ca3af">✕</button>
       </div>
-      <p style="font-size:.85rem;color:#6b7280;margin-bottom:1.25rem">Votre avis sera publié après validation par notre équipe.</p>
+      <p style="font-size:.85rem;color:#6b7280;margin-bottom:1.25rem">Votre avis sera publié immédiatement.</p>
       <div style="display:flex;flex-direction:column;gap:.875rem">
         <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Votre prénom *</label><input id="rev-name" type="text" class="input" placeholder="Ex: Jean"/></div>
         <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Votre avis *</label><textarea id="rev-text" class="input" rows="4" style="resize:vertical" placeholder="Partagez votre expérience avec RIVO…"></textarea></div>
@@ -509,7 +509,16 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
             <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Titre *</label><input id="ts-title" type="text" class="input" placeholder="Ex: Excel pour débutants"/></div>
             <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Prix (FCFA) *</label><input id="ts-price" type="number" class="input" placeholder="Ex: 5000" min="0"/></div>
             <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Description *</label><textarea id="ts-desc" class="input" rows="4" style="resize:vertical" placeholder="Décrivez le contenu, les objectifs, à qui s'adresse cette formation…"></textarea></div>
-            <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">URL de la photo de couverture</label><input id="ts-img" type="url" class="input" placeholder="https://..."/></div>
+            <div>
+              <label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Photo de couverture</label>
+              <input type="file" id="ts-img-file" accept="image/*" style="display:none" onchange="uploadTsCover(this)"/>
+              <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
+                <button type="button" onclick="document.getElementById('ts-img-file').click()" style="display:inline-flex;align-items:center;gap:.4rem;background:#eff6ff;color:#2563EB;border:1px solid #bfdbfe;border-radius:.625rem;padding:.5rem 1rem;cursor:pointer;font-weight:700;font-size:.85rem">📷 Choisir une photo</button>
+                <span id="ts-img-name" style="font-size:.8rem;color:#9ca3af">Aucun fichier</span>
+                <img id="ts-img-preview" style="display:none;width:3.5rem;height:3.5rem;object-fit:cover;border-radius:.5rem;border:2px solid #e5e7eb"/>
+              </div>
+              <input type="hidden" id="ts-img"/>
+            </div>
             <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">URL du contenu (PDF, Drive, lien…)</label><input id="ts-content-url" type="url" class="input" placeholder="https://drive.google.com/…"/></div>
           </div>
           <button onclick="submitTrainerCourse()" id="ts-submit-btn" class="btn-primary" style="width:100%;justify-content:center;padding:.875rem;margin-top:1.5rem">📤 Soumettre pour validation</button>
@@ -1900,6 +1909,24 @@ async function saveBirthDate(val){
   }catch(e){toast('Erreur enregistrement','err');}
 }
 
+async function uploadTsCover(input){
+  const file=input.files[0];if(!file)return;
+  const nm=document.getElementById('ts-img-name');
+  const pv=document.getElementById('ts-img-preview');
+  if(nm)nm.textContent='Envoi en cours…';
+  try{
+    const fd=new FormData();fd.append('file',file);
+    const r=await fetch('png.php',{method:'POST',body:fd});
+    const d=await r.json();
+    if(d.error)throw new Error(d.error.message);
+    document.getElementById('ts-img').value=d.secure_url;
+    if(nm)nm.textContent=file.name;
+    if(pv){pv.src=d.secure_url;pv.style.display='inline-block';}
+  }catch(e){
+    if(nm)nm.textContent='Erreur : '+e.message;
+    toast('Erreur upload photo','err');
+  }
+}
 async function updateAvatar(input){
   const file=input.files[0];
   if(!file)return;
@@ -2175,11 +2202,12 @@ async function submitLeaveReview(){
   if(!name||!text){toast('Prénom et avis obligatoires','err');return;}
   const btn=document.getElementById('rev-btn');
   btn.disabled=true;btn.innerHTML='<span class="spin"></span>';
-  const {error}=await sb.from('testimonials').insert({name,text,photo_url:null,rating:_revRating,is_active:false,sort_order:0});
+  const {error}=await sb.from('testimonials').insert({name,text,photo_url:null,rating:_revRating,is_active:true,sort_order:0});
   btn.disabled=false;btn.innerHTML='📤 Envoyer mon avis';
   if(error){toast('Erreur : '+error.message,'err');return;}
   document.getElementById('modal-leave-review').style.display='none';
-  toast('Merci ! Votre avis sera publié après validation 🎉');
+  toast('Merci ! Votre avis a été publié 🎉');
+  loadTestimonials();
 }
 
 // ── Devenir formateur ─────────────────────────────────
@@ -2306,6 +2334,9 @@ async function submitTrainerCourse(){
     document.getElementById('ts-price').value='';
     document.getElementById('ts-desc').value='';
     document.getElementById('ts-img').value='';
+    const _nm=document.getElementById('ts-img-name');if(_nm)_nm.textContent='Aucun fichier';
+    const _pv=document.getElementById('ts-img-preview');if(_pv)_pv.style.display='none';
+    const _fi=document.getElementById('ts-img-file');if(_fi)_fi.value='';
     document.getElementById('ts-content-url').value='';
   }catch(e){toast('Erreur. Réessayez.','err');}
   finally{btn.disabled=false;btn.innerHTML='📤 Soumettre pour validation';}
