@@ -143,10 +143,22 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
         </button>
       </div>
       <!-- Bouton téléchargement APK -->
-      <div style="margin-top:1.25rem">
-        <a href="RIVO.apk" download style="display:inline-flex;align-items:center;gap:.6rem;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.35);color:white;font-weight:700;font-size:.95rem;padding:.75rem 1.75rem;border-radius:.875rem;text-decoration:none;transition:background .2s;backdrop-filter:blur(8px)" onmouseover="this.style.background='rgba(255,255,255,.22)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">
-          📲 Télécharger l'application Android
+      <div style="margin-top:1.5rem">
+        <a href="https://www.appcreator24.com/app4067690-bezdgo" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:.6rem;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;color:white;font-weight:800;font-size:1rem;padding:.85rem 2rem;border-radius:1rem;text-decoration:none;transition:opacity .2s;box-shadow:0 4px 18px rgba(34,197,94,.4)" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+          📲 Télécharger l'application
         </a>
+        <!-- Instructions installation -->
+        <div style="margin-top:1.25rem;background:rgba(255,255,255,.13);backdrop-filter:blur(10px);border:1.5px solid rgba(255,255,255,.28);border-radius:1rem;padding:1.1rem 1.4rem;max-width:380px;text-align:left">
+          <p style="color:white;font-weight:800;font-size:.9rem;margin-bottom:.6rem">📲 COMMENT INSTALLER RIVO</p>
+          <ol style="color:#dbeafe;font-size:.82rem;line-height:1.85;padding-left:1.25rem;margin:0">
+            <li>Cliquez sur "Télécharger" ci-dessus</li>
+            <li>Une fois téléchargé, défilez votre écran vers le bas</li>
+            <li>Cliquez sur le fichier <strong style="color:white">rivo.apk</strong></li>
+            <li>Cliquez sur <strong style="color:white">Installer</strong></li>
+            <li>Si votre téléphone bloque : <strong style="color:#fde68a">Paramètres → Sécurité → Autoriser "Sources inconnues"</strong></li>
+            <li>Ouvrez RIVO et commencez à apprendre !</li>
+          </ol>
+        </div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;max-width:380px;margin:3.5rem auto 0">
         <div style="text-align:center"><div style="font-size:2rem;font-weight:900;color:white">200+</div><div style="font-size:.8rem;color:#93c5fd;margin-top:.25rem">Formations</div></div>
@@ -2105,11 +2117,7 @@ function checkShowTutorial(){
 
 // ── PWA ────────────────────────────────────────────────
 let _deferredPrompt;
-if('serviceWorker' in navigator){
-  window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('./sw.js').catch(()=>{});
-  });
-}
+// sw.js supprimé — firebase-messaging-sw.js gère déjà tout
 window.addEventListener('beforeinstallprompt',e=>{
   e.preventDefault(); _deferredPrompt=e;
   const b=document.getElementById('pwa-banner');
