@@ -145,6 +145,9 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
         <button onclick="goTo('register')" style="display:inline-flex;align-items:center;gap:.5rem;color:white;font-weight:700;font-size:1.05rem;padding:.9rem 2rem;border-radius:.875rem;background:rgba(255,255,255,.18);backdrop-filter:blur(8px);border:none;cursor:pointer;transition:background .2s" onmouseover="this.style.background='rgba(255,255,255,.28)'" onmouseout="this.style.background='rgba(255,255,255,.18)'">
           Voir les formations
         </button>
+        <button onclick="goTo('verify')" style="display:inline-flex;align-items:center;gap:.5rem;color:white;font-weight:700;font-size:1.05rem;padding:.9rem 2rem;border-radius:.875rem;background:rgba(255,255,255,.12);backdrop-filter:blur(8px);border:1.5px solid rgba(255,255,255,.4);cursor:pointer;transition:background .2s" onmouseover="this.style.background='rgba(255,255,255,.22)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">
+          🔍 Vérifier un certificat
+        </button>
       </div>
       <!-- Bouton téléchargement APK -->
       <div style="margin-top:1.5rem">
@@ -164,14 +167,9 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
           </ol>
         </div>
       </div>
-      <div style="margin-top:1rem">
-        <button onclick="goTo('verify')" style="display:inline-flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.4);color:white;font-weight:700;font-size:.9rem;padding:.7rem 1.5rem;border-radius:.875rem;cursor:pointer;backdrop-filter:blur(8px);transition:background .2s" onmouseover="this.style.background='rgba(255,255,255,.25)'" onmouseout="this.style.background='rgba(255,255,255,.15)'">
-          🔍 Vérifier un certificat
-        </button>
-      </div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;max-width:380px;margin:3.5rem auto 0">
-        <div style="text-align:center"><div style="font-size:2rem;font-weight:900;color:white">200+</div><div style="font-size:.8rem;color:#93c5fd;margin-top:.25rem">Formations</div></div>
-        <div style="text-align:center"><div style="font-size:2rem;font-weight:900;color:white">5K+</div><div style="font-size:.8rem;color:#93c5fd;margin-top:.25rem">Apprenants</div></div>
+        <div style="text-align:center"><div id="stat-formations" style="font-size:2rem;font-weight:900;color:white">…</div><div style="font-size:.8rem;color:#93c5fd;margin-top:.25rem">Formations</div></div>
+        <div style="text-align:center"><div id="stat-apprenants" style="font-size:2rem;font-weight:900;color:white">…</div><div style="font-size:.8rem;color:#93c5fd;margin-top:.25rem">Apprenants</div></div>
         <div style="text-align:center"><div style="font-size:2rem;font-weight:900;color:white">98%</div><div style="font-size:.8rem;color:#93c5fd;margin-top:.25rem">Satisfaction</div></div>
       </div>
     </div>
@@ -206,8 +204,39 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
       <div id="testimonials-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem">
         <div style="text-align:center;padding:2rem;color:#9ca3af"><div class="spin-blue" style="margin:0 auto"></div></div>
       </div>
+      <div style="text-align:center;margin-top:2.5rem">
+        <button onclick="openLeaveReview()" style="display:inline-flex;align-items:center;gap:.6rem;background:linear-gradient(135deg,#f59e0b,#d97706);color:white;border:none;border-radius:1rem;padding:.85rem 2rem;font-weight:800;font-size:.95rem;cursor:pointer;box-shadow:0 4px 14px rgba(245,158,11,.35);transition:opacity .2s" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+          ✍️ Partager mon expérience
+        </button>
+      </div>
     </div>
   </section>
+
+  <!-- Modal : Laisser un avis -->
+  <div id="modal-leave-review" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center;padding:1rem">
+    <div style="background:white;border-radius:1.5rem;padding:1.75rem;max-width:440px;width:100%;box-shadow:0 25px 60px rgba(0,0,0,.3);max-height:90vh;overflow-y:auto">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+        <h3 style="font-size:1.1rem;font-weight:800;color:#1F2937">⭐ Partager mon expérience</h3>
+        <button onclick="document.getElementById('modal-leave-review').style.display='none'" style="background:none;border:none;font-size:1.25rem;cursor:pointer;color:#9ca3af">✕</button>
+      </div>
+      <p style="font-size:.85rem;color:#6b7280;margin-bottom:1.25rem">Votre avis sera publié après validation par notre équipe.</p>
+      <div style="display:flex;flex-direction:column;gap:.875rem">
+        <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Votre nom *</label><input id="rev-name" type="text" class="input" placeholder="Ex: Jean D."/></div>
+        <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Photo (URL, optionnel)</label><input id="rev-photo" type="url" class="input" placeholder="https://…"/></div>
+        <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.35rem">Votre témoignage *</label><textarea id="rev-text" class="input" rows="4" style="resize:vertical" placeholder="Partagez votre expérience avec RIVO…"></textarea></div>
+        <div><label style="display:block;font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.5rem">Note</label>
+          <div style="display:flex;gap:.5rem">
+            <button onclick="setRevRating(1)" id="rev-star-1" style="font-size:1.5rem;background:none;border:none;cursor:pointer;transition:transform .15s" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">⭐</button>
+            <button onclick="setRevRating(2)" id="rev-star-2" style="font-size:1.5rem;background:none;border:none;cursor:pointer;transition:transform .15s" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">⭐</button>
+            <button onclick="setRevRating(3)" id="rev-star-3" style="font-size:1.5rem;background:none;border:none;cursor:pointer;transition:transform .15s" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">⭐</button>
+            <button onclick="setRevRating(4)" id="rev-star-4" style="font-size:1.5rem;background:none;border:none;cursor:pointer;transition:transform .15s" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">⭐</button>
+            <button onclick="setRevRating(5)" id="rev-star-5" style="font-size:1.5rem;background:none;border:none;cursor:pointer;transition:transform .15s" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">⭐</button>
+          </div>
+        </div>
+      </div>
+      <button onclick="submitLeaveReview()" id="rev-btn" class="btn-primary" style="width:100%;justify-content:center;padding:.875rem;margin-top:1.5rem">📤 Envoyer mon avis</button>
+    </div>
+  </div>
 
   <!-- Parrainage + Badges -->
   <section style="padding:5rem 1.25rem;background:#eff6ff">
@@ -1179,6 +1208,7 @@ async function startApp(){
         fbAuth=firebase.auth();
         startApp();
         loadTestimonials();
+        loadLandingStats();
       }catch(e){tryLoad(i+1);}
     };
     s.onerror=function(){tryLoad(i+1);};
@@ -2103,6 +2133,52 @@ async function loadTestimonials(){
         <p style="color:#4b5563;font-size:.9rem;line-height:1.7;font-style:italic">"${t.text||''}"</p>
       </div>`).join('');
   }catch(e){grid.innerHTML='';}
+}
+
+// ── Stats landing page ────────────────────────────────
+async function loadLandingStats(){
+  try{
+    const [r1,r2]=await Promise.all([
+      sb.from('courses').select('id',{count:'exact',head:true}).eq('is_published',true),
+      sb.from('profiles').select('id',{count:'exact',head:true})
+    ]);
+    const f=document.getElementById('stat-formations');
+    const a=document.getElementById('stat-apprenants');
+    if(f)f.textContent=(r1.count||0)+'';
+    if(a){const n=r2.count||0;a.textContent=n>=1000?(Math.floor(n/100)/10)+'K+':n+'';}
+  }catch(e){}
+}
+
+// ── Avis / Témoignages ────────────────────────────────
+let _revRating=5;
+function openLeaveReview(){
+  if(!CU?.id){toast('Connectez-vous pour laisser un avis','warn');goTo('login');return;}
+  _revRating=5;
+  const n=document.getElementById('rev-name');if(n&&CP)n.value=((CP.first_name||'')+' '+(CP.last_name||'')).trim();
+  document.getElementById('rev-text').value='';
+  document.getElementById('rev-photo').value=CP?.avatar_url||'';
+  updateRevStars();
+  document.getElementById('modal-leave-review').style.display='flex';
+}
+function setRevRating(n){_revRating=n;updateRevStars();}
+function updateRevStars(){
+  for(let i=1;i<=5;i++){
+    const s=document.getElementById('rev-star-'+i);
+    if(s)s.style.filter=i<=_revRating?'none':'grayscale(1) opacity(.4)';
+  }
+}
+async function submitLeaveReview(){
+  const name=document.getElementById('rev-name')?.value.trim();
+  const text=document.getElementById('rev-text')?.value.trim();
+  const photo=document.getElementById('rev-photo')?.value.trim()||null;
+  if(!name||!text){toast('Nom et témoignage obligatoires','err');return;}
+  const btn=document.getElementById('rev-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span>';
+  const {error}=await sb.from('testimonials').insert({name,text,photo_url:photo,rating:_revRating,is_active:false,sort_order:0});
+  btn.disabled=false;btn.innerHTML='📤 Envoyer mon avis';
+  if(error){toast('Erreur : '+error.message,'err');return;}
+  document.getElementById('modal-leave-review').style.display='none';
+  toast('Merci ! Votre avis sera publié après validation 🎉');
 }
 
 // ── Devenir formateur ─────────────────────────────────

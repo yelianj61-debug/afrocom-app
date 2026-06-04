@@ -591,9 +591,27 @@
 
     <!-- Section NPI Attestations -->
     <div id="page-npi" class="p-8 hidden" style="display:none">
-      <div class="mb-6">
-        <h1 class="text-2xl font-bold text-white">📋 NPI Attestations</h1>
-        <p class="text-gray-400 mt-1">Attribuer un code NPI (13 chiffres) à chaque attestation envoyée</p>
+      <div class="mb-6 flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 class="text-2xl font-bold text-white">📋 NPI Attestations</h1>
+          <p class="text-gray-400 mt-1">Attribuer un code NPI (13 chiffres) à chaque attestation envoyée</p>
+        </div>
+        <button onclick="toggleNpiForm()" class="btn-primary">➕ Émettre une attestation</button>
+      </div>
+      <!-- Formulaire émission manuelle -->
+      <div id="npi-emit-form" style="display:none;background:#111827;border:1px solid #374151;border-radius:.875rem;padding:1.5rem;margin-bottom:1.5rem;max-width:620px">
+        <h3 class="font-bold text-white mb-4">Émettre une attestation NPI</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.875rem">
+          <div><label class="block text-sm text-gray-400 mb-1">Email utilisateur *</label><input id="npi-emit-email" type="email" class="input" placeholder="user@email.com"/></div>
+          <div><label class="block text-sm text-gray-400 mb-1">Titre de la formation *</label><input id="npi-emit-course" type="text" class="input" placeholder="Ex: Excel avancé"/></div>
+          <div><label class="block text-sm text-gray-400 mb-1">Code NPI (13 chiffres) *</label><input id="npi-emit-code" type="text" class="input" maxlength="13" placeholder="1234567890123"/></div>
+          <div><label class="block text-sm text-gray-400 mb-1">Photo URL (optionnel)</label><input id="npi-emit-photo" type="url" class="input" placeholder="https://…"/></div>
+        </div>
+        <div style="display:flex;gap:.5rem;margin-top:1rem">
+          <button onclick="emitNpi()" class="btn-primary">💾 Créer l'attestation</button>
+          <button onclick="toggleNpiForm()" style="background:#374151;color:#d1d5db;border:none;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600">Annuler</button>
+        </div>
+        <p id="npi-emit-err" style="display:none;color:#f87171;font-size:.8rem;margin-top:.75rem"></p>
       </div>
       <div class="card" style="overflow:auto">
         <table>
@@ -2306,6 +2324,35 @@ async function deletePartenaire(id, btn) {
 }
 
 /* ── NPI Attestations ─────────────────────────────────── */
+function toggleNpiForm(){
+  const f=document.getElementById('npi-emit-form');
+  if(f)f.style.display=f.style.display==='none'?'block':'none';
+}
+async function emitNpi(){
+  const email=document.getElementById('npi-emit-email')?.value.trim();
+  const courseTitle=document.getElementById('npi-emit-course')?.value.trim();
+  const code=document.getElementById('npi-emit-code')?.value.trim();
+  const photo=document.getElementById('npi-emit-photo')?.value.trim()||null;
+  const errEl=document.getElementById('npi-emit-err');
+  errEl.style.display='none';
+  if(!email||!courseTitle||!code){errEl.style.display='block';errEl.textContent='Email, formation et code NPI sont obligatoires.';return;}
+  if(code.length!==13||!/^\d+$/.test(code)){errEl.style.display='block';errEl.textContent='Le code NPI doit contenir exactement 13 chiffres.';return;}
+  // Trouver l'utilisateur
+  const{data:pData,error:pErr}=await sbAdmin.from('profiles').select('id').eq('email',email).maybeSingle();
+  if(pErr||!pData){errEl.style.display='block';errEl.textContent='Utilisateur introuvable avec cet email.';return;}
+  // Trouver la formation
+  const{data:cData,error:cErr}=await sbAdmin.from('courses').select('id').ilike('title',courseTitle).maybeSingle();
+  if(cErr||!cData){errEl.style.display='block';errEl.textContent='Formation introuvable (vérifiez le titre exact).';return;}
+  // Créer le certificat
+  const{error:ins}=await sbAdmin.from('certificates').insert({
+    user_id:pData.id,course_id:cData.id,npi_code:code,holder_photo_url:photo,
+    issued_at:new Date().toISOString()
+  });
+  if(ins){errEl.style.display='block';errEl.textContent='Erreur : '+ins.message;return;}
+  toast('Attestation NPI créée ✅');
+  toggleNpiForm();
+  loadNpi();
+}
 async function loadNpi() {
   const tbody = document.getElementById('npi-table');
   if(!tbody) return;
@@ -2448,10 +2495,13 @@ async function switchFmtTab(tab) {
             <div class="font-bold text-white text-lg">${escHtml((a.first_name||'') + ' ' + (a.last_name||''))}</div>
             <div class="text-gray-400 text-sm">${escHtml(a.email||'')} · ${escHtml(a.phone||'')} · ${escHtml(a.country||'')}</div>
             <div class="text-gray-300 text-sm mt-1"><strong>Profession :</strong> ${escHtml(a.profession||'—')}</div>
+            <div class="text-gray-300 text-sm"><strong>Pays / Code postal :</strong> ${escHtml(a.country||'—')} ${a.postal_code?'· '+escHtml(a.postal_code):''}</div>
             <div class="text-gray-300 text-sm"><strong>Formations maîtrisées :</strong> ${a.num_courses||0}</div>
-            <div class="text-gray-400 text-sm mt-1">${escHtml(a.courses_list||'')}</div>
-            ${a.has_website && a.website_url ? `<div class="text-sm mt-1"><a href="${escHtml(a.website_url)}" target="_blank" style="color:#60a5fa">${escHtml(a.website_url)}</a></div>` : ''}
-            <div class="text-gray-400 text-sm">Attestations : ${a.cert_issuer==='rivo'?'RIVO':'Le formateur'} · Paiement : <span style="color:${a.payment_status==='paid'?'#4ade80':'#f87171'}">${a.payment_status==='paid'?'✅ Payé':'⏳ Non payé'}</span></div>
+            ${a.courses_list?`<div class="text-gray-400 text-sm mt-1" style="white-space:pre-wrap">${escHtml(a.courses_list)}</div>`:''}
+            ${a.diploma_urls?`<div class="text-sm mt-1"><strong class="text-gray-300">Diplômes :</strong> <a href="${escHtml(a.diploma_urls)}" target="_blank" style="color:#60a5fa;word-break:break-all">Voir les diplômes</a></div>`:''}
+            ${a.has_website && a.website_url ? `<div class="text-sm mt-1"><strong class="text-gray-300">Site web :</strong> <a href="${escHtml(a.website_url)}" target="_blank" style="color:#60a5fa">${escHtml(a.website_url)}</a></div>` : ''}
+            <div class="text-gray-400 text-sm mt-1">Attestations : <strong style="color:#e5e7eb">${a.cert_issuer==='rivo'?'RIVO':'Le formateur lui-même'}</strong> · Paiement : <span style="color:${a.payment_status==='paid'?'#4ade80':'#f87171'};font-weight:700">${a.payment_status==='paid'?'✅ Payé':'⏳ Non payé'}</span></div>
+            <div class="text-gray-500 text-xs mt-1">Demande le ${new Date(a.created_at).toLocaleDateString('fr-FR')}</div>
           </div>
           <div style="display:flex;gap:.5rem;flex-shrink:0">
             <button onclick="approveFmt('${a.id}','${a.user_id}')" class="btn-success">✅ Approuver</button>
