@@ -270,26 +270,41 @@ function showFake(){
 
 /* ─── Vérification principale ──────────────────────── */
 async function verifyByNpiAndName(npi, prenom='', nom='', formation=''){
-  const {data, error} = await sb.from('certificates')
+  // 1. Chercher dans certificates (utilisateurs enregistrés)
+  const {data:cert} = await sb.from('certificates')
     .select('*,courses(title),profiles(first_name,last_name)')
     .eq('npi_code', npi)
     .maybeSingle();
 
-  if(error || !data){ showNotFound(); return; }
+  let data = cert;
 
-  // Si infos fournies (scan ou formulaire), vérifier contre DB
-  if(prenom || nom || formation){
-    const dbFirst   = norm(data.profiles?.first_name);
-    const dbLast    = norm(data.profiles?.last_name);
-    const dbCourse  = norm(data.courses?.title);
-
-    const firstOk   = !prenom   || fuzzy(dbFirst,  norm(prenom));
-    const lastOk    = !nom      || fuzzy(dbLast,   norm(nom));
-    const courseOk  = !formation|| fuzzy(dbCourse, norm(formation));
-
-    if(!firstOk || !lastOk || !courseOk){
-      showFake(); return;
+  // 2. Fallback : chercher dans npi_attestations (générateur standalone)
+  if(!data){
+    const {data:att} = await sb.from('npi_attestations')
+      .select('*')
+      .eq('npi_code', npi)
+      .maybeSingle();
+    if(att){
+      data = {
+        npi_code:        att.npi_code,
+        holder_photo_url:att.holder_photo_url||null,
+        issued_at:       att.issued_at,
+        profiles:{ first_name:att.holder_first_name, last_name:att.holder_last_name },
+        courses: { title:att.course_title }
+      };
     }
+  }
+
+  if(!data){ showNotFound(); return; }
+
+  if(prenom || nom || formation){
+    const dbFirst  = norm(data.profiles?.first_name);
+    const dbLast   = norm(data.profiles?.last_name);
+    const dbCourse = norm(data.courses?.title);
+    const firstOk  = !prenom    || fuzzy(dbFirst,  norm(prenom));
+    const lastOk   = !nom       || fuzzy(dbLast,   norm(nom));
+    const courseOk = !formation || fuzzy(dbCourse, norm(formation));
+    if(!firstOk || !lastOk || !courseOk){ showFake(); return; }
   }
   showValid(data);
 }
@@ -353,7 +368,9 @@ async function handleQrResult(raw){
 
 function setScanStatus(msg){
   const el=document.getElementById('scan-status');
-  el.textContent=msg; el.style.display=msg?'block':'none';
+  if(!msg){el.style.display='none';el.innerHTML='';return;}
+  el.style.display='block';
+  el.innerHTML=`<span style="display:inline-block;width:.85rem;height:.85rem;border:2.5px solid #bfdbfe;border-top-color:#2563EB;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:.4rem"></span>${msg}`;
 }
 
 /* ─── Caméra (scan live) ───────────────────────────── */
@@ -397,6 +414,11 @@ function scanFrame(){
 /* ─── Upload image QR ──────────────────────────────── */
 function handleQrUpload(input){
   const file=input.files[0]; if(!file) return;
+
+  // Afficher spinner immédiatement, avant tout traitement
+  setScanStatus('Analyse du QR code en cours…');
+  document.getElementById('result').style.display='none';
+
   const prev=document.getElementById('upload-preview');
   const reader=new FileReader();
   reader.onload=function(e){
@@ -404,41 +426,66 @@ function handleQrUpload(input){
     img.onload=function(){
       // Afficher aperçu
       prev.src=e.target.result; prev.style.display='block';
-      // Décoder QR
-      const canvas=document.createElement('canvas');
-      canvas.width=img.width; canvas.height=img.height;
-      const ctx=canvas.getContext('2d');
-      ctx.drawImage(img,0,0);
-      const imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
-      const code=jsQR(imgData.data,imgData.width,imgData.height,{inversionAttempts:'attemptBoth'});
-      if(code){ handleQrResult(code.data); }
-      else{
-        setScanStatus('');
-        document.getElementById('result').style.display='block';
-        document.getElementById('result').innerHTML=`<div class="result-notfound">
-          <div style="font-size:2.5rem;margin-bottom:.5rem">🔎</div>
-          <p style="font-weight:800;color:#dc2626;margin-bottom:.25rem">QR code non détecté</p>
-          <p style="color:#9b1c1c;font-size:.85rem">Assurez-vous que le QR code est net et visible. Utilisez la vérification manuelle.</p>
-        </div>`;
-      }
+
+      // setTimeout → laisse le navigateur rendre le spinner avant le traitement lourd
+      setTimeout(function(){
+        let found=false;
+
+        // Tenter plusieurs échelles — les photos haute résolution ont le QR trop petit pour jsQR
+        const targetWidths=[img.width,1500,1000,700,500,350];
+        const tried=new Set();
+
+        for(const tw of targetWidths){
+          const scale=Math.min(1, tw/img.width);
+          const key=Math.round(scale*100);
+          if(tried.has(key)) continue;
+          tried.add(key);
+
+          const w=Math.max(100, Math.round(img.width*scale));
+          const h=Math.max(100, Math.round(img.height*scale));
+          const canvas=document.createElement('canvas');
+          canvas.width=w; canvas.height=h;
+          const ctx=canvas.getContext('2d');
+          ctx.drawImage(img,0,0,w,h);
+
+          for(const inv of['dontInvert','attemptBoth','onlyInvert']){
+            const imgData=ctx.getImageData(0,0,w,h);
+            const code=jsQR(imgData.data,w,h,{inversionAttempts:inv});
+            if(code){ setScanStatus(''); handleQrResult(code.data); found=true; break; }
+          }
+          if(found) break;
+        }
+
+        if(!found){
+          setScanStatus('');
+          document.getElementById('result').style.display='block';
+          document.getElementById('result').innerHTML=`<div class="result-notfound">
+            <div style="font-size:2.5rem;margin-bottom:.5rem">🔎</div>
+            <p style="font-weight:800;color:#dc2626;margin-bottom:.25rem">QR code non détecté</p>
+            <p style="color:#9b1c1c;font-size:.85rem">Essayez avec une photo plus nette (éclairage, angle, zoom). Utilisez la vérification manuelle.</p>
+          </div>`;
+        }
+      }, 80);
     };
     img.src=e.target.result;
   };
   reader.readAsDataURL(file);
-  // Reset pour permettre re-upload du même fichier
   input.value='';
 }
 
-/* ─── Paramètre URL ?npi= ──────────────────────────── */
+/* ─── Paramètre URL ?npi= (depuis QR scanné) ──────── */
 (function(){
   const p=new URLSearchParams(location.search);
   const npi=p.get('npi');
-  if(npi&&/^\d{13}$/.test(npi)){
-    document.getElementById('v-npi').value=npi;
-    const fn=p.get('fn'); const ln=p.get('ln'); const course=p.get('course');
-    if(fn) document.getElementById('v-prenom').value=fn;
-    if(ln) document.getElementById('v-nom').value=ln;
-    if(course) document.getElementById('v-course').value=course;
+  if(!npi||!/^\d{13}$/.test(npi)) return;
+  const fn=p.get('fn')||''; const ln=p.get('ln')||''; const course=p.get('course')||'';
+  document.getElementById('v-npi').value=npi;
+  if(fn) document.getElementById('v-prenom').value=fn;
+  if(ln) document.getElementById('v-nom').value=ln;
+  if(course) document.getElementById('v-course').value=course;
+  // Auto-soumettre si les 4 paramètres sont présents (scan QR)
+  if(fn&&ln&&course){
+    setTimeout(()=>verifyManual(), 400);
   }
 })();
 </script>
