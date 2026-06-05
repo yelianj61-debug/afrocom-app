@@ -8,8 +8,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet"/>
 
 <!--
-  SQL À EXÉCUTER UNE SEULE FOIS DANS SUPABASE (SQL Editor) :
-  ─────────────────────────────────────────────────────────────
+  SQL À EXÉCUTER UNE FOIS DANS SUPABASE (SQL Editor) :
+  ────────────────────────────────────────────────────
   CREATE TABLE IF NOT EXISTS npi_attestations (
     id                UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     npi_code          TEXT UNIQUE NOT NULL,
@@ -24,140 +24,79 @@
   ALTER TABLE npi_attestations ENABLE ROW LEVEL SECURITY;
   CREATE POLICY "read_all"   ON npi_attestations FOR SELECT USING (true);
   CREATE POLICY "insert_all" ON npi_attestations FOR INSERT WITH CHECK (true);
-  ─────────────────────────────────────────────────────────────
+  ────────────────────────────────────────────────────
 -->
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Montserrat',sans-serif;background:#0f172a;color:#f1f5f9;min-height:100vh}
 
-/* Layout */
-.app{display:grid;grid-template-columns:380px 1fr;min-height:100vh}
-@media(max-width:900px){.app{grid-template-columns:1fr;grid-template-rows:auto 1fr}}
+.app{display:grid;grid-template-columns:360px 1fr;min-height:100vh}
+@media(max-width:900px){.app{grid-template-columns:1fr}}
 
-/* Sidebar form */
-.sidebar{background:#1e293b;padding:2rem 1.5rem;overflow-y:auto;border-right:1px solid #334155}
-.sidebar-logo{display:flex;align-items:center;gap:.625rem;margin-bottom:1.75rem}
-.sidebar-logo-icon{width:2.25rem;height:2.25rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);border-radius:.625rem;display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:.95rem}
-.sidebar-logo-name{font-size:1.15rem;font-weight:900;color:#f1f5f9}
+/* Sidebar */
+.sidebar{background:#1e293b;padding:1.5rem 1.25rem 2rem;overflow-y:auto;border-right:1px solid #334155}
+.sidebar-logo{display:flex;align-items:center;gap:.5rem;margin-bottom:1.5rem}
+.sidebar-logo-icon{width:2rem;height:2rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);border-radius:.5rem;display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:.85rem}
+.sidebar-logo-name{font-size:1.05rem;font-weight:900}
 .sidebar-logo-name span{color:#60a5fa}
-.sidebar h2{font-size:1rem;font-weight:800;color:#f1f5f9;margin-bottom:1.25rem;display:flex;align-items:center;gap:.5rem}
 
-/* Form elements */
-.field{margin-bottom:.875rem}
-label{display:block;font-size:.75rem;font-weight:700;color:#94a3b8;margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.04em}
-.input{width:100%;padding:.65rem .9rem;background:#0f172a;border:1.5px solid #334155;border-radius:.625rem;font-size:.88rem;color:#f1f5f9;outline:none;font-family:'Montserrat',sans-serif;transition:border-color .2s}
-.input:focus{border-color:#2563EB;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+.field{margin-bottom:.75rem}
+label{display:block;font-size:.72rem;font-weight:700;color:#94a3b8;margin-bottom:.28rem;text-transform:uppercase;letter-spacing:.04em}
+.input{width:100%;padding:.6rem .875rem;background:#0f172a;border:1.5px solid #334155;border-radius:.625rem;font-size:.85rem;color:#f1f5f9;outline:none;font-family:'Montserrat',sans-serif;transition:border-color .2s}
+.input:focus{border-color:#2563EB}
 .input::placeholder{color:#475569}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:.625rem}
 
-/* Upload field */
 .upload-field{display:flex;gap:.5rem;align-items:center}
-.upload-btn{padding:.5rem .875rem;background:#334155;border:none;border-radius:.5rem;color:#f1f5f9;font-size:.78rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .2s;font-family:'Montserrat',sans-serif}
+.upload-btn{padding:.45rem .75rem;background:#334155;border:none;border-radius:.5rem;color:#f1f5f9;font-size:.75rem;font-weight:600;cursor:pointer;white-space:nowrap;font-family:'Montserrat',sans-serif}
 .upload-btn:hover{background:#475569}
-.upload-name{font-size:.75rem;color:#64748b;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.upload-thumb{width:2.25rem;height:2.25rem;border-radius:.375rem;object-fit:cover;border:1px solid #334155;display:none}
+.upload-name{font-size:.72rem;color:#64748b;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.upload-thumb{width:2rem;height:2rem;border-radius:.35rem;object-fit:cover;display:none;border:1px solid #334155}
 
-/* Buttons */
-.btn-gen{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:1rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);color:white;border:none;border-radius:.875rem;font-size:.95rem;font-weight:700;cursor:pointer;transition:opacity .2s;box-shadow:0 4px 14px rgba(37,99,235,.4);font-family:'Montserrat',sans-serif;margin-top:.5rem}
+.btn-gen{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:.9rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);color:white;border:none;border-radius:.875rem;font-size:.9rem;font-weight:700;cursor:pointer;transition:opacity .2s;box-shadow:0 4px 14px rgba(37,99,235,.4);font-family:'Montserrat',sans-serif;margin-top:.375rem}
 .btn-gen:hover{opacity:.9}
 .btn-gen:disabled{opacity:.55;cursor:not-allowed}
-.btn-dl{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:.875rem;background:linear-gradient(135deg,#059669,#047857);color:white;border:none;border-radius:.875rem;font-size:.9rem;font-weight:700;cursor:pointer;margin-top:.625rem;font-family:'Montserrat',sans-serif;transition:opacity .2s}
+.btn-dl{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:.8rem;background:linear-gradient(135deg,#059669,#047857);color:white;border:none;border-radius:.875rem;font-size:.85rem;font-weight:700;cursor:pointer;margin-top:.5rem;font-family:'Montserrat',sans-serif}
 .btn-dl:hover{opacity:.9}
 .btn-dl:disabled{opacity:.55;cursor:not-allowed}
 
-/* NPI result box */
-.npi-result{background:#0f172a;border:2px solid #2563EB;border-radius:.875rem;padding:1rem;margin-top:1rem;text-align:center;display:none}
-.npi-label{font-size:.7rem;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem}
-.npi-value{font-size:1rem;font-weight:900;color:#f1f5f9;font-family:monospace;letter-spacing:.08em}
-.npi-copy{margin-top:.5rem;padding:.35rem .875rem;background:#1e293b;border:1px solid #334155;border-radius:.5rem;color:#94a3b8;font-size:.75rem;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif}
+.npi-box{background:#0f172a;border:2px solid #2563EB;border-radius:.875rem;padding:.875rem;margin-top:.875rem;text-align:center;display:none}
+.npi-box-label{font-size:.68rem;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.25rem}
+.npi-box-value{font-size:.95rem;font-weight:900;font-family:monospace;letter-spacing:.08em}
+.npi-copy{margin-top:.4rem;padding:.3rem .75rem;background:#1e293b;border:1px solid #334155;border-radius:.45rem;color:#94a3b8;font-size:.72rem;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif}
 .npi-copy:hover{background:#334155;color:#f1f5f9}
 
-/* Spinner */
-.spin{display:inline-block;width:1rem;height:1rem;border:2.5px solid rgba(255,255,255,.35);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite}
+.status{font-size:.75rem;color:#60a5fa;margin-top:.625rem;text-align:center;display:none;min-height:1.2rem}
+
 @keyframes spin{to{transform:rotate(360deg)}}
+.spin{display:inline-block;width:.85rem;height:.85rem;border:2.5px solid rgba(96,165,250,.3);border-top-color:#60a5fa;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:.3rem}
 
-/* Status */
-.status-msg{font-size:.78rem;color:#60a5fa;margin-top:.75rem;text-align:center;display:none}
-
-/* Main / preview */
-.main{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:2rem 1.5rem;background:#0f172a;overflow:auto}
-.preview-label{font-size:.75rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1.25rem;text-align:center}
-.cert-scale-wrap{overflow:auto;max-width:100%}
-
-/* Certificate styles (inline-friendly for html2canvas) */
-#certificate{
-  width:1050px;height:742px;position:relative;
-  font-family:'Montserrat',sans-serif;
-  background:#faf5eb;
-  flex-shrink:0;
-}
-.cert-outer{position:absolute;inset:0;border:16px solid #0d1117;pointer-events:none;z-index:20}
-.cert-inner{position:absolute;inset:20px;border:2px solid #c9a227;pointer-events:none;z-index:20}
-.cert-content{position:absolute;inset:28px;display:grid;grid-template-columns:210px 1fr 195px;gap:0}
-
-/* Left col */
-.cl{padding:8px 12px 8px 8px;display:flex;flex-direction:column;align-items:center;gap:9px}
-.cl-photo{width:108px;height:108px;border-radius:50%;border:4px solid #c9a227;overflow:hidden;background:#d1d5db;flex-shrink:0}
-.cl-photo img{width:100%;height:100%;object-fit:cover}
-.cl-npi{border:2px dashed #1d4ed8;padding:7px 8px;text-align:center;width:100%;background:rgba(29,78,216,.05)}
-.cl-verify{border:1.5px solid #c9a227;padding:7px 8px;width:100%;background:rgba(201,162,39,.05)}
-.cl-qr{background:white;padding:3px;border:1px solid #e5e7eb;display:flex;align-items:center;justify-content:center}
-.cl-url{font-size:6.5px;color:#374151;text-align:center;line-height:1.45;font-family:'Montserrat',sans-serif}
-
-/* Center col */
-.cc{display:flex;flex-direction:column;align-items:center;text-align:center;padding:6px 12px;border-left:1px solid rgba(201,162,39,.4);border-right:1px solid rgba(201,162,39,.4)}
-.cc-logo{display:flex;align-items:center;gap:7px;margin-bottom:6px}
-.cc-logo-icon{width:30px;height:30px;background:#2563EB;border-radius:5px;display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:13px;flex-shrink:0}
-.cc-logo-text .name{font-size:15px;font-weight:900;color:#0d1117;line-height:1}
-.cc-logo-text .tagline{font-size:5.5px;color:#6b7280;font-weight:600;line-height:1.2}
-.cc-divider{width:85%;height:1px;background:linear-gradient(90deg,transparent,#c9a227,transparent);margin:5px auto}
-.cc-title{font-size:44px;font-weight:700;color:#0d1117;font-family:'Playfair Display',serif;font-style:italic;line-height:1;margin-bottom:3px}
-.cc-subtitle{font-size:9.5px;font-weight:800;color:#c9a227;letter-spacing:.18em;margin-bottom:7px}
-.cc-certifie{font-size:7.5px;color:#4b5563;font-style:italic;margin-bottom:10px}
-.cc-name{font-size:34px;font-weight:700;color:#0d1117;font-family:'Dancing Script',cursive;line-height:1.1;margin-bottom:7px;max-width:370px;word-break:break-word}
-.cc-suivi{font-size:8px;color:#4b5563;margin-bottom:3px}
-.cc-course{font-size:14px;font-weight:900;color:#0d1117;letter-spacing:.04em;text-transform:uppercase;margin-bottom:5px;max-width:360px}
-.cc-satisfait{font-size:7.5px;color:#4b5563;margin-bottom:8px}
-.cc-foi{font-size:7px;color:#4b5563;font-style:italic;line-height:1.6;max-width:330px;margin-bottom:10px}
-.cc-bottom{display:flex;gap:20px;align-items:flex-start;justify-content:center;margin-top:auto}
-.cc-bottom-item{text-align:center}
-.cc-bottom-item .icon{font-size:16px;line-height:1;margin-bottom:3px}
-.cc-bottom-item .bl{font-size:6.5px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px}
-.cc-bottom-item .bv{font-size:8.5px;font-weight:800;color:#0d1117}
-
-/* Right col */
-.cr{padding:8px 8px 8px 12px;display:flex;flex-direction:column;align-items:center;gap:9px}
-.cr-badge{width:78px;height:78px;border-radius:50%;border:2.5px solid #c9a227;background:linear-gradient(135deg,#0d1117,#1a2744);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:6px;flex-shrink:0}
-.cr-photo{width:100%;height:118px;border-radius:8px;overflow:hidden;border:2px solid #d1d5db;background:#e5e7eb;flex-shrink:0}
-.cr-photo img{width:100%;height:100%;object-fit:cover}
-.cr-course-label{text-align:center}
-.cr-sig{margin-top:auto;text-align:center;border-top:1.5px solid #c9a227;padding-top:7px;width:100%}
-
-/* Footer disclaimer */
-.cert-disclaimer{position:absolute;bottom:22px;left:30px;right:30px;text-align:center;font-size:6.5px;color:#9ca3af;font-style:italic;font-family:'Montserrat',sans-serif}
+/* Main preview */
+.main{display:flex;flex-direction:column;align-items:center;padding:1.5rem;background:#0f172a;overflow:auto}
+.preview-label{font-size:.7rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.12em;margin-bottom:1rem}
+.cert-scale-wrap{overflow-x:auto;overflow-y:hidden;max-width:100%}
+#cert-scale-inner{transform-origin:top left;display:block}
 </style>
 </head>
 <body>
-
 <div class="app">
 
-  <!-- ── SIDEBAR ── -->
+  <!-- ─── SIDEBAR ─── -->
   <div class="sidebar">
     <div class="sidebar-logo">
       <div class="sidebar-logo-icon">R</div>
-      <div class="sidebar-logo-name">RIVO <span>Attestations</span></div>
+      <div class="sidebar-logo-name">RIVO <span>Générateur</span></div>
     </div>
 
-    <h2>✍️ Informations du titulaire</h2>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.625rem">
+    <div class="row2">
       <div class="field">
         <label>Prénom *</label>
         <input id="f-prenom" class="input" type="text" placeholder="Jean" oninput="liveUpdate()"/>
       </div>
       <div class="field">
         <label>Nom *</label>
-        <input id="f-nom" class="input" type="text" placeholder="Dupont" oninput="liveUpdate()"/>
+        <input id="f-nom" class="input" type="text" placeholder="Kossi" oninput="liveUpdate()"/>
       </div>
     </div>
 
@@ -174,176 +113,243 @@ label{display:block;font-size:.75rem;font-weight:700;color:#94a3b8;margin-bottom
     <div class="field">
       <label>Photo de l'apprenant</label>
       <div class="upload-field">
-        <button class="upload-btn" type="button" onclick="document.getElementById('f-photo-input').click()">📷 Choisir</button>
+        <button class="upload-btn" onclick="document.getElementById('f-photo').click()">📷 Choisir</button>
         <span class="upload-name" id="f-photo-name">Aucun fichier</span>
-        <img class="upload-thumb" id="f-photo-thumb" alt=""/>
-        <input type="file" id="f-photo-input" accept="image/*" style="display:none" onchange="handlePhotoUpload(this,'f-photo-name','f-photo-thumb','holder')"/>
+        <img class="upload-thumb" id="f-photo-thumb"/>
+        <input type="file" id="f-photo" accept="image/*" style="display:none" onchange="pickPhoto(this,'holder')"/>
       </div>
     </div>
 
     <div class="field">
       <label>Photo de la formation</label>
       <div class="upload-field">
-        <button class="upload-btn" type="button" onclick="document.getElementById('f-course-photo-input').click()">🖼️ Choisir</button>
+        <button class="upload-btn" onclick="document.getElementById('f-course-photo').click()">🖼️ Choisir</button>
         <span class="upload-name" id="f-course-photo-name">Aucun fichier</span>
-        <img class="upload-thumb" id="f-course-photo-thumb" alt=""/>
-        <input type="file" id="f-course-photo-input" accept="image/*" style="display:none" onchange="handlePhotoUpload(this,'f-course-photo-name','f-course-photo-thumb','course')"/>
+        <img class="upload-thumb" id="f-course-photo-thumb"/>
+        <input type="file" id="f-course-photo" accept="image/*" style="display:none" onchange="pickPhoto(this,'course')"/>
       </div>
     </div>
 
-    <button class="btn-gen" id="btn-gen" onclick="generer()">
-      🎓 Générer l'attestation
-    </button>
+    <button class="btn-gen" id="btn-gen" onclick="generer()">🎓 Générer l'attestation</button>
+    <button class="btn-dl"  id="btn-dl"  onclick="telecharger()" style="display:none">📥 Télécharger PNG</button>
+    <div class="status" id="status"></div>
 
-    <button class="btn-dl" id="btn-dl" onclick="telecharger()" style="display:none">
-      📥 Télécharger en PNG
-    </button>
-
-    <div class="status-msg" id="status-msg"></div>
-
-    <div class="npi-result" id="npi-result">
-      <div class="npi-label">Code NPI généré</div>
-      <div class="npi-value" id="npi-display">—</div>
-      <button class="npi-copy" onclick="copyNpi()">📋 Copier le NPI</button>
+    <div class="npi-box" id="npi-box">
+      <div class="npi-box-label">Code NPI généré</div>
+      <div class="npi-box-value" id="npi-val">—</div>
+      <button class="npi-copy" onclick="copyNpi()">📋 Copier</button>
     </div>
   </div>
 
-  <!-- ── MAIN (preview) ── -->
+  <!-- ─── MAIN / preview ─── -->
   <div class="main">
-    <div class="preview-label">Aperçu de l'attestation</div>
+    <div class="preview-label">Aperçu de l'attestation (fidèle au modèle RIVO)</div>
     <div class="cert-scale-wrap">
-      <div id="cert-scale-inner" style="transform-origin:top left">
+      <div id="cert-scale-inner">
 
-        <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-             CERTIFICAT — 1050 × 742 px
-             ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
-        <div id="certificate">
+<!-- ══════════════════════════════════════════════════════════════════
+     CERTIFICAT RIVO — 1050 × 742 px
+     Design fidèle à l'attestation RIVO originale
+     ══════════════════════════════════════════════════════════════════ -->
+<div id="certificate" style="width:1050px;height:742px;position:relative;font-family:'Montserrat',sans-serif;background:#faf5eb;overflow:hidden">
 
-          <!-- Borders -->
-          <div class="cert-outer"></div>
-          <div class="cert-inner"></div>
+  <!-- ── Fond crème avec légère texture ── -->
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%, #fffef8 0%, #faf0d7 100%)"></div>
 
-          <!-- 3-column grid -->
-          <div class="cert-content">
+  <!-- ── Bordure externe noire ── -->
+  <div style="position:absolute;inset:0;border:18px solid #0d1117;pointer-events:none;z-index:30"></div>
 
-            <!-- LEFT COLUMN -->
-            <div class="cl">
-              <div class="cl-photo">
-                <img id="cert-holder-photo" src="" alt="Titulaire"
-                     style="width:100%;height:100%;object-fit:cover;display:block"/>
-              </div>
+  <!-- ── Bande or décorative (entre les deux noirs) ── -->
+  <div style="position:absolute;inset:18px;height:9px;background:linear-gradient(90deg,#8b6914,#d4a017,#f0c040,#d4a017,#8b6914);z-index:29"></div>
+  <div style="position:absolute;left:18px;right:18px;bottom:18px;height:9px;background:linear-gradient(90deg,#8b6914,#d4a017,#f0c040,#d4a017,#8b6914);z-index:29"></div>
+  <div style="position:absolute;top:18px;left:18px;width:9px;bottom:18px;background:linear-gradient(180deg,#8b6914,#d4a017,#f0c040,#d4a017,#8b6914);z-index:29"></div>
+  <div style="position:absolute;top:18px;right:18px;width:9px;bottom:18px;background:linear-gradient(180deg,#8b6914,#d4a017,#f0c040,#d4a017,#8b6914);z-index:29"></div>
 
-              <div class="cl-npi">
-                <div style="font-size:8px;font-weight:800;color:#1d4ed8;margin-bottom:3px;letter-spacing:.06em">● NPI ●</div>
-                <div id="cert-npi-text" style="font-size:9.5px;font-weight:900;color:#0d1117;word-break:break-all;font-family:monospace">NPI-</div>
-                <div style="font-size:6.5px;color:#6b7280;margin-top:3px;font-weight:600;letter-spacing:.04em">NUMÉRO PERSONNEL D'IDENTIFICATION</div>
-              </div>
+  <!-- ── Bordure or intérieure fine ── -->
+  <div style="position:absolute;inset:28px;border:2px solid #c9a227;pointer-events:none;z-index:29"></div>
 
-              <div class="cl-verify">
-                <div style="font-size:7px;font-weight:800;color:#c9a227;text-align:center;margin-bottom:5px;letter-spacing:.04em">✅ VÉRIFICATION DE L'AUTHENTICITÉ</div>
-                <div style="font-size:6.5px;color:#374151;margin-bottom:2.5px">✓ Nom du titulaire</div>
-                <div style="font-size:6.5px;color:#374151;margin-bottom:2.5px">✓ Formation suivie</div>
-                <div style="font-size:6.5px;color:#374151;margin-bottom:2.5px">✓ Date de délivrance</div>
-                <div style="font-size:6.5px;color:#374151">✓ Statut</div>
-              </div>
+  <!-- ── Coins décoratifs ── -->
+  <div style="position:absolute;top:26px;left:26px;width:22px;height:22px;border-top:3px solid #c9a227;border-left:3px solid #c9a227;z-index:30"></div>
+  <div style="position:absolute;top:26px;right:26px;width:22px;height:22px;border-top:3px solid #c9a227;border-right:3px solid #c9a227;z-index:30"></div>
+  <div style="position:absolute;bottom:26px;left:26px;width:22px;height:22px;border-bottom:3px solid #c9a227;border-left:3px solid #c9a227;z-index:30"></div>
+  <div style="position:absolute;bottom:26px;right:26px;width:22px;height:22px;border-bottom:3px solid #c9a227;border-right:3px solid #c9a227;z-index:30"></div>
 
-              <div class="cl-qr" id="cert-qr-container">
-                <div id="cert-qr" style="width:80px;height:80px"></div>
-              </div>
+  <!-- ══════════ CONTENU (inset 34px) ══════════ -->
+  <div style="position:absolute;inset:34px;display:flex;flex-direction:column">
 
-              <div class="cl-url">
-                Pour plus de vérification, veuillez vous rendre sur le site officiel<br/>
-                <strong>https://certificatnpi.infy.click</strong><br/>
-                et tapez le NPI pour vérifier l'authenticité.
-              </div>
-            </div>
+    <!-- ─── LIGNE DU HAUT : médaille | logo RIVO | badge excellence ─── -->
+    <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:7px;border-bottom:1px solid rgba(201,162,39,.5);margin-bottom:7px">
 
-            <!-- CENTER COLUMN -->
-            <div class="cc">
-              <!-- Logo -->
-              <div class="cc-logo">
-                <div class="cc-logo-icon">R</div>
-                <div class="cc-logo-text">
-                  <div class="name">RIVO</div>
-                  <div class="tagline">LA PLATEFORME QUI TRANSFORME L'APPRENTISSAGE EN OPPORTUNITÉ</div>
-                </div>
-              </div>
+      <!-- Médaille gauche -->
+      <div style="width:70px;height:70px;border-radius:50%;border:3px solid #c9a227;background:linear-gradient(135deg,#0d1117,#1a2744);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:6px;flex-shrink:0;box-shadow:0 0 0 2px rgba(201,162,39,.3)">
+        <div style="font-size:6px;font-weight:800;color:#d4a017;letter-spacing:.04em;line-height:1.3">FORMATEURS<br/>RIVO BÉNIN</div>
+        <div style="color:#d4a017;font-size:8px;margin-top:2px">★★★★★</div>
+        <div style="color:#d4a017;font-size:5px;font-weight:700;margin-top:1px">CERTIFIÉ</div>
+      </div>
 
-              <div class="cc-divider"></div>
+      <!-- Logo RIVO -->
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:34px;height:34px;background:linear-gradient(135deg,#c9a227,#8b6914);border-radius:6px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(201,162,39,.4)">
+          <span style="font-size:16px;font-weight:900;color:#0d1117">R</span>
+        </div>
+        <div>
+          <div style="font-size:20px;font-weight:900;color:#0d1117;letter-spacing:.06em;line-height:1">RIVO</div>
+          <div style="font-size:5.5px;color:#6b7280;font-weight:700;letter-spacing:.06em;line-height:1.3">RÉVÈLE VOTRE POTENTIEL</div>
+          <div style="font-size:4.5px;color:#9ca3af;letter-spacing:.03em">LA PLATEFORME QUI TRANSFORME L'APPRENTISSAGE EN OPPORTUNITÉ</div>
+        </div>
+      </div>
 
-              <div class="cc-title">Attestation</div>
-              <div class="cc-subtitle">— DE FIN DE FORMATION —</div>
+      <!-- Badge excellence droite -->
+      <div style="width:70px;height:70px;border-radius:50%;border:3px solid #c9a227;background:linear-gradient(135deg,#0d1117,#1a2744);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:6px;flex-shrink:0;box-shadow:0 0 0 2px rgba(201,162,39,.3)">
+        <div style="color:#d4a017;font-size:7px;font-weight:900;letter-spacing:.04em">RIVO</div>
+        <div style="color:#d4a017;font-size:5.5px;font-weight:700;line-height:1.3;margin-top:2px">EXCELLENCE<br/>FORMATION</div>
+        <div style="color:#d4a017;font-size:9px;margin-top:3px">★★★★</div>
+      </div>
 
-              <div class="cc-certifie">Nous soussignés, RIVO, organisme de formation professionnelle, certifions que :</div>
+    </div><!-- /ligne haut -->
 
-              <div class="cc-name" id="cert-full-name">Jean Kossi</div>
+    <!-- ─── GRILLE 3 COLONNES ─── -->
+    <div style="display:grid;grid-template-columns:200px 1fr 190px;gap:0;flex:1;min-height:0;overflow:hidden">
 
-              <div class="cc-suivi">a suivi avec succès la formation :</div>
-              <div class="cc-course" id="cert-course-name">MARKETING DIGITAL</div>
-              <div class="cc-satisfait">et a satisfait à l'ensemble des évaluations requises.</div>
+      <!-- ── COLONNE GAUCHE ── -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:7px;padding-right:10px;border-right:1px solid rgba(201,162,39,.4)">
 
-              <div class="cc-divider"></div>
+        <!-- Photo titulaire -->
+        <div style="width:105px;height:105px;border-radius:50%;border:4px solid #c9a227;overflow:hidden;background:#d1d5db;flex-shrink:0;box-shadow:0 2px 10px rgba(201,162,39,.35)">
+          <img id="cert-holder-photo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23d1d5db' width='100' height='100'/%3E%3Ccircle cx='50' cy='38' r='20' fill='%239ca3af'/%3E%3Cellipse cx='50' cy='85' rx='32' ry='24' fill='%239ca3af'/%3E%3C/svg%3E"
+               style="width:100%;height:100%;object-fit:cover;display:block"/>
+        </div>
 
-              <div class="cc-foi">En foi de quoi, la présente attestation lui est délivrée pour servir et valoir ce que de droit.</div>
+        <!-- NPI box -->
+        <div style="border:2px dashed #1d4ed8;padding:7px 8px;text-align:center;width:100%;background:rgba(29,78,216,.06);border-radius:4px">
+          <div style="font-size:8px;font-weight:900;color:#1d4ed8;margin-bottom:3px;letter-spacing:.1em">● NPI ●</div>
+          <div id="cert-npi-text" style="font-size:9px;font-weight:900;color:#0d1117;word-break:break-all;font-family:'Courier New',monospace;letter-spacing:.04em">NPI-</div>
+          <div style="font-size:5.5px;color:#6b7280;margin-top:3px;font-weight:700;letter-spacing:.06em;text-transform:uppercase">Numéro Personnel d'Identification</div>
+        </div>
 
-              <div class="cc-bottom">
-                <div class="cc-bottom-item">
-                  <div class="icon">📅</div>
-                  <div class="bl">DATE DE DÉLIVRANCE</div>
-                  <div class="bv" id="cert-date">—</div>
-                </div>
-                <div class="cc-bottom-item">
-                  <div class="icon">📍</div>
-                  <div class="bl">FAIT À</div>
-                  <div class="bv" id="cert-lieu">Lomé, Togo</div>
-                </div>
-                <div class="cc-bottom-item">
-                  <div class="icon">🎓</div>
-                  <div class="bl">NIVEAU</div>
-                  <div class="bv">Professionnel</div>
-                </div>
-              </div>
-            </div>
+        <!-- Vérification -->
+        <div style="border:1.5px solid #c9a227;padding:6px 8px;width:100%;background:rgba(201,162,39,.05);border-radius:4px">
+          <div style="font-size:6.5px;font-weight:900;color:#c9a227;text-align:center;margin-bottom:5px;letter-spacing:.04em">✅ VÉRIFICATION DE L'AUTHENTICITÉ</div>
+          <div style="font-size:6px;color:#374151;margin-bottom:2.5px;font-weight:600">✓ Nom du titulaire</div>
+          <div style="font-size:6px;color:#374151;margin-bottom:2.5px;font-weight:600">✓ Formation suivie</div>
+          <div style="font-size:6px;color:#374151;margin-bottom:2.5px;font-weight:600">✓ Date de délivrance</div>
+          <div style="font-size:6px;color:#374151;font-weight:600">✓ Statut</div>
+        </div>
 
-            <!-- RIGHT COLUMN -->
-            <div class="cr">
-              <!-- Excellence badge -->
-              <div class="cr-badge">
-                <div style="color:#c9a227;font-size:7.5px;font-weight:800;letter-spacing:.04em">RIVO</div>
-                <div style="color:#c9a227;font-size:6px;font-weight:700;line-height:1.3;margin-top:2px">EXCELLENCE<br/>FORMATION</div>
-                <div style="color:#c9a227;font-size:9px;margin-top:3px">★★★★</div>
-              </div>
+        <!-- QR code -->
+        <div style="background:white;padding:4px;border:1.5px solid #e5e7eb;display:flex;align-items:center;justify-content:center">
+          <div id="cert-qr" style="width:80px;height:80px"></div>
+        </div>
 
-              <!-- Course photo -->
-              <div class="cr-photo">
-                <img id="cert-course-photo" src="" alt="Formation"
-                     style="width:100%;height:100%;object-fit:cover;display:block"/>
-              </div>
+        <!-- URL de vérification -->
+        <div style="font-size:5.5px;color:#374151;text-align:center;line-height:1.55">
+          Pour plus de vérification, veuillez aller<br/>directement sur le site officiel<br/>
+          <strong style="color:#1d4ed8;font-size:5.5px">https://certificatnpi.infy.click</strong><br/>
+          et tapez le NPI pour vérifier l'authenticité.
+        </div>
 
-              <!-- Course label -->
-              <div class="cr-course-label">
-                <div style="font-size:6.5px;font-weight:800;color:#c9a227;letter-spacing:.1em;text-transform:uppercase">FORMATION SUIVIE</div>
-                <div id="cert-course-label" style="font-size:9.5px;font-weight:900;color:#0d1117;margin-top:3px;text-transform:uppercase">MARKETING DIGITAL</div>
-              </div>
+      </div><!-- /colonne gauche -->
 
-              <!-- Signature -->
-              <div class="cr-sig">
-                <div style="font-size:13px;font-family:'Dancing Script',cursive;color:#0d1117;margin-bottom:1px">Martial Gbesso</div>
-                <div style="font-size:6.5px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.04em">LE DIRECTEUR RIVO</div>
-                <div style="margin-top:5px;width:48px;height:48px;border-radius:50%;border:2px solid #c9a227;display:flex;align-items:center;justify-content:center;margin:5px auto 0;background:rgba(201,162,39,.08)">
-                  <div style="font-size:7px;font-weight:900;color:#c9a227;text-align:center;line-height:1.3">RIVO<br/>✦</div>
-                </div>
-              </div>
-            </div>
+      <!-- ── COLONNE CENTRE ── -->
+      <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:4px 14px 0">
 
-          </div><!-- /cert-content -->
+        <!-- Grand titre ATTESTATION -->
+        <div style="font-size:60px;font-weight:700;color:#0d1117;font-family:'Playfair Display',serif;font-style:italic;line-height:.95;margin-bottom:2px;text-shadow:1px 1px 0 rgba(0,0,0,.08)">Attestation</div>
+        <div style="font-size:10.5px;font-weight:900;color:#c9a227;letter-spacing:.22em;margin-bottom:8px">— DE FIN DE FORMATION —</div>
 
-          <!-- Disclaimer footer -->
-          <div class="cert-disclaimer">
-            Cette attestation est un document officiel et sécurisé. Toute falsification, reproduction ou utilisation frauduleuse est passible de poursuites.
+        <!-- Ligne or -->
+        <div style="width:90%;height:1px;background:linear-gradient(90deg,transparent,#c9a227,transparent);margin-bottom:7px"></div>
+
+        <div style="font-size:7.5px;color:#4b5563;font-style:italic;margin-bottom:8px;line-height:1.5">
+          Nous soussignés, RIVO, organisme de formation professionnelle, certifions que :
+        </div>
+
+        <!-- Nom en cursive -->
+        <div id="cert-full-name" style="font-size:40px;font-weight:700;color:#0d1117;font-family:'Dancing Script',cursive;line-height:1.05;margin-bottom:7px;max-width:370px;word-break:break-word">Jean Kossi</div>
+
+        <div style="font-size:8px;color:#4b5563;margin-bottom:3px">a suivi avec succès la formation :</div>
+
+        <div id="cert-course-name" style="font-size:17px;font-weight:900;color:#0d1117;letter-spacing:.05em;text-transform:uppercase;margin-bottom:5px;max-width:350px;line-height:1.2">MARKETING DIGITAL</div>
+
+        <div style="font-size:7.5px;color:#4b5563;margin-bottom:7px">et a satisfait à l'ensemble des évaluations requises.</div>
+
+        <!-- Ligne or -->
+        <div style="width:90%;height:1px;background:linear-gradient(90deg,transparent,#c9a227,transparent);margin-bottom:7px"></div>
+
+        <div style="font-size:7px;color:#4b5563;font-style:italic;line-height:1.65;max-width:320px;margin-bottom:auto">
+          En foi de quoi, la présente attestation lui est délivrée pour servir et valoir ce que de droit.
+        </div>
+
+        <!-- Bas : date / lieu / niveau -->
+        <div style="display:flex;gap:18px;align-items:flex-start;justify-content:center;margin-top:10px">
+          <div style="text-align:center">
+            <div style="font-size:16px;line-height:1;margin-bottom:2px">📅</div>
+            <div style="font-size:5.5px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.09em;margin-bottom:2px">DATE DE DÉLIVRANCE</div>
+            <div id="cert-date" style="font-size:8.5px;font-weight:900;color:#0d1117">—</div>
           </div>
+          <div style="text-align:center">
+            <div style="font-size:16px;line-height:1;margin-bottom:2px">📍</div>
+            <div style="font-size:5.5px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.09em;margin-bottom:2px">FAIT À</div>
+            <div id="cert-lieu" style="font-size:8.5px;font-weight:900;color:#0d1117">Lomé, Togo</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:16px;line-height:1;margin-bottom:2px">🎓</div>
+            <div style="font-size:5.5px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.09em;margin-bottom:2px">NIVEAU</div>
+            <div style="font-size:8.5px;font-weight:900;color:#0d1117">Professionnel</div>
+          </div>
+        </div>
 
-        </div><!-- /#certificate -->
+      </div><!-- /colonne centre -->
+
+      <!-- ── COLONNE DROITE ── -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding-left:10px;border-left:1px solid rgba(201,162,39,.4)">
+
+        <!-- Badge excellence -->
+        <div style="width:72px;height:72px;border-radius:50%;border:3px solid #c9a227;background:linear-gradient(135deg,#0d1117,#1a2744);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:5px;flex-shrink:0;box-shadow:0 0 0 2px rgba(201,162,39,.3)">
+          <div style="color:#d4a017;font-size:7px;font-weight:900;letter-spacing:.04em">RIVO</div>
+          <div style="color:#d4a017;font-size:5.5px;font-weight:700;line-height:1.35;margin-top:2px">EXCELLENCE<br/>FORMATION</div>
+          <div style="color:#d4a017;font-size:9px;margin-top:3px">★★★★</div>
+        </div>
+
+        <!-- Photo de la formation -->
+        <div style="width:100%;height:112px;border-radius:8px;overflow:hidden;border:2px solid #d1d5db;background:#e5e7eb;flex-shrink:0">
+          <img id="cert-course-photo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 112'%3E%3Crect fill='%23e5e7eb' width='180' height='112'/%3E%3Ctext x='90' y='62' text-anchor='middle' fill='%239ca3af' font-size='14' font-family='sans-serif'%3EPhoto formation%3C/text%3E%3C/svg%3E"
+               style="width:100%;height:100%;object-fit:cover;display:block"/>
+        </div>
+
+        <!-- Label formation -->
+        <div style="text-align:center">
+          <div style="font-size:6.5px;font-weight:900;color:#c9a227;letter-spacing:.12em;text-transform:uppercase">FORMATION SUIVIE</div>
+          <div id="cert-course-label" style="font-size:9.5px;font-weight:900;color:#0d1117;margin-top:3px;text-transform:uppercase;line-height:1.3;max-width:160px">MARKETING DIGITAL</div>
+        </div>
+
+        <!-- Signature -->
+        <div style="margin-top:auto;text-align:center;border-top:1.5px solid #c9a227;padding-top:7px;width:100%">
+          <div style="font-size:14px;font-family:'Dancing Script',cursive;color:#0d1117;margin-bottom:1px">Martial Gbesso</div>
+          <div style="font-size:6px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em">LE DIRECTEUR RIVO</div>
+          <!-- Cachet -->
+          <div style="width:52px;height:52px;border-radius:50%;border:2.5px solid #c9a227;margin:5px auto 0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(201,162,39,.08)">
+            <div style="font-size:7px;font-weight:900;color:#c9a227;text-align:center;line-height:1.4">RIVO<br/><span style="font-size:9px">✦</span></div>
+          </div>
+        </div>
+
+      </div><!-- /colonne droite -->
+
+    </div><!-- /grid 3 colonnes -->
+
+    <!-- ─── Pied de page ─── -->
+    <div style="margin-top:7px;padding-top:5px;border-top:1px solid rgba(201,162,39,.5);text-align:center">
+      <div style="font-size:9px;font-weight:900;color:#c9a227;letter-spacing:.22em">COMPÉTENCE ◆ INTÉGRITÉ ◆ EXCELLENCE</div>
+    </div>
+
+  </div><!-- /contenu -->
+
+  <!-- Disclaimer -->
+  <div style="position:absolute;bottom:22px;left:0;right:0;text-align:center;font-size:6px;color:#9ca3af;font-style:italic;font-family:'Montserrat',sans-serif;padding:0 40px">
+    Cette attestation est un document officiel et sécurisé. Toute falsification, reproduction ou utilisation frauduleuse est passible de poursuites.
+  </div>
+
+</div><!-- /#certificate -->
 
       </div><!-- /cert-scale-inner -->
     </div><!-- /cert-scale-wrap -->
@@ -351,267 +357,182 @@ label{display:block;font-size:.75rem;font-weight:700;color:#94a3b8;margin-bottom
 
 </div><!-- /app -->
 
-<!-- Libs -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <script>
-/* ─── Supabase ─────────────────────────────────────── */
 const SB_URL     = 'https://qwdttzsbbspayojzeugy.supabase.co';
 const SB_SERVICE = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3ZHR0enNiYnNwYXlvanpldWd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODk3MTQzNSwiZXhwIjoyMDk0NTQ3NDM1fQ.Qh-1b3NA4wH5Km4W1v-nU0aGagkeIByet2INxccz3tw';
-const sbAdmin = window.supabase.createClient(SB_URL, SB_SERVICE, {
-  auth:{persistSession:false, autoRefreshToken:false, detectSessionInUrl:false}
-});
+const sbAdmin = window.supabase.createClient(SB_URL, SB_SERVICE,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
 const VERIFY_URL = 'https://certificatnpi.infy.click';
 
-/* ─── State ────────────────────────────────────────── */
-let holderPhotoDataUrl  = '';
-let coursePhotoDataUrl  = '';
-let currentNpi          = '';
-let qrInstance          = null;
+let holderDataUrl = '';
+let courseDataUrl = '';
+let currentNpi = '';
+let qrObj = null;
 
-/* ─── Photo upload handler ─────────────────────────── */
-function handlePhotoUpload(input, nameId, thumbId, type){
-  const file = input.files[0];
-  if(!file) return;
-  const nameEl  = document.getElementById(nameId);
-  const thumbEl = document.getElementById(thumbId);
-  nameEl.textContent = file.name.length > 20 ? file.name.slice(0,20)+'…' : file.name;
+function pickPhoto(input, type){
+  const file = input.files[0]; if(!file) return;
+  const isHolder = type==='holder';
+  const nameId  = isHolder ? 'f-photo-name'    : 'f-course-photo-name';
+  const thumbId = isHolder ? 'f-photo-thumb'   : 'f-course-photo-thumb';
+  document.getElementById(nameId).textContent = file.name.length>22?file.name.slice(0,22)+'…':file.name;
   const reader = new FileReader();
-  reader.onload = function(e){
+  reader.onload = e=>{
     const dataUrl = e.target.result;
-    thumbEl.src = dataUrl;
-    thumbEl.style.display = 'block';
-    if(type === 'holder'){
-      holderPhotoDataUrl = dataUrl;
-      document.getElementById('cert-holder-photo').src = dataUrl;
-    } else {
-      coursePhotoDataUrl = dataUrl;
-      document.getElementById('cert-course-photo').src = dataUrl;
-    }
+    const thumb = document.getElementById(thumbId);
+    thumb.src = dataUrl; thumb.style.display='block';
+    if(isHolder){ holderDataUrl=dataUrl; document.getElementById('cert-holder-photo').src=dataUrl; }
+    else        { courseDataUrl=dataUrl; document.getElementById('cert-course-photo').src=dataUrl; }
   };
   reader.readAsDataURL(file);
 }
 
-/* ─── Live update (form → certificate preview) ─────── */
 function liveUpdate(){
-  const prenom = document.getElementById('f-prenom').value.trim();
-  const nom    = document.getElementById('f-nom').value.trim();
-  const course = document.getElementById('f-course').value.trim();
-  const lieu   = document.getElementById('f-lieu').value.trim();
-  document.getElementById('cert-full-name').textContent   = [prenom, nom].filter(Boolean).join(' ') || 'Jean Kossi';
-  document.getElementById('cert-course-name').textContent  = course.toUpperCase() || 'MARKETING DIGITAL';
-  document.getElementById('cert-course-label').textContent = course.toUpperCase() || 'MARKETING DIGITAL';
-  document.getElementById('cert-lieu').textContent         = lieu || 'Lomé, Togo';
+  const p = document.getElementById('f-prenom').value.trim();
+  const n = document.getElementById('f-nom').value.trim();
+  const c = document.getElementById('f-course').value.trim();
+  const l = document.getElementById('f-lieu').value.trim();
+  document.getElementById('cert-full-name').textContent    = [p,n].filter(Boolean).join(' ')||'Jean Kossi';
+  document.getElementById('cert-course-name').textContent  = c.toUpperCase()||'MARKETING DIGITAL';
+  document.getElementById('cert-course-label').textContent = c.toUpperCase()||'MARKETING DIGITAL';
+  document.getElementById('cert-lieu').textContent         = l||'Lomé, Togo';
 }
 
-/* ─── NPI generation ────────────────────────────────── */
 async function generateNpi(){
   const d = new Date();
-  const dateStr = d.getFullYear().toString()
-    + String(d.getMonth()+1).padStart(2,'0')
-    + String(d.getDate()).padStart(2,'0'); // YYYYMMDD = 8 digits
-
-  try {
-    const start = dateStr.slice(0,4)+'-'+dateStr.slice(4,6)+'-'+dateStr.slice(6,8)+'T00:00:00.000Z';
-    const end   = dateStr.slice(0,4)+'-'+dateStr.slice(4,6)+'-'+dateStr.slice(6,8)+'T23:59:59.999Z';
-    const {count} = await sbAdmin.from('npi_attestations')
-      .select('id',{count:'exact',head:true})
-      .gte('issued_at', start).lte('issued_at', end);
-    const seq = String((count||0)+1).padStart(5,'0');
-    return dateStr + seq; // 13 digits total
-  } catch(e){
-    return dateStr + String(Math.floor(Math.random()*99999)+1).padStart(5,'0');
+  const ds = d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
+  try{
+    const s = ds.slice(0,4)+'-'+ds.slice(4,6)+'-'+ds.slice(6,8)+'T00:00:00.000Z';
+    const e = ds.slice(0,4)+'-'+ds.slice(4,6)+'-'+ds.slice(6,8)+'T23:59:59.999Z';
+    const {count} = await sbAdmin.from('npi_attestations').select('id',{count:'exact',head:true}).gte('issued_at',s).lte('issued_at',e);
+    return ds + String((count||0)+1).padStart(5,'0');
+  }catch{
+    return ds + String(Math.floor(Math.random()*99999)+1).padStart(5,'0');
   }
 }
 
-/* ─── QR code generation ─────────────────────────────── */
-function buildQrUrl(npi, prenom, nom, course){
-  const p = new URLSearchParams({npi, fn:prenom, ln:nom, course});
-  return `${VERIFY_URL}/?${p.toString()}`;
-}
-
 function renderQr(url){
-  const container = document.getElementById('cert-qr');
-  container.innerHTML = '';
-  if(qrInstance){ try{ qrInstance.clear(); }catch(e){} }
-  qrInstance = new QRCode(container, {
-    text:       url,
-    width:      80,
-    height:     80,
-    colorDark:  '#000000',
-    colorLight: '#ffffff',
-    correctLevel: QRCode.CorrectLevel.M
-  });
+  const el = document.getElementById('cert-qr');
+  el.innerHTML='';
+  if(qrObj){try{qrObj.clear();}catch(e){}}
+  qrObj = new QRCode(el,{text:url,width:80,height:80,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
 }
 
-/* ─── Cloudinary upload ──────────────────────────────── */
-async function uploadToCloudinary(dataUrl){
+async function uploadCloudinary(dataUrl){
   if(!dataUrl) return null;
   try{
-    const fd = new FormData();
-    fd.append('file', dataUrl);
-    fd.append('upload_preset', 'afrotv_images');
-    const r = await fetch('https://api.cloudinary.com/v1_1/dx0dzt35e/image/upload',{method:'POST',body:fd});
-    const d = await r.json();
-    return d.secure_url || null;
-  } catch(e){ return null; }
+    const fd=new FormData();
+    fd.append('file',dataUrl); fd.append('upload_preset','afrotv_images');
+    const r=await fetch('https://api.cloudinary.com/v1_1/dx0dzt35e/image/upload',{method:'POST',body:fd});
+    return (await r.json()).secure_url||null;
+  }catch{return null;}
 }
 
-/* ─── Status helpers ─────────────────────────────────── */
 function setStatus(msg, loading=false){
-  const el = document.getElementById('status-msg');
-  if(!msg){ el.style.display='none'; el.innerHTML=''; return; }
-  el.style.display = 'block';
-  el.innerHTML = loading
-    ? `<span style="display:inline-block;width:.8rem;height:.8rem;border:2.5px solid rgba(96,165,250,.3);border-top-color:#60a5fa;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:.35rem"></span>${msg}`
-    : msg;
+  const el=document.getElementById('status');
+  if(!msg){el.style.display='none';el.innerHTML='';return;}
+  el.style.display='block';
+  el.innerHTML=loading?`<span class="spin"></span>${msg}`:msg;
 }
 
-/* ─── GÉNÉRER ─────────────────────────────────────────── */
 async function generer(){
-  const prenom = document.getElementById('f-prenom').value.trim();
-  const nom    = document.getElementById('f-nom').value.trim();
-  const course = document.getElementById('f-course').value.trim();
-  const lieu   = document.getElementById('f-lieu').value.trim();
+  const prenom=document.getElementById('f-prenom').value.trim();
+  const nom   =document.getElementById('f-nom').value.trim();
+  const course=document.getElementById('f-course').value.trim();
+  const lieu  =document.getElementById('f-lieu').value.trim();
+  if(!prenom){alert('Veuillez renseigner le prénom.');return;}
+  if(!nom)   {alert('Veuillez renseigner le nom.');return;}
+  if(!course){alert('Veuillez renseigner la formation.');return;}
+  if(!lieu)  {alert('Veuillez renseigner le lieu.');return;}
 
-  if(!prenom){ alert('Veuillez renseigner le prénom.'); return; }
-  if(!nom)   { alert('Veuillez renseigner le nom.'); return; }
-  if(!course){ alert('Veuillez renseigner le nom de la formation.'); return; }
-  if(!lieu)  { alert('Veuillez renseigner le lieu de délivrance.'); return; }
+  const btn=document.getElementById('btn-gen');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span>Génération…';
+  document.getElementById('btn-dl').style.display='none';
+  document.getElementById('npi-box').style.display='none';
+  setStatus('Génération du NPI…',true);
 
-  const btn = document.getElementById('btn-gen');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spin"></span> Génération…';
-  document.getElementById('btn-dl').style.display = 'none';
-  document.getElementById('npi-result').style.display = 'none';
-  setStatus('Génération du NPI…', true);
-
-  // 1. Générer NPI
   const npi = await generateNpi();
   currentNpi = npi;
-  const npiDisplay = 'NPI-' + npi;
+  const npiDisp = 'NPI-'+npi;
 
-  setStatus('Téléversement des photos…', true);
-
-  // 2. Uploader photos (en parallèle, non bloquant)
+  setStatus('Téléversement photos…',true);
   const [holderUrl, courseUrl] = await Promise.all([
-    uploadToCloudinary(holderPhotoDataUrl),
-    uploadToCloudinary(coursePhotoDataUrl)
+    uploadCloudinary(holderDataUrl),
+    uploadCloudinary(courseDataUrl)
   ]);
 
-  setStatus('Enregistrement dans la base…', true);
-
-  // 3. Sauvegarder dans npi_attestations
+  setStatus('Enregistrement…',true);
   await sbAdmin.from('npi_attestations').insert({
-    npi_code:          npi,
-    holder_first_name: prenom,
-    holder_last_name:  nom,
-    course_title:      course,
-    holder_photo_url:  holderUrl,
-    course_photo_url:  courseUrl,
-    location:          lieu,
-    issued_at:         new Date().toISOString()
+    npi_code:npi, holder_first_name:prenom, holder_last_name:nom,
+    course_title:course, holder_photo_url:holderUrl, course_photo_url:courseUrl,
+    location:lieu, issued_at:new Date().toISOString()
   });
 
-  setStatus('');
-
-  // 4. Mise à jour du certificat
+  // Mise à jour du certificat
   const dateStr = new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
-  document.getElementById('cert-full-name').textContent    = prenom + ' ' + nom;
+  document.getElementById('cert-full-name').textContent    = prenom+' '+nom;
   document.getElementById('cert-course-name').textContent  = course.toUpperCase();
   document.getElementById('cert-course-label').textContent = course.toUpperCase();
   document.getElementById('cert-lieu').textContent         = lieu;
   document.getElementById('cert-date').textContent         = dateStr;
-  document.getElementById('cert-npi-text').textContent     = npiDisplay;
-  if(holderPhotoDataUrl) document.getElementById('cert-holder-photo').src = holderPhotoDataUrl;
-  if(coursePhotoDataUrl) document.getElementById('cert-course-photo').src = coursePhotoDataUrl;
+  document.getElementById('cert-npi-text').textContent     = npiDisp;
+  if(holderDataUrl) document.getElementById('cert-holder-photo').src=holderDataUrl;
+  if(courseDataUrl) document.getElementById('cert-course-photo').src=courseDataUrl;
 
-  // 5. Générer le QR code
-  const qrUrl = buildQrUrl(npi, prenom, nom, course);
+  // QR vers la page de vérification
+  const qrUrl = VERIFY_URL+'/?'+new URLSearchParams({npi,fn:prenom,ln:nom,course}).toString();
   renderQr(qrUrl);
 
-  // 6. Afficher NPI result
-  document.getElementById('npi-display').textContent = npiDisplay;
-  document.getElementById('npi-result').style.display = 'block';
-  document.getElementById('btn-dl').style.display = 'flex';
-
-  btn.disabled = false;
-  btn.innerHTML = '🎓 Générer l\'attestation';
+  document.getElementById('npi-val').textContent = npiDisp;
+  document.getElementById('npi-box').style.display='block';
+  document.getElementById('btn-dl').style.display='flex';
+  btn.disabled=false; btn.innerHTML='🎓 Générer l\'attestation';
   setStatus('✅ Attestation générée et enregistrée !');
-  setTimeout(()=>setStatus(''), 3500);
-
-  // 7. Ajuster la mise à l'échelle après rendu
-  scaleCert();
+  setTimeout(()=>setStatus(''),3500);
 }
 
-/* ─── TÉLÉCHARGER ─────────────────────────────────────── */
 async function telecharger(){
-  const btn = document.getElementById('btn-dl');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spin"></span> Export en cours…';
-  setStatus('Génération du PNG haute résolution…', true);
-
+  const btn=document.getElementById('btn-dl');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span>Export…';
+  setStatus('Export PNG haute résolution…',true);
   try{
-    // Désactiver le scale pendant la capture
-    const scaleEl = document.getElementById('cert-scale-inner');
-    const oldTransform = scaleEl.style.transform;
-    scaleEl.style.transform = 'none';
-
-    const canvas = await html2canvas(document.getElementById('certificate'),{
-      scale:          2,
-      useCORS:        true,
-      allowTaint:     false,
-      backgroundColor:'#faf5eb',
-      logging:        false
-    });
-
-    scaleEl.style.transform = oldTransform;
-
-    const link = document.createElement('a');
-    link.download = 'Attestation-RIVO-' + currentNpi + '.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
+    const si=document.getElementById('cert-scale-inner');
+    const old=si.style.transform; si.style.transform='none';
+    const canvas=await html2canvas(document.getElementById('certificate'),{scale:2,useCORS:true,allowTaint:false,backgroundColor:'#faf5eb',logging:false});
+    si.style.transform=old;
+    const a=document.createElement('a');
+    a.download='Attestation-RIVO-'+currentNpi+'.png';
+    a.href=canvas.toDataURL('image/png'); a.click();
     setStatus('');
-  }catch(e){
-    setStatus('❌ Erreur lors de l\'export : ' + e.message);
-  }
-
-  btn.disabled = false;
-  btn.innerHTML = '📥 Télécharger en PNG';
+  }catch(e){ setStatus('❌ '+e.message); }
+  btn.disabled=false; btn.innerHTML='📥 Télécharger PNG';
 }
 
-/* ─── Copier NPI ─────────────────────────────────────── */
 function copyNpi(){
-  const val = document.getElementById('npi-display').textContent;
-  navigator.clipboard.writeText(val).then(()=>{
-    const btn = event.currentTarget;
-    const old = btn.textContent;
-    btn.textContent = '✅ Copié !';
-    setTimeout(()=>{ btn.textContent = old; }, 1800);
-  }).catch(()=> alert('NPI : ' + val));
+  const v=document.getElementById('npi-val').textContent;
+  navigator.clipboard.writeText(v).then(()=>{
+    const b=event.currentTarget; const o=b.textContent;
+    b.textContent='✅ Copié !'; setTimeout(()=>b.textContent=o,1800);
+  }).catch(()=>alert('NPI : '+v));
 }
 
-/* ─── Scale du certificat selon l'écran ─────────────── */
 function scaleCert(){
-  const main  = document.querySelector('.main');
-  const inner = document.getElementById('cert-scale-inner');
+  const main=document.querySelector('.main');
+  const inner=document.getElementById('cert-scale-inner');
   if(!main||!inner) return;
-  const available = main.clientWidth - 48; // 2×24px padding
-  const certW = 1050;
-  const scale = Math.min(1, available / certW);
-  inner.style.transform = `scale(${scale})`;
-  inner.style.width     = certW + 'px';
-  inner.style.height    = (742 * scale) + 'px'; // ajuster hauteur wrapper
+  const avail=main.clientWidth-48;
+  const s=Math.min(1, avail/1050);
+  inner.style.transform=`scale(${s})`;
+  inner.style.width='1050px';
+  // Ajuster la hauteur du wrapper pour qu'il n'y ait pas d'espace vide
+  inner.parentElement.style.height=Math.round(742*s)+'px';
 }
 
-window.addEventListener('resize', scaleCert);
-window.addEventListener('load', ()=>{ scaleCert(); liveUpdate(); });
-
-/* Init date sur le certificat */
-document.getElementById('cert-date').textContent =
-  new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
+window.addEventListener('resize',scaleCert);
+window.addEventListener('load',()=>{ scaleCert(); liveUpdate(); });
+document.getElementById('cert-date').textContent=new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
 </script>
 </body>
 </html>
