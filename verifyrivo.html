@@ -9,15 +9,15 @@
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f8fafc;color:#1F2937;min-height:100vh}
-  .container{max-width:520px;margin:0 auto;padding:1.5rem 1.25rem 3rem}
+  .container{max-width:540px;margin:0 auto;padding:1.5rem 1.25rem 3rem}
 
   /* Header */
   .header{text-align:center;padding:2.5rem 0 2rem}
   .logo-wrap{display:inline-flex;align-items:center;gap:.625rem;margin-bottom:.875rem}
-  .logo-icon{width:2.75rem;height:2.75rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);border-radius:.875rem;display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:1.1rem;letter-spacing:-.5px;box-shadow:0 4px 14px rgba(37,99,235,.35)}
+  .logo-icon{width:2.75rem;height:2.75rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);border-radius:.875rem;display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:1.1rem;box-shadow:0 4px 14px rgba(37,99,235,.35)}
   .logo-name{font-size:1.6rem;font-weight:900;color:#1F2937}
   .logo-name span{color:#2563EB}
-  .slogan{font-size:.95rem;color:#6b7280;line-height:1.55;max-width:360px;margin:0 auto}
+  .slogan{font-size:.95rem;color:#6b7280;line-height:1.55;max-width:380px;margin:0 auto}
   .slogan strong{color:#2563EB}
 
   /* Cards */
@@ -39,26 +39,30 @@
   .btn-primary{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:.875rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);color:white;border:none;border-radius:.875rem;font-size:.95rem;font-weight:700;cursor:pointer;transition:opacity .2s;box-shadow:0 4px 14px rgba(37,99,235,.3)}
   .btn-primary:hover{opacity:.9}
   .btn-primary:disabled{opacity:.6;cursor:not-allowed}
-  .btn-scan{display:flex;align-items:center;justify-content:center;gap:.625rem;width:100%;padding:1.1rem;background:white;color:#2563EB;border:2px solid #2563EB;border-radius:.875rem;font-size:.95rem;font-weight:700;cursor:pointer;transition:all .2s}
-  .btn-scan:hover{background:#eff6ff}
+  .btn-outline{display:flex;align-items:center;justify-content:center;gap:.5rem;padding:.75rem 1.25rem;background:white;color:#2563EB;border:2px solid #2563EB;border-radius:.875rem;font-size:.88rem;font-weight:700;cursor:pointer;transition:all .2s;flex:1}
+  .btn-outline:hover{background:#eff6ff}
 
   /* QR Scanner */
   #scanner-wrap{display:none;margin-top:1rem;border-radius:1rem;overflow:hidden;position:relative;background:#000;aspect-ratio:1/1}
   #scanner-video{width:100%;height:100%;object-fit:cover;display:block}
   .scanner-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
-  .scanner-frame{width:65%;height:65%;border:3px solid #2563EB;border-radius:.75rem;box-shadow:0 0 0 9999px rgba(0,0,0,.45)}
-  .scanner-line{position:absolute;left:17.5%;right:17.5%;height:2px;background:linear-gradient(90deg,transparent,#2563EB,transparent);animation:scan 2s linear infinite}
-  @keyframes scan{0%{top:17.5%}100%{top:82.5%}}
-  .btn-stop{position:absolute;top:.75rem;right:.75rem;background:rgba(0,0,0,.6);color:white;border:none;border-radius:.5rem;padding:.35rem .75rem;font-size:.8rem;cursor:pointer;font-weight:600}
+  .scanner-frame{width:62%;height:62%;border:3px solid #2563EB;border-radius:.75rem;box-shadow:0 0 0 9999px rgba(0,0,0,.5)}
+  .scanner-line{position:absolute;left:19%;right:19%;height:2px;background:linear-gradient(90deg,transparent,#2563EB,transparent);animation:scan 2s linear infinite}
+  @keyframes scan{0%{top:19%}100%{top:81%}}
+  .btn-stop{position:absolute;top:.75rem;right:.75rem;background:rgba(0,0,0,.65);color:white;border:none;border-radius:.5rem;padding:.35rem .75rem;font-size:.8rem;cursor:pointer;font-weight:600}
+
+  /* Upload zone */
+  .upload-zone{border:2px dashed #bfdbfe;border-radius:1rem;padding:1.5rem;text-align:center;cursor:pointer;transition:all .2s;margin-top:.75rem}
+  .upload-zone:hover{border-color:#2563EB;background:#eff6ff}
+  #upload-preview{display:none;margin-top:.75rem;border-radius:.75rem;max-width:100%;border:2px solid #e5e7eb}
 
   /* Spinner */
   .spin{display:inline-block;width:1rem;height:1rem;border:2.5px solid rgba(255,255,255,.4);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
 
-  /* Result */
+  /* Result — Valid */
   #result{display:none;margin-top:1.25rem}
   .result-valid{background:linear-gradient(135deg,#eff6ff,#dbeafe);border:2px solid #2563EB;border-radius:1.25rem;padding:2rem;text-align:center}
-  .result-error{background:#fff5f5;border:2px solid #fca5a5;border-radius:1.25rem;padding:2rem;text-align:center}
   .result-photo{width:5.5rem;height:5.5rem;border-radius:9999px;object-fit:cover;border:3px solid #2563EB;margin:0 auto 1rem;display:block}
   .result-avatar{width:5.5rem;height:5.5rem;border-radius:9999px;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;color:white;font-size:2rem;font-weight:900;margin:0 auto 1rem}
   .badge-verify{display:inline-flex;align-items:center;gap:.4rem;background:#2563EB;color:white;font-size:.78rem;font-weight:700;padding:.35rem 1rem;border-radius:9999px;margin-bottom:1rem;letter-spacing:.02em}
@@ -69,6 +73,18 @@
   .result-meta-label{color:#6b7280;font-weight:600}
   .result-meta-value{color:#1e40af;font-weight:700}
   .authentic-msg{font-size:.82rem;color:#1d4ed8;margin-top:.875rem;font-style:italic}
+
+  /* Result — Not found */
+  .result-notfound{background:#fff5f5;border:2px solid #fca5a5;border-radius:1.25rem;padding:2rem;text-align:center}
+
+  /* Result — FALSIFIÉ */
+  .result-fake{background:#0f0f0f;border:2px solid #dc2626;border-radius:1.25rem;padding:2rem;text-align:center}
+  .fake-title{font-size:1.4rem;font-weight:900;color:#ef4444;margin-bottom:.875rem;letter-spacing:.03em}
+  .fake-body{color:#f9fafb;font-size:.9rem;line-height:1.7;margin-bottom:1.25rem}
+  .fake-list{list-style:none;padding:0;text-align:left;margin:.625rem 0;display:inline-block}
+  .fake-list li{color:#fca5a5;font-size:.88rem;margin-bottom:.35rem;font-weight:600}
+  .fake-wa{display:inline-flex;align-items:center;gap:.5rem;background:#25d366;color:white;border:none;border-radius:.875rem;padding:.75rem 1.5rem;font-size:.9rem;font-weight:700;cursor:pointer;margin-top:.75rem;text-decoration:none}
+  .reward{color:#fbbf24;font-weight:800;font-size:.95rem;margin-top:.875rem}
 
   /* Footer */
   .footer{text-align:center;padding:2rem 0 1rem;font-size:.8rem;color:#9ca3af}
@@ -91,11 +107,24 @@
   <!-- Option 1 : Scanner QR -->
   <div class="card">
     <div class="card-title">📷 Scanner le certificat</div>
-    <p style="font-size:.85rem;color:#6b7280;margin-bottom:1rem">Pointez votre caméra sur le QR code imprimé sur l'attestation.</p>
-    <button class="btn-scan" id="btn-scan-open" onclick="startScanner()">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 012-2h2m10 0h2a2 2 0 012 2v2M3 17v2a2 2 0 002 2h2m10 0h2a2 2 0 002-2v-2M8 8h8v8H8z"/></svg>
-      Scanner le QR Code
-    </button>
+    <p style="font-size:.85rem;color:#6b7280;margin-bottom:1rem">Utilisez la caméra ou importez une photo de l'attestation.</p>
+
+    <!-- Boutons caméra + upload -->
+    <div style="display:flex;gap:.75rem;flex-wrap:wrap">
+      <button class="btn-outline" id="btn-scan-open" onclick="startScanner()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 012-2h2m10 0h2a2 2 0 012 2v2M3 17v2a2 2 0 002 2h2m10 0h2a2 2 0 002-2v-2M8 8h8v8H8z"/></svg>
+        Caméra
+      </button>
+      <button class="btn-outline" onclick="document.getElementById('qr-upload-input').click()">
+        🖼️ Importer une image
+      </button>
+      <input type="file" id="qr-upload-input" accept="image/*" style="display:none" onchange="handleQrUpload(this)"/>
+    </div>
+
+    <!-- Aperçu image uploadée -->
+    <img id="upload-preview" alt="Aperçu attestation"/>
+
+    <!-- Viewfinder caméra -->
     <div id="scanner-wrap">
       <video id="scanner-video" autoplay playsinline muted></video>
       <canvas id="scanner-canvas" style="display:none"></canvas>
@@ -105,7 +134,8 @@
       </div>
       <button class="btn-stop" onclick="stopScanner()">✕ Fermer</button>
     </div>
-    <p id="scan-status" style="display:none;font-size:.8rem;color:#2563EB;font-weight:600;margin-top:.75rem;text-align:center"></p>
+
+    <p id="scan-status" style="display:none;font-size:.82rem;color:#2563EB;font-weight:600;margin-top:.75rem;text-align:center"></p>
   </div>
 
   <div class="divider">ou vérification manuelle</div>
@@ -124,8 +154,8 @@
       </div>
     </div>
     <div class="input-row">
-      <label for="v-email">Adresse e-mail *</label>
-      <input id="v-email" type="email" class="input" placeholder="jean.dupont@email.com"/>
+      <label for="v-course">Nom de la formation *</label>
+      <input id="v-course" type="text" class="input" placeholder="Ex : Excel pour débutants"/>
     </div>
     <div class="input-row">
       <label for="v-npi">Code NPI (13 chiffres) *</label>
@@ -143,14 +173,13 @@
 
 </div>
 
-<!-- Footer -->
 <div class="footer">
   Propulsé par <a href="index.php" target="_blank">RIVO</a> &nbsp;·&nbsp; © 2025 Tous droits réservés
 </div>
 
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<!-- jsQR (QR decoder) -->
+<!-- jsQR -->
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 
 <script>
@@ -161,24 +190,16 @@ const sb = window.supabase.createClient(SB_URL, SB_ANON);
 let scanStream = null;
 let scanLoop   = null;
 
-/* ── Helpers ── */
+/* ─── Helpers ─────────────────────────────────────── */
 function fmtDate(iso){
   if(!iso) return '—';
   return new Date(iso).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
 }
+function norm(s){ return (s||'').toLowerCase().trim(); }
+function fuzzy(a,b){ return a===b || a.includes(b) || b.includes(a); }
 
-function showError(msg, sub){
-  const r = document.getElementById('result');
-  r.style.display = 'block';
-  r.innerHTML = `<div class="result-error">
-    <div style="font-size:3rem;margin-bottom:.75rem">❌</div>
-    <p style="font-weight:900;color:#dc2626;font-size:1.1rem;margin-bottom:.5rem">${msg}</p>
-    <p style="color:#9b1c1c;font-size:.85rem">${sub}</p>
-  </div>`;
-  r.scrollIntoView({behavior:'smooth', block:'nearest'});
-}
-
-function showSuccess(data){
+/* ─── Affichage résultats ──────────────────────────── */
+function showValid(data){
   const p   = data.profiles;
   const c   = data.courses;
   const nom = ((p?.first_name||'') + ' ' + (p?.last_name||'')).trim() || '—';
@@ -187,17 +208,17 @@ function showSuccess(data){
     : `<div class="result-avatar">${nom[0]||'?'}</div>`;
 
   const r = document.getElementById('result');
-  r.style.display = 'block';
+  r.style.display='block';
   r.innerHTML = `<div class="result-valid">
     ${photoHtml}
     <div class="badge-verify">✅ &nbsp;ATTESTATION VÉRIFIÉE</div>
     <div class="result-name">${nom}</div>
-    <div class="result-course">📚 ${c?.title || '—'}</div>
+    <div class="result-course">📚 ${c?.title||'—'}</div>
     <p style="font-size:.88rem;color:#1e40af;font-weight:700;margin-top:.25rem">Délivrée par <span style="color:#2563EB">RIVO</span></p>
     <div class="result-meta">
       <div class="result-meta-row">
         <span class="result-meta-label">🔢 Code NPI</span>
-        <span class="result-meta-value">${data.npi_code || '—'}</span>
+        <span class="result-meta-value">${data.npi_code||'—'}</span>
       </div>
       <div class="result-meta-row">
         <span class="result-meta-label">📅 Date de délivrance</span>
@@ -206,151 +227,218 @@ function showSuccess(data){
     </div>
     <p class="authentic-msg">🛡️ Cette attestation est <strong>AUTHENTIQUE</strong> et a été délivrée officiellement par RIVO.</p>
   </div>`;
-  r.scrollIntoView({behavior:'smooth', block:'nearest'});
+  r.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
-/* ── Vérification par NPI ── */
-async function verifyByNpi(npi){
+function showNotFound(){
+  const r = document.getElementById('result');
+  r.style.display='block';
+  r.innerHTML = `<div class="result-notfound">
+    <div style="font-size:3rem;margin-bottom:.75rem">❌</div>
+    <p style="font-weight:900;color:#dc2626;font-size:1.1rem;margin-bottom:.5rem">Aucune attestation trouvée</p>
+    <p style="color:#9b1c1c;font-size:.85rem">Veuillez vérifier vos informations et réessayer.</p>
+  </div>`;
+  r.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function showFake(){
+  const r = document.getElementById('result');
+  r.style.display='block';
+  r.innerHTML = `<div class="result-fake">
+    <div style="font-size:3.5rem;margin-bottom:.5rem">🚨</div>
+    <div class="fake-title">DOCUMENT FALSIFIÉ</div>
+    <p class="fake-body">
+      Ce document <strong style="color:#ef4444">ne correspond à aucune attestation valide</strong>
+      dans notre base de données. Il s'agit d'un document frauduleux.
+    </p>
+    <div style="background:rgba(220,38,38,.15);border:1px solid #dc2626;border-radius:.875rem;padding:1rem;margin-bottom:1rem">
+      <p style="color:#fca5a5;font-weight:800;font-size:.88rem;margin-bottom:.5rem">⛔ SI CETTE PERSONNE EST AVEC VOUS :</p>
+      <ul class="fake-list">
+        <li>🚔 Arrêtez-la immédiatement</li>
+        <li>👮 Conduisez-la à la police</li>
+        <li>📞 Appelez-nous via WhatsApp</li>
+      </ul>
+    </div>
+    <a href="https://wa.me/22945916177" target="_blank" class="fake-wa">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Signaler au +229 45 91 61 77
+    </a>
+    <p class="reward">🏆 Vous serez récompensé !</p>
+  </div>`;
+  r.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+/* ─── Vérification principale ──────────────────────── */
+async function verifyByNpiAndName(npi, prenom='', nom='', formation=''){
   const {data, error} = await sb.from('certificates')
-    .select('*,courses(title),profiles(first_name,last_name,email)')
-    .eq('npi_code', npi.trim())
+    .select('*,courses(title),profiles(first_name,last_name)')
+    .eq('npi_code', npi)
     .maybeSingle();
-  if(error || !data){
-    showError('Aucune attestation trouvée', 'Veuillez vérifier vos informations.');
-    return null;
-  }
-  return data;
-}
 
-/* ── Vérification manuelle ── */
-async function verifyManual(){
-  const prenom = document.getElementById('v-prenom').value.trim();
-  const nom    = document.getElementById('v-nom').value.trim();
-  const email  = document.getElementById('v-email').value.trim().toLowerCase();
-  const npi    = document.getElementById('v-npi').value.trim();
+  if(error || !data){ showNotFound(); return; }
 
-  if(!prenom || !nom)   { alert('Veuillez renseigner votre prénom et nom.'); return; }
-  if(!email)            { alert('Veuillez renseigner votre adresse e-mail.'); return; }
-  if(npi.length !== 13) { alert('Le code NPI doit contenir exactement 13 chiffres.'); return; }
+  // Si infos fournies (scan ou formulaire), vérifier contre DB
+  if(prenom || nom || formation){
+    const dbFirst   = norm(data.profiles?.first_name);
+    const dbLast    = norm(data.profiles?.last_name);
+    const dbCourse  = norm(data.courses?.title);
 
-  const btn = document.getElementById('btn-verify');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spin"></span> Vérification en cours…';
-  document.getElementById('result').style.display = 'none';
+    const firstOk   = !prenom   || fuzzy(dbFirst,  norm(prenom));
+    const lastOk    = !nom      || fuzzy(dbLast,   norm(nom));
+    const courseOk  = !formation|| fuzzy(dbCourse, norm(formation));
 
-  try {
-    const data = await verifyByNpi(npi);
-    if(!data){ return; }
-
-    const p = data.profiles;
-    const pFirst = (p?.first_name||'').toLowerCase();
-    const pLast  = (p?.last_name||'').toLowerCase();
-    const pEmail = (p?.email||'').toLowerCase();
-
-    const firstOk = pFirst.includes(prenom.toLowerCase()) || prenom.toLowerCase().includes(pFirst);
-    const lastOk  = pLast.includes(nom.toLowerCase())   || nom.toLowerCase().includes(pLast);
-    const emailOk = pEmail === email;
-
-    if(!firstOk || !lastOk || !emailOk){
-      showError('Informations incorrectes', 'Les informations saisies ne correspondent pas à cette attestation.');
-      return;
+    if(!firstOk || !lastOk || !courseOk){
+      showFake(); return;
     }
-    showSuccess(data);
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = '🔍 Vérifier l\'attestation';
   }
+  showValid(data);
 }
 
-/* ── QR Scanner ── */
-async function startScanner(){
-  const wrap  = document.getElementById('scanner-wrap');
-  const video = document.getElementById('scanner-video');
-  const status = document.getElementById('scan-status');
-  document.getElementById('result').style.display = 'none';
+/* ─── Formulaire manuel ────────────────────────────── */
+async function verifyManual(){
+  const prenom  = document.getElementById('v-prenom').value.trim();
+  const nom     = document.getElementById('v-nom').value.trim();
+  const course  = document.getElementById('v-course').value.trim();
+  const npi     = document.getElementById('v-npi').value.trim();
 
-  try {
-    scanStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment' }
-    });
-    video.srcObject = scanStream;
-    await video.play();
-    wrap.style.display = 'block';
-    document.getElementById('btn-scan-open').style.display = 'none';
-    status.style.display = 'block';
-    status.textContent = '🔍 Pointez le QR code sur l\'attestation…';
-    scanLoop = requestAnimationFrame(scanFrame);
-  } catch(e) {
-    alert('Impossible d\'accéder à la caméra. Vérifiez les permissions.');
+  if(!prenom||!nom)  { alert('Veuillez renseigner prénom et nom.'); return; }
+  if(!course)        { alert('Veuillez renseigner le nom de la formation.'); return; }
+  if(npi.length!==13){ alert('Le code NPI doit contenir exactement 13 chiffres.'); return; }
+
+  const btn=document.getElementById('btn-verify');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> Vérification…';
+  document.getElementById('result').style.display='none';
+  try{ await verifyByNpiAndName(npi, prenom, nom, course); }
+  finally{ btn.disabled=false; btn.innerHTML='🔍 Vérifier l\'attestation'; }
+}
+
+/* ─── Parser le contenu QR ─────────────────────────── */
+async function handleQrResult(raw){
+  setScanStatus('⏳ Vérification en cours…');
+  document.getElementById('result').style.display='none';
+
+  let prenom='', nom='', formation='', npi='';
+  const parts = raw.trim().split('|');
+
+  if(parts.length>=4 && /^\d{13}$/.test(parts[3])){
+    // PRENOM|NOM|FORMATION|NPI
+    prenom=parts[0]; nom=parts[1]; formation=parts[2]; npi=parts[3];
+  } else if(parts.length>=3 && /^\d{13}$/.test(parts[2])){
+    // PRENOM|NOM|NPI (sans formation)
+    prenom=parts[0]; nom=parts[1]; npi=parts[2];
+  } else if(/^\d{13}$/.test(raw.trim())){
+    // NPI seul
+    npi=raw.trim();
+  } else {
+    // Essai URL
+    try{
+      const u=new URL(raw);
+      npi       = u.searchParams.get('npi')    ||'';
+      prenom    = u.searchParams.get('fn')     ||'';
+      nom       = u.searchParams.get('ln')     ||'';
+      formation = u.searchParams.get('course') ||'';
+    }catch(e){}
+    // Fallback : chercher 13 chiffres dans le texte
+    if(!npi){ const m=raw.match(/\b(\d{13})\b/); if(m) npi=m[1]; }
   }
+
+  if(!npi||npi.length!==13){
+    setScanStatus('');
+    showNotFound();
+    return;
+  }
+  await verifyByNpiAndName(npi, prenom, nom, formation);
+  setScanStatus('');
+}
+
+function setScanStatus(msg){
+  const el=document.getElementById('scan-status');
+  el.textContent=msg; el.style.display=msg?'block':'none';
+}
+
+/* ─── Caméra (scan live) ───────────────────────────── */
+async function startScanner(){
+  const wrap=document.getElementById('scanner-wrap');
+  const video=document.getElementById('scanner-video');
+  document.getElementById('result').style.display='none';
+  try{
+    scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    video.srcObject=scanStream;
+    await video.play();
+    wrap.style.display='block';
+    document.getElementById('btn-scan-open').style.display='none';
+    setScanStatus('🔍 Pointez le QR code sur l\'attestation…');
+    scanLoop=requestAnimationFrame(scanFrame);
+  }catch(e){ alert('Impossible d\'accéder à la caméra. Vérifiez les permissions.'); }
 }
 
 function stopScanner(){
   if(scanLoop) cancelAnimationFrame(scanLoop);
-  if(scanStream) scanStream.getTracks().forEach(t => t.stop());
-  scanStream = null; scanLoop = null;
-  document.getElementById('scanner-wrap').style.display = 'none';
-  document.getElementById('btn-scan-open').style.display = 'flex';
-  document.getElementById('scan-status').style.display = 'none';
+  if(scanStream) scanStream.getTracks().forEach(t=>t.stop());
+  scanStream=null; scanLoop=null;
+  document.getElementById('scanner-wrap').style.display='none';
+  document.getElementById('btn-scan-open').style.display='flex';
+  setScanStatus('');
 }
 
 function scanFrame(){
-  const video  = document.getElementById('scanner-video');
-  const canvas = document.getElementById('scanner-canvas');
-  if(video.readyState !== video.HAVE_ENOUGH_DATA){ scanLoop = requestAnimationFrame(scanFrame); return; }
-
-  canvas.width  = video.videoWidth;
-  canvas.height = video.videoHeight;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const code = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts:'dontInvert' });
-
-  if(code){
-    stopScanner();
-    handleQrResult(code.data);
-  } else {
-    scanLoop = requestAnimationFrame(scanFrame);
-  }
+  const video=document.getElementById('scanner-video');
+  const canvas=document.getElementById('scanner-canvas');
+  if(video.readyState!==video.HAVE_ENOUGH_DATA){scanLoop=requestAnimationFrame(scanFrame);return;}
+  canvas.width=video.videoWidth; canvas.height=video.videoHeight;
+  const ctx=canvas.getContext('2d');
+  ctx.drawImage(video,0,0,canvas.width,canvas.height);
+  const img=ctx.getImageData(0,0,canvas.width,canvas.height);
+  const code=jsQR(img.data,img.width,img.height,{inversionAttempts:'dontInvert'});
+  if(code){ stopScanner(); handleQrResult(code.data); }
+  else{ scanLoop=requestAnimationFrame(scanFrame); }
 }
 
-async function handleQrResult(raw){
-  const status = document.getElementById('scan-status');
-  status.style.display = 'block';
-  status.textContent = '⏳ Vérification…';
-
-  // Extraire le NPI : 13 chiffres bruts ou paramètre ?npi= dans une URL
-  let npi = null;
-  if(/^\d{13}$/.test(raw.trim())){
-    npi = raw.trim();
-  } else {
-    try {
-      const u = new URL(raw);
-      npi = u.searchParams.get('npi');
-    } catch(e){}
-    if(!npi){
-      const m = raw.match(/\b(\d{13})\b/);
-      if(m) npi = m[1];
-    }
-  }
-
-  if(!npi){
-    status.style.display = 'none';
-    showError('QR Code non reconnu', 'Ce QR code ne semble pas provenir d\'une attestation RIVO.');
-    return;
-  }
-
-  const data = await verifyByNpi(npi);
-  status.style.display = 'none';
-  if(data) showSuccess(data);
+/* ─── Upload image QR ──────────────────────────────── */
+function handleQrUpload(input){
+  const file=input.files[0]; if(!file) return;
+  const prev=document.getElementById('upload-preview');
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const img=new Image();
+    img.onload=function(){
+      // Afficher aperçu
+      prev.src=e.target.result; prev.style.display='block';
+      // Décoder QR
+      const canvas=document.createElement('canvas');
+      canvas.width=img.width; canvas.height=img.height;
+      const ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0);
+      const imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
+      const code=jsQR(imgData.data,imgData.width,imgData.height,{inversionAttempts:'attemptBoth'});
+      if(code){ handleQrResult(code.data); }
+      else{
+        setScanStatus('');
+        document.getElementById('result').style.display='block';
+        document.getElementById('result').innerHTML=`<div class="result-notfound">
+          <div style="font-size:2.5rem;margin-bottom:.5rem">🔎</div>
+          <p style="font-weight:800;color:#dc2626;margin-bottom:.25rem">QR code non détecté</p>
+          <p style="color:#9b1c1c;font-size:.85rem">Assurez-vous que le QR code est net et visible. Utilisez la vérification manuelle.</p>
+        </div>`;
+      }
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+  // Reset pour permettre re-upload du même fichier
+  input.value='';
 }
 
-/* ── Paramètre URL ?npi= ── */
+/* ─── Paramètre URL ?npi= ──────────────────────────── */
 (function(){
-  const p = new URLSearchParams(location.search);
-  const npi = p.get('npi');
-  if(npi && /^\d{13}$/.test(npi)){
-    document.getElementById('v-npi').value = npi;
+  const p=new URLSearchParams(location.search);
+  const npi=p.get('npi');
+  if(npi&&/^\d{13}$/.test(npi)){
+    document.getElementById('v-npi').value=npi;
+    const fn=p.get('fn'); const ln=p.get('ln'); const course=p.get('course');
+    if(fn) document.getElementById('v-prenom').value=fn;
+    if(ln) document.getElementById('v-nom').value=ln;
+    if(course) document.getElementById('v-course').value=course;
   }
 })();
 </script>
