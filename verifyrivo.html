@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>VerifyRIVO — Vérification d'attestations</title>
+<meta name="description" content="Vérifiez l'authenticité d'une attestation RIVO en quelques secondes."/>
+<link rel="icon" href="icon-192.png"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f8fafc;color:#1F2937;min-height:100vh}
+  .container{max-width:520px;margin:0 auto;padding:1.5rem 1.25rem 3rem}
+
+  /* Header */
+  .header{text-align:center;padding:2.5rem 0 2rem}
+  .logo-wrap{display:inline-flex;align-items:center;gap:.625rem;margin-bottom:.875rem}
+  .logo-icon{width:2.75rem;height:2.75rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);border-radius:.875rem;display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:1.1rem;letter-spacing:-.5px;box-shadow:0 4px 14px rgba(37,99,235,.35)}
+  .logo-name{font-size:1.6rem;font-weight:900;color:#1F2937}
+  .logo-name span{color:#2563EB}
+  .slogan{font-size:.95rem;color:#6b7280;line-height:1.55;max-width:360px;margin:0 auto}
+  .slogan strong{color:#2563EB}
+
+  /* Cards */
+  .card{background:white;border-radius:1.25rem;padding:1.75rem;box-shadow:0 2px 16px rgba(0,0,0,.07);margin-bottom:1.25rem}
+  .card-title{font-size:1.05rem;font-weight:800;color:#1F2937;margin-bottom:1.25rem;display:flex;align-items:center;gap:.5rem}
+
+  /* Divider */
+  .divider{display:flex;align-items:center;gap:.75rem;margin:1.25rem 0;color:#9ca3af;font-size:.8rem;font-weight:600}
+  .divider::before,.divider::after{content:'';flex:1;height:1px;background:#e5e7eb}
+
+  /* Inputs */
+  .input{width:100%;padding:.7rem 1rem;border:1.5px solid #e5e7eb;border-radius:.75rem;font-size:.9rem;color:#1F2937;outline:none;transition:border-color .2s;background:white}
+  .input:focus{border-color:#2563EB;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+  .input-group{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem}
+  .input-row{margin-bottom:.75rem}
+  label{display:block;font-size:.8rem;font-weight:700;color:#374151;margin-bottom:.35rem}
+
+  /* Buttons */
+  .btn-primary{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:.875rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);color:white;border:none;border-radius:.875rem;font-size:.95rem;font-weight:700;cursor:pointer;transition:opacity .2s;box-shadow:0 4px 14px rgba(37,99,235,.3)}
+  .btn-primary:hover{opacity:.9}
+  .btn-primary:disabled{opacity:.6;cursor:not-allowed}
+  .btn-scan{display:flex;align-items:center;justify-content:center;gap:.625rem;width:100%;padding:1.1rem;background:white;color:#2563EB;border:2px solid #2563EB;border-radius:.875rem;font-size:.95rem;font-weight:700;cursor:pointer;transition:all .2s}
+  .btn-scan:hover{background:#eff6ff}
+
+  /* QR Scanner */
+  #scanner-wrap{display:none;margin-top:1rem;border-radius:1rem;overflow:hidden;position:relative;background:#000;aspect-ratio:1/1}
+  #scanner-video{width:100%;height:100%;object-fit:cover;display:block}
+  .scanner-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+  .scanner-frame{width:65%;height:65%;border:3px solid #2563EB;border-radius:.75rem;box-shadow:0 0 0 9999px rgba(0,0,0,.45)}
+  .scanner-line{position:absolute;left:17.5%;right:17.5%;height:2px;background:linear-gradient(90deg,transparent,#2563EB,transparent);animation:scan 2s linear infinite}
+  @keyframes scan{0%{top:17.5%}100%{top:82.5%}}
+  .btn-stop{position:absolute;top:.75rem;right:.75rem;background:rgba(0,0,0,.6);color:white;border:none;border-radius:.5rem;padding:.35rem .75rem;font-size:.8rem;cursor:pointer;font-weight:600}
+
+  /* Spinner */
+  .spin{display:inline-block;width:1rem;height:1rem;border:2.5px solid rgba(255,255,255,.4);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* Result */
+  #result{display:none;margin-top:1.25rem}
+  .result-valid{background:linear-gradient(135deg,#eff6ff,#dbeafe);border:2px solid #2563EB;border-radius:1.25rem;padding:2rem;text-align:center}
+  .result-error{background:#fff5f5;border:2px solid #fca5a5;border-radius:1.25rem;padding:2rem;text-align:center}
+  .result-photo{width:5.5rem;height:5.5rem;border-radius:9999px;object-fit:cover;border:3px solid #2563EB;margin:0 auto 1rem;display:block}
+  .result-avatar{width:5.5rem;height:5.5rem;border-radius:9999px;background:linear-gradient(135deg,#2563EB,#1D4ED8);display:flex;align-items:center;justify-content:center;color:white;font-size:2rem;font-weight:900;margin:0 auto 1rem}
+  .badge-verify{display:inline-flex;align-items:center;gap:.4rem;background:#2563EB;color:white;font-size:.78rem;font-weight:700;padding:.35rem 1rem;border-radius:9999px;margin-bottom:1rem;letter-spacing:.02em}
+  .result-name{font-size:1.25rem;font-weight:900;color:#1e3a8a;margin-bottom:.35rem}
+  .result-course{font-size:.9rem;color:#1d4ed8;font-weight:600;margin-bottom:.5rem}
+  .result-meta{display:flex;flex-direction:column;gap:.35rem;margin-top:.875rem;border-top:1px solid #bfdbfe;padding-top:.875rem}
+  .result-meta-row{display:flex;justify-content:space-between;align-items:center;font-size:.82rem}
+  .result-meta-label{color:#6b7280;font-weight:600}
+  .result-meta-value{color:#1e40af;font-weight:700}
+  .authentic-msg{font-size:.82rem;color:#1d4ed8;margin-top:.875rem;font-style:italic}
+
+  /* Footer */
+  .footer{text-align:center;padding:2rem 0 1rem;font-size:.8rem;color:#9ca3af}
+  .footer a{color:#2563EB;text-decoration:none;font-weight:600}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo-wrap">
+      <div class="logo-icon">R</div>
+      <div class="logo-name">Verify<span>RIVO</span></div>
+    </div>
+    <p class="slogan">Vérifiez l'authenticité d'une attestation RIVO <strong>en quelques secondes</strong>, partout dans le monde.</p>
+  </div>
+
+  <!-- Option 1 : Scanner QR -->
+  <div class="card">
+    <div class="card-title">📷 Scanner le certificat</div>
+    <p style="font-size:.85rem;color:#6b7280;margin-bottom:1rem">Pointez votre caméra sur le QR code imprimé sur l'attestation.</p>
+    <button class="btn-scan" id="btn-scan-open" onclick="startScanner()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 012-2h2m10 0h2a2 2 0 012 2v2M3 17v2a2 2 0 002 2h2m10 0h2a2 2 0 002-2v-2M8 8h8v8H8z"/></svg>
+      Scanner le QR Code
+    </button>
+    <div id="scanner-wrap">
+      <video id="scanner-video" autoplay playsinline muted></video>
+      <canvas id="scanner-canvas" style="display:none"></canvas>
+      <div class="scanner-overlay">
+        <div class="scanner-frame"></div>
+        <div class="scanner-line"></div>
+      </div>
+      <button class="btn-stop" onclick="stopScanner()">✕ Fermer</button>
+    </div>
+    <p id="scan-status" style="display:none;font-size:.8rem;color:#2563EB;font-weight:600;margin-top:.75rem;text-align:center"></p>
+  </div>
+
+  <div class="divider">ou vérification manuelle</div>
+
+  <!-- Option 2 : Formulaire manuel -->
+  <div class="card">
+    <div class="card-title">✍️ Vérification manuelle</div>
+    <div class="input-group">
+      <div>
+        <label for="v-prenom">Prénom *</label>
+        <input id="v-prenom" type="text" class="input" placeholder="Ex : Jean"/>
+      </div>
+      <div>
+        <label for="v-nom">Nom *</label>
+        <input id="v-nom" type="text" class="input" placeholder="Ex : Dupont"/>
+      </div>
+    </div>
+    <div class="input-row">
+      <label for="v-email">Adresse e-mail *</label>
+      <input id="v-email" type="email" class="input" placeholder="jean.dupont@email.com"/>
+    </div>
+    <div class="input-row">
+      <label for="v-npi">Code NPI (13 chiffres) *</label>
+      <input id="v-npi" type="text" class="input" placeholder="Ex : 1234567890123" maxlength="13"
+             style="letter-spacing:.1em;font-size:1rem;font-weight:700"
+             oninput="this.value=this.value.replace(/\D/g,'').slice(0,13)"/>
+    </div>
+    <button class="btn-primary" id="btn-verify" onclick="verifyManual()">
+      🔍 Vérifier l'attestation
+    </button>
+  </div>
+
+  <!-- Résultat -->
+  <div id="result"></div>
+
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  Propulsé par <a href="index.php" target="_blank">RIVO</a> &nbsp;·&nbsp; © 2025 Tous droits réservés
+</div>
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<!-- jsQR (QR decoder) -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+
+<script>
+const SB_URL  = 'https://qwdttzsbbspayojzeugy.supabase.co';
+const SB_ANON = 'sb_publishable_tG64uzNsmT0XDV7pmglqFA_lxQ4xIFm';
+const sb = window.supabase.createClient(SB_URL, SB_ANON);
+
+let scanStream = null;
+let scanLoop   = null;
+
+/* ── Helpers ── */
+function fmtDate(iso){
+  if(!iso) return '—';
+  return new Date(iso).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
+}
+
+function showError(msg, sub){
+  const r = document.getElementById('result');
+  r.style.display = 'block';
+  r.innerHTML = `<div class="result-error">
+    <div style="font-size:3rem;margin-bottom:.75rem">❌</div>
+    <p style="font-weight:900;color:#dc2626;font-size:1.1rem;margin-bottom:.5rem">${msg}</p>
+    <p style="color:#9b1c1c;font-size:.85rem">${sub}</p>
+  </div>`;
+  r.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function showSuccess(data){
+  const p   = data.profiles;
+  const c   = data.courses;
+  const nom = ((p?.first_name||'') + ' ' + (p?.last_name||'')).trim() || '—';
+  const photoHtml = data.holder_photo_url
+    ? `<img src="${data.holder_photo_url}" class="result-photo" alt="${nom}"/>`
+    : `<div class="result-avatar">${nom[0]||'?'}</div>`;
+
+  const r = document.getElementById('result');
+  r.style.display = 'block';
+  r.innerHTML = `<div class="result-valid">
+    ${photoHtml}
+    <div class="badge-verify">✅ &nbsp;ATTESTATION VÉRIFIÉE</div>
+    <div class="result-name">${nom}</div>
+    <div class="result-course">📚 ${c?.title || '—'}</div>
+    <p style="font-size:.88rem;color:#1e40af;font-weight:700;margin-top:.25rem">Délivrée par <span style="color:#2563EB">RIVO</span></p>
+    <div class="result-meta">
+      <div class="result-meta-row">
+        <span class="result-meta-label">🔢 Code NPI</span>
+        <span class="result-meta-value">${data.npi_code || '—'}</span>
+      </div>
+      <div class="result-meta-row">
+        <span class="result-meta-label">📅 Date de délivrance</span>
+        <span class="result-meta-value">${fmtDate(data.issued_at)}</span>
+      </div>
+    </div>
+    <p class="authentic-msg">🛡️ Cette attestation est <strong>AUTHENTIQUE</strong> et a été délivrée officiellement par RIVO.</p>
+  </div>`;
+  r.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+/* ── Vérification par NPI ── */
+async function verifyByNpi(npi){
+  const {data, error} = await sb.from('certificates')
+    .select('*,courses(title),profiles(first_name,last_name,email)')
+    .eq('npi_code', npi.trim())
+    .maybeSingle();
+  if(error || !data){
+    showError('Aucune attestation trouvée', 'Veuillez vérifier vos informations.');
+    return null;
+  }
+  return data;
+}
+
+/* ── Vérification manuelle ── */
+async function verifyManual(){
+  const prenom = document.getElementById('v-prenom').value.trim();
+  const nom    = document.getElementById('v-nom').value.trim();
+  const email  = document.getElementById('v-email').value.trim().toLowerCase();
+  const npi    = document.getElementById('v-npi').value.trim();
+
+  if(!prenom || !nom)   { alert('Veuillez renseigner votre prénom et nom.'); return; }
+  if(!email)            { alert('Veuillez renseigner votre adresse e-mail.'); return; }
+  if(npi.length !== 13) { alert('Le code NPI doit contenir exactement 13 chiffres.'); return; }
+
+  const btn = document.getElementById('btn-verify');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span> Vérification en cours…';
+  document.getElementById('result').style.display = 'none';
+
+  try {
+    const data = await verifyByNpi(npi);
+    if(!data){ return; }
+
+    const p = data.profiles;
+    const pFirst = (p?.first_name||'').toLowerCase();
+    const pLast  = (p?.last_name||'').toLowerCase();
+    const pEmail = (p?.email||'').toLowerCase();
+
+    const firstOk = pFirst.includes(prenom.toLowerCase()) || prenom.toLowerCase().includes(pFirst);
+    const lastOk  = pLast.includes(nom.toLowerCase())   || nom.toLowerCase().includes(pLast);
+    const emailOk = pEmail === email;
+
+    if(!firstOk || !lastOk || !emailOk){
+      showError('Informations incorrectes', 'Les informations saisies ne correspondent pas à cette attestation.');
+      return;
+    }
+    showSuccess(data);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '🔍 Vérifier l\'attestation';
+  }
+}
+
+/* ── QR Scanner ── */
+async function startScanner(){
+  const wrap  = document.getElementById('scanner-wrap');
+  const video = document.getElementById('scanner-video');
+  const status = document.getElementById('scan-status');
+  document.getElementById('result').style.display = 'none';
+
+  try {
+    scanStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment' }
+    });
+    video.srcObject = scanStream;
+    await video.play();
+    wrap.style.display = 'block';
+    document.getElementById('btn-scan-open').style.display = 'none';
+    status.style.display = 'block';
+    status.textContent = '🔍 Pointez le QR code sur l\'attestation…';
+    scanLoop = requestAnimationFrame(scanFrame);
+  } catch(e) {
+    alert('Impossible d\'accéder à la caméra. Vérifiez les permissions.');
+  }
+}
+
+function stopScanner(){
+  if(scanLoop) cancelAnimationFrame(scanLoop);
+  if(scanStream) scanStream.getTracks().forEach(t => t.stop());
+  scanStream = null; scanLoop = null;
+  document.getElementById('scanner-wrap').style.display = 'none';
+  document.getElementById('btn-scan-open').style.display = 'flex';
+  document.getElementById('scan-status').style.display = 'none';
+}
+
+function scanFrame(){
+  const video  = document.getElementById('scanner-video');
+  const canvas = document.getElementById('scanner-canvas');
+  if(video.readyState !== video.HAVE_ENOUGH_DATA){ scanLoop = requestAnimationFrame(scanFrame); return; }
+
+  canvas.width  = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const code = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts:'dontInvert' });
+
+  if(code){
+    stopScanner();
+    handleQrResult(code.data);
+  } else {
+    scanLoop = requestAnimationFrame(scanFrame);
+  }
+}
+
+async function handleQrResult(raw){
+  const status = document.getElementById('scan-status');
+  status.style.display = 'block';
+  status.textContent = '⏳ Vérification…';
+
+  // Extraire le NPI : 13 chiffres bruts ou paramètre ?npi= dans une URL
+  let npi = null;
+  if(/^\d{13}$/.test(raw.trim())){
+    npi = raw.trim();
+  } else {
+    try {
+      const u = new URL(raw);
+      npi = u.searchParams.get('npi');
+    } catch(e){}
+    if(!npi){
+      const m = raw.match(/\b(\d{13})\b/);
+      if(m) npi = m[1];
+    }
+  }
+
+  if(!npi){
+    status.style.display = 'none';
+    showError('QR Code non reconnu', 'Ce QR code ne semble pas provenir d\'une attestation RIVO.');
+    return;
+  }
+
+  const data = await verifyByNpi(npi);
+  status.style.display = 'none';
+  if(data) showSuccess(data);
+}
+
+/* ── Paramètre URL ?npi= ── */
+(function(){
+  const p = new URLSearchParams(location.search);
+  const npi = p.get('npi');
+  if(npi && /^\d{13}$/.test(npi)){
+    document.getElementById('v-npi').value = npi;
+  }
+})();
+</script>
+</body>
+</html>
