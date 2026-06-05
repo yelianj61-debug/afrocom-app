@@ -19,7 +19,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box}
-body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+html{font-size:18px}
+body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0;font-weight:700;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+p,span,li,a,label,td,th,div{font-weight:700}
 img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
 .page{display:none}.page.active{display:block}
 .gradient-hero{background:linear-gradient(135deg,#1e3a8a 0%,#2563EB 55%,#3b82f6 100%)}
