@@ -121,72 +121,94 @@ label{display:block;font-size:.7rem;font-weight:700;color:#94a3b8;margin-bottom:
 <div id="certificate" style="width:1050px;height:742px;position:relative;overflow:hidden;font-family:'Montserrat',sans-serif">
 
   <!-- Fond crème avec légère texture ornementale -->
-  <div style="position:absolute;inset:0;background:#f9f3e3"></div>
-  <!-- Motif très léger en fond -->
-  <div style="position:absolute;inset:0;opacity:.04;background-image:radial-gradient(circle,#8b6914 1px,transparent 1px);background-size:28px 28px"></div>
+  <div style="position:absolute;inset:0;background:#f5efdb"></div>
+  <div style="position:absolute;inset:0;opacity:.07;background-image:radial-gradient(circle,#8b6914 1px,transparent 1px);background-size:24px 24px"></div>
 
   <!-- Bordure externe noire épaisse -->
   <div style="position:absolute;inset:0;border:20px solid #0d1117;pointer-events:none;z-index:40"></div>
-
-  <!-- Ligne or extérieure (juste après le noir) -->
-  <div style="position:absolute;inset:20px;border:3px solid #c9a227;pointer-events:none;z-index:39"></div>
-
+  <!-- Ligne or extérieure -->
+  <div style="position:absolute;inset:20px;border:3.5px solid #c9a227;pointer-events:none;z-index:39"></div>
   <!-- Ligne noire fine intérieure -->
-  <div style="position:absolute;inset:24px;border:1px solid rgba(13,17,23,.5);pointer-events:none;z-index:38"></div>
+  <div style="position:absolute;inset:25px;border:1.5px solid #0d1117;pointer-events:none;z-index:38"></div>
 
-  <!-- Ornements de coins (SVG inline, fiables avec html2canvas) -->
-  <!-- Coin haut-gauche -->
-  <svg style="position:absolute;top:24px;left:24px;z-index:41" width="55" height="55" viewBox="0 0 55 55" fill="none">
-    <path d="M2 53 L2 8 Q2 2 8 2 L53 2" stroke="#c9a227" stroke-width="2.5"/>
-    <path d="M10 53 L10 18 Q10 10 18 10 L53 10" stroke="#c9a227" stroke-width="1" opacity=".5"/>
-    <circle cx="2" cy="2" r="3.5" fill="#c9a227"/>
-    <circle cx="10" cy="10" r="2" fill="#c9a227" opacity=".7"/>
-    <path d="M2 25 Q14 12 27 2" stroke="#c9a227" stroke-width="1" opacity=".6"/>
-    <path d="M2 38 Q20 18 38 2" stroke="#c9a227" stroke-width=".7" opacity=".35"/>
+  <!-- Rosettes aux coins de la ligne or (petits cercles dorés) -->
+  <div style="position:absolute;top:18px;left:18px;width:10px;height:10px;border-radius:50%;background:#c9a227;z-index:42"></div>
+  <div style="position:absolute;top:18px;right:18px;width:10px;height:10px;border-radius:50%;background:#c9a227;z-index:42"></div>
+  <div style="position:absolute;bottom:18px;left:18px;width:10px;height:10px;border-radius:50%;background:#c9a227;z-index:42"></div>
+  <div style="position:absolute;bottom:18px;right:18px;width:10px;height:10px;border-radius:50%;background:#c9a227;z-index:42"></div>
+
+  <!-- Ornements de coins SVG (plus grands et plus visibles) -->
+  <svg style="position:absolute;top:25px;left:25px;z-index:41" width="68" height="68" viewBox="0 0 68 68" fill="none">
+    <path d="M2 66 L2 10 Q2 2 10 2 L66 2" stroke="#c9a227" stroke-width="3"/>
+    <path d="M12 66 L12 22 Q12 12 22 12 L66 12" stroke="#c9a227" stroke-width="1.2" opacity=".6"/>
+    <circle cx="2" cy="2" r="4" fill="#c9a227"/>
+    <circle cx="12" cy="12" r="2.5" fill="#c9a227" opacity=".8"/>
+    <circle cx="22" cy="2" r="1.5" fill="#c9a227" opacity=".5"/>
+    <circle cx="2" cy="22" r="1.5" fill="#c9a227" opacity=".5"/>
+    <path d="M2 30 Q18 14 34 2" stroke="#c9a227" stroke-width="1.2" opacity=".55"/>
+    <path d="M2 46 Q28 20 50 2" stroke="#c9a227" stroke-width=".8" opacity=".3"/>
   </svg>
-  <!-- Coin haut-droit -->
-  <svg style="position:absolute;top:24px;right:24px;z-index:41;transform:scaleX(-1)" width="55" height="55" viewBox="0 0 55 55" fill="none">
-    <path d="M2 53 L2 8 Q2 2 8 2 L53 2" stroke="#c9a227" stroke-width="2.5"/>
-    <path d="M10 53 L10 18 Q10 10 18 10 L53 10" stroke="#c9a227" stroke-width="1" opacity=".5"/>
-    <circle cx="2" cy="2" r="3.5" fill="#c9a227"/>
-    <circle cx="10" cy="10" r="2" fill="#c9a227" opacity=".7"/>
-    <path d="M2 25 Q14 12 27 2" stroke="#c9a227" stroke-width="1" opacity=".6"/>
-    <path d="M2 38 Q20 18 38 2" stroke="#c9a227" stroke-width=".7" opacity=".35"/>
+  <svg style="position:absolute;top:25px;right:25px;z-index:41;transform:scaleX(-1)" width="68" height="68" viewBox="0 0 68 68" fill="none">
+    <path d="M2 66 L2 10 Q2 2 10 2 L66 2" stroke="#c9a227" stroke-width="3"/>
+    <path d="M12 66 L12 22 Q12 12 22 12 L66 12" stroke="#c9a227" stroke-width="1.2" opacity=".6"/>
+    <circle cx="2" cy="2" r="4" fill="#c9a227"/>
+    <circle cx="12" cy="12" r="2.5" fill="#c9a227" opacity=".8"/>
+    <circle cx="22" cy="2" r="1.5" fill="#c9a227" opacity=".5"/>
+    <circle cx="2" cy="22" r="1.5" fill="#c9a227" opacity=".5"/>
+    <path d="M2 30 Q18 14 34 2" stroke="#c9a227" stroke-width="1.2" opacity=".55"/>
+    <path d="M2 46 Q28 20 50 2" stroke="#c9a227" stroke-width=".8" opacity=".3"/>
   </svg>
-  <!-- Coin bas-gauche -->
-  <svg style="position:absolute;bottom:24px;left:24px;z-index:41;transform:scaleY(-1)" width="55" height="55" viewBox="0 0 55 55" fill="none">
-    <path d="M2 53 L2 8 Q2 2 8 2 L53 2" stroke="#c9a227" stroke-width="2.5"/>
-    <path d="M10 53 L10 18 Q10 10 18 10 L53 10" stroke="#c9a227" stroke-width="1" opacity=".5"/>
-    <circle cx="2" cy="2" r="3.5" fill="#c9a227"/>
-    <circle cx="10" cy="10" r="2" fill="#c9a227" opacity=".7"/>
-    <path d="M2 25 Q14 12 27 2" stroke="#c9a227" stroke-width="1" opacity=".6"/>
+  <svg style="position:absolute;bottom:25px;left:25px;z-index:41;transform:scaleY(-1)" width="68" height="68" viewBox="0 0 68 68" fill="none">
+    <path d="M2 66 L2 10 Q2 2 10 2 L66 2" stroke="#c9a227" stroke-width="3"/>
+    <path d="M12 66 L12 22 Q12 12 22 12 L66 12" stroke="#c9a227" stroke-width="1.2" opacity=".6"/>
+    <circle cx="2" cy="2" r="4" fill="#c9a227"/>
+    <circle cx="12" cy="12" r="2.5" fill="#c9a227" opacity=".8"/>
+    <path d="M2 30 Q18 14 34 2" stroke="#c9a227" stroke-width="1.2" opacity=".55"/>
   </svg>
-  <!-- Coin bas-droit -->
-  <svg style="position:absolute;bottom:24px;right:24px;z-index:41;transform:scale(-1)" width="55" height="55" viewBox="0 0 55 55" fill="none">
-    <path d="M2 53 L2 8 Q2 2 8 2 L53 2" stroke="#c9a227" stroke-width="2.5"/>
-    <path d="M10 53 L10 18 Q10 10 18 10 L53 10" stroke="#c9a227" stroke-width="1" opacity=".5"/>
-    <circle cx="2" cy="2" r="3.5" fill="#c9a227"/>
-    <circle cx="10" cy="10" r="2" fill="#c9a227" opacity=".7"/>
-    <path d="M2 25 Q14 12 27 2" stroke="#c9a227" stroke-width="1" opacity=".6"/>
+  <svg style="position:absolute;bottom:25px;right:25px;z-index:41;transform:scale(-1)" width="68" height="68" viewBox="0 0 68 68" fill="none">
+    <path d="M2 66 L2 10 Q2 2 10 2 L66 2" stroke="#c9a227" stroke-width="3"/>
+    <path d="M12 66 L12 22 Q12 12 22 12 L66 12" stroke="#c9a227" stroke-width="1.2" opacity=".6"/>
+    <circle cx="2" cy="2" r="4" fill="#c9a227"/>
+    <circle cx="12" cy="12" r="2.5" fill="#c9a227" opacity=".8"/>
+    <path d="M2 30 Q18 14 34 2" stroke="#c9a227" stroke-width="1.2" opacity=".55"/>
   </svg>
 
   <!-- ═══ CONTENU PRINCIPAL (inset 32px) ═══ -->
   <div style="position:absolute;inset:32px;display:flex;flex-direction:column">
 
-    <!-- ─── LIGNE HAUTE : logo RIVO centré ─── -->
-    <div style="display:flex;justify-content:center;align-items:center;gap:10px;padding-bottom:6px;border-bottom:1.5px solid rgba(201,162,39,.6);margin-bottom:6px">
-      <svg width="38" height="38" viewBox="0 0 38 38"><rect width="38" height="38" rx="7" fill="#c9a227"/><text x="50%" y="68%" text-anchor="middle" fill="#0d1117" font-size="22" font-weight="900" font-family="Montserrat,sans-serif">R</text></svg>
-      <div>
-        <div style="font-size:22px;font-weight:900;color:#0d1117;letter-spacing:.08em;line-height:1">RIVO</div>
-        <div style="font-size:5px;color:#6b7280;font-weight:700;letter-spacing:.06em;line-height:1.4">LA PLATEFORME QUI TRANSFORME L'APPRENTISSAGE EN OPPORTUNITÉ</div>
+    <!-- ─── LIGNE HAUTE : médaille gauche | RIVO logo | badge excellence ─── -->
+    <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:6px;border-bottom:2px solid rgba(201,162,39,.7);margin-bottom:6px">
+
+      <!-- Médaille gauche : FORMATEURS RIVO BÉNIN -->
+      <div style="width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,#1a2744,#0d1117);border:3px solid #c9a227;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:5px;flex-shrink:0;box-shadow:0 0 0 1.5px rgba(201,162,39,.5),inset 0 0 8px rgba(201,162,39,.15)">
+        <div style="color:#d4a017;font-size:5px;font-weight:800;letter-spacing:.05em;line-height:1.4;text-transform:uppercase">FORMATEURS<br/>RIVO BÉNIN</div>
+        <div style="color:#d4a017;font-size:8.5px;margin-top:1px">★★★★★</div>
+        <div style="color:#d4a017;font-size:5px;font-weight:700;margin-top:1px;letter-spacing:.06em">CERTIFIÉ</div>
       </div>
+
+      <!-- Logo RIVO centré -->
+      <div style="display:flex;align-items:center;gap:10px">
+        <svg width="40" height="40" viewBox="0 0 40 40"><rect width="40" height="40" rx="7" fill="#c9a227"/><text x="50%" y="69%" text-anchor="middle" fill="#0d1117" font-size="23" font-weight="900" font-family="Montserrat,sans-serif">R</text></svg>
+        <div>
+          <div style="font-size:24px;font-weight:900;color:#0d1117;letter-spacing:.08em;line-height:1">RIVO</div>
+          <div style="font-size:5px;color:#6b7280;font-weight:700;letter-spacing:.04em;line-height:1.5">LA PLATEFORME QUI TRANSFORME L'APPRENTISSAGE EN OPPORTUNITÉ</div>
+        </div>
+      </div>
+
+      <!-- Badge RIVO EXCELLENCE à droite -->
+      <div style="width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,#1a2744,#0d1117);border:3px solid #c9a227;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:5px;flex-shrink:0;box-shadow:0 0 0 1.5px rgba(201,162,39,.5),inset 0 0 8px rgba(201,162,39,.15)">
+        <div style="color:#d4a017;font-size:8px;font-weight:900;letter-spacing:.06em">RIVO</div>
+        <div style="color:#d4a017;font-size:5.5px;font-weight:700;line-height:1.35;margin-top:2px;text-transform:uppercase">EXCELLENCE<br/>FORMATION</div>
+        <div style="color:#d4a017;font-size:9px;margin-top:2px">★★★★</div>
+      </div>
+
     </div>
 
     <!-- ─── GRILLE 3 COLONNES ─── -->
     <div style="display:grid;grid-template-columns:215px 1fr 200px;gap:0;flex:1;min-height:0">
 
       <!-- ─── COLONNE GAUCHE ─── -->
-      <div style="display:flex;flex-direction:column;align-items:center;gap:7px;padding:0 10px 0 0;border-right:1px solid rgba(201,162,39,.45)">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:7px;padding:0 10px 0 0">
 
         <!-- Photo titulaire ronde -->
         <div style="width:108px;height:108px;border-radius:50%;border:4px solid #c9a227;overflow:hidden;background:#d1d5db;flex-shrink:0;box-shadow:0 3px 12px rgba(201,162,39,.4)">
@@ -227,10 +249,10 @@ label{display:block;font-size:.7rem;font-weight:700;color:#94a3b8;margin-bottom:
       </div><!-- /col gauche -->
 
       <!-- ─── COLONNE CENTRE ─── -->
-      <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:2px 14px 0">
+      <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:2px 14px 0;border-left:1px solid rgba(201,162,39,.5);border-right:1px solid rgba(201,162,39,.5)">
 
-        <!-- Grand titre ATTESTATION (fidèle à l'original) -->
-        <div style="font-size:72px;font-weight:900;color:#0d1117;font-family:'Cinzel',serif;line-height:.9;margin-bottom:3px;letter-spacing:.06em">ATTESTATION</div>
+        <!-- Grand titre ATTESTATION -->
+        <div style="font-size:80px;font-weight:900;color:#0d1117;font-family:'Cinzel',serif;line-height:.85;margin-bottom:3px;letter-spacing:.05em">ATTESTATION</div>
 
         <!-- Sous-titre or avec tirets -->
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
@@ -277,17 +299,10 @@ label{display:block;font-size:.7rem;font-weight:700;color:#94a3b8;margin-bottom:
       </div><!-- /col centre -->
 
       <!-- ─── COLONNE DROITE ─── -->
-      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding-left:10px;border-left:1px solid rgba(201,162,39,.45)">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding-left:10px">
 
-        <!-- Badge RIVO EXCELLENCE (cercle marine/or) -->
-        <div style="width:74px;height:74px;border-radius:50%;background:linear-gradient(135deg,#0d1117,#1a2744);border:3px solid #c9a227;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:6px;flex-shrink:0;box-shadow:0 0 0 2px rgba(201,162,39,.35),0 3px 10px rgba(0,0,0,.4)">
-          <div style="color:#d4a017;font-size:8px;font-weight:900;letter-spacing:.06em">RIVO</div>
-          <div style="color:#d4a017;font-size:5.5px;font-weight:700;line-height:1.35;margin-top:2px">EXCELLENCE<br/>FORMATION</div>
-          <div style="color:#d4a017;font-size:9px;margin-top:3px">★★★★</div>
-        </div>
-
-        <!-- Photo de la formation -->
-        <div style="width:100%;height:110px;border-radius:8px;overflow:hidden;border:2px solid #e0c878;background:#e5e7eb;flex-shrink:0">
+        <!-- Photo de la formation (la badge est maintenant dans le header) -->
+        <div style="width:100%;height:130px;border-radius:8px;overflow:hidden;border:2.5px solid #c9a227;background:#e5e7eb;flex-shrink:0;box-shadow:0 2px 8px rgba(201,162,39,.3)">
           <img id="ccph" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 182 110'%3E%3Crect fill='%23e5e7eb' width='182' height='110'/%3E%3Ctext x='91' y='61' text-anchor='middle' fill='%239ca3af' font-size='12' font-family='sans-serif'%3EPhoto formation%3C/text%3E%3C/svg%3E"
                style="width:100%;height:100%;object-fit:cover;display:block"/>
         </div>
