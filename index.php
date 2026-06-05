@@ -1125,12 +1125,13 @@ const sbAdmin={
 // ── Firebase ──────────────────────────────────────────
 const FB_CONFIG = {
   apiKey: "AIzaSyA5olGOv_gvmJdogl1nQg2TzAdGJ5WbZR4",
-  authDomain: "rivoo-a0624.firebaseapp.com",
+  authDomain: "rivo.freedev.app",
   projectId: "rivoo-a0624",
   storageBucket: "rivoo-a0624.firebasestorage.app",
   messagingSenderId: "565836730871",
   appId: "1:565836730871:web:e9891b273540fb0d4d1ef2"
 };
+const ACS = {url:'https://rivo.freedev.app',handleCodeInApp:false};
 let fbAuth = null;
 
 // ── Globals ───────────────────────────────────────────
@@ -1451,7 +1452,7 @@ async function forgotPassword(){
   if(!email){showErr('li-err','Entrez votre email, puis cliquez "Mot de passe oublié".');return;}
   setBtn('li-btn','<span class="spin"></span>',true);
   try{
-    await fbAuth.sendPasswordResetEmail(email);
+    await fbAuth.sendPasswordResetEmail(email, ACS);
     showErr('li-err','');
     toast('Email de réinitialisation envoyé ! Vérifiez votre boîte mail. 📧');
   }catch(e){
@@ -1471,7 +1472,7 @@ async function resendConfirmation(){
     return;
   }
   try{
-    await fbUser.sendEmailVerification();
+    await fbUser.sendEmailVerification(ACS);
     toast('Email de confirmation renvoyé ! Vérifiez votre boîte mail. 📧');
   }catch(e){
     toast(e.message||'Erreur envoi','err');
@@ -1523,7 +1524,7 @@ async function doRegister(e){
     localStorage.setItem('rivo_pending_profile',JSON.stringify({
       first_name:fn, last_name:ln, birth_date:birth||null, referred_by:refId||null
     }));
-    await fbNewUser.sendEmailVerification();
+    await fbNewUser.sendEmailVerification(ACS);
     await fbAuth.signOut();
     toast('Compte créé ! 📧 Vérifiez votre boîte mail pour confirmer avant de vous connecter.');
     setTimeout(()=>{ goTo('login'); },2200);
