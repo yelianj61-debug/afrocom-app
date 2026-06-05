@@ -5,10 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Générateur d'Attestations RIVO</title>
 <link rel="icon" href="icon-192.png"/>
-<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400&family=Cinzel:wght@700;900&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400&family=Cinzel:wght@700;900&display=swap" rel="stylesheet"/>
 <!--
 SQL À EXÉCUTER UNE FOIS DANS SUPABASE :
-────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS npi_attestations (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   npi_code TEXT UNIQUE NOT NULL,
@@ -23,43 +22,41 @@ CREATE TABLE IF NOT EXISTS npi_attestations (
 ALTER TABLE npi_attestations ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "read_all"   ON npi_attestations FOR SELECT USING (true);
 CREATE POLICY "insert_all" ON npi_attestations FOR INSERT WITH CHECK (true);
-────────────────────────────────────────────────────────────────
 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Montserrat',sans-serif;background:#0f172a;color:#f1f5f9;min-height:100vh}
-.app{display:grid;grid-template-columns:350px 1fr;min-height:100vh}
-@media(max-width:900px){.app{grid-template-columns:1fr}}
-.sidebar{background:#1e293b;padding:1.5rem 1.25rem 2rem;overflow-y:auto;border-right:1px solid #334155}
-.slogo{display:flex;align-items:center;gap:.5rem;margin-bottom:1.5rem}
-.slogo-icon{width:2rem;height:2rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);border-radius:.5rem;display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:.85rem}
-.slogo-name{font-size:1.05rem;font-weight:900}.slogo-name span{color:#60a5fa}
-.f{margin-bottom:.7rem}
-label{display:block;font-size:.7rem;font-weight:700;color:#94a3b8;margin-bottom:.25rem;text-transform:uppercase;letter-spacing:.04em}
-.inp{width:100%;padding:.58rem .875rem;background:#0f172a;border:1.5px solid #334155;border-radius:.625rem;font-size:.84rem;color:#f1f5f9;outline:none;font-family:'Montserrat',sans-serif}
-.inp:focus{border-color:#2563EB}
-.inp::placeholder{color:#475569}
+.app{display:grid;grid-template-columns:340px 1fr;min-height:100vh}
+@media(max-width:860px){.app{grid-template-columns:1fr}}
+.sidebar{background:#1e293b;padding:1.4rem 1.2rem 2rem;overflow-y:auto;border-right:1px solid #334155}
+.slogo{display:flex;align-items:center;gap:.5rem;margin-bottom:1.4rem}
+.slogo-i{width:2rem;height:2rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);border-radius:.5rem;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:.85rem}
+.slogo-n{font-size:1rem;font-weight:900}.slogo-n span{color:#60a5fa}
+.f{margin-bottom:.65rem}
+label{display:block;font-size:.68rem;font-weight:700;color:#94a3b8;margin-bottom:.22rem;text-transform:uppercase;letter-spacing:.04em}
+.inp{width:100%;padding:.55rem .8rem;background:#0f172a;border:1.5px solid #334155;border-radius:.6rem;font-size:.83rem;color:#f1f5f9;outline:none;font-family:'Montserrat',sans-serif}
+.inp:focus{border-color:#2563EB}.inp::placeholder{color:#475569}
 .r2{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
 .upf{display:flex;gap:.4rem;align-items:center}
-.upb{padding:.42rem .7rem;background:#334155;border:none;border-radius:.45rem;color:#f1f5f9;font-size:.73rem;font-weight:600;cursor:pointer;white-space:nowrap;font-family:'Montserrat',sans-serif}
+.upb{padding:.4rem .65rem;background:#334155;border:none;border-radius:.45rem;color:#f1f5f9;font-size:.7rem;font-weight:600;cursor:pointer;white-space:nowrap;font-family:'Montserrat',sans-serif}
 .upb:hover{background:#475569}
-.upn{font-size:.7rem;color:#64748b;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.upt{width:1.9rem;height:1.9rem;border-radius:.35rem;object-fit:cover;display:none;border:1px solid #334155}
-.bg{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:.875rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);color:white;border:none;border-radius:.875rem;font-size:.88rem;font-weight:700;cursor:pointer;font-family:'Montserrat',sans-serif;margin-top:.4rem}
+.upn{font-size:.68rem;color:#64748b;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.upt{width:1.8rem;height:1.8rem;border-radius:.3rem;object-fit:cover;display:none;border:1px solid #334155}
+.bg{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:.85rem;background:linear-gradient(135deg,#2563EB,#1D4ED8);color:#fff;border:none;border-radius:.875rem;font-size:.87rem;font-weight:700;cursor:pointer;font-family:'Montserrat',sans-serif;margin-top:.4rem}
 .bg:hover{opacity:.9}.bg:disabled{opacity:.55;cursor:not-allowed}
-.bd{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:.78rem;background:linear-gradient(135deg,#059669,#047857);color:white;border:none;border-radius:.875rem;font-size:.83rem;font-weight:700;cursor:pointer;margin-top:.45rem;font-family:'Montserrat',sans-serif}
+.bd{display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:.75rem;background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;border-radius:.875rem;font-size:.82rem;font-weight:700;cursor:pointer;margin-top:.45rem;font-family:'Montserrat',sans-serif}
 .bd:hover{opacity:.9}.bd:disabled{opacity:.55;cursor:not-allowed}
-.nbox{background:#0f172a;border:2px solid #2563EB;border-radius:.875rem;padding:.8rem;margin-top:.8rem;text-align:center;display:none}
-.nlab{font-size:.68rem;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.22rem}
-.nval{font-size:.9rem;font-weight:900;font-family:monospace;letter-spacing:.06em}
-.ncop{margin-top:.38rem;padding:.28rem .7rem;background:#1e293b;border:1px solid #334155;border-radius:.45rem;color:#94a3b8;font-size:.7rem;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif}
+.nbox{background:#0f172a;border:2px solid #2563EB;border-radius:.875rem;padding:.8rem;margin-top:.75rem;text-align:center;display:none}
+.nlab{font-size:.65rem;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.2rem}
+.nval{font-size:.88rem;font-weight:900;font-family:monospace;letter-spacing:.05em}
+.ncop{margin-top:.35rem;padding:.25rem .65rem;background:#1e293b;border:1px solid #334155;border-radius:.4rem;color:#94a3b8;font-size:.68rem;font-weight:600;cursor:pointer;font-family:'Montserrat',sans-serif}
 .ncop:hover{background:#334155;color:#f1f5f9}
-.st{font-size:.73rem;color:#60a5fa;margin-top:.55rem;text-align:center;display:none}
+.st{font-size:.7rem;color:#60a5fa;margin-top:.5rem;text-align:center;display:none}
 @keyframes spin{to{transform:rotate(360deg)}}
-.sp{display:inline-block;width:.8rem;height:.8rem;border:2.5px solid rgba(96,165,250,.3);border-top-color:#60a5fa;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:.3rem}
-.main{display:flex;flex-direction:column;align-items:center;padding:1.5rem;background:#0f172a;overflow:auto}
-.plabel{font-size:.68rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.12em;margin-bottom:.9rem}
-.cswrap{overflow-x:auto;overflow-y:hidden;max-width:100%}
+.sp{display:inline-block;width:.78rem;height:.78rem;border:2px solid rgba(96,165,250,.3);border-top-color:#60a5fa;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:.28rem}
+.main{display:flex;flex-direction:column;align-items:center;padding:1.4rem;background:#0f172a;overflow:auto}
+.plabel{font-size:.65rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.12em;margin-bottom:.85rem}
+.csw{overflow-x:auto;overflow-y:hidden;max-width:100%}
 #csi{transform-origin:top left;display:block}
 </style>
 </head>
@@ -69,24 +66,22 @@ label{display:block;font-size:.7rem;font-weight:700;color:#94a3b8;margin-bottom:
 <!-- ── SIDEBAR ── -->
 <div class="sidebar">
   <div class="slogo">
-    <div class="slogo-icon">R</div>
-    <div class="slogo-name">RIVO <span>Générateur</span></div>
+    <div class="slogo-i">R</div>
+    <div class="slogo-n">RIVO <span>Générateur</span></div>
   </div>
-
   <div class="r2">
-    <div class="f"><label>Prénom *</label><input id="fp" class="inp" type="text" placeholder="Jean" oninput="live()"/></div>
-    <div class="f"><label>Nom *</label><input id="fn" class="inp" type="text" placeholder="Kossi" oninput="live()"/></div>
+    <div class="f"><label>Prénom *</label><input id="fp" class="inp" type="text" placeholder="Jean" oninput="lv()"/></div>
+    <div class="f"><label>Nom *</label><input id="fn" class="inp" type="text" placeholder="Kossi" oninput="lv()"/></div>
   </div>
-  <div class="f"><label>Formation suivie *</label><input id="fc" class="inp" type="text" placeholder="Ex : Marketing Digital" oninput="live()"/></div>
-  <div class="f"><label>Lieu de délivrance *</label><input id="fl" class="inp" type="text" placeholder="Ex : Lomé, Togo" oninput="live()"/></div>
-
+  <div class="f"><label>Formation suivie *</label><input id="fc" class="inp" type="text" placeholder="Ex : Marketing Digital" oninput="lv()"/></div>
+  <div class="f"><label>Lieu de délivrance *</label><input id="fl" class="inp" type="text" placeholder="Ex : Lomé, Togo" oninput="lv()"/></div>
   <div class="f">
     <label>Photo de l'apprenant</label>
     <div class="upf">
       <button class="upb" onclick="document.getElementById('fpi').click()">📷 Choisir</button>
       <span class="upn" id="fpn">Aucun fichier</span>
       <img class="upt" id="fpt"/>
-      <input type="file" id="fpi" accept="image/*" style="display:none" onchange="pick(this,'h')"/>
+      <input type="file" id="fpi" accept="image/*" style="display:none" onchange="pk(this,'h')"/>
     </div>
   </div>
   <div class="f">
@@ -95,11 +90,10 @@ label{display:block;font-size:.7rem;font-weight:700;color:#94a3b8;margin-bottom:
       <button class="upb" onclick="document.getElementById('fci').click()">🖼️ Choisir</button>
       <span class="upn" id="fcn">Aucun fichier</span>
       <img class="upt" id="fct"/>
-      <input type="file" id="fci" accept="image/*" style="display:none" onchange="pick(this,'c')"/>
+      <input type="file" id="fci" accept="image/*" style="display:none" onchange="pk(this,'c')"/>
     </div>
   </div>
-
-  <button class="bg" id="bg" onclick="gen()">🎓 Générer l'attestation</button>
+  <button class="bg" id="bg" onclick="gn()">🎓 Générer l'attestation</button>
   <button class="bd" id="bd" onclick="dl()" style="display:none">📥 Télécharger PNG</button>
   <div class="st" id="st"></div>
   <div class="nbox" id="nbox">
@@ -109,247 +103,259 @@ label{display:block;font-size:.7rem;font-weight:700;color:#94a3b8;margin-bottom:
   </div>
 </div>
 
-<!-- ── MAIN preview ── -->
+<!-- ── APERÇU ── -->
 <div class="main">
   <div class="plabel">Aperçu — Attestation RIVO</div>
-  <div class="cswrap">
-    <div id="csi">
+  <div class="csw"><div id="csi">
 
-<!-- ═══════════════════════════════════════════════════════════════
-     ATTESTATION RIVO — 1050 × 742 px — Fidèle au modèle original
-     ═══════════════════════════════════════════════════════════════ -->
-<div id="certificate" style="width:1050px;height:742px;position:relative;overflow:hidden;font-family:'Montserrat',sans-serif">
+<!-- ═══════════════════════════════════════════════════
+     ATTESTATION RIVO · 1050 × 742 px
+     ═══════════════════════════════════════════════════ -->
+<div id="certificate" style="width:1050px;height:742px;position:relative;overflow:hidden;font-family:'Montserrat',sans-serif;background:#f5efd5">
 
-  <!-- Fond crème avec légère texture ornementale -->
-  <div style="position:absolute;inset:0;background:#f5efdb"></div>
-  <div style="position:absolute;inset:0;opacity:.07;background-image:radial-gradient(circle,#8b6914 1px,transparent 1px);background-size:24px 24px"></div>
-
-  <!-- Bordure externe noire épaisse -->
-  <div style="position:absolute;inset:0;border:20px solid #0d1117;pointer-events:none;z-index:40"></div>
-  <!-- Ligne or extérieure -->
-  <div style="position:absolute;inset:20px;border:3.5px solid #c9a227;pointer-events:none;z-index:39"></div>
-  <!-- Ligne noire fine intérieure -->
-  <div style="position:absolute;inset:25px;border:1.5px solid #0d1117;pointer-events:none;z-index:38"></div>
-
-  <!-- Rosettes aux coins de la ligne or (petits cercles dorés) -->
-  <div style="position:absolute;top:18px;left:18px;width:10px;height:10px;border-radius:50%;background:#c9a227;z-index:42"></div>
-  <div style="position:absolute;top:18px;right:18px;width:10px;height:10px;border-radius:50%;background:#c9a227;z-index:42"></div>
-  <div style="position:absolute;bottom:18px;left:18px;width:10px;height:10px;border-radius:50%;background:#c9a227;z-index:42"></div>
-  <div style="position:absolute;bottom:18px;right:18px;width:10px;height:10px;border-radius:50%;background:#c9a227;z-index:42"></div>
-
-  <!-- Ornements de coins SVG (plus grands et plus visibles) -->
-  <svg style="position:absolute;top:25px;left:25px;z-index:41" width="68" height="68" viewBox="0 0 68 68" fill="none">
-    <path d="M2 66 L2 10 Q2 2 10 2 L66 2" stroke="#c9a227" stroke-width="3"/>
-    <path d="M12 66 L12 22 Q12 12 22 12 L66 12" stroke="#c9a227" stroke-width="1.2" opacity=".6"/>
-    <circle cx="2" cy="2" r="4" fill="#c9a227"/>
-    <circle cx="12" cy="12" r="2.5" fill="#c9a227" opacity=".8"/>
-    <circle cx="22" cy="2" r="1.5" fill="#c9a227" opacity=".5"/>
-    <circle cx="2" cy="22" r="1.5" fill="#c9a227" opacity=".5"/>
-    <path d="M2 30 Q18 14 34 2" stroke="#c9a227" stroke-width="1.2" opacity=".55"/>
-    <path d="M2 46 Q28 20 50 2" stroke="#c9a227" stroke-width=".8" opacity=".3"/>
-  </svg>
-  <svg style="position:absolute;top:25px;right:25px;z-index:41;transform:scaleX(-1)" width="68" height="68" viewBox="0 0 68 68" fill="none">
-    <path d="M2 66 L2 10 Q2 2 10 2 L66 2" stroke="#c9a227" stroke-width="3"/>
-    <path d="M12 66 L12 22 Q12 12 22 12 L66 12" stroke="#c9a227" stroke-width="1.2" opacity=".6"/>
-    <circle cx="2" cy="2" r="4" fill="#c9a227"/>
-    <circle cx="12" cy="12" r="2.5" fill="#c9a227" opacity=".8"/>
-    <circle cx="22" cy="2" r="1.5" fill="#c9a227" opacity=".5"/>
-    <circle cx="2" cy="22" r="1.5" fill="#c9a227" opacity=".5"/>
-    <path d="M2 30 Q18 14 34 2" stroke="#c9a227" stroke-width="1.2" opacity=".55"/>
-    <path d="M2 46 Q28 20 50 2" stroke="#c9a227" stroke-width=".8" opacity=".3"/>
-  </svg>
-  <svg style="position:absolute;bottom:25px;left:25px;z-index:41;transform:scaleY(-1)" width="68" height="68" viewBox="0 0 68 68" fill="none">
-    <path d="M2 66 L2 10 Q2 2 10 2 L66 2" stroke="#c9a227" stroke-width="3"/>
-    <path d="M12 66 L12 22 Q12 12 22 12 L66 12" stroke="#c9a227" stroke-width="1.2" opacity=".6"/>
-    <circle cx="2" cy="2" r="4" fill="#c9a227"/>
-    <circle cx="12" cy="12" r="2.5" fill="#c9a227" opacity=".8"/>
-    <path d="M2 30 Q18 14 34 2" stroke="#c9a227" stroke-width="1.2" opacity=".55"/>
-  </svg>
-  <svg style="position:absolute;bottom:25px;right:25px;z-index:41;transform:scale(-1)" width="68" height="68" viewBox="0 0 68 68" fill="none">
-    <path d="M2 66 L2 10 Q2 2 10 2 L66 2" stroke="#c9a227" stroke-width="3"/>
-    <path d="M12 66 L12 22 Q12 12 22 12 L66 12" stroke="#c9a227" stroke-width="1.2" opacity=".6"/>
-    <circle cx="2" cy="2" r="4" fill="#c9a227"/>
-    <circle cx="12" cy="12" r="2.5" fill="#c9a227" opacity=".8"/>
-    <path d="M2 30 Q18 14 34 2" stroke="#c9a227" stroke-width="1.2" opacity=".55"/>
+  <!-- ── Motif watermark fond ── -->
+  <svg style="position:absolute;inset:0;width:100%;height:100%;opacity:.055" preserveAspectRatio="xMidYMid slice">
+    <defs><pattern id="wp" x="0" y="0" width="36" height="36" patternUnits="userSpaceOnUse">
+      <path d="M18 2 L34 18 L18 34 L2 18 Z" fill="none" stroke="#8b6914" stroke-width="1"/>
+      <circle cx="18" cy="18" r="3" fill="none" stroke="#8b6914" stroke-width=".8"/>
+    </pattern></defs>
+    <rect width="100%" height="100%" fill="url(#wp)"/>
   </svg>
 
-  <!-- ═══ CONTENU PRINCIPAL (inset 32px) ═══ -->
-  <div style="position:absolute;inset:32px;display:flex;flex-direction:column">
+  <!-- ── Bordure noire externe ── -->
+  <div style="position:absolute;inset:0;border:20px solid #0d1117;pointer-events:none;z-index:50"></div>
 
-    <!-- ─── LIGNE HAUTE : médaille gauche | RIVO logo | badge excellence ─── -->
-    <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:6px;border-bottom:2px solid rgba(201,162,39,.7);margin-bottom:6px">
+  <!-- ── Bande or ornementale (entre noir externe et ligne intérieure) ── -->
+  <svg style="position:absolute;inset:20px;width:calc(100% - 40px);height:calc(100% - 40px);pointer-events:none;z-index:49" overflow="visible">
+    <!-- Ligne or extérieure -->
+    <rect x="0" y="0" width="100%" height="100%" fill="none" stroke="#c9a227" stroke-width="4"/>
+    <!-- Ligne or intérieure (8px dedans) -->
+    <rect x="8" y="8" width="calc(100% - 16px)" height="calc(100% - 16px)" fill="none" stroke="#c9a227" stroke-width="1.5"/>
+    <!-- Ligne noire fine entre les deux lignes or -->
+    <rect x="4" y="4" width="calc(100% - 8px)" height="calc(100% - 8px)" fill="none" stroke="#0d1117" stroke-width="1"/>
+  </svg>
 
-      <!-- Médaille gauche : FORMATEURS RIVO BÉNIN -->
-      <div style="width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,#1a2744,#0d1117);border:3px solid #c9a227;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:5px;flex-shrink:0;box-shadow:0 0 0 1.5px rgba(201,162,39,.5),inset 0 0 8px rgba(201,162,39,.15)">
-        <div style="color:#d4a017;font-size:5px;font-weight:800;letter-spacing:.05em;line-height:1.4;text-transform:uppercase">FORMATEURS<br/>RIVO BÉNIN</div>
-        <div style="color:#d4a017;font-size:8.5px;margin-top:1px">★★★★★</div>
-        <div style="color:#d4a017;font-size:5px;font-weight:700;margin-top:1px;letter-spacing:.06em">CERTIFIÉ</div>
-      </div>
+  <!-- ── Ornements de coins (SVG Baroque style) ── -->
+  <!-- Haut-gauche -->
+  <svg style="position:absolute;top:16px;left:16px;z-index:51" width="80" height="80" viewBox="0 0 80 80" fill="none">
+    <path d="M4 76 L4 16 Q4 4 16 4 L76 4" stroke="#c9a227" stroke-width="3.5"/>
+    <path d="M14 76 L14 28 Q14 14 28 14 L76 14" stroke="#c9a227" stroke-width="1.5" opacity=".65"/>
+    <circle cx="4" cy="4" r="5" fill="#c9a227"/>
+    <circle cx="14" cy="14" r="3" fill="#c9a227" opacity=".8"/>
+    <circle cx="24" cy="4" r="2" fill="#c9a227" opacity=".6"/>
+    <circle cx="4" cy="24" r="2" fill="#c9a227" opacity=".6"/>
+    <path d="M4 36 Q22 18 40 4" stroke="#c9a227" stroke-width="1.5" opacity=".6"/>
+    <path d="M4 54 Q32 24 58 4" stroke="#c9a227" stroke-width=".9" opacity=".35"/>
+    <!-- Swirls décoratifs -->
+    <path d="M18 4 Q12 12 4 18" stroke="#c9a227" stroke-width="1.5"/>
+    <path d="M28 4 Q16 16 4 28" stroke="#c9a227" stroke-width="1" opacity=".5"/>
+    <circle cx="4" cy="4" r="2" fill="#0d1117"/>
+    <circle cx="14" cy="14" r="1.2" fill="#0d1117" opacity=".5"/>
+  </svg>
+  <!-- Haut-droit (miroir horizontal) -->
+  <svg style="position:absolute;top:16px;right:16px;z-index:51;transform:scaleX(-1)" width="80" height="80" viewBox="0 0 80 80" fill="none">
+    <path d="M4 76 L4 16 Q4 4 16 4 L76 4" stroke="#c9a227" stroke-width="3.5"/>
+    <path d="M14 76 L14 28 Q14 14 28 14 L76 14" stroke="#c9a227" stroke-width="1.5" opacity=".65"/>
+    <circle cx="4" cy="4" r="5" fill="#c9a227"/>
+    <circle cx="14" cy="14" r="3" fill="#c9a227" opacity=".8"/>
+    <circle cx="24" cy="4" r="2" fill="#c9a227" opacity=".6"/>
+    <circle cx="4" cy="24" r="2" fill="#c9a227" opacity=".6"/>
+    <path d="M4 36 Q22 18 40 4" stroke="#c9a227" stroke-width="1.5" opacity=".6"/>
+    <path d="M4 54 Q32 24 58 4" stroke="#c9a227" stroke-width=".9" opacity=".35"/>
+    <path d="M18 4 Q12 12 4 18" stroke="#c9a227" stroke-width="1.5"/>
+    <path d="M28 4 Q16 16 4 28" stroke="#c9a227" stroke-width="1" opacity=".5"/>
+    <circle cx="4" cy="4" r="2" fill="#0d1117"/>
+    <circle cx="14" cy="14" r="1.2" fill="#0d1117" opacity=".5"/>
+  </svg>
+  <!-- Bas-gauche (miroir vertical) -->
+  <svg style="position:absolute;bottom:16px;left:16px;z-index:51;transform:scaleY(-1)" width="80" height="80" viewBox="0 0 80 80" fill="none">
+    <path d="M4 76 L4 16 Q4 4 16 4 L76 4" stroke="#c9a227" stroke-width="3.5"/>
+    <path d="M14 76 L14 28 Q14 14 28 14 L76 14" stroke="#c9a227" stroke-width="1.5" opacity=".65"/>
+    <circle cx="4" cy="4" r="5" fill="#c9a227"/>
+    <circle cx="14" cy="14" r="3" fill="#c9a227" opacity=".8"/>
+    <path d="M4 36 Q22 18 40 4" stroke="#c9a227" stroke-width="1.5" opacity=".6"/>
+    <path d="M18 4 Q12 12 4 18" stroke="#c9a227" stroke-width="1.5"/>
+    <circle cx="4" cy="4" r="2" fill="#0d1117"/>
+  </svg>
+  <!-- Bas-droit (miroir) -->
+  <svg style="position:absolute;bottom:16px;right:16px;z-index:51;transform:scale(-1)" width="80" height="80" viewBox="0 0 80 80" fill="none">
+    <path d="M4 76 L4 16 Q4 4 16 4 L76 4" stroke="#c9a227" stroke-width="3.5"/>
+    <path d="M14 76 L14 28 Q14 14 28 14 L76 14" stroke="#c9a227" stroke-width="1.5" opacity=".65"/>
+    <circle cx="4" cy="4" r="5" fill="#c9a227"/>
+    <circle cx="14" cy="14" r="3" fill="#c9a227" opacity=".8"/>
+    <path d="M4 36 Q22 18 40 4" stroke="#c9a227" stroke-width="1.5" opacity=".6"/>
+    <path d="M18 4 Q12 12 4 18" stroke="#c9a227" stroke-width="1.5"/>
+    <circle cx="4" cy="4" r="2" fill="#0d1117"/>
+  </svg>
 
-      <!-- Logo RIVO centré -->
-      <div style="display:flex;align-items:center;gap:10px">
-        <svg width="40" height="40" viewBox="0 0 40 40"><rect width="40" height="40" rx="7" fill="#c9a227"/><text x="50%" y="69%" text-anchor="middle" fill="#0d1117" font-size="23" font-weight="900" font-family="Montserrat,sans-serif">R</text></svg>
+  <!-- ══════════════ CONTENU ══════════════ -->
+  <div style="position:absolute;inset:36px;display:flex;flex-direction:column">
+
+    <!-- ── EN-TÊTE : logo gauche + badge Excellence droite ── -->
+    <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:5px;border-bottom:1.5px solid rgba(201,162,39,.7);margin-bottom:5px;flex-shrink:0">
+
+      <!-- Logo RIVO gauche -->
+      <div style="display:flex;align-items:center;gap:8px">
+        <svg width="36" height="36" viewBox="0 0 36 36"><rect width="36" height="36" rx="6" fill="#0d1117"/><text x="50%" y="70%" text-anchor="middle" fill="#c9a227" font-size="20" font-weight="900" font-family="Montserrat,sans-serif">R</text></svg>
         <div>
-          <div style="font-size:24px;font-weight:900;color:#0d1117;letter-spacing:.08em;line-height:1">RIVO</div>
-          <div style="font-size:5px;color:#6b7280;font-weight:700;letter-spacing:.04em;line-height:1.5">LA PLATEFORME QUI TRANSFORME L'APPRENTISSAGE EN OPPORTUNITÉ</div>
+          <div style="font-size:20px;font-weight:900;color:#0d1117;letter-spacing:.06em;line-height:1">RIVO</div>
+          <div style="font-size:5px;color:#6b7280;font-weight:700;letter-spacing:.04em;text-transform:uppercase">RÉVÉLONS VOTRE POTENTIEL</div>
         </div>
       </div>
 
-      <!-- Badge RIVO EXCELLENCE à droite -->
-      <div style="width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,#1a2744,#0d1117);border:3px solid #c9a227;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:5px;flex-shrink:0;box-shadow:0 0 0 1.5px rgba(201,162,39,.5),inset 0 0 8px rgba(201,162,39,.15)">
-        <div style="color:#d4a017;font-size:8px;font-weight:900;letter-spacing:.06em">RIVO</div>
-        <div style="color:#d4a017;font-size:5.5px;font-weight:700;line-height:1.35;margin-top:2px;text-transform:uppercase">EXCELLENCE<br/>FORMATION</div>
-        <div style="color:#d4a017;font-size:9px;margin-top:2px">★★★★</div>
+      <!-- Badge RIVO EXCELLENCE droite -->
+      <div style="position:relative;width:74px;height:74px;flex-shrink:0">
+        <!-- Cercle principal -->
+        <div style="width:74px;height:74px;border-radius:50%;background:linear-gradient(160deg,#1a2744,#0a0f1e);border:3px solid #c9a227;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:4px;box-shadow:0 0 0 1.5px rgba(201,162,39,.4),0 4px 12px rgba(0,0,0,.5)">
+          <div style="color:#d4a017;font-size:8px;font-weight:900;letter-spacing:.06em;line-height:1">RIVO</div>
+          <div style="color:#d4a017;font-size:5px;font-weight:700;line-height:1.3;margin-top:2px;text-transform:uppercase">EXCELLENCE<br/>FORMATION</div>
+          <div style="color:#d4a017;font-size:8.5px;margin-top:2px">★★★★</div>
+        </div>
+        <!-- Ruban bleu "FORMATION" en bas du badge -->
+        <div style="position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);background:#1d4ed8;color:white;font-size:4.5px;font-weight:800;padding:2px 8px;border-radius:2px;white-space:nowrap;letter-spacing:.06em">FORMATION</div>
       </div>
 
     </div>
 
-    <!-- ─── GRILLE 3 COLONNES ─── -->
-    <div style="display:grid;grid-template-columns:215px 1fr 200px;gap:0;flex:1;min-height:0">
+    <!-- ── CORPS : 3 colonnes ── -->
+    <div style="display:grid;grid-template-columns:205px 1fr 192px;flex:1;min-height:0;overflow:hidden">
 
-      <!-- ─── COLONNE GAUCHE ─── -->
-      <div style="display:flex;flex-direction:column;align-items:center;gap:7px;padding:0 10px 0 0">
+      <!-- ── COL GAUCHE ── -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding-right:10px">
 
-        <!-- Photo titulaire ronde -->
-        <div style="width:108px;height:108px;border-radius:50%;border:4px solid #c9a227;overflow:hidden;background:#d1d5db;flex-shrink:0;box-shadow:0 3px 12px rgba(201,162,39,.4)">
-          <img id="cph" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 108 108'%3E%3Crect fill='%23e5e7eb' width='108' height='108'/%3E%3Ccircle cx='54' cy='40' r='22' fill='%23adb5bd'/%3E%3Cellipse cx='54' cy='92' rx='35' ry='26' fill='%23adb5bd'/%3E%3C/svg%3E"
+        <!-- Photo ronde -->
+        <div style="width:105px;height:105px;border-radius:50%;border:4px solid #c9a227;overflow:hidden;background:#d1d5db;flex-shrink:0;box-shadow:0 3px 12px rgba(201,162,39,.45)">
+          <img id="cph" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 105 105'%3E%3Crect fill='%23e5e7eb' width='105' height='105'/%3E%3Ccircle cx='52' cy='38' r='20' fill='%23adb5bd'/%3E%3Cellipse cx='52' cy='88' rx='32' ry='24' fill='%23adb5bd'/%3E%3C/svg%3E"
                style="width:100%;height:100%;object-fit:cover;display:block"/>
         </div>
 
-        <!-- NPI box bleu pointillé -->
-        <div style="border:2.5px dashed #1d4ed8;padding:7px 8px;text-align:center;width:100%;background:rgba(29,78,216,.07)">
-          <div style="font-size:8.5px;font-weight:900;color:#1d4ed8;margin-bottom:3px;letter-spacing:.1em">● NPI ●</div>
-          <div id="cnpi" style="font-size:9px;font-weight:900;color:#0d1117;font-family:'Courier New',monospace;word-break:break-all;letter-spacing:.03em">NPI-</div>
-          <div style="font-size:5.5px;color:#6b7280;margin-top:3px;font-weight:700;letter-spacing:.06em;text-transform:uppercase">Numéro Personnel d'Identification</div>
+        <!-- NPI box -->
+        <div style="border:2.5px dashed #1d4ed8;padding:5px 7px;text-align:center;width:100%;background:rgba(29,78,216,.06)">
+          <div style="font-size:7.5px;font-weight:900;color:#1d4ed8;margin-bottom:2px;letter-spacing:.1em">● NPI ●</div>
+          <div id="cnpi" style="font-size:8.5px;font-weight:900;color:#0d1117;font-family:'Courier New',monospace;word-break:break-all">NPI-</div>
+          <div style="font-size:5px;color:#6b7280;margin-top:2px;font-weight:700;letter-spacing:.05em;text-transform:uppercase">Numéro Personnel d'Identification</div>
         </div>
 
-        <!-- Vérification -->
-        <div style="border:1.5px solid #c9a227;padding:6px 8px;width:100%;background:rgba(201,162,39,.06)">
-          <div style="font-size:6.5px;font-weight:900;color:#0d1117;text-align:center;margin-bottom:5px;letter-spacing:.04em">VÉRIFICATION DE L'AUTHENTICITÉ</div>
-          <div style="display:flex;flex-direction:column;gap:2.5px">
-            <div style="font-size:6px;color:#374151;display:flex;align-items:center;gap:4px"><span style="color:#16a34a;font-size:7px">✓</span>Nom du titulaire</div>
-            <div style="font-size:6px;color:#374151;display:flex;align-items:center;gap:4px"><span style="color:#16a34a;font-size:7px">✓</span>Formation suivie</div>
-            <div style="font-size:6px;color:#374151;display:flex;align-items:center;gap:4px"><span style="color:#16a34a;font-size:7px">✓</span>Date de délivrance</div>
-            <div style="font-size:6px;color:#374151;display:flex;align-items:center;gap:4px"><span style="color:#16a34a;font-size:7px">✓</span>Statut : <strong style="color:#16a34a;margin-left:2px">AUTHENTIQUE</strong></div>
+        <!-- Vérification + QR côte à côte -->
+        <div style="display:flex;gap:5px;width:100%;align-items:stretch">
+          <!-- QR code -->
+          <div style="background:white;padding:3px;border:1px solid #e5e7eb;flex-shrink:0;display:flex;align-items:center;justify-content:center">
+            <div id="cqr" style="width:72px;height:72px"></div>
+          </div>
+          <!-- Vérification -->
+          <div style="border:1.5px solid #c9a227;padding:5px 6px;background:rgba(201,162,39,.05);flex:1">
+            <div style="font-size:5.5px;font-weight:900;color:#0d1117;text-align:center;margin-bottom:4px;letter-spacing:.03em;text-transform:uppercase">VÉRIFICATION<br/>DE L'AUTHENTICITÉ</div>
+            <div style="font-size:5.5px;color:#374151;margin-bottom:2px;display:flex;align-items:center;gap:2px"><span style="color:#16a34a;font-size:7px">✓</span>Nom du titulaire</div>
+            <div style="font-size:5.5px;color:#374151;margin-bottom:2px;display:flex;align-items:center;gap:2px"><span style="color:#16a34a;font-size:7px">✓</span>Formation suivie</div>
+            <div style="font-size:5.5px;color:#374151;margin-bottom:2px;display:flex;align-items:center;gap:2px"><span style="color:#16a34a;font-size:7px">✓</span>Date de délivrance</div>
+            <div style="font-size:5.5px;color:#374151;display:flex;align-items:center;gap:2px"><span style="color:#16a34a;font-size:7px">✓</span>Statut : <strong style="color:#16a34a;margin-left:1px">AUTHENTIQUE</strong></div>
           </div>
         </div>
 
-        <!-- QR code -->
-        <div style="background:white;padding:4px;border:1px solid #e5e7eb">
-          <div id="cqr" style="width:80px;height:80px"></div>
-        </div>
-
         <!-- URL vérification -->
-        <div style="font-size:5.5px;color:#374151;text-align:center;line-height:1.6">
+        <div style="font-size:5.2px;color:#374151;text-align:center;line-height:1.6">
           Pour plus de vérification, prière d'aller<br/>directement sur le site officiel<br/>
-          <strong style="color:#1d4ed8;font-size:5.5px">https://certificatnpi.infy.click</strong><br/>
-          et tapé le NPI pour vérifier l'authenticité.
+          <strong style="color:#1d4ed8">https://certificatnpi.infy.click</strong><br/>
+          et tapez le NPI pour vérifier l'authenticité.
         </div>
 
       </div><!-- /col gauche -->
 
-      <!-- ─── COLONNE CENTRE ─── -->
-      <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:2px 14px 0;border-left:1px solid rgba(201,162,39,.5);border-right:1px solid rgba(201,162,39,.5)">
+      <!-- ── COL CENTRE ── -->
+      <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 12px;border-left:1px solid rgba(201,162,39,.5);border-right:1px solid rgba(201,162,39,.5)">
 
-        <!-- Grand titre ATTESTATION -->
-        <div style="font-size:80px;font-weight:900;color:#0d1117;font-family:'Cinzel',serif;line-height:.85;margin-bottom:3px;letter-spacing:.05em">ATTESTATION</div>
+        <!-- ATTESTATION - Grand titre Cinzel -->
+        <div style="font-size:78px;font-weight:900;color:#0d1117;font-family:'Cinzel',serif;line-height:.85;letter-spacing:.04em;margin-bottom:2px">ATTESTATION</div>
 
-        <!-- Sous-titre or avec tirets -->
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <!-- Sous-titre or décoratif -->
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;width:100%">
           <div style="flex:1;height:1.5px;background:linear-gradient(90deg,transparent,#c9a227)"></div>
-          <div style="font-size:10px;font-weight:800;color:#c9a227;letter-spacing:.18em;white-space:nowrap">DE FIN DE FORMATION</div>
+          <div style="font-size:9.5px;font-weight:800;color:#c9a227;letter-spacing:.16em;white-space:nowrap">DE FIN DE FORMATION</div>
           <div style="flex:1;height:1.5px;background:linear-gradient(90deg,#c9a227,transparent)"></div>
         </div>
 
-        <div style="font-size:7.5px;color:#4b5563;font-style:italic;margin-bottom:9px;line-height:1.5">Nous soussignés, RIVO, organisme de formation professionnelle, certifions que :</div>
+        <div style="font-size:7px;color:#4b5563;font-style:italic;margin-bottom:7px;line-height:1.5">Nous soussignés, RIVO, organisme de formation professionnelle, certifions que :</div>
 
-        <!-- Nom en cursive GRAND -->
-        <div id="cname" style="font-size:44px;font-weight:700;color:#0d1117;font-family:'Dancing Script',cursive;line-height:1;margin-bottom:7px;max-width:360px;word-break:break-word">Jean Kossi</div>
+        <!-- Nom cursive grand -->
+        <div id="cname" style="font-size:46px;font-weight:700;color:#0d1117;font-family:'Dancing Script',cursive;line-height:.95;margin-bottom:6px;max-width:360px;word-break:break-word">Jean Kossi</div>
 
-        <div style="font-size:8px;color:#4b5563;margin-bottom:3px">a suivi avec succès la formation :</div>
-        <div id="ccourse" style="font-size:18px;font-weight:900;color:#0d1117;letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px;max-width:340px;line-height:1.2">MARKETING DIGITAL</div>
-        <div style="font-size:7.5px;color:#4b5563;margin-bottom:7px">et a satisfait à l'ensemble des évaluations requises.</div>
-
-        <!-- Encadré "En foi de quoi" avec bordure or -->
-        <div style="border:1.5px solid #c9a227;padding:7px 14px;width:95%;background:rgba(201,162,39,.04);margin-bottom:8px">
-          <div style="font-size:7.5px;color:#374151;font-style:italic;line-height:1.65">
-            En foi de quoi, la présente attestation lui est délivrée pour servir et valoir ce que de droit.
-          </div>
-        </div>
+        <div style="font-size:7.5px;color:#4b5563;margin-bottom:2px">a suivi avec succès la formation :</div>
+        <div id="ccourse" style="font-size:18px;font-weight:900;color:#0d1117;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;max-width:340px;line-height:1.2">MARKETING DIGITAL</div>
+        <div style="font-size:7px;color:#4b5563;margin-bottom:6px">et a satisfait à l'ensemble des évaluations requises.</div>
 
         <!-- Date / Lieu / Niveau -->
-        <div style="display:flex;gap:20px;align-items:flex-start;justify-content:center;margin-top:auto">
+        <div style="display:flex;gap:16px;align-items:flex-start;justify-content:center;margin-top:auto;padding-bottom:4px">
           <div style="text-align:center">
-            <div style="font-size:16px;line-height:1;margin-bottom:2px">📅</div>
-            <div style="font-size:5.5px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.09em;margin-bottom:2px">DATE DE DÉLIVRANCE</div>
-            <div id="cdate" style="font-size:8.5px;font-weight:900;color:#0d1117">—</div>
+            <div style="font-size:14px;line-height:1;margin-bottom:2px">📅</div>
+            <div style="font-size:5px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:1px">DATE DE DÉLIVRANCE</div>
+            <div id="cdate" style="font-size:8px;font-weight:900;color:#0d1117">—</div>
           </div>
           <div style="text-align:center">
-            <div style="font-size:16px;line-height:1;margin-bottom:2px">📍</div>
-            <div style="font-size:5.5px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.09em;margin-bottom:2px">FAIT À</div>
-            <div id="clieu" style="font-size:8.5px;font-weight:900;color:#0d1117">Lomé, Togo</div>
+            <div style="font-size:14px;line-height:1;margin-bottom:2px">📍</div>
+            <div style="font-size:5px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:1px">FAIT À</div>
+            <div id="clieu" style="font-size:8px;font-weight:900;color:#0d1117">Lomé, Togo</div>
           </div>
           <div style="text-align:center">
-            <div style="font-size:16px;line-height:1;margin-bottom:2px">🎓</div>
-            <div style="font-size:5.5px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.09em;margin-bottom:2px">NIVEAU</div>
-            <div style="font-size:8.5px;font-weight:900;color:#0d1117">Professionnel</div>
+            <div style="font-size:14px;line-height:1;margin-bottom:2px">🎓</div>
+            <div style="font-size:5px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:1px">NIVEAU</div>
+            <div style="font-size:8px;font-weight:900;color:#0d1117">Professionnel</div>
           </div>
         </div>
 
       </div><!-- /col centre -->
 
-      <!-- ─── COLONNE DROITE ─── -->
-      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding-left:10px">
+      <!-- ── COL DROITE ── -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:7px;padding-left:10px">
 
-        <!-- Photo de la formation (la badge est maintenant dans le header) -->
-        <div style="width:100%;height:130px;border-radius:8px;overflow:hidden;border:2.5px solid #c9a227;background:#e5e7eb;flex-shrink:0;box-shadow:0 2px 8px rgba(201,162,39,.3)">
-          <img id="ccph" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 182 110'%3E%3Crect fill='%23e5e7eb' width='182' height='110'/%3E%3Ctext x='91' y='61' text-anchor='middle' fill='%239ca3af' font-size='12' font-family='sans-serif'%3EPhoto formation%3C/text%3E%3C/svg%3E"
+        <!-- Photo formation -->
+        <div style="width:100%;height:120px;border-radius:8px;overflow:hidden;border:2px solid #c9a227;background:#e5e7eb;flex-shrink:0;box-shadow:0 2px 8px rgba(201,162,39,.3)">
+          <img id="ccph" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 175 120'%3E%3Crect fill='%23e5e7eb' width='175' height='120'/%3E%3Ctext x='87' y='66' text-anchor='middle' fill='%239ca3af' font-size='11' font-family='sans-serif'%3EPhoto formation%3C/text%3E%3C/svg%3E"
                style="width:100%;height:100%;object-fit:cover;display:block"/>
         </div>
 
         <!-- Label formation -->
         <div style="text-align:center">
           <div style="font-size:6.5px;font-weight:900;color:#c9a227;letter-spacing:.14em;text-transform:uppercase">FORMATION SUIVIE</div>
-          <div id="cclabel" style="font-size:10px;font-weight:900;color:#0d1117;margin-top:3px;text-transform:uppercase;line-height:1.2;max-width:168px">MARKETING DIGITAL</div>
+          <div id="cclabel" style="font-size:9.5px;font-weight:900;color:#0d1117;margin-top:2px;text-transform:uppercase;line-height:1.2;max-width:162px">MARKETING DIGITAL</div>
         </div>
 
-        <!-- Directeur + signature + cachet -->
-        <div style="margin-top:auto;text-align:center;width:100%;padding-top:7px;border-top:1.5px solid #c9a227">
-          <div style="font-size:6.5px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">LE DIRECTEUR RIVO</div>
-          <div style="font-size:16px;font-family:'Dancing Script',cursive;color:#0d1117;line-height:1.1">Martial Gbesso</div>
-          <div style="font-size:6.5px;color:#6b7280;margin-bottom:5px">Martial Gbesso</div>
-          <!-- Cachet rond -->
-          <div style="width:56px;height:56px;border-radius:50%;border:2.5px solid #1d4ed8;margin:0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(29,78,216,.06);position:relative">
-            <div style="font-size:8px;font-weight:900;color:#1d4ed8">RIVO</div>
-            <!-- Texte circulaire simulé -->
-            <div style="position:absolute;top:3px;left:0;right:0;text-align:center;font-size:4.5px;font-weight:700;color:#1d4ed8;letter-spacing:.05em">ORGANISME DE FORMATION</div>
-            <div style="position:absolute;bottom:3px;left:0;right:0;text-align:center;font-size:4.5px;font-weight:700;color:#1d4ed8;letter-spacing:.05em">PROFESSIONNELLE</div>
-          </div>
+        <!-- Signature + sceau -->
+        <div style="margin-top:auto;text-align:center;width:100%;border-top:1.5px solid #c9a227;padding-top:6px">
+          <div style="font-size:6px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.06em;margin-bottom:1px">LE DIRECTEUR RIVO</div>
+          <div style="font-size:15px;font-family:'Dancing Script',cursive;color:#0d1117;line-height:1.1">Martial Gbesso</div>
+          <div style="font-size:6px;color:#6b7280;margin-bottom:4px">Martial Gbesso</div>
         </div>
 
       </div><!-- /col droite -->
 
-    </div><!-- /grille 3 colonnes -->
+    </div><!-- /grille -->
 
-    <!-- ─── PIED : COMPÉTENCE ★ INTÉGRITÉ ★ EXCELLENCE ─── -->
-    <div style="margin-top:7px;padding-top:5px;border-top:1.5px solid rgba(201,162,39,.65);text-align:center">
-      <div style="font-size:10px;font-weight:900;color:#c9a227;letter-spacing:.25em;text-transform:uppercase">COMPÉTENCE ★ INTÉGRITÉ ★ EXCELLENCE</div>
+    <!-- ── PIED : COMPÉTENCE ✦ INTÉGRITÉ ✦ EXCELLENCE ── -->
+    <div style="margin-top:5px;padding-top:4px;border-top:1.5px solid rgba(201,162,39,.7);text-align:center;flex-shrink:0">
+      <div style="font-size:9px;font-weight:900;color:#c9a227;letter-spacing:.22em;text-transform:uppercase">✦ COMPÉTENCE ✦ INTÉGRITÉ ✦ EXCELLENCE ✦</div>
     </div>
 
-  </div><!-- /contenu principal -->
+  </div><!-- /contenu -->
 
-  <!-- Disclaimer tout en bas -->
-  <div style="position:absolute;bottom:23px;left:40px;right:40px;text-align:center;font-size:5.5px;color:#9ca3af;font-style:italic;font-family:'Montserrat',sans-serif">
+  <!-- Grand sceau RIVO centré au bas -->
+  <div style="position:absolute;bottom:38px;left:50%;transform:translateX(-50%);z-index:35">
+    <div style="width:82px;height:82px;border-radius:50%;background:linear-gradient(135deg,#0d1117,#1a2744);border:3px solid #c9a227;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,.5),0 0 0 2px rgba(201,162,39,.3)">
+      <div style="color:#d4a017;font-size:13px;font-weight:900;letter-spacing:.06em;line-height:1">RIVO</div>
+      <div style="color:#d4a017;font-size:4.5px;font-weight:700;line-height:1.4;margin-top:2px;letter-spacing:.04em;text-transform:uppercase">ORGANISME DE<br/>FORMATION<br/>PROFESSIONNELLE</div>
+      <div style="color:#d4a017;font-size:8px;margin-top:2px">★★★★</div>
+    </div>
+  </div>
+
+  <!-- Disclaimer -->
+  <div style="position:absolute;bottom:24px;left:50px;right:50px;text-align:center;font-size:5.5px;color:#9ca3af;font-style:italic;z-index:35">
     Cette attestation est un document officiel et sécurisé. Toute falsification, reproduction ou utilisation frauduleuse est passible de poursuites.
   </div>
 
 </div><!-- /#certificate -->
 
-    </div><!-- /csi -->
-  </div><!-- /cswrap -->
-</div><!-- /main -->
-
-</div><!-- /app -->
+  </div></div>
+</div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
@@ -361,22 +367,20 @@ const sba=window.supabase.createClient(SB_URL,SB_SVC,{auth:{persistSession:false
 const VURL='https://certificatnpi.infy.click';
 let hd='',cd='',npi='',qo=null;
 
-function pick(inp,t){
+function pk(inp,t){
   const f=inp.files[0];if(!f)return;
-  const isH=t==='h';
-  const nn=isH?'fpn':'fcn',nt=isH?'fpt':'fct';
-  document.getElementById(nn).textContent=f.name.length>22?f.name.slice(0,22)+'…':f.name;
+  const ih=t==='h';
+  document.getElementById(ih?'fpn':'fcn').textContent=f.name.length>22?f.name.slice(0,22)+'…':f.name;
   const r=new FileReader();
   r.onload=e=>{
     const u=e.target.result;
-    const th=document.getElementById(nt);th.src=u;th.style.display='block';
-    if(isH){hd=u;document.getElementById('cph').src=u;}
+    const th=document.getElementById(ih?'fpt':'fct');th.src=u;th.style.display='block';
+    if(ih){hd=u;document.getElementById('cph').src=u;}
     else{cd=u;document.getElementById('ccph').src=u;}
-  };
-  r.readAsDataURL(f);
+  };r.readAsDataURL(f);
 }
 
-function live(){
+function lv(){
   const p=document.getElementById('fp').value.trim();
   const n=document.getElementById('fn').value.trim();
   const c=document.getElementById('fc').value.trim();
@@ -401,10 +405,10 @@ async function mkNpi(){
 function mkQr(url){
   const el=document.getElementById('cqr');el.innerHTML='';
   if(qo){try{qo.clear();}catch(e){}}
-  qo=new QRCode(el,{text:url,width:80,height:80,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.M});
+  qo=new QRCode(el,{text:url,width:72,height:72,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.M});
 }
 
-async function uplCloud(du){
+async function upl(du){
   if(!du)return null;
   try{
     const fd=new FormData();fd.append('file',du);fd.append('upload_preset','afrotv_images');
@@ -413,36 +417,32 @@ async function uplCloud(du){
   }catch{return null;}
 }
 
-function setSt(msg,load=false){
+function ss(msg,load=false){
   const el=document.getElementById('st');
   if(!msg){el.style.display='none';el.innerHTML='';return;}
   el.style.display='block';
   el.innerHTML=load?`<span class="sp"></span>${msg}`:msg;
 }
 
-async function gen(){
+async function gn(){
   const p=document.getElementById('fp').value.trim();
   const n=document.getElementById('fn').value.trim();
   const c=document.getElementById('fc').value.trim();
   const l=document.getElementById('fl').value.trim();
-  if(!p){alert('Veuillez renseigner le prénom.');return;}
-  if(!n){alert('Veuillez renseigner le nom.');return;}
-  if(!c){alert('Veuillez renseigner la formation.');return;}
-  if(!l){alert('Veuillez renseigner le lieu.');return;}
+  if(!p){alert('Prénom requis.');return;}if(!n){alert('Nom requis.');return;}
+  if(!c){alert('Formation requise.');return;}if(!l){alert('Lieu requis.');return;}
 
   const btn=document.getElementById('bg');
   btn.disabled=true;btn.innerHTML='<span class="sp"></span>Génération…';
   document.getElementById('bd').style.display='none';
   document.getElementById('nbox').style.display='none';
-  setSt('Génération du NPI…',true);
+  ss('Génération du NPI…',true);
 
   npi=await mkNpi();
   const nd='NPI-'+npi;
-
-  setSt('Téléversement photos…',true);
-  const[hu,cu]=await Promise.all([uplCloud(hd),uplCloud(cd)]);
-
-  setSt('Enregistrement…',true);
+  ss('Téléversement photos…',true);
+  const[hu,cu]=await Promise.all([upl(hd),upl(cd)]);
+  ss('Enregistrement…',true);
   await sba.from('npi_attestations').insert({
     npi_code:npi,holder_first_name:p,holder_last_name:n,
     course_title:c,holder_photo_url:hu,course_photo_url:cu,
@@ -458,31 +458,30 @@ async function gen(){
   document.getElementById('cnpi').textContent=nd;
   if(hd)document.getElementById('cph').src=hd;
   if(cd)document.getElementById('ccph').src=cd;
-
   mkQr(VURL+'/?'+new URLSearchParams({npi,fn:p,ln:n,course:c}).toString());
 
   document.getElementById('nv').textContent=nd;
   document.getElementById('nbox').style.display='block';
   document.getElementById('bd').style.display='flex';
   btn.disabled=false;btn.innerHTML='🎓 Générer l\'attestation';
-  setSt('✅ Attestation générée et enregistrée !');
-  setTimeout(()=>setSt(''),3500);
+  ss('✅ Attestation générée et enregistrée !');
+  setTimeout(()=>ss(''),3500);
 }
 
 async function dl(){
   const btn=document.getElementById('bd');
   btn.disabled=true;btn.innerHTML='<span class="sp"></span>Export…';
-  setSt('Export PNG haute résolution…',true);
+  ss('Export PNG haute résolution…',true);
   try{
     const si=document.getElementById('csi');
     const old=si.style.transform;si.style.transform='none';
-    const cv=await html2canvas(document.getElementById('certificate'),{scale:2,useCORS:true,allowTaint:false,backgroundColor:'#f9f3e3',logging:false});
+    const cv=await html2canvas(document.getElementById('certificate'),{scale:2,useCORS:true,allowTaint:false,backgroundColor:'#f5efd5',logging:false});
     si.style.transform=old;
     const a=document.createElement('a');
     a.download='Attestation-RIVO-'+npi+'.png';
     a.href=cv.toDataURL('image/png');a.click();
-    setSt('');
-  }catch(e){setSt('❌ '+e.message);}
+    ss('');
+  }catch(e){ss('❌ '+e.message);}
   btn.disabled=false;btn.innerHTML='📥 Télécharger PNG';
 }
 
@@ -494,18 +493,16 @@ function cp(){
   }).catch(()=>alert('NPI : '+v));
 }
 
-function scale(){
+function sc(){
   const m=document.querySelector('.main');
   const i=document.getElementById('csi');
   if(!m||!i)return;
-  const av=m.clientWidth-48;
-  const s=Math.min(1,av/1050);
-  i.style.transform=`scale(${s})`;
-  i.style.width='1050px';
+  const s=Math.min(1,(m.clientWidth-40)/1050);
+  i.style.transform=`scale(${s})`;i.style.width='1050px';
   i.parentElement.style.height=Math.round(742*s)+'px';
 }
-window.addEventListener('resize',scale);
-window.addEventListener('load',()=>{scale();live();});
+window.addEventListener('resize',sc);
+window.addEventListener('load',()=>{sc();lv();});
 document.getElementById('cdate').textContent=new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
 </script>
 </body>
