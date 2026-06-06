@@ -1125,7 +1125,7 @@ const sbAdmin={
 // ── Firebase ──────────────────────────────────────────
 const FB_CONFIG = {
   apiKey: "AIzaSyA5olGOv_gvmJdogl1nQg2TzAdGJ5WbZR4",
-  authDomain: "rivo.freedev.app",
+  authDomain: "rivoo-a0624.firebaseapp.com",
   projectId: "rivoo-a0624",
   storageBucket: "rivoo-a0624.firebasestorage.app",
   messagingSenderId: "565836730871",
