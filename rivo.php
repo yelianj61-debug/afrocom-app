@@ -484,6 +484,27 @@ body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1F2937;margin:0}
   </div>
 </div>
 
+<!-- ═══════════════════ PAGE: EMAIL ACTION (confirmation / réinitialisation) ═══════════════════ -->
+<div id="page-email-action" class="page">
+  <div class="gradient-hero" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem 1.25rem">
+    <div style="width:100%;max-width:440px">
+      <div style="text-align:center;margin-bottom:1.5rem">
+        <div style="display:flex;align-items:center;justify-content:center;gap:.6rem;margin-bottom:.5rem">
+          <div style="width:3rem;height:3rem;border-radius:1rem;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:1.5rem">📚</div>
+          <span style="font-size:2rem;font-weight:900;color:white">RIVO</span>
+        </div>
+      </div>
+      <div id="email-action-body" style="background:white;border-radius:1.5rem;padding:2rem;box-shadow:0 20px 60px rgba(0,0,0,.25);text-align:center">
+        <div class="spin-blue" style="margin:0 auto 1rem"></div>
+        <p style="color:#6b7280">Vérification du lien en cours…</p>
+      </div>
+      <div id="email-action-tip" style="display:none;margin-top:1rem;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:1rem;padding:1rem 1.25rem;color:#dbeafe;font-size:.82rem;line-height:1.5">
+        💡 <strong>Le lien ne s'est pas ouvert correctement ?</strong> Copiez l'adresse affichée dans la barre du navigateur ci-dessus, ouvrez Safari (ou Chrome), collez-la et appuyez sur "Aller".
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════════════ PAGE: REGISTER ═══════════════════ -->
 <div id="page-register" class="page">
   <div class="gradient-hero" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem 1.25rem">
@@ -800,7 +821,7 @@ const FB_CONFIG = {
   messagingSenderId: "565836730871",
   appId: "1:565836730871:web:e9891b273540fb0d4d1ef2"
 };
-const ACS = {url:'https://rivo.freedev.app',handleCodeInApp:false};
+const ACS = {url:'https://rivo.freedev.app',handleCodeInApp:true};
 let fbAuth = null;
 
 // ── Globals ───────────────────────────────────────────
@@ -836,6 +857,92 @@ function goTo(p){
     if(!loaded.notif){loaded.notif=true; loadNotifications();}
   }
   if(p==='notifs' && CU) loadNotifications();
+}
+
+// ── Traitement des liens d'action Firebase (confirmation email / reset mdp) ─
+async function handleEmailAction(){
+  const params=new URLSearchParams(window.location.search);
+  const mode=params.get('mode');
+  const oobCode=params.get('oobCode');
+  if(!mode||!oobCode) return false;
+
+  goTo('email-action');
+  history.replaceState({},'',location.pathname);
+  const box=document.getElementById('email-action-body');
+  const tip=document.getElementById('email-action-tip');
+
+  if(mode==='verifyEmail'){
+    try{
+      await fbAuth.applyActionCode(oobCode);
+      box.innerHTML=`
+        <div style="font-size:3rem;margin-bottom:.75rem">✅</div>
+        <h2 style="font-size:1.35rem;font-weight:900;color:#1F2937;margin-bottom:.5rem">Adresse e-mail confirmée !</h2>
+        <p style="color:#6b7280;margin-bottom:1.5rem;font-size:.92rem">Votre compte RIVO est maintenant actif. Connectez-vous pour commencer à apprendre et gagner.</p>
+        <button onclick="goTo('login')" class="btn-primary" style="width:100%;justify-content:center;padding:.875rem;font-size:1rem">Se connecter</button>
+      `;
+    }catch(e){
+      box.innerHTML=`
+        <div style="font-size:3rem;margin-bottom:.75rem">⚠️</div>
+        <h2 style="font-size:1.25rem;font-weight:900;color:#dc2626;margin-bottom:.5rem">Lien invalide ou expiré</h2>
+        <p style="color:#6b7280;margin-bottom:1.5rem;font-size:.92rem">Ce lien de confirmation a peut-être déjà été utilisé, ou il a expiré (validité 1 heure). Connectez-vous pour en demander un nouveau.</p>
+        <button onclick="goTo('login')" class="btn-outline" style="width:100%;justify-content:center;padding:.875rem;font-size:1rem">Retour à la connexion</button>
+      `;
+      tip.style.display='block';
+    }
+  } else if(mode==='resetPassword'){
+    try{
+      const email=await fbAuth.verifyPasswordResetCode(oobCode);
+      box.innerHTML=`
+        <div style="font-size:2.5rem;margin-bottom:.5rem">🔑</div>
+        <h2 style="font-size:1.3rem;font-weight:900;color:#1F2937;margin-bottom:.25rem">Nouveau mot de passe</h2>
+        <p style="color:#6b7280;margin-bottom:1.25rem;font-size:.88rem">Pour le compte <strong style="color:#1F2937">${email}</strong></p>
+        <form id="rp-form" onsubmit="confirmResetPwd(event)" style="display:flex;flex-direction:column;gap:1rem;text-align:left">
+          <div class="input-icon" style="position:relative">
+            <input type="password" id="rp-pwd" class="input" placeholder="••••••••  (8 caractères min.)" required minlength="8" style="padding-right:2.75rem"/>
+            <button type="button" onclick="togglePwd('rp-pwd')" style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;font-size:1.1rem">👁</button>
+          </div>
+          <input type="hidden" id="rp-code" value="${oobCode}"/>
+          <button type="submit" id="rp-btn" class="btn-primary" style="width:100%;justify-content:center;padding:.875rem;font-size:1rem">Réinitialiser le mot de passe</button>
+        </form>
+      `;
+    }catch(e){
+      box.innerHTML=`
+        <div style="font-size:3rem;margin-bottom:.75rem">⚠️</div>
+        <h2 style="font-size:1.25rem;font-weight:900;color:#dc2626;margin-bottom:.5rem">Lien invalide ou expiré</h2>
+        <p style="color:#6b7280;margin-bottom:1.5rem;font-size:.92rem">Ce lien de réinitialisation a peut-être déjà été utilisé, ou il a expiré. Demandez-en un nouveau depuis la page de connexion.</p>
+        <button onclick="goTo('login')" class="btn-outline" style="width:100%;justify-content:center;padding:.875rem;font-size:1rem">Retour à la connexion</button>
+      `;
+      tip.style.display='block';
+    }
+  } else {
+    box.innerHTML=`
+      <div style="font-size:3rem;margin-bottom:.75rem">ℹ️</div>
+      <h2 style="font-size:1.2rem;font-weight:900;color:#1F2937;margin-bottom:.5rem">Lien non reconnu</h2>
+      <p style="color:#6b7280;margin-bottom:1.5rem;font-size:.92rem">Ce lien d'action n'est pas pris en charge par RIVO.</p>
+      <button onclick="goTo('login')" class="btn-outline" style="width:100%;justify-content:center;padding:.875rem;font-size:1rem">Retour à la connexion</button>
+    `;
+  }
+  return true;
+}
+
+async function confirmResetPwd(e){
+  e.preventDefault();
+  const code=document.getElementById('rp-code').value;
+  const pwd=document.getElementById('rp-pwd').value;
+  if(pwd.length<8){ toast('Le mot de passe doit contenir au moins 8 caractères','err'); return; }
+  setBtn('rp-btn','<span class="spin"></span> Réinitialisation…',true);
+  try{
+    await fbAuth.confirmPasswordReset(code,pwd);
+    document.getElementById('email-action-body').innerHTML=`
+      <div style="font-size:3rem;margin-bottom:.75rem">✅</div>
+      <h2 style="font-size:1.3rem;font-weight:900;color:#1F2937;margin-bottom:.5rem">Mot de passe réinitialisé !</h2>
+      <p style="color:#6b7280;margin-bottom:1.5rem;font-size:.92rem">Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.</p>
+      <button onclick="goTo('login')" class="btn-primary" style="width:100%;justify-content:center;padding:.875rem;font-size:1rem">Se connecter</button>
+    `;
+  }catch(err){
+    toast('Erreur : '+(err.message||'réessayez plus tard'),'err');
+    setBtn('rp-btn','Réinitialiser le mot de passe',false);
+  }
 }
 
 // ── App start (called after CDN loads) ───────────────
@@ -904,7 +1011,7 @@ async function startApp(){
         // ── Init Firebase Auth ────────────────────────
         if(!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
         fbAuth=firebase.auth();
-        startApp();
+        handleEmailAction().then(handled=>{ if(!handled) startApp(); });
       }catch(e){tryLoad(i+1);}
     };
     s.onerror=function(){tryLoad(i+1);};
