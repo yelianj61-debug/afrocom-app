@@ -707,7 +707,8 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
 
   <!-- Email confirmation banner -->
   <div id="email-confirm-banner" style="display:none;background:#fef3c7;border-bottom:2px solid #fcd34d;padding:.625rem 1rem;text-align:center;font-size:.8rem;color:#92400e;font-weight:600">
-    ⚠️ Veuillez confirmer votre email dans votre boîte mail. Ce bandeau disparaîtra après confirmation.
+    ⚠️ Vérifiez votre boîte mail pour confirmer votre compte. Si vous ne trouvez pas l'email, vérifiez vos spams.
+    <button onclick="resendConfirmation()" style="margin-left:.75rem;background:#f59e0b;border:none;color:white;font-weight:700;font-size:.75rem;padding:.3rem .7rem;border-radius:.5rem;cursor:pointer">Renvoyer l'email</button>
   </div>
 
   <!-- Notification panel -->
@@ -1289,7 +1290,7 @@ async function startApp(){
       const unsub=fbAuth.onAuthStateChanged(u=>{unsub();resolve(u);});
     });
 
-    if(fbUser&&fbUser.emailVerified){
+    if(fbUser){
       FBU=fbUser;
       await loadProfileData();
       if(CP){
@@ -1498,14 +1499,6 @@ async function doLogin(e){
     const cred=await withTimeout(fbAuth.signInWithEmailAndPassword(email,pwd),15000);
     const fbUser=cred.user;
     await fbUser.reload(); // force la synchro emailVerified depuis le serveur
-
-    // 2. Email pas encore confirmé
-    if(!fbUser.emailVerified){
-      FBU=fbUser;
-      showErr('li-err','Confirmez votre email avant de vous connecter. Vérifiez vos spams.');
-      document.getElementById('li-resend').style.display='block';
-      return;
-    }
 
     FBU=fbUser;
 
