@@ -1465,7 +1465,13 @@ async function loadProfileData(){
     if(av)av.innerHTML=p.avatar_url?`<img src="${p.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:9999px"/>`:((fn[0]||'')+(ln[0]||'')).toUpperCase()||'?';
   }catch(e){
     console.warn('loadProfileData error:',e?.message||e);
-    // BUG 2 FIX: en cas d'erreur, remplacer "..." par "—" pour éviter l'affichage vide
+    // Profil de secours minimal pour éviter que les appelants ne crashent sur CP.xxx
+    if(!CP){
+      CP={id:null,first_name:'',last_name:'',email:FBU?.email||'',
+          badge_level:'debutant',balance:0,referral_balance:0,
+          referral_code:'—',rivo_id:'',currency:'XOF',points:0};
+      if(FBU?.email) CU={id:null,email:FBU.email};
+    }
     ['info-name','info-email','info-solde','ref-code','prof-name','prof-email'].forEach(id=>{
       const el=document.getElementById(id);if(el && el.textContent==='...')el.textContent='—';
     });
@@ -1520,7 +1526,7 @@ async function doLogin(e){
     // loadProfileData() définit toujours CP (mode dégradé Firebase si BDD indisponible)
 
     // 5. Redirection admin
-    if(CP.badge_level==='admin'){
+    if(CP?.badge_level==='admin'){
       toast('Connexion admin réussie !');
       setTimeout(()=>{window.location.href='./rivo-admin.html';},700);
       return;
