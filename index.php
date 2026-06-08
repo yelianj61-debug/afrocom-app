@@ -580,7 +580,6 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
             Se connecter
           </button>
           <p id="li-err" style="display:none;color:#dc2626;font-size:.85rem;text-align:center;background:#fef2f2;border:1px solid #fecaca;border-radius:.75rem;padding:.625rem .875rem;margin-top:-.25rem"></p>
-          <button id="li-resend" type="button" onclick="resendConfirmation()" style="display:none;width:100%;background:#fef3c7;border:1px solid #fcd34d;color:#92400e;border-radius:.75rem;padding:.625rem;font-size:.85rem;font-weight:600;cursor:pointer;margin-top:-.25rem">📧 Renvoyer l'email de confirmation</button>
         </form>
         <p style="text-align:center;margin-top:.75rem">
           <button type="button" onclick="forgotPassword()" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:.82rem;text-decoration:underline">Mot de passe oublié ?</button>
@@ -705,11 +704,7 @@ img{pointer-events:none;-webkit-user-drag:none;user-drag:none}
     </div>
   </header>
 
-  <!-- Email confirmation banner -->
-  <div id="email-confirm-banner" style="display:none;background:#fef3c7;border-bottom:2px solid #fcd34d;padding:.625rem 1rem;text-align:center;font-size:.8rem;color:#92400e;font-weight:600">
-    ⚠️ Vérifiez votre boîte mail pour confirmer votre compte. Si vous ne trouvez pas l'email, vérifiez vos spams.
-    <button onclick="resendConfirmation()" style="margin-left:.75rem;background:#f59e0b;border:none;color:white;font-weight:700;font-size:.75rem;padding:.3rem .7rem;border-radius:.5rem;cursor:pointer">Renvoyer l'email</button>
-  </div>
+
 
   <!-- Notification panel -->
   <div id="notif-panel" style="display:none;position:fixed;top:3.5rem;right:.75rem;width:min(320px,calc(100vw - 1.5rem));background:white;border-radius:1rem;box-shadow:0 8px 32px rgba(0,0,0,.18);z-index:200;max-height:400px;overflow-y:auto;border:1px solid #e5e7eb">
@@ -1203,25 +1198,7 @@ async function handleEmailAction(){
   const box=document.getElementById('email-action-body');
   const tip=document.getElementById('email-action-tip');
 
-  if(mode==='verifyEmail'){
-    try{
-      await fbAuth.applyActionCode(oobCode);
-      box.innerHTML=`
-        <div style="font-size:3rem;margin-bottom:.75rem">✅</div>
-        <h2 style="font-size:1.35rem;font-weight:900;color:#1F2937;margin-bottom:.5rem">Adresse e-mail confirmée !</h2>
-        <p style="color:#6b7280;margin-bottom:1.5rem;font-size:.92rem">Votre compte RIVO est maintenant actif. Connectez-vous pour commencer à apprendre et gagner.</p>
-        <button onclick="goTo('login')" class="btn-primary" style="width:100%;justify-content:center;padding:.875rem;font-size:1rem">Se connecter</button>
-      `;
-    }catch(e){
-      box.innerHTML=`
-        <div style="font-size:3rem;margin-bottom:.75rem">⚠️</div>
-        <h2 style="font-size:1.25rem;font-weight:900;color:#dc2626;margin-bottom:.5rem">Lien invalide ou expiré</h2>
-        <p style="color:#6b7280;margin-bottom:1.5rem;font-size:.92rem">Ce lien de confirmation a peut-être déjà été utilisé, ou il a expiré (validité 1 heure). Connectez-vous pour en demander un nouveau.</p>
-        <button onclick="goTo('login')" class="btn-outline" style="width:100%;justify-content:center;padding:.875rem;font-size:1rem">Retour à la connexion</button>
-      `;
-      tip.style.display='block';
-    }
-  } else if(mode==='resetPassword'){
+  if(mode==='resetPassword'){
     try{
       const email=await fbAuth.verifyPasswordResetCode(oobCode);
       box.innerHTML=`
@@ -1278,10 +1255,6 @@ async function confirmResetPwd(e){
 }
 
 // ── App start (called after CDN loads) ───────────────
-function updateEmailBanner(){
-  const banner=document.getElementById('email-confirm-banner');
-  if(banner) banner.style.display=(FBU&&!FBU.emailVerified)?'block':'none';
-}
 
 async function startApp(){
   try{
@@ -1294,7 +1267,6 @@ async function startApp(){
       FBU=fbUser;
       await loadProfileData();
       if(CP){
-        updateEmailBanner();
         goTo('dashboard');
         checkShowTutorial();
       }
@@ -1495,7 +1467,6 @@ async function saveWhatsapp(){
 async function doLogin(e){
   e.preventDefault();
   showErr('li-err','');
-  document.getElementById('li-resend').style.display='none';
   setBtn('li-btn','<span class="spin"></span> Connexion...',true);
   try{
     const email=document.getElementById('li-email').value.trim();
@@ -1570,21 +1541,6 @@ async function forgotPassword(){
   }
 }
 
-async function resendConfirmation(){
-  // FBU est défini si login a échoué pour email non vérifié
-  const fbUser=FBU||fbAuth.currentUser;
-  if(!fbUser){
-    toast('Entrez votre email + mot de passe et cliquez "Se connecter" d\'abord.','err');
-    return;
-  }
-  try{
-    await fbUser.sendEmailVerification(ACS);
-    toast('Email de confirmation renvoyé ! Vérifiez votre boîte mail. 📧');
-  }catch(e){
-    toast(e.message||'Erreur envoi','err');
-  }
-}
-
 // ── Register ──────────────────────────────────────────
 async function doRegister(e){
   e.preventDefault();
@@ -1630,10 +1586,10 @@ async function doRegister(e){
     localStorage.setItem('rivo_pending_profile',JSON.stringify({
       first_name:fn, last_name:ln, birth_date:birth||null, referred_by:refId||null
     }));
-    await fbNewUser.sendEmailVerification(ACS);
-    await fbAuth.signOut();
-    toast('Compte créé ! 📧 Vérifiez votre boîte mail pour confirmer avant de vous connecter.');
-    setTimeout(()=>{ goTo('login'); },2200);
+    FBU=fbNewUser;
+    await loadProfileData();
+    toast('Compte créé ! Bienvenue sur RIVO 🎉');
+    setTimeout(()=>{ goTo('dashboard'); },500);
   }catch(err){
     const msg=err.message||'';
     if(msg.includes('email-already-in-use'))showErr('rg-err','Cet email est déjà utilisé.');
